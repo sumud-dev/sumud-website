@@ -235,7 +235,6 @@ export async function createEvent(
     }
 
     revalidatePath("/admin/events");
-    revalidatePath("/events");
 
     return { success: true, error: null, id: eventId, slug };
   } catch (err) {
@@ -333,9 +332,8 @@ export async function updateEvent(
     }
 
     revalidatePath("/admin/events");
-    revalidatePath("/events");
     if (data.slug || existingEvent.slug) {
-      revalidatePath(`/events/${data.slug || existingEvent.slug}`);
+      revalidatePath(`/admin/events/${data.slug || existingEvent.slug}`);
     }
 
     return { success: true, error: null, slug: data.slug || existingEvent.slug || undefined };
@@ -383,7 +381,6 @@ export async function updateEventStatus(
     }
 
     revalidatePath("/admin/events");
-    revalidatePath("/events");
 
     return { success: true, error: null };
   } catch (err) {
@@ -427,7 +424,6 @@ export async function deleteEvent(id: string): Promise<MutationResponse> {
     }
 
     revalidatePath("/admin/events");
-    revalidatePath("/events");
 
     return { success: true, error: null };
   } catch (err) {
@@ -460,7 +456,6 @@ export async function deleteEvents(ids: string[]): Promise<MutationResponse> {
     }
 
     revalidatePath("/admin/events");
-    revalidatePath("/events");
 
     return { success: true, error: null };
   } catch (err) {
