@@ -544,7 +544,7 @@ export default function DashboardPage() {
                 <CardDescription>Scheduled events and gatherings</CardDescription>
               </div>
               <Button variant="ghost" size="sm" asChild>
-                <Link href="/events">
+                <Link href="/admin/events">
                   View all
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
@@ -568,7 +568,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex-1 space-y-1">
                     <Link
-                      href={`/events/${event.id}/edit`}
+                      href={`/admin/events/${event.id}/edit`}
                       className="font-medium hover:underline"
                     >
                       {event.title}
@@ -614,7 +614,7 @@ export default function DashboardPage() {
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
-                  <Link href="/events/new">
+                  <Link href="/admin/events/new">
                     <Calendar className="h-4 w-4 mr-2" />
                     Schedule an event
                   </Link>
@@ -640,7 +640,7 @@ export default function DashboardPage() {
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
-                  <Link href="/events">
+                  <Link href="/admin/events">
                     <Calendar className="h-4 w-4 mr-2" />
                     Manage events
                   </Link>
