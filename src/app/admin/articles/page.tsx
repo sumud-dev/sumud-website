@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Plus, MoreHorizontal, Edit, Trash2, Eye, FileText, CheckCircle, Archive } from "lucide-react";
+import { Plus, MoreHorizontal, Edit, Trash2, Eye, FileText, CheckCircle, Archive, Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { StatsCard } from "@/src/components/cards";
@@ -23,68 +23,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/src/components/ui/table";
-import { Article } from "@/src/types/Articles";
+import {
+  getPosts,
+  deletePost,
+  updatePostStatus,
+} from "@/src/actions/article.actions";
+import {
+  calculateStats,
+  getCategoryName,
+  type PostWithCategory,
+} from "@/src/lib/article.utils";
 
-// Mock data for UI display
-const mockArticles: Article[] = [
-  {
-    id: "1",
-    title: "Preserving Palestinian Heritage Through Art",
-    slug: "preserving-palestinian-heritage-through-art",
-    excerpt: "Exploring how traditional art forms keep cultural identity alive...",
-    status: "published",
-    category: { name: "Culture" },
-    publishedAt: "2025-01-15",
-    createdAt: "2025-01-10",
-    viewCount: 1250,
-  },
-  {
-    id: "2",
-    title: "Community Events This Spring",
-    slug: "community-events-spring-2025",
-    excerpt: "Join us for exciting community gatherings and celebrations...",
-    status: "published",
-    category: { name: "Events" },
-    publishedAt: "2025-02-01",
-    createdAt: "2025-01-28",
-    viewCount: 890,
-  },
-  {
-    id: "3",
-    title: "Traditional Recipes: A Culinary Journey",
-    slug: "traditional-recipes-culinary-journey",
-    excerpt: "Discover the rich flavors and stories behind traditional dishes...",
-    status: "draft",
-    category: { name: "Food" },
-    publishedAt: null,
-    createdAt: "2025-02-10",
-    viewCount: 0,
-  },
-  {
-    id: "4",
-    title: "Youth Education Programs",
-    slug: "youth-education-programs",
-    excerpt: "New initiatives to support young learners in our community...",
-    status: "published",
-    category: { name: "Education" },
-    publishedAt: "2025-01-20",
-    createdAt: "2025-01-18",
-    viewCount: 567,
-  },
-  {
-    id: "5",
-    title: "Archived: 2024 Year in Review",
-    slug: "2024-year-in-review",
-    excerpt: "A look back at our achievements and milestones from last year...",
-    status: "archived",
-    category: { name: "News" },
-    publishedAt: "2024-12-31",
-    createdAt: "2024-12-28",
-    viewCount: 2100,
-  },
-];
-
-const statusColors = {
+const statusColors: Record<string, string> = {
   draft: "bg-yellow-100 text-yellow-800",
   published: "bg-green-100 text-green-800",
   archived: "bg-gray-100 text-gray-800",
@@ -92,33 +42,62 @@ const statusColors = {
 
 const ArticlesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [posts, setPosts] = React.useState<PostWithCategory[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
-  // Filter articles based on search
-  const filteredArticles = React.useMemo(() => {
-    if (!searchQuery) return mockArticles;
-    return mockArticles.filter((article) =>
-      article.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery]);
+  // Fetch posts from server action
+  const fetchPosts = React.useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await getPosts();
 
-  // Calculate stats from mock data
-  const stats = React.useMemo(() => {
-    const total = mockArticles.length;
-    const published = mockArticles.filter((a) => a.status === "published").length;
-    const drafts = mockArticles.filter((a) => a.status === "draft").length;
-    const archived = mockArticles.filter((a) => a.status === "archived").length;
-    return { total, published, drafts, archived };
+    if (error) {
+      toast.error("Failed to fetch articles");
+      console.error(error);
+    } else {
+      setPosts(data || []);
+    }
+    setLoading(false);
   }, []);
 
-  const handleDelete = (slug: string, title: string) => {
+  React.useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  // Filter posts based on search
+  const filteredPosts = React.useMemo(() => {
+    if (!searchQuery) return posts;
+    return posts.filter((post) =>
+      post.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [searchQuery, posts]);
+
+  // Calculate stats from posts
+  const stats = React.useMemo(() => calculateStats(posts), [posts]);
+
+  const handleDelete = async (id: number, title: string) => {
     if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
-    // TODO: Connect to backend
-    toast.info(`Delete "${title}" - connect to backend`);
+
+    const { success, error } = await deletePost(id);
+
+    if (error) {
+      toast.error("Failed to delete article");
+      console.error(error);
+    } else if (success) {
+      toast.success(`"${title}" deleted successfully`);
+      fetchPosts();
+    }
   };
 
-  const handleStatusUpdate = (slug: string, newStatus: string) => {
-    // TODO: Connect to backend
-    toast.info(`Update "${slug}" status to ${newStatus} - connect to backend`);
+  const handleStatusUpdate = async (id: number, newStatus: "draft" | "published" | "archived") => {
+    const { success, error } = await updatePostStatus(id, newStatus);
+
+    if (error) {
+      toast.error("Failed to update status");
+      console.error(error);
+    } else if (success) {
+      toast.success(`Status updated to ${newStatus}`);
+      fetchPosts();
+    }
   };
 
   return (
@@ -188,50 +167,52 @@ const ArticlesPage: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[300px]">Title</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Published</TableHead>
-                  <TableHead>Views</TableHead>
-                  <TableHead className="w-[70px]">Actions</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead className="w-28">Date</TableHead>
+                  <TableHead className="w-16">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredArticles.length === 0 ? (
+                {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={3} className="text-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-500" />
+                    </TableCell>
+                  </TableRow>
+                ) : filteredPosts.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center py-8 text-gray-500">
                       No articles found.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredArticles.map((article) => (
-                    <TableRow key={article.id}>
+                  filteredPosts.map((post) => (
+                    <TableRow key={post.id}>
                       <TableCell>
-                        <div className="max-w-[300px]">
-                          <div className="font-medium">{article.title}</div>
-                          {article.excerpt && (
-                            <div className="text-sm text-gray-500 mt-1 line-clamp-2">
-                              {article.excerpt}
-                            </div>
+                        <div className="space-y-1">
+                          <div className="font-medium truncate max-w-xs">
+                            {post.title}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge className={`${statusColors[post.status] || statusColors.draft} text-xs`}>
+                              {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
+                            </Badge>
+                            <Badge variant="outline" className="capitalize text-xs">
+                              {getCategoryName(post)}
+                            </Badge>
+                          </div>
+                          {post.excerpt && (
+                            <p className="text-sm text-gray-500 truncate max-w-xs">
+                              {post.excerpt}
+                            </p>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <Badge className={statusColors[article.status]}>
-                          {article.status.charAt(0).toUpperCase() + article.status.slice(1)}
-                        </Badge>
+                      <TableCell className="text-sm text-gray-600">
+                        {post.status === "published" && post.published_at
+                          ? new Date(post.published_at).toLocaleDateString()
+                          : new Date(post.created_at).toLocaleDateString()}
                       </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="capitalize">
-                          {article.category?.name || "N/A"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {article.status === "published" && article.publishedAt
-                          ? new Date(article.publishedAt).toLocaleDateString()
-                          : new Date(article.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>{article.viewCount.toLocaleString()}</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -241,35 +222,35 @@ const ArticlesPage: React.FC = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem asChild>
-                              <Link href={`/articles/${article.slug}`} target="_blank">
+                              <Link href={`/admin/articles/${post.slug}`}>
                                 <Eye className="mr-2 h-4 w-4" />
-                                View
+                                View Details
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <Link href={`/admin/articles/${article.slug}/edit`}>
+                              <Link href={`/admin/articles/${post.slug}/edit`}>
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit
                               </Link>
                             </DropdownMenuItem>
-                            {article.status === "draft" && (
+                            {post.status === "draft" && (
                               <DropdownMenuItem
-                                onClick={() => handleStatusUpdate(article.slug, "published")}
+                                onClick={() => handleStatusUpdate(post.id, "published")}
                               >
-                                <Edit className="mr-2 h-4 w-4" />
+                                <CheckCircle className="mr-2 h-4 w-4" />
                                 Publish
                               </DropdownMenuItem>
                             )}
-                            {article.status === "published" && (
+                            {post.status === "published" && (
                               <DropdownMenuItem
-                                onClick={() => handleStatusUpdate(article.slug, "draft")}
+                                onClick={() => handleStatusUpdate(post.id, "draft")}
                               >
-                                <Edit className="mr-2 h-4 w-4" />
+                                <Archive className="mr-2 h-4 w-4" />
                                 Unpublish
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem
-                              onClick={() => handleDelete(article.slug, article.title)}
+                              onClick={() => handleDelete(post.id, post.title)}
                               className="text-red-600"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />

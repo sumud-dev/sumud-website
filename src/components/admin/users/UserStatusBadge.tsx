@@ -1,7 +1,7 @@
 import React from "react";
 import { UserStatus } from "@/src/types/Users";
 import { STATUS_CONFIG } from "./constants";
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/src/lib/utils/utils";
 
 interface UserStatusBadgeProps {
   status: UserStatus;

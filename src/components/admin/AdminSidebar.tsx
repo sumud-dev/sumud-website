@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   FileText,
@@ -15,32 +15,49 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/src/lib/utils/utils";
 import { Button } from "@/src/components/ui/button";
+import { createClient } from "@/src/lib/supabase/client";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Articles", href: "/articles", icon: FileText },
-  { name: "Campaigns", href: "/campaigns", icon: Megaphone },
-  { name: "Events", href: "/events", icon: Calendar },
-  { name: "Categories", href: "/categories", icon: FolderOpen },
-  { name: "Users", href: "/users", icon: Users },
+  { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+  { name: "Articles", href: "/admin/articles", icon: FileText },
+  { name: "Campaigns", href: "/admin/campaigns", icon: Megaphone },
+  { name: "Events", href: "/admin/events", icon: Calendar },
+  { name: "Categories", href: "/admin/categories", icon: FolderOpen },
+  { name: "Users", href: "/admin/users", icon: Users },
 ];
 
 const bottomNavigation = [
-  { name: "Settings", href: "/settings", icon: Settings },
+  { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+interface AdminSidebarProps {
+  userEmail?: string;
+  userInitial?: string;
+}
+
+export function AdminSidebar({ userEmail, userInitial = "A" }: AdminSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push("/auth/login");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       {/* Mobile sidebar backdrop */}
       {sidebarOpen && (
         <div
@@ -124,46 +141,48 @@ export default function DashboardLayout({
               );
             })}
             <button
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
-              onClick={() => {
-                // Handle logout
-                console.log("Logout clicked");
-              }}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors disabled:opacity-50"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
             >
               <LogOut className="h-5 w-5" />
-              Logout
+              {isLoggingOut ? "Logging out..." : "Logout"}
             </button>
           </div>
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="lg:pl-64">
-        {/* Top header */}
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle sidebar</span>
-          </Button>
+      {/* Mobile header button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="lg:hidden"
+        onClick={() => setSidebarOpen(true)}
+      >
+        <Menu className="h-5 w-5" />
+        <span className="sr-only">Toggle sidebar</span>
+      </Button>
 
-          <div className="flex-1" />
-
-          {/* User menu placeholder */}
-          <div className="flex items-center gap-4">
-            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-              <span className="text-sm font-medium text-muted-foreground">A</span>
-            </div>
-          </div>
-        </header>
-
-        {/* Page content */}
-        <main className="p-6">{children}</main>
+      {/* User avatar */}
+      <div className="flex items-center gap-4">
+        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center" title={userEmail}>
+          <span className="text-sm font-medium text-muted-foreground">{userInitial}</span>
+        </div>
       </div>
-    </div>
+    </>
+  );
+}
+
+export function AdminMobileMenuButton({ onClick }: { onClick: () => void }) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="lg:hidden"
+      onClick={onClick}
+    >
+      <Menu className="h-5 w-5" />
+      <span className="sr-only">Toggle sidebar</span>
+    </Button>
   );
 }

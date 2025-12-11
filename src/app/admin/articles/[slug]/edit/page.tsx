@@ -29,6 +29,8 @@ import {
   SelectValue,
 } from "@/src/components/ui/select";
 import { toast } from "sonner";
+import { getPostBySlug, updatePost } from "@/src/actions/article.actions";
+import type { PostWithCategory } from "@/src/lib/article.utils";
 
 const articleSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title too long"),
@@ -39,24 +41,8 @@ const articleSchema = z.object({
   content: z.string().min(1, "Content is required"),
   status: z.enum(["draft", "published", "archived"]),
   featuredImageUrl: z.string().optional(),
-  tags: z.string().optional(),
   metaDescription: z.string().max(160, "Meta description too long").optional(),
 });
-
-type Article = {
-  id: string;
-  title: string;
-  slug: string;
-  content: string;
-  excerpt: string;
-  status: string;
-  language: string;
-  authorName: string;
-  featuredImageUrl?: string;
-  metaDescription?: string;
-  tags?: string[];
-  categoryId?: string;
-};
 
 type ArticleFormData = z.infer<typeof articleSchema>;
 
@@ -70,8 +56,8 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [article, setArticle] = React.useState<Article | null>(null);
-  const [slug, setSlug] = React.useState<string>("");
+  const [article, setArticle] = React.useState<PostWithCategory | null>(null);
+  const [currentSlug, setCurrentSlug] = React.useState<string>("");
 
   const form = useForm<ArticleFormData>({
     resolver: zodResolver(articleSchema),
@@ -81,7 +67,6 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
       content: "",
       status: "published",
       featuredImageUrl: "",
-      tags: "",
       metaDescription: "",
     },
   });
@@ -95,29 +80,34 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
         // Properly unwrap the params Promise
         const resolvedParams = await params;
         const articleSlug = resolvedParams.slug;
-        setSlug(articleSlug);
+        setCurrentSlug(articleSlug);
 
-        const response = await fetch(`/api/articles/${articleSlug}`);
+        const { data, error } = await getPostBySlug(articleSlug);
 
-        if (!response.ok) {
-          throw new Error("Article not found");
+        if (error) {
+          console.error("Error fetching article:", error);
+          toast.error("Failed to load article");
+          router.push("/admin/articles");
+          return;
         }
 
-        const data = await response.json();
-        const articleData = data.data;
+        if (!data) {
+          toast.error("Article not found");
+          router.push("/admin/articles");
+          return;
+        }
 
         // Update form with article data
         form.reset({
-          title: articleData.title || "",
-          excerpt: articleData.excerpt || "",
-          content: articleData.content || "",
-          status: articleData.status || "published",
-          tags: articleData.tags ? articleData.tags.join(", ") : "",
-          metaDescription: articleData.metaDescription || "",
-          featuredImageUrl: articleData.featuredImageUrl || "",
+          title: data.title || "",
+          excerpt: data.excerpt || "",
+          content: data.content || "",
+          status: (data.status as "draft" | "published" | "archived") || "published",
+          featuredImageUrl: data.featured_image || "",
+          metaDescription: "",
         });
 
-        setArticle(articleData);
+        setArticle(data);
       } catch (error) {
         console.error("Error fetching article:", error);
         toast.error("Failed to load article");
@@ -131,7 +121,16 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
   }, [params, form, router]);
 
   const onSubmit = async (data: ArticleFormData) => {
-    if (!article) return;
+    if (!article) {
+      console.error("No article loaded");
+      return;
+    }
+
+    console.log("Submitting update for article:", {
+      id: article.id,
+      idType: typeof article.id,
+      currentSlug: currentSlug,
+    });
 
     setIsSubmitting(true);
     try {
@@ -142,48 +141,46 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
         .replace(/\s+/g, "-") // Replace spaces with hyphens
         .trim();
 
-      // Prepare article data for update
-      const updateData = {
+      const shouldUpdateSlug = newSlug !== currentSlug;
+
+      console.log("Calling updatePost with:", {
+        id: article.id,
+        data: {
+          title: data.title,
+          slug: shouldUpdateSlug ? newSlug : undefined,
+          content: data.content?.substring(0, 100) + "...",
+          excerpt: data.excerpt,
+          status: data.status,
+          featured_image: data.featuredImageUrl,
+          language: article.language || "en",
+        },
+      });
+
+      const { success, error } = await updatePost(article.id, {
         title: data.title,
-        slug: newSlug !== article.slug ? newSlug : article.slug, // Only update slug if title changed
+        slug: shouldUpdateSlug ? newSlug : undefined,
         content: data.content,
         excerpt: data.excerpt,
         status: data.status,
+        featured_image: data.featuredImageUrl,
         language: article.language || "en",
-        featuredImageUrl: data.featuredImageUrl || article.featuredImageUrl,
-        metaDescription: data.metaDescription,
-        tags: data.tags
-          ? data.tags
-              .split(",")
-              .map((tag) => tag.trim())
-              .filter(Boolean)
-          : [],
-        categoryId: article.categoryId, // Preserve existing category
-      };
-
-      const response = await fetch(`/api/admin/articles/${slug}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updateData),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update article");
+      console.log("updatePost response:", { success, error });
+
+      if (error) {
+        throw new Error(error);
       }
 
-      const result = await response.json();
-      console.log("Article updated:", result);
+      if (success) {
+        toast.success("Article updated successfully!");
 
-      toast.success("Article updated successfully!");
-
-      // Redirect to the updated slug if it changed
-      if (newSlug !== slug) {
-        router.push(`/admin/articles/${newSlug}/edit`);
-      } else {
-        router.push("/admin/articles");
+        // Redirect to the updated slug if it changed
+        if (shouldUpdateSlug) {
+          router.push(`/admin/articles/${newSlug}/edit`);
+        } else {
+          router.push("/admin/articles");
+        }
       }
     } catch (error) {
       console.error("Error updating article:", error);
@@ -198,10 +195,10 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
   };
 
   const handlePreview = () => {
-    if (!article || !slug) return;
+    if (!article || !currentSlug) return;
 
-    // Open preview in new tab
-    window.open(`/articles/${slug}`, "_blank");
+    // Open admin article detail page in new tab
+    window.open(`/admin/articles/${currentSlug}`, "_blank");
     toast.info("Opening article preview in new tab");
   };
 
@@ -301,6 +298,24 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                       </FormItem>
                     )}
                   />
+
+                  <FormField
+                    control={form.control}
+                    name="content"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Content</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Write your article content..."
+                            className="min-h-[300px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </CardContent>
               </Card>
             </div>
@@ -321,7 +336,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                         <FormLabel>Status</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -345,7 +360,11 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                       disabled={isSubmitting}
                       className="bg-[#781D32] hover:bg-[#781D32]/90"
                     >
-                      <Save className="mr-2 h-4 w-4" />
+                      {isSubmitting ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Save className="mr-2 h-4 w-4" />
+                      )}
                       {isSubmitting ? "Updating..." : "Update Article"}
                     </Button>
                   </div>
@@ -370,13 +389,13 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                             {...field}
                           />
                         </FormControl>
-                        {article.featuredImageUrl && (
+                        {article.featured_image && (
                           <div className="mt-2">
                             <p className="text-sm text-gray-500">
                               Current image:
                             </p>
                             <Image
-                              src={article.featuredImageUrl}
+                              src={article.featured_image}
                               alt="Current featured"
                               width={400}
                               height={128}
@@ -391,32 +410,12 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                 </CardContent>
               </Card>
 
-              {/* Tags and SEO */}
+              {/* SEO */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Tags & SEO</CardTitle>
+                  <CardTitle>SEO</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="tags"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tags</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="culture, heritage, community..."
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Separate tags with commas
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
                   <FormField
                     control={form.control}
                     name="metaDescription"
@@ -426,7 +425,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                         <FormControl>
                           <Textarea
                             placeholder="SEO meta description..."
-                            className="min-h-[80px]"
+                            className="min-h-20"
                             {...field}
                           />
                         </FormControl>

@@ -10,11 +10,9 @@ import {
   Trash2,
   Eye,
   Calendar,
-  Pause,
+  FileText,
   Play,
-  MapPin,
-  Users,
-  Video,
+  Archive,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import {
@@ -40,186 +38,98 @@ import {
   TableHeader,
   TableRow,
 } from "@/src/components/ui/table";
-import { Event } from "@/src/types/Events";
+import {
+  getEvents,
+  deleteEvent,
+  updateEventStatus,
+  type Event,
+  type EventStatus,
+} from "@/src/actions/events.actions";
+import { calculateEventStats } from "@/src/lib/utils/event.utils";
 
-// Mock data for UI display
-const mockEvents: Event[] = [
-  {
-    id: "1",
-    title: "Community Solidarity Gathering",
-    description:
-      "Join us for an evening of community support, featuring speakers, cultural performances, and networking opportunities.",
-    location: "Community Center Hall",
-    address: "123 Main Street, City Center",
-    eventDate: "2025-01-15",
-    startTime: "18:00",
-    endTime: "21:00",
-    capacity: 200,
-    attendees: 145,
-    status: "upcoming",
-    imageUrl: null,
-    isOnline: false,
-    onlineUrl: null,
-    createdAt: "2024-12-01T00:00:00Z",
-    updatedAt: "2024-12-15T00:00:00Z",
-  },
-  {
-    id: "2",
-    title: "Fundraising Gala Dinner",
-    description:
-      "An elegant evening to raise funds for humanitarian aid, featuring a silent auction and live entertainment.",
-    location: "Grand Hotel Ballroom",
-    address: "456 Luxury Avenue",
-    eventDate: "2025-02-14",
-    startTime: "19:00",
-    endTime: "23:00",
-    capacity: 150,
-    attendees: 150,
-    status: "upcoming",
-    imageUrl: null,
-    isOnline: false,
-    onlineUrl: null,
-    createdAt: "2024-11-15T00:00:00Z",
-    updatedAt: "2024-12-20T00:00:00Z",
-  },
-  {
-    id: "3",
-    title: "Virtual Awareness Webinar",
-    description:
-      "Online webinar discussing the current humanitarian situation and ways to help from anywhere in the world.",
-    location: "Online Event",
-    address: null,
-    eventDate: "2025-01-20",
-    startTime: "14:00",
-    endTime: "16:00",
-    capacity: 500,
-    attendees: 320,
-    status: "upcoming",
-    imageUrl: null,
-    isOnline: true,
-    onlineUrl: "https://zoom.us/webinar/example",
-    createdAt: "2024-12-10T00:00:00Z",
-    updatedAt: "2024-12-18T00:00:00Z",
-  },
-  {
-    id: "4",
-    title: "Youth Volunteer Training",
-    description:
-      "Training session for young volunteers to learn about effective community service and humanitarian work.",
-    location: "Youth Center",
-    address: "789 Education Street",
-    eventDate: "2024-12-20",
-    startTime: "10:00",
-    endTime: "15:00",
-    capacity: 50,
-    attendees: 48,
-    status: "completed",
-    imageUrl: null,
-    isOnline: false,
-    onlineUrl: null,
-    createdAt: "2024-11-01T00:00:00Z",
-    updatedAt: "2024-12-20T00:00:00Z",
-  },
-  {
-    id: "5",
-    title: "Cultural Heritage Exhibition",
-    description:
-      "Exhibition showcasing traditional art, crafts, and cultural artifacts to preserve and celebrate heritage.",
-    location: "City Art Gallery",
-    address: "321 Museum Road",
-    eventDate: "2025-03-01",
-    startTime: "09:00",
-    endTime: "18:00",
-    capacity: null,
-    attendees: 0,
-    status: "draft",
-    imageUrl: null,
-    isOnline: false,
-    onlineUrl: null,
-    createdAt: "2024-12-25T00:00:00Z",
-    updatedAt: "2024-12-25T00:00:00Z",
-  },
-  {
-    id: "6",
-    title: "Emergency Relief Coordination Meeting",
-    description:
-      "Planning meeting for coordinating emergency relief efforts with partner organizations.",
-    location: "Conference Room A",
-    address: "Organization HQ",
-    eventDate: "2024-11-15",
-    startTime: "09:00",
-    endTime: "12:00",
-    capacity: 30,
-    attendees: 25,
-    status: "cancelled",
-    imageUrl: null,
-    isOnline: false,
-    onlineUrl: null,
-    createdAt: "2024-10-20T00:00:00Z",
-    updatedAt: "2024-11-10T00:00:00Z",
-  },
-];
-
-const statusColors: Record<Event["status"], string> = {
+const statusColors: Record<string, string> = {
   draft: "bg-yellow-100 text-yellow-800",
-  upcoming: "bg-blue-100 text-blue-800",
-  ongoing: "bg-green-100 text-green-800",
-  completed: "bg-gray-100 text-gray-800",
-  cancelled: "bg-red-100 text-red-800",
+  published: "bg-green-100 text-green-800",
+  archived: "bg-gray-100 text-gray-800",
+};
+
+// Truncate text to a specified number of words
+const truncateText = (text: string, wordLimit: number): string => {
+  const words = text.split(/\s+/);
+  if (words.length <= wordLimit) return text;
+  return words.slice(0, wordLimit).join(" ") + "...";
 };
 
 const EventsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [events, setEvents] = React.useState<Event[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  // Fetch events on mount
+  React.useEffect(() => {
+    const fetchEvents = async () => {
+      setIsLoading(true);
+      const { data, error } = await getEvents();
+      if (error) {
+        toast.error(`Failed to load events: ${error}`);
+      } else if (data) {
+        setEvents(data);
+      }
+      setIsLoading(false);
+    };
+    fetchEvents();
+  }, []);
 
   // Filter events based on search
   const filteredEvents = React.useMemo(() => {
-    if (!searchQuery) return mockEvents;
-    return mockEvents.filter(
+    if (!searchQuery) return events;
+    return events.filter(
       (event) =>
-        event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.location.toLowerCase().includes(searchQuery.toLowerCase())
+        event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.locations?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.categories?.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [searchQuery]);
+  }, [searchQuery, events]);
 
-  // Calculate stats from mock data
-  const stats = React.useMemo(() => {
-    const total = mockEvents.length;
-    const upcoming = mockEvents.filter((e) => e.status === "upcoming").length;
-    const drafts = mockEvents.filter((e) => e.status === "draft").length;
-    const completed = mockEvents.filter((e) => e.status === "completed").length;
-    return { total, upcoming, drafts, completed };
-  }, []);
+  // Calculate stats from actual data
+  const stats = React.useMemo(() => calculateEventStats(events), [events]);
 
-  const handleDelete = (id: string, title: string) => {
+  const handleDelete = async (id: string, title: string) => {
     if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
-    // TODO: Connect to backend
-    toast.info(`Delete "${title}" - connect to backend`);
+    
+    const result = await deleteEvent(id);
+    if (result.success) {
+      setEvents((prev) => prev.filter((e) => e.id !== id));
+      toast.success(`"${title}" deleted successfully`);
+    } else {
+      toast.error(result.error || "Failed to delete event");
+    }
   };
 
-  const handleStatusUpdate = (
+  const handleStatusUpdate = async (
     id: string,
-    newStatus: Event["status"],
+    newStatus: EventStatus,
     title: string
   ) => {
-    // TODO: Connect to backend
-    toast.info(`Update "${title}" status to ${newStatus} - connect to backend`);
+    const result = await updateEventStatus(id, newStatus);
+    if (result.success) {
+      setEvents((prev) =>
+        prev.map((e) => (e.id === id ? { ...e, status: newStatus } : e))
+      );
+      toast.success(`"${title}" status updated to ${newStatus}`);
+    } else {
+      toast.error(result.error || "Failed to update status");
+    }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-US", {
       weekday: "short",
       year: "numeric",
       month: "short",
       day: "numeric",
     });
-  };
-
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(":");
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? "PM" : "AM";
-    const hour12 = hour % 12 || 12;
-    return `${hour12}:${minutes} ${ampm}`;
   };
 
   return (
@@ -232,7 +142,7 @@ const EventsPage: React.FC = () => {
           <p className="text-gray-600 mt-1">Manage your events and gatherings</p>
         </div>
         <Button asChild className="bg-[#781D32] hover:bg-[#781D32]/90">
-          <Link href="/events/new">
+          <Link href="/admin/events/new">
             <Plus className="mr-2 h-4 w-4" />
             New Event
           </Link>
@@ -248,23 +158,23 @@ const EventsPage: React.FC = () => {
           iconClassName="text-muted-foreground"
         />
         <StatsCard
-          title="Upcoming"
-          value={stats.upcoming}
+          title="Published"
+          value={stats.published}
           icon={Play}
-          iconClassName="text-blue-500"
-          valueClassName="text-blue-600"
+          iconClassName="text-green-500"
+          valueClassName="text-green-600"
         />
         <StatsCard
           title="Drafts"
           value={stats.drafts}
-          icon={Edit}
+          icon={FileText}
           iconClassName="text-yellow-500"
           valueClassName="text-yellow-600"
         />
         <StatsCard
-          title="Completed"
-          value={stats.completed}
-          icon={Calendar}
+          title="Archived"
+          value={stats.archived}
+          icon={Archive}
           iconClassName="text-gray-500"
           valueClassName="text-gray-600"
         />
@@ -288,157 +198,139 @@ const EventsPage: React.FC = () => {
 
           {/* Table */}
           <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[300px]">Event</TableHead>
-                  <TableHead>Date & Time</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Attendees</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-[70px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEvents.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="text-center py-8 text-gray-500"
-                    >
-                      No events found.
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead>Event</TableHead>
+                    <TableHead className="w-32">Published</TableHead>
+                    <TableHead className="w-24">Status</TableHead>
+                    <TableHead className="w-16">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  filteredEvents.map((event) => (
-                    <TableRow key={event.id}>
-                      <TableCell>
-                        <div className="max-w-[300px]">
-                          <div className="font-medium flex items-center gap-2">
-                            {event.title}
-                            {event.isOnline && (
-                              <Video className="h-4 w-4 text-blue-500" />
-                            )}
-                          </div>
-                          {event.description && (
-                            <div className="text-sm text-gray-500 mt-1 line-clamp-2">
-                              {event.description}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-sm">
-                          <div className="font-medium">
-                            {formatDate(event.eventDate)}
-                          </div>
-                          <div className="text-gray-500">
-                            {formatTime(event.startTime)}
-                            {event.endTime && ` - ${formatTime(event.endTime)}`}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1 text-sm">
-                          <MapPin className="h-3 w-3 text-gray-400" />
-                          {event.location}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1 text-sm">
-                          <Users className="h-3 w-3 text-gray-400" />
-                          {event.attendees}
-                          {event.capacity && ` / ${event.capacity}`}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={statusColors[event.status]}>
-                          {event.status.charAt(0).toUpperCase() +
-                            event.status.slice(1)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link
-                                href={`/events/${event.id}`}
-                                target="_blank"
-                              >
-                                <Eye className="mr-2 h-4 w-4" />
-                                View
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/events/${event.id}/edit`}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
-                              </Link>
-                            </DropdownMenuItem>
-                            {event.status === "draft" && (
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleStatusUpdate(
-                                    event.id,
-                                    "upcoming",
-                                    event.title
-                                  )
-                                }
-                              >
-                                <Play className="mr-2 h-4 w-4" />
-                                Publish
-                              </DropdownMenuItem>
-                            )}
-                            {event.status === "upcoming" && (
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleStatusUpdate(
-                                    event.id,
-                                    "ongoing",
-                                    event.title
-                                  )
-                                }
-                              >
-                                <Play className="mr-2 h-4 w-4" />
-                                Start Event
-                              </DropdownMenuItem>
-                            )}
-                            {event.status === "ongoing" && (
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleStatusUpdate(
-                                    event.id,
-                                    "completed",
-                                    event.title
-                                  )
-                                }
-                              >
-                                <Pause className="mr-2 h-4 w-4" />
-                                Complete
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleDelete(event.id, event.title)
-                              }
-                              className="text-red-600"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        className="text-center py-8 text-gray-500"
+                      >
+                        Loading events...
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : filteredEvents.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        className="text-center py-8 text-gray-500"
+                      >
+                        No events found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredEvents.map((event) => (
+                      <TableRow key={event.id} className="hover:bg-gray-50/50">
+                        <TableCell className="py-3 max-w-0">
+                          <p className="font-medium text-gray-900 truncate">
+                            {event.title || "Untitled"}
+                          </p>
+                          {event.content && (
+                            <p className="text-sm text-gray-500 mt-1 truncate">
+                              {truncateText(event.content, 10)}
+                            </p>
+                          )}
+                        </TableCell>
+                        <TableCell className="py-3 whitespace-nowrap">
+                          <span className="text-sm text-gray-600">
+                            {formatDate(event.published_at)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-3">
+                          <Badge className={statusColors[event.status || "draft"] || statusColors.draft}>
+                            {(event.status || "draft").charAt(0).toUpperCase() +
+                              (event.status || "draft").slice(1)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="py-3">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem asChild>
+                                <Link href={`/admin/events/${event.id}`}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View Details
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link href={`/admin/events/${event.id}/edit`}>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit
+                                </Link>
+                              </DropdownMenuItem>
+                              {event.status === "draft" && (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleStatusUpdate(
+                                      event.id,
+                                      "published",
+                                      event.title || "Untitled"
+                                    )
+                                  }
+                                >
+                                  <Play className="mr-2 h-4 w-4" />
+                                  Publish
+                                </DropdownMenuItem>
+                              )}
+                              {event.status === "published" && (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleStatusUpdate(
+                                      event.id,
+                                      "archived",
+                                      event.title || "Untitled"
+                                    )
+                                  }
+                                >
+                                  <Archive className="mr-2 h-4 w-4" />
+                                  Archive
+                                </DropdownMenuItem>
+                              )}
+                              {event.status === "archived" && (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleStatusUpdate(
+                                      event.id,
+                                      "draft",
+                                      event.title || "Untitled"
+                                    )
+                                  }
+                                >
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  Move to Draft
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleDelete(event.id, event.title || "Untitled")
+                                }
+                                className="text-red-600"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </CardContent>
       </Card>
