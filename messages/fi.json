@@ -1,0 +1,345 @@
+{
+  "common": {
+    "loading": "Ladataan...",
+    "error": "Tapahtui virhe",
+    "success": "Onnistui",
+    "cancel": "Peruuta",
+    "save": "Tallenna",
+    "edit": "Muokkaa",
+    "delete": "Poista",
+    "add": "Lisää",
+    "search": "Haku",
+    "submit": "Lähetä",
+    "back": "Takaisin",
+    "next": "Seuraava",
+    "previous": "Edellinen",
+    "viewAll": "Näytä kaikki",
+    "readMore": "Lue lisää",
+    "learnMore": "Lue lisää",
+    "getStarted": "Aloita",
+    "joinNow": "Liity nyt",
+    "signPetition": "Allekirjoita vetoomus",
+    "share": "Jaa",
+    "close": "Sulje",
+    "confirm": "Vahvista",
+    "optional": "Valinnainen",
+    "required": "Pakollinen",
+    "selected": "Valittu",
+    "recommended": "Suositeltu",
+    "popular": "Suosittu",
+    "recommendedForSupport": "Suositeltu jatkuvaan tukeen",
+    "contactSupport": "Ota yhteyttä tukeen",
+    "siteName": "Sumud"
+  },
+  "navigation": {
+    "home": "Etusivu",
+    "join": "Liity mukaan",
+    "petitions": "Vetoomukset",
+    "articles": "Artikkelit",
+    "events": "Tapahtumat",
+    "about": "Tietoa",
+    "contact": "Yhteystiedot",
+    "admin": "Hallinta",
+    "signin": "Kirjaudu sisään",
+    "signup": "Rekisteröidy",
+    "signout": "Kirjaudu ulos",
+    "language": "Kieli",
+    "menu": "Valikko"
+  },
+  "homepage": {
+    "hero": {
+      "title": "Seiso Palestiinan rinnalla",
+      "subtitle": "Rakentamassa solidaarisuutta koulutuksen, edunvalvonnan ja toiminnan kautta",
+      "description": "Liity yhteisöömme, joka pyrkii palestiinalaisten oikeuksien ja suomalais-palestiinalaisen ymmärryksen edistämiseen merkityksellisen sitoutumisen ja ruohonjuuritason aktivismin kautta.",
+      "joinButton": "Liity liikkeeseen",
+      "learnButton": "Lue lisää"
+    },
+    "stats": {
+      "members": "Aktiivista jäsentä",
+      "petitions": "Kerättyä allekirjoitusta",
+      "events": "Järjestettyä tapahtumaa",
+      "years": "Vuotta edunvalvontaa"
+    },
+    "features": {
+      "title": "Vaikutuksemme",
+      "subtitle": "Työskentelemme yhdessä oikeudenmukaisuuden ja ihmisoikeuksien puolesta",
+      "advocacy": {
+        "title": "Poliittinen edunvalvonta",
+        "description": "Yhteistyö suomalaisten päättäjien kanssa palestiinalaisten oikeuksien ja kansainvälisen oikeuden tukemiseksi."
+      },
+      "education": {
+        "title": "Yhteisökoulutus",
+        "description": "Tietoisuuden lisääminen Palestiinan historiasta, kulttuurista ja nykytilanteesta tapahtumien ja resurssien kautta."
+      },
+      "solidarity": {
+        "title": "Suora solidaarisuus",
+        "description": "Palestiinalaisten yhteisöjen tukeminen kampanjoiden, varainkeruun ja humanitaarisen avun kautta."
+      }
+    },
+    "news": {
+      "title": "Uusimmat uutiset",
+      "subtitle": "Pysy ajan tasalla viimeisimmistä toimistamme ja kannanotoistamme",
+      "viewAll": "Näytä kaikki artikkelit"
+    },
+    "events": {
+      "title": "Tulevat tapahtumat",
+      "subtitle": "Liity mukaan tuleviin aktiviteetteihin ja yhteisötapaamisiin",
+      "viewAll": "Näytä kaikki tapahtumat"
+    },
+    "testimonials": {
+      "title": "Yhteisön ääniä",
+      "subtitle": "Kuule jäseniemme kokemuksia Sumudista"
+    },
+    "cta": {
+      "title": "Valmis tekemään eron?",
+      "subtitle": "Liity tuhansien Palestiinan rinnalla seisovien tukijoiden joukkoon",
+      "description": "Äänesi on tärkeä. Oli kyse jäsenyydestä, vetoomusten allekirjoittamisesta tai tapahtumiin osallistumisesta, jokainen teko merkitsee oikeudenmukaisemman maailman rakentamisessa.",
+      "joinButton": "Ryhdy jäseneksi",
+      "petitionsButton": "Allekirjoita vetoomuksia"
+    }
+  },
+  "membership": {
+    "title": "Liity liikkeeseen",
+    "subtitle": "Ryhdy osaksi kasvavaa palestiinalaisten oikeuksien puolesta toimivaa yhteisöä",
+    "description": "Liity tuhansien tukijoiden joukkoon, jotka työskentelevät palestiinalaisten oikeuksien ja suomalais-palestiinalaisen ymmärryksen eteen koulutuksen, edunvalvonnan ja kulttuurivaihdon kautta.",
+    "tiers": {
+      "supporter": {
+        "name": "Tukija",
+        "description": "Perussolidaarisuusjäsenyys",
+        "features": [
+          "Yhteisöön pääsy",
+          "Uutiskirjepäivitykset",
+          "Tapahtumakutsut",
+          "Kuukausittaiset edistymisraportit"
+        ]
+      },
+      "advocate": {
+        "name": "Edunvalvoja",
+        "description": "Aktiivinen solidaarisuusjäsenyys",
+        "features": [
+          "Kaikki Tukijan edut",
+          "Etuoikeutettu pääsy tapahtumiin",
+          "Jäsenresurssit",
+          "Paikallisosasto-osallistuminen",
+          "Suorat edunvalvontapäivitykset"
+        ]
+      },
+      "champion": {
+        "name": "Mestari",
+        "description": "Tehostettu solidaarisuusjäsenyys",
+        "features": [
+          "Kaikki Edunvalvojan edut",
+          "Eksklusiivinen koulutussisältö",
+          "Suorat viestintäkanavat",
+          "Neuvottelukunnan osallistuminen",
+          "Kampanjastrategian näkemykset"
+        ]
+      },
+      "patron": {
+        "name": "Suojelija",
+        "description": "Premium solidaarisuusjäsenyys",
+        "features": [
+          "Kaikki Mestarin edut",
+          "Strategisen suunnittelun panos",
+          "Tunnustusedut",
+          "Johtamismahdollisuudet",
+          "Suora yhteys johtoon"
+        ]
+      }
+    },
+    "form": {
+      "title": "Jäsentiedot",
+      "subtitle": "Anna tietosi rekisteröinnin viimeistelemiseksi",
+      "fullName": "Koko nimi",
+      "fullNamePlaceholder": "Syötä koko nimesi",
+      "email": "Sähköpostiosoite",
+      "emailPlaceholder": "Syötä sähköpostiosoitteesi",
+      "phone": "Puhelinnumero",
+      "address": "Osoite",
+      "addressPlaceholder": "Syötä osoitteesi",
+      "addressHint": "Tapahtumakutsuihin ja paikallisosaston koordinointiin",
+      "chapter": "Paikallisosasto",
+      "chapterPlaceholder": "Valitse paikallisosasto",
+      "chapterHint": "Ota yhteys muihin jäseniin alueellasi",
+      "paymentMethod": "Valitse maksutapa",
+      "oneTime": "Kertamaksu",
+      "oneTimeDescription": "Maksa kerran vuosittaisesta jäsenyydestä. Saat uusimismuistutuksen ennen vanhenemista.",
+      "monthly": "Kuukausittainen tilaus",
+      "monthlyDescription": "Automaattiset kuukausimaksut. Peruuta milloin tahansa. Kätevä ja tukee jatkuvaa solidaarisuutta.",
+      "privacyConsent": "Hyväksyn tietosuojakäytännön",
+      "newsletterConsent": "Tilaa uutiskirjepäivitykset",
+      "termsConsent": "Hyväksyn käyttöehdot",
+      "submitButton": "Viimeistele rekisteröinti",
+      "processing": "Käsitellään rekisteröintiä..."
+    },
+    "chooseTier": "Valitse jäsenyystasosi",
+    "whyJoin": "Miksi liittyä Sumudiin?",
+    "privacyTitle": "Yksityisyytesi on tärkeä",
+    "privacyMessage": "Otamme yksityisyytesi vakavasti. Tietosi tallennetaan turvallisesti ja käytetään vain jäsenyysasioihin.",
+    "privacyLink": "Lue tietosuojakäytäntömme",
+    "needHelp": "Tarvitsetko apua?",
+    "helpMessage": "Onko sinulla kysymyksiä jäsenyydestä tai tarvitsetko apua rekisteröinnissä?",
+    "success": {
+      "title": "Tervetuloa Sumudiin!",
+      "message": "Kiitos liittymisestä yhteisöömme. Rekisteröintisi on lähetetty onnistuneesti ja olemme pian yhteydessä seuraavista vaiheista.",
+      "nextSteps": "Mitä tapahtuu seuraavaksi?",
+      "getInvolved": "Osallistu heti",
+      "homeButton": "Takaisin etusivulle",
+      "petitionsButton": "Näytä vetoomukset"
+    }
+  },
+  "petitions": {
+    "title": "Aktiiviset kampanjat",
+    "subtitle": "Seiso Palestiinan rinnalla",
+    "description": "Liity tuhansien tukijoiden joukkoon, jotka toimivat palestiinalaisten oikeuksien ja oikeudenmukaisuuden puolesta",
+    "search": "Hae kampanjoita...",
+    "categories": {
+      "all": "Kaikki kategoriat",
+      "humanRights": "Ihmisoikeudet",
+      "humanitarian": "Humanitaarinen",
+      "education": "Koulutus",
+      "political": "Poliittinen",
+      "economic": "Taloudellinen oikeudenmukaisuus",
+      "cultural": "Kulttuuriset oikeudet"
+    },
+    "stats": {
+      "activeCampaigns": "Aktiivista kampanjaa",
+      "totalSignatures": "Allekirjoituksia yhteensä",
+      "countries": "Maata"
+    },
+    "card": {
+      "signed": "allekirjoittanut",
+      "supporters": "tukijaa",
+      "goal": "Tavoite",
+      "daysLeft": "päivää jäljellä",
+      "lastDay": "Viimeinen päivä!",
+      "urgent": "Kiireellinen",
+      "nearGoal": "Lähellä tavoitetta",
+      "signButton": "Allekirjoita vetoomus"
+    },
+    "detail": {
+      "shareTitle": "Jaa tämä vetoomus",
+      "signTitle": "Allekirjoita tämä vetoomus",
+      "supporterName": "Nimesi",
+      "supporterEmail": "Sähköpostisi",
+      "ageConsent": "Vahvistan olevani 18-vuotias tai vanhempi",
+      "newsletterConsent": "Tilaa kampanjapäivitykset",
+      "signButton": "Allekirjoita vetoomus",
+      "signing": "Allekirjoitetaan...",
+      "thankYou": "Kiitos allekirjoituksesta!",
+      "confirmationMessage": "Allekirjoituksesi on lisätty tähän tärkeään kampanjaan.",
+      "relatedTitle": "Liittyvät kampanjat"
+    },
+    "noResults": {
+      "title": "Kampanjoita ei löytynyt",
+      "message": "Kokeile säätää haku- tai suodatuskriteereitä",
+      "clearButton": "Tyhjennä suodattimet"
+    }
+  },
+  "articles": {
+    "title": "Uusimmat uutiset ja päivitykset",
+    "subtitle": "Pysy ajan tasalla palestiinalaisten oikeuksista ja edunvalvontatyöstämme",
+    "search": "Hae artikkeleita...",
+    "categories": {
+      "all": "Kaikki kategoriat",
+      "statement": "Kannanotto",
+      "announcement": "Ilmoitus",
+      "pressRelease": "Lehdistötiedote",
+      "article": "Artikkeli",
+      "news": "Uutiset",
+      "opinion": "Mielipide"
+    },
+    "featured": "Nostot",
+    "readTime": "min lukuaika",
+    "publishedOn": "Julkaistu",
+    "author": "Kirjoittaja",
+    "relatedTitle": "Liittyvät artikkelit",
+    "shareTitle": "Jaa tämä artikkeli",
+    "noResults": {
+      "title": "Artikkeleita ei löytynyt",
+      "message": "Kokeile säätää haku- tai suodatuskriteereitä",
+      "clearButton": "Tyhjennä suodattimet"
+    }
+  },
+  "footer": {
+    "description": "Sumud edistää palestiinalaisten oikeuksia ja suomalais-palestiinalaista ymmärrystä koulutuksen, edunvalvonnan ja solidaarisuuden kautta.",
+    "quickLinks": "Pikavalinnat",
+    "follow": "Seuraa meitä",
+    "newsletter": {
+      "title": "Pysy ajan tasalla",
+      "subtitle": "Saa uusimmat uutiset ja kampanjapäivitykset",
+      "placeholder": "Syötä sähköpostisi",
+      "button": "Tilaa",
+      "success": "Kiitos tilauksesta!"
+    },
+    "copyright": "© 2025 Sumud. Kaikki oikeudet pidätetään.",
+    "privacy": "Tietosuojakäytäntö",
+    "terms": "Käyttöehdot"
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Hallintapaneeli",
+      "welcome": "Tervetuloa Sumudin hallintapaneeliin",
+      "description": "Hallinnoi artikkeleita, jäseniä, vetoomuksia ja valvo sivuston toimintaa.",
+      "stats": {
+        "totalMembers": "Jäseniä yhteensä",
+        "publishedArticles": "Julkaistuja artikkeleita",
+        "activePetitions": "Aktiivisia vetoomuksia",
+        "totalSignatures": "Allekirjoituksia yhteensä"
+      },
+      "quickActions": "Pikatoiminnot",
+      "recentActivity": "Viimeaikainen toiminta"
+    },
+    "members": {
+      "title": "Jäsenet",
+      "description": "Hallinnoi jäsenrekisteröintejä ja -tietoja",
+      "exportButton": "Vie CSV",
+      "columns": {
+        "name": "Nimi",
+        "email": "Sähköposti",
+        "status": "Tila",
+        "tier": "Jäsenyystaso",
+        "joined": "Liittymispäivä",
+        "actions": "Toiminnot"
+      }
+    },
+    "articles": {
+      "title": "Artikkelit",
+      "description": "Hallinnoi julkaistuja artikkeleita ja ilmoituksia",
+      "newButton": "Uusi artikkeli",
+      "createTitle": "Luo uusi artikkeli",
+      "editTitle": "Muokkaa artikkelia",
+      "form": {
+        "title": "Artikkelin otsikko",
+        "content": "Artikkelin sisältö",
+        "category": "Kategoria",
+        "status": "Tila",
+        "featuredImage": "Pääkuva",
+        "metaDescription": "Meta-kuvaus"
+      }
+    },
+    "petitions": {
+      "title": "Vetoomukset",
+      "description": "Hallinnoi kampanjoita ja seuraa allekirjoituksia",
+      "newButton": "Uusi vetoomus",
+      "createTitle": "Luo uusi vetoomus",
+      "form": {
+        "title": "Vetoomuksen otsikko",
+        "description": "Lyhyt kuvaus",
+        "content": "Yksityiskohtainen sisältö",
+        "category": "Kategoria",
+        "targetSignatures": "Tavoiteallekirjoitukset",
+        "endDate": "Päättymispäivä"
+      }
+    }
+  },
+  "errors": {
+    "pageNotFound": "Sivua ei löydy",
+    "serverError": "Palvelinvirhe",
+    "networkError": "Verkkovirhe",
+    "validationError": "Validointivirhe",
+    "unauthorized": "Luvaton pääsy",
+    "tryAgain": "Yritä uudelleen",
+    "goHome": "Mene etusivulle"
+  }
+}

@@ -1,0 +1,388 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "search": "Search",
+    "submit": "Submit",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "viewAll": "View All",
+    "readMore": "Read More",
+    "learnMore": "Learn More",
+    "getStarted": "Get Started",
+    "joinNow": "Join Now",
+    "signPetition": "Sign Petition",
+    "share": "Share",
+    "close": "Close",
+    "confirm": "Confirm",
+    "optional": "Optional",
+    "required": "Required",
+    "selected": "Selected",
+    "recommended": "Recommended",
+    "popular": "Popular",
+    "recommendedForSupport": "Recommended for ongoing support",
+    "contactSupport": "Contact Support",
+    "siteName": "Sumud"
+  },
+  "navigation": {
+    "home": "Home",
+    "join": "Join Us",
+    "petitions": "Petitions",
+    "articles": "Articles",
+    "events": "Events",
+    "about": "About",
+    "contact": "Contact",
+    "admin": "Admin",
+    "signin": "Sign In",
+    "signup": "Sign Up",
+    "signout": "Sign Out",
+    "language": "Language",
+    "menu": "Menu",
+    "impact": "Impact"
+  },
+  "homepage": {
+    "hero": {
+      "title": "Stand with Palestine",
+      "subtitle": "Building solidarity through education, advocacy, and action",
+      "description": "Join our community working towards Palestinian rights and Finnish-Palestinian understanding through meaningful engagement and grassroots activism.",
+      "joinButton": "Join Our Movement",
+      "learnButton": "Learn More"
+    },
+    "stats": {
+      "members": "Active Members",
+      "petitions": "Signatures Collected",
+      "events": "Events Hosted",
+      "years": "Years of Advocacy"
+    },
+    "features": {
+      "title": "Our Impact",
+      "subtitle": "Working together for justice and human rights",
+      "advocacy": {
+        "title": "Policy Advocacy",
+        "description": "Engaging with Finnish policymakers to support Palestinian rights and international law."
+      },
+      "education": {
+        "title": "Community Education",
+        "description": "Raising awareness about Palestinian history, culture, and current situation through events and resources."
+      },
+      "solidarity": {
+        "title": "Direct Solidarity",
+        "description": "Supporting Palestinian communities through campaigns, fundraising, and humanitarian aid."
+      }
+    },
+    "news": {
+      "title": "Latest News",
+      "subtitle": "Stay updated with our recent activities and statements",
+      "viewAll": "View All Articles"
+    },
+    "events": {
+      "title": "Upcoming Events",
+      "subtitle": "Join us in upcoming activities and community gatherings",
+      "viewAll": "View All Events"
+    },
+    "testimonials": {
+      "title": "Community Voices",
+      "subtitle": "Hear from our members about their experience with Sumud"
+    },
+    "cta": {
+      "title": "Ready to Make a Difference?",
+      "subtitle": "Join thousands of supporters standing with Palestine",
+      "description": "Your voice matters. Whether through membership, signing petitions, or attending events, every action counts towards building a more just world.",
+      "joinButton": "Become a Member",
+      "petitionsButton": "Sign Petitions"
+    }
+  },
+  "impact": {
+    "meta": {
+      "title": "Our Impact - Supporting Palestinian Artisans | Sumud",
+      "description": "Discover how your purchases create positive change. Every product supports Palestinian artisans, preserves cultural heritage, and empowers communities."
+    },
+    "hero": {
+      "title": "Every Purchase Creates Impact",
+      "subtitle": "When you shop with Sumud, you're not just buying a product. You're supporting Palestinian artisans, preserving cultural heritage, and empowering communities to build a brighter future.",
+      "scrollPrompt": "Discover Our Impact"
+    },
+    "stats": {
+      "title": "Our Impact in Numbers",
+      "subtitle": "Together, we're building sustainable livelihoods and preserving cultural heritage one purchase at a time.",
+      "familiesSupported": "Families Supported",
+      "artisansEmployed": "Artisans Employed",
+      "productsSold": "Products Sold",
+      "communitiesHelped": "Communities Helped"
+    },
+    "process": {
+      "title": "How It Works",
+      "subtitle": "A simple purchase creates a ripple effect of positive change across Palestinian communities."
+    },
+    "artisans": {
+      "title": "Meet Our Artisans",
+      "subtitle": "Behind every product is a skilled artisan with a story of resilience, creativity, and dedication to preserving Palestinian culture."
+    },
+    "areas": {
+      "title": "Areas of Impact",
+      "subtitle": "Our work creates positive change across multiple dimensions of Palestinian life and culture."
+    },
+    "certifications": {
+      "title": "Our Commitment to Transparency",
+      "subtitle": "We hold ourselves to the highest standards of ethical sourcing, fair trade, and environmental responsibility.",
+      "trustStatement": "We believe in complete transparency. Every product comes with information about the artisan who made it, where it was created, and how your purchase directly impacts their community."
+    },
+    "cta": {
+      "title": "Start Making an Impact Today",
+      "subtitle": "Every purchase supports Palestinian artisans and their communities. Join us in preserving heritage and building a better future.",
+      "shopButton": "Shop Now",
+      "learnButton": "Learn More About Us"
+    }
+  },
+  "membership": {
+    "title": "Join Our Movement",
+    "subtitle": "Become part of a growing community advocating for Palestinian rights",
+    "description": "Join thousands of supporters working towards Palestinian rights and Finnish-Palestinian understanding through education, advocacy, and cultural exchange.",
+    "tiers": {
+      "supporter": {
+        "name": "Supporter",
+        "description": "Basic solidarity membership",
+        "features": [
+          "Community access",
+          "Newsletter updates",
+          "Event invitations",
+          "Monthly progress reports"
+        ]
+      },
+      "advocate": {
+        "name": "Advocate",
+        "description": "Active solidarity membership",
+        "features": [
+          "All Supporter features",
+          "Priority event access",
+          "Member resources",
+          "Local chapter participation",
+          "Direct advocacy updates"
+        ]
+      },
+      "champion": {
+        "name": "Champion",
+        "description": "Enhanced solidarity membership",
+        "features": [
+          "All Advocate features",
+          "Exclusive educational content",
+          "Direct communication channels",
+          "Advisory participation",
+          "Campaign strategy insights"
+        ]
+      },
+      "patron": {
+        "name": "Patron",
+        "description": "Premium solidarity membership",
+        "features": [
+          "All Champion features",
+          "Strategic planning input",
+          "Recognition benefits",
+          "Leadership opportunities",
+          "Direct access to leadership"
+        ]
+      }
+    },
+    "form": {
+      "title": "Member Information",
+      "subtitle": "Please provide your details to complete registration",
+      "fullName": "Full Name",
+      "fullNamePlaceholder": "Enter your full name",
+      "email": "Email Address",
+      "emailPlaceholder": "Enter your email address",
+      "phone": "Phone Number",
+      "address": "Address",
+      "addressPlaceholder": "Enter your address",
+      "addressHint": "For event invitations and local chapter coordination",
+      "chapter": "Local Chapter",
+      "chapterPlaceholder": "Select a local chapter",
+      "chapterHint": "Connect with other members in your area",
+      "paymentMethod": "Choose Payment Method",
+      "oneTime": "One-time Payment",
+      "oneTimeDescription": "Pay once for annual membership. You'll receive a renewal reminder before expiration.",
+      "monthly": "Monthly Subscription",
+      "monthlyDescription": "Automatic monthly payments. Cancel anytime. Convenient and supports ongoing solidarity.",
+      "privacyConsent": "I accept the privacy policy",
+      "newsletterConsent": "Subscribe to newsletter updates",
+      "termsConsent": "I accept the terms of service",
+      "submitButton": "Complete Registration",
+      "processing": "Processing Registration..."
+    },
+    "chooseTier": "Choose Your Membership Level",
+    "whyJoin": "Why Join Sumud?",
+    "privacyTitle": "Your Privacy Matters",
+    "privacyMessage": "We take your privacy seriously. Your information is securely stored and only used for membership purposes.",
+    "privacyLink": "Read our Privacy Policy",
+    "needHelp": "Need Help?",
+    "helpMessage": "Have questions about membership or need assistance with registration?",
+    "success": {
+      "title": "Welcome to Sumud!",
+      "message": "Thank you for joining our community. Your registration has been successfully submitted and we'll be in touch soon with next steps.",
+      "nextSteps": "What happens next?",
+      "getInvolved": "Get involved immediately",
+      "homeButton": "Return to Home",
+      "petitionsButton": "View Petitions"
+    }
+  },
+  "petitions": {
+    "title": "Active Campaigns",
+    "subtitle": "Stand with Palestine",
+    "description": "Join thousands of supporters taking action for Palestinian rights and justice",
+    "search": "Search campaigns...",
+    "categories": {
+      "all": "All Categories",
+      "humanRights": "Human Rights",
+      "humanitarian": "Humanitarian",
+      "education": "Education",
+      "political": "Political",
+      "economic": "Economic Justice",
+      "cultural": "Cultural Rights"
+    },
+    "stats": {
+      "activeCampaigns": "Active Campaigns",
+      "totalSignatures": "Total Signatures",
+      "countries": "Countries"
+    },
+    "card": {
+      "signed": "signed",
+      "supporters": "supporters",
+      "goal": "Goal",
+      "daysLeft": "days left",
+      "lastDay": "Last day!",
+      "urgent": "Urgent",
+      "nearGoal": "Near Goal",
+      "signButton": "Sign Petition"
+    },
+    "detail": {
+      "shareTitle": "Share this petition",
+      "signTitle": "Sign this Petition",
+      "supporterName": "Your Name",
+      "supporterEmail": "Your Email",
+      "ageConsent": "I confirm that I am 18 years or older",
+      "newsletterConsent": "Subscribe to campaign updates",
+      "signButton": "Sign Petition",
+      "signing": "Signing...",
+      "thankYou": "Thank you for signing!",
+      "confirmationMessage": "Your signature has been added to this important campaign.",
+      "relatedTitle": "Related Campaigns"
+    },
+    "noResults": {
+      "title": "No campaigns found",
+      "message": "Try adjusting your search or filter criteria",
+      "clearButton": "Clear Filters"
+    }
+  },
+  "articles": {
+    "title": "Latest News & Updates",
+    "subtitle": "Stay informed about Palestinian rights and our advocacy work",
+    "search": "Search articles...",
+    "categories": {
+      "all": "All Categories",
+      "statement": "Statement",
+      "announcement": "Announcement",
+      "pressRelease": "Press Release",
+      "article": "Article",
+      "news": "News",
+      "opinion": "Opinion"
+    },
+    "featured": "Featured Articles",
+    "readTime": "min read",
+    "publishedOn": "Published on",
+    "author": "By",
+    "relatedTitle": "Related Articles",
+    "shareTitle": "Share this article",
+    "noResults": {
+      "title": "No articles found",
+      "message": "Try adjusting your search or filter criteria",
+      "clearButton": "Clear Filters"
+    }
+  },
+  "footer": {
+    "description": "Sumud advocates for Palestinian rights and promotes Finnish-Palestinian understanding through education, advocacy, and solidarity.",
+    "quickLinks": "Quick Links",
+    "follow": "Follow Us",
+    "newsletter": {
+      "title": "Stay Updated",
+      "subtitle": "Get the latest news and campaign updates",
+      "placeholder": "Enter your email",
+      "button": "Subscribe",
+      "success": "Thank you for subscribing!"
+    },
+    "copyright": "© 2025 Sumud. All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Admin Dashboard",
+      "welcome": "Welcome to Sumud Admin Dashboard",
+      "description": "Manage articles, members, petitions, and monitor site activity.",
+      "stats": {
+        "totalMembers": "Total Members",
+        "publishedArticles": "Published Articles",
+        "activePetitions": "Active Petitions",
+        "totalSignatures": "Total Signatures"
+      },
+      "quickActions": "Quick Actions",
+      "recentActivity": "Recent Activity"
+    },
+    "members": {
+      "title": "Members",
+      "description": "Manage member registrations and data",
+      "exportButton": "Export CSV",
+      "columns": {
+        "name": "Name",
+        "email": "Email",
+        "status": "Status",
+        "tier": "Membership Tier",
+        "joined": "Joined Date",
+        "actions": "Actions"
+      }
+    },
+    "articles": {
+      "title": "Articles",
+      "description": "Manage published articles and announcements",
+      "newButton": "New Article",
+      "createTitle": "Create New Article",
+      "editTitle": "Edit Article",
+      "form": {
+        "title": "Article Title",
+        "content": "Article Content",
+        "category": "Category",
+        "status": "Status",
+        "featuredImage": "Featured Image",
+        "metaDescription": "Meta Description"
+      }
+    },
+    "petitions": {
+      "title": "Petitions",
+      "description": "Manage campaigns and track signatures",
+      "newButton": "New Petition",
+      "createTitle": "Create New Petition",
+      "form": {
+        "title": "Petition Title",
+        "description": "Short Description",
+        "content": "Detailed Content",
+        "category": "Category",
+        "targetSignatures": "Target Signatures",
+        "endDate": "End Date"
+      }
+    }
+  },
+  "errors": {
+    "pageNotFound": "Page Not Found",
+    "serverError": "Server Error",
+    "networkError": "Network Error",
+    "validationError": "Validation Error",
+    "unauthorized": "Unauthorized Access",
+    "tryAgain": "Please try again",
+    "goHome": "Go to Homepage"
+  }
+}
