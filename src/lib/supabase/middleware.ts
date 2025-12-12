@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { routing } from "@/src/i18n/routing";
 
 // Routes that don't require authentication
 const PUBLIC_ROUTES = ["/", "/auth", "/api/auth", "/api/sanity", "/api/supabase"];
@@ -7,15 +8,37 @@ const PUBLIC_ROUTES = ["/", "/auth", "/api/auth", "/api/sanity", "/api/supabase"
 // Routes that require authentication (add more as needed)
 const PROTECTED_ROUTES = ["/admin"];
 
+// Get the locale from the pathname
+function getLocaleFromPathname(pathname: string): string | null {
+  const segments = pathname.split("/").filter(Boolean);
+  const firstSegment = segments[0];
+  if (firstSegment && routing.locales.includes(firstSegment as typeof routing.locales[number])) {
+    return firstSegment;
+  }
+  return null;
+}
+
+// Remove locale prefix from pathname for route matching
+function getPathnameWithoutLocale(pathname: string): string {
+  const locale = getLocaleFromPathname(pathname);
+  if (locale) {
+    const withoutLocale = pathname.replace(`/${locale}`, "") || "/";
+    return withoutLocale;
+  }
+  return pathname;
+}
+
 function isPublicRoute(pathname: string): boolean {
+  const pathnameWithoutLocale = getPathnameWithoutLocale(pathname);
   return PUBLIC_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
+    (route) => pathnameWithoutLocale === route || pathnameWithoutLocale.startsWith(`${route}/`)
   );
 }
 
 function isProtectedRoute(pathname: string): boolean {
+  const pathnameWithoutLocale = getPathnameWithoutLocale(pathname);
   return PROTECTED_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
+    (route) => pathnameWithoutLocale === route || pathnameWithoutLocale.startsWith(`${route}/`)
   );
 }
 
@@ -66,7 +89,9 @@ export async function updateSession(request: NextRequest) {
   // For protected routes, redirect to login if not authenticated
   if (isProtectedRoute(pathname) && !user) {
     const url = request.nextUrl.clone();
-    url.pathname = "/auth/login";
+    const locale = getLocaleFromPathname(pathname);
+    // Preserve the locale in the redirect URL
+    url.pathname = locale ? `/${locale}/auth/login` : "/auth/login";
     url.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(url);
   }
