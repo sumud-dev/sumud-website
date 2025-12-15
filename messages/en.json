@@ -29,7 +29,16 @@
     "popular": "Popular",
     "recommendedForSupport": "Recommended for ongoing support",
     "contactSupport": "Contact Support",
-    "siteName": "Sumud"
+    "siteName": "Sumud",
+    "upload": {
+      "dragDrop": "Drag and drop an image here, or click to select",
+      "dropHere": "Drop the image here",
+      "uploading": "Uploading...",
+      "fileInfo": "PNG, JPG, WEBP, GIF up to {maxSize}MB",
+      "fileTooLarge": "File size must be less than {maxSize}MB",
+      "invalidFileType": "Only image files are allowed",
+      "error": "Failed to upload image. Please try again."
+    }
   },
   "navigation": {
     "home": "Home",
@@ -45,15 +54,22 @@
     "signout": "Sign Out",
     "language": "Language",
     "menu": "Menu",
-    "impact": "Impact"
+    "impact": "Impact",
+    "campaigns": "Campaigns",
+    "becomeAMember": "Become a Member",
+    "volunteer": "Volunteer",
+    "dashboard": "Dashboard"
   },
   "homepage": {
     "hero": {
       "title": "Stand with Palestine",
       "subtitle": "Building solidarity through education, advocacy, and action",
       "description": "Join our community working towards Palestinian rights and Finnish-Palestinian understanding through meaningful engagement and grassroots activism.",
+      "tagline": "Sumud Finnish Palestine Network celebrates and preserves Palestinian heritage while building bridges of solidarity. Through education, cultural exchange, and humanitarian action, we honor the resilience and rich traditions of Palestinian communities in Finland and beyond.",
       "joinButton": "Join Our Movement",
-      "learnButton": "Learn More"
+      "learnButton": "Learn More",
+      "imageCaption": "Olive branch - Symbol of Palestinian heritage and resilience",
+      "scrollPrompt": "Scroll to explore"
     },
     "stats": {
       "members": "Active Members",
@@ -82,10 +98,34 @@
       "subtitle": "Stay updated with our recent activities and statements",
       "viewAll": "View All Articles"
     },
+    "newsUpdates": {
+      "title": "Latest News & Updates",
+      "winterReport": {
+        "title": "Winter Solidarity Report",
+        "excerpt": "Read our comprehensive updates on humanitarian aid efforts, solidarity campaigns, and community activities across Finland this quarter.",
+        "category": "Report",
+        "readTime": "5 min read"
+      },
+      "voiceMatters": {
+        "title": "Your Voice Matters",
+        "excerpt": "Every signature in solidarity with Palestine through advocacy, education, and community mobilization makes a difference.",
+        "category": "Call to Action",
+        "readTime": "2 min read"
+      },
+      "readFullReport": "Read Full Report",
+      "getInvolved": "Get Involved",
+      "learnMore": "Learn More"
+    },
     "events": {
       "title": "Upcoming Events",
-      "subtitle": "Join us in upcoming activities and community gatherings",
-      "viewAll": "View All Events"
+      "subtitle": "Connect with our community through meaningful events that promote awareness, solidarity, and cultural exchange.",
+      "viewAll": "View All Events",
+      "registerNow": "Register Now"
+    },
+    "campaigns": {
+      "title": "Campaigns",
+      "subtitle": "Join our campaigns for boycott, advocacy, and community action. Make your voice heard and create real change.",
+      "viewAll": "View All Campaigns"
     },
     "testimonials": {
       "title": "Community Voices",
@@ -376,6 +416,117 @@
       }
     }
   },
+  "articlesPage": {
+    "hero": {
+      "title": "Stories & Articles",
+      "subtitle": "Voices for Palestinian Justice",
+      "description": "Discover powerful stories, insights, and perspectives from writers on justice, dignity, and human rights"
+    },
+    "search": {
+      "placeholder": "Search articles...",
+      "noResults": {
+        "title": "No articles found",
+        "message": "We couldn't find any articles matching your criteria.",
+        "clearButton": "Clear Filters"
+      }
+    },
+    "filters": {
+      "selectCategory": "Select category"
+    },
+    "categories": {
+      "all": "All Articles",
+      "news": "Breaking News",
+      "analysis": "Analysis",
+      "culture": "Culture",
+      "history": "History",
+      "activism": "Activism",
+      "personal": "Stories"
+    },
+    "featured": {
+      "title": "Featured Article",
+      "subtitle": "This week's editorial pick"
+    },
+    "latest": {
+      "title": "Latest Articles",
+      "subtitle": "Explore our collection of in-depth articles covering justice, human rights, and Palestinian solidarity."
+    },
+    "newsletter": {
+      "title": "Stay informed with our stories",
+      "subtitle": "Get the latest articles on justice, solidarity, and human rights delivered to your inbox.",
+      "placeholder": "Enter your email",
+      "subscribe": "Subscribe",
+      "joinText": "Join 15,000+ readers. Unsubscribe at any time."
+    },
+    "loadMore": {
+      "showing": "Showing {count} articles",
+      "subtitle": "Discover more stories of justice, solidarity, and human rights.",
+      "button": "Load more articles",
+      "loading": "Loading more stories...",
+      "newArticles": "New articles added regularly"
+    },
+    "error": {
+      "title": "Unable to Load Articles",
+      "message": "We're experiencing technical difficulties. Please try again later.",
+      "tryAgain": "Try Again"
+    }
+  },
+  "campaignsPage": {
+    "hero": {
+      "title": "Active Campaigns",
+      "subtitle": "Take Action for Palestinian Rights",
+      "description": "Join advocacy campaigns creating real change. Every action brings us closer to justice and freedom"
+    },
+    "search": {
+      "placeholder": "Search campaigns...",
+      "noResults": {
+        "title": "No campaigns found",
+        "message": "Try adjusting your search or filter criteria",
+        "clearButton": "Clear Filters"
+      }
+    },
+    "filters": {
+      "allCampaigns": "All Campaigns",
+      "sortBy": "Sort by"
+    },
+    "sort": {
+      "featured": "Featured",
+      "recent": "Recently Added"
+    },
+    "types": {
+      "awareness": "Awareness",
+      "advocacy": "Advocacy",
+      "fundraising": "Fundraising",
+      "community_building": "Community Building",
+      "education": "Education",
+      "solidarity": "Solidarity",
+      "humanitarian": "Humanitarian",
+      "political": "Political",
+      "cultural": "Cultural",
+      "environmental": "Environmental"
+    },
+    "loading": {
+      "title": "Loading campaigns...",
+      "message": "Please wait while we fetch the latest campaigns"
+    },
+    "error": {
+      "title": "Error loading campaigns",
+      "defaultMessage": "Something went wrong. Please try again later.",
+      "tryAgain": "Try Again"
+    },
+    "card": {
+      "campaignType": "Campaign Type",
+      "priority": "Priority",
+      "featured": "Featured",
+      "active": "Active",
+      "learnMore": "Learn More"
+    },
+    "cta": {
+      "title": "Ready to Join a Campaign?",
+      "description": "Take action and be part of something meaningful. Every contribution strengthens our collective voice for Palestinian rights and justice.",
+      "exploreButton": "Explore Campaigns",
+      "learnMoreButton": "Learn More"
+    }
+  },
   "errors": {
     "pageNotFound": "Page Not Found",
     "serverError": "Server Error",
@@ -384,5 +535,176 @@
     "unauthorized": "Unauthorized Access",
     "tryAgain": "Please try again",
     "goHome": "Go to Homepage"
+  },
+  "about": {
+    "hero": {
+      "title": "About Sumud",
+      "subtitle": "Finnish Palestine Network",
+      "description": "We are a community-driven organization dedicated to promoting solidarity, education, and advocacy for Palestinian rights in Finland."
+    },
+    "mission": {
+      "title": "Our Mission",
+      "description": "Sumud (صمود) means \"steadfast perseverance\" in Arabic. We embody this spirit by fostering understanding, providing education, and advocating for Palestinian rights within Finnish society. Through cultural exchange, community building, and peaceful activism, we work to create a more just and informed world."
+    },
+    "whatWeDo": {
+      "title": "What We Do",
+      "subtitle": "Our work spans education, advocacy, cultural exchange, and community support to advance Palestinian rights and solidarity.",
+      "education": {
+        "title": "Education & Awareness",
+        "description": "Providing accurate information about Palestinian history, culture, and current events through workshops, seminars, and public events."
+      },
+      "advocacy": {
+        "title": "Advocacy & Campaigns",
+        "description": "Supporting BDS initiatives, apartheid-free zones, and cultural/academic boycotts to promote Palestinian rights."
+      },
+      "cultural": {
+        "title": "Cultural Exchange",
+        "description": "Celebrating Palestinian heritage and fostering connections between Finnish and Palestinian communities."
+      },
+      "community": {
+        "title": "Community Support",
+        "description": "Organizing fundraising events and humanitarian initiatives to support Palestinian communities."
+      }
+    },
+    "values": {
+      "title": "Our Values",
+      "subtitle": "These core principles guide everything we do in our work for Palestinian solidarity.",
+      "solidarity": {
+        "title": "Solidarity",
+        "description": "Building bridges of understanding and support between Finnish and Palestinian communities."
+      },
+      "justice": {
+        "title": "Justice",
+        "description": "Advocating for human rights and dignity for all Palestinian people."
+      },
+      "community": {
+        "title": "Community",
+        "description": "Creating inclusive spaces for dialogue, education, and collective action."
+      }
+    },
+    "engage": {
+      "title": "Ways to Engage",
+      "subtitle": "There are many ways to support our mission and become part of the Sumud community.",
+      "petitions": {
+        "title": "Petitions & Initiatives",
+        "description": "Sign and support our ongoing petitions for justice and Palestinian rights.",
+        "action": "Browse Petitions"
+      },
+      "membership": {
+        "title": "Membership Program",
+        "description": "Join our community as a member and get exclusive access to events and updates.",
+        "action": "Become a Member"
+      },
+      "donate": {
+        "title": "Make a Donation",
+        "description": "Support our mission with a donation to help fund our programs and campaigns.",
+        "action": "Donate Now"
+      },
+      "volunteer": {
+        "title": "Volunteer With Us",
+        "description": "Get involved by volunteering your time and skills to support our initiatives.",
+        "action": "Learn More"
+      }
+    },
+    "cta": {
+      "title": "Ready to Join Our Movement?",
+      "description": "Become part of a community dedicated to justice, education, and solidarity. Your voice and participation can make a real difference.",
+      "memberButton": "Become a Member",
+      "learnButton": "Learn More"
+    }
+  },
+  "adminSettings": {
+    "pageTitle": "Settings",
+    "pageDescription": "Manage your account settings and preferences",
+    "tabs": {
+      "profile": "Profile",
+      "notifications": "Notifications",
+      "security": "Security",
+      "appearance": "Appearance",
+      "site": "Site"
+    },
+    "profile": {
+      "title": "Profile Information",
+      "description": "Update your personal information and profile picture",
+      "name": "Full Name",
+      "namePlaceholder": "Enter your name",
+      "email": "Email Address",
+      "emailPlaceholder": "Enter your email",
+      "role": "Role",
+      "roleHint": "Contact a super admin to change your role",
+      "bio": "Bio",
+      "bioPlaceholder": "Tell us about yourself",
+      "avatar": "Avatar",
+      "changePhoto": "Change Photo",
+      "photoHint": "JPG, PNG or GIF. Max size 2MB.",
+      "saveButton": "Save Profile",
+      "successMessage": "Profile updated successfully"
+    },
+    "security": {
+      "title": "Security Settings",
+      "description": "Manage your security preferences",
+      "passwordTitle": "Password",
+      "passwordDescription": "Change your password to keep your account secure",
+      "twoFactorTitle": "Two-Factor Authentication",
+      "twoFactorDescription": "Add an extra layer of security to your account",
+      "twoFactorEnable": "Enable Two-Factor Authentication",
+      "twoFactorEnableDescription": "Use an authenticator app for additional security",
+      "sessionTitle": "Session Settings",
+      "sessionDescription": "Manage your session and login preferences",
+      "sessionTimeout": "Session Timeout (minutes)",
+      "activeSessions": "Active Sessions",
+      "activeSessionsInfo": "You're currently logged in on 1 device",
+      "signOutOther": "Sign Out All Other Sessions",
+      "currentPassword": "Current Password",
+      "currentPasswordPlaceholder": "Enter current password",
+      "newPassword": "New Password",
+      "newPasswordPlaceholder": "Enter new password",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Confirm new password",
+      "updatePassword": "Update Password",
+      "saveButton": "Save Settings",
+      "successMessage": "Security settings updated"
+    },
+    "appearance": {
+      "title": "Appearance Settings",
+      "description": "Customize the look and feel of the admin panel",
+      "theme": "Theme",
+      "themeDescription": "Choose your preferred color scheme",
+      "compactMode": "Compact Mode",
+      "compactModeDescription": "Use a more compact layout with less spacing",
+      "showAnimations": "Show Animations",
+      "showAnimationsDescription": "Enable smooth transitions and animations",
+      "saveButton": "Save Appearance",
+      "successMessage": "Appearance settings saved"
+    },
+    "site": {
+      "title": "Site Settings",
+      "description": "Configure general site settings and preferences",
+      "siteName": "Site Name",
+      "siteNamePlaceholder": "Enter site name",
+      "contactEmail": "Contact Email",
+      "contactEmailPlaceholder": "Enter contact email",
+      "siteDescription": "Site Description",
+      "siteDescriptionPlaceholder": "Describe your site",
+      "siteDescriptionHint": "Used for SEO and social media sharing",
+      "defaultLanguage": "Default Language",
+      "timezone": "Timezone",
+      "saveButton": "Save Site Settings",
+      "successMessage": "Site settings updated"
+    },
+    "sidebar": {
+      "adminTitle": "Sumud Admin",
+      "dashboard": "Dashboard",
+      "articles": "Articles",
+      "campaigns": "Campaigns",
+      "events": "Events",
+      "categories": "Categories",
+      "users": "Users",
+      "content": "Content",
+      "settings": "Settings",
+      "logout": "Logout",
+      "loggingOut": "Logging out...",
+      "toggleSidebar": "Toggle sidebar"
+    }
   }
 }

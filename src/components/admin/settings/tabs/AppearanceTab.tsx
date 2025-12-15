@@ -1,4 +1,7 @@
+"use client";
+
 import React from "react";
+import { useTranslations } from "next-intl";
 import { Separator } from "@/src/components/ui/separator";
 import SettingsCard from "@/src/components/admin/settings/SettingsCard";
 import SettingToggle from "@/src/components/admin/settings/SettingToggle";
@@ -21,6 +24,8 @@ const AppearanceTab = ({
   onSave,
   isSaving,
 }: AppearanceTabProps) => {
+  const t = useTranslations("adminSettings.appearance");
+
   const updateAppearance = (
     key: keyof typeof appearance,
     value: string | boolean
@@ -30,16 +35,16 @@ const AppearanceTab = ({
 
   return (
     <SettingsCard
-      title="Appearance Settings"
-      description="Customize the look and feel of the admin panel"
+      title={t("title")}
+      description={t("description")}
     >
       <SettingsSelect
         id="theme"
-        label="Theme"
+        label={t("theme")}
         value={appearance.theme}
         onValueChange={(value) => updateAppearance("theme", value)}
         options={THEME_OPTIONS}
-        description="Choose your preferred color scheme"
+        description={t("themeDescription")}
       />
 
       <Separator />
@@ -47,16 +52,16 @@ const AppearanceTab = ({
       <div className="space-y-4">
         <SettingToggle
           id="compact-mode"
-          label="Compact Mode"
-          description="Use a more compact layout with less spacing"
+          label={t("compactMode")}
+          description={t("compactModeDescription")}
           checked={appearance.compactMode}
           onCheckedChange={(checked) => updateAppearance("compactMode", checked)}
         />
 
         <SettingToggle
           id="show-animations"
-          label="Show Animations"
-          description="Enable smooth transitions and animations"
+          label={t("showAnimations")}
+          description={t("showAnimationsDescription")}
           checked={appearance.showAnimations}
           onCheckedChange={(checked) =>
             updateAppearance("showAnimations", checked)
@@ -64,7 +69,7 @@ const AppearanceTab = ({
         />
       </div>
 
-      <SaveButton onClick={onSave} isSaving={isSaving} label="Save Appearance" />
+      <SaveButton onClick={onSave} isSaving={isSaving} label={t("saveButton")} />
     </SettingsCard>
   );
 };

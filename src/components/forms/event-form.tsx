@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/src/components/ui/select";
+import { ImageUpload } from "@/src/components/ui/image-upload";
 import type { Event, EventStatus } from "@/src/actions/events.actions";
 
 const eventSchema = z.object({
@@ -308,27 +309,40 @@ export function EventForm({
                   name="featuredImageUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Featured Image URL</FormLabel>
+                      <FormLabel>Featured Image</FormLabel>
+                      <FormControl>
+                        <ImageUpload
+                          value={field.value}
+                          onChange={field.onChange}
+                          disabled={isSubmitting}
+                          folder="events"
+                          maxSize={5}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Upload an image or provide a URL below. Maximum size: 5MB.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="featuredImageUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Or enter image URL</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="https://example.com/image.jpg"
                           {...field}
+                          disabled={isSubmitting}
                         />
                       </FormControl>
-                      {event?.featured_image && (
-                        <div className="mt-2">
-                          <p className="text-sm text-gray-500">
-                            Current image:
-                          </p>
-                          <Image
-                            src={event.featured_image}
-                            alt="Current featured"
-                            width={400}
-                            height={128}
-                            className="w-full h-32 object-cover rounded mt-1"
-                          />
-                        </div>
-                      )}
+                      <FormDescription>
+                        Alternatively, paste an image URL directly.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -344,6 +358,7 @@ export function EventForm({
                         <Input
                           placeholder="Image description for accessibility"
                           {...field}
+                          disabled={isSubmitting}
                         />
                       </FormControl>
                       <FormDescription>

@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  getCampaignById,
+  updateCampaign,
+  deleteCampaign,
+} from "@/actions/campaigns.actions";
 
 // GET - Fetch single campaign
 export const GET = async (
@@ -8,23 +13,14 @@ export const GET = async (
   try {
     const { id } = await params;
 
-    // TODO: Replace with your actual database query
-    // Example: const campaign = await db.campaign.findUnique({ where: { id } });
-    
-    // Mock data for demonstration
-    const campaign = {
-      id,
-      title: "Sample Campaign",
-      description: "This is a sample campaign description.",
-      goal: 10000,
-      currentAmount: 5000,
-      status: "active",
-      startDate: "2025-01-01",
-      endDate: "2025-12-31",
-      imageUrl: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const { data: campaign, error } = await getCampaignById(id);
+
+    if (error) {
+      return NextResponse.json(
+        { error },
+        { status: 404 }
+      );
+    }
 
     if (!campaign) {
       return NextResponse.json(
@@ -52,33 +48,24 @@ export const PATCH = async (
     const { id } = await params;
     const body = await request.json();
 
-    const { title, description, goal, status, startDate, endDate, imageUrl } = body;
+    const { success, error } = await updateCampaign(id, body);
 
-    // Validate required fields
-    if (!title || !description || !goal || !status || !startDate || !endDate) {
+    if (!success) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: error || "Failed to update campaign" },
         { status: 400 }
       );
     }
 
-    // TODO: Replace with your actual database update
-    // Example: const updatedCampaign = await db.campaign.update({
-    //   where: { id },
-    //   data: { title, description, goal, status, startDate, endDate, imageUrl }
-    // });
+    // Fetch the updated campaign to return
+    const { data: updatedCampaign, error: fetchError } = await getCampaignById(id);
 
-    const updatedCampaign = {
-      id,
-      title,
-      description,
-      goal,
-      status,
-      startDate,
-      endDate,
-      imageUrl,
-      updatedAt: new Date().toISOString(),
-    };
+    if (fetchError) {
+      return NextResponse.json(
+        { error: fetchError },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ data: updatedCampaign });
   } catch (error) {
@@ -98,8 +85,14 @@ export const DELETE = async (
   try {
     const { id } = await params;
 
-    // TODO: Replace with your actual database delete
-    // Example: await db.campaign.delete({ where: { id } });
+    const { success, error } = await deleteCampaign(id);
+
+    if (!success) {
+      return NextResponse.json(
+        { error: error || "Failed to delete campaign" },
+        { status: 400 }
+      );
+    }
 
     return NextResponse.json({ message: "Campaign deleted successfully" });
   } catch (error) {

@@ -1,7 +1,6 @@
 import { SelectOption } from "@/src/types/Settings";
 import {
   User,
-  Bell,
   Shield,
   Palette,
   Globe
@@ -51,7 +50,7 @@ export const THEME_OPTIONS: SelectOption[] = [
 export const LANGUAGE_OPTIONS: SelectOption[] = [
   { value: "en", label: "English" },
   { value: "ar", label: "Arabic (العربية)" },
-  { value: "fin", label: "(Suomi) Finland" },
+  { value: "fi", label: "Suomi (Finnish)" },
 ];
 
 export const TIMEZONE_OPTIONS: SelectOption[] = [
@@ -60,7 +59,6 @@ export const TIMEZONE_OPTIONS: SelectOption[] = [
 
 export const SETTINGS_TABS = [
   { value: "profile", label: "Profile", icon: User },
-  { value: "notifications", label: "Notifications", icon: Bell },
   { value: "security", label: "Security", icon: Shield },
   { value: "appearance", label: "Appearance", icon: Palette },
   { value: "site", label: "Site", icon: Globe },

@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { Mail } from "lucide-react";
 import { Input } from "@/src/components/ui/input";
@@ -12,6 +14,8 @@ import {
   LANGUAGE_OPTIONS,
   TIMEZONE_OPTIONS,
 } from "@/src/lib/constants";
+import { useRouter, usePathname } from "@/src/i18n/navigation";
+import { useLocale, useTranslations } from "next-intl";
 
 interface SiteSettingsTabProps {
   siteSettings: typeof INITIAL_SITE_SETTINGS;
@@ -28,6 +32,12 @@ const SiteSettingsTab = ({
   onSave,
   isSaving,
 }: SiteSettingsTabProps) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const currentLocale = useLocale();
+  const t = useTranslations("adminSettings.site");
+  const [selectedLanguage, setSelectedLanguage] = React.useState(currentLocale);
+
   const updateSiteSettings = (
     key: keyof typeof siteSettings,
     value: string
@@ -35,23 +45,36 @@ const SiteSettingsTab = ({
     setSiteSettings((prev) => ({ ...prev, [key]: value }));
   };
 
+  const handleLanguageChange = (newLocale: string) => {
+    setSelectedLanguage(newLocale);
+    updateSiteSettings("language", newLocale);
+  };
+
+  const handleSave = () => {
+    onSave();
+    // Only navigate to new locale after save if language changed
+    if (selectedLanguage !== currentLocale) {
+      router.replace(pathname, { locale: selectedLanguage as "en" | "ar" | "fi" });
+    }
+  };
+
   return (
     <SettingsCard
-      title="Site Settings"
-      description="Configure general site settings and preferences"
+      title={t("title")}
+      description={t("description")}
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="site-name">Site Name</Label>
+          <Label htmlFor="site-name">{t("siteName")}</Label>
           <Input
             id="site-name"
             value={siteSettings.siteName}
             onChange={(e) => updateSiteSettings("siteName", e.target.value)}
-            placeholder="Enter site name"
+            placeholder={t("siteNamePlaceholder")}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="contact-email">Contact Email</Label>
+          <Label htmlFor="contact-email">{t("contactEmail")}</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -61,7 +84,7 @@ const SiteSettingsTab = ({
               onChange={(e) =>
                 updateSiteSettings("contactEmail", e.target.value)
               }
-              placeholder="Enter contact email"
+              placeholder={t("contactEmailPlaceholder")}
               className="pl-10"
             />
           </div>
@@ -69,18 +92,18 @@ const SiteSettingsTab = ({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="site-description">Site Description</Label>
+        <Label htmlFor="site-description">{t("siteDescription")}</Label>
         <Textarea
           id="site-description"
           value={siteSettings.siteDescription}
           onChange={(e) =>
             updateSiteSettings("siteDescription", e.target.value)
           }
-          placeholder="Describe your site"
+          placeholder={t("siteDescriptionPlaceholder")}
           rows={3}
         />
         <p className="text-xs text-muted-foreground">
-          Used for SEO and social media sharing
+          {t("siteDescriptionHint")}
         </p>
       </div>
 
@@ -89,15 +112,15 @@ const SiteSettingsTab = ({
       <div className="grid gap-4 sm:grid-cols-2">
         <SettingsSelect
           id="language"
-          label="Default Language"
-          value={siteSettings.language}
-          onValueChange={(value) => updateSiteSettings("language", value)}
+          label={t("defaultLanguage")}
+          value={selectedLanguage}
+          onValueChange={handleLanguageChange}
           options={LANGUAGE_OPTIONS}
           className="w-full"
         />
         <SettingsSelect
           id="timezone"
-          label="Timezone"
+          label={t("timezone")}
           value={siteSettings.timezone}
           onValueChange={(value) => updateSiteSettings("timezone", value)}
           options={TIMEZONE_OPTIONS}
@@ -106,9 +129,9 @@ const SiteSettingsTab = ({
       </div>
 
       <SaveButton
-        onClick={onSave}
+        onClick={handleSave}
         isSaving={isSaving}
-        label="Save Site Settings"
+        label={t("saveButton")}
       />
     </SettingsCard>
   );

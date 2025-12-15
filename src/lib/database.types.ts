@@ -32,6 +32,121 @@ export type Database = {
         }
         Relationships: []
       }
+      campaigns: {
+        Row: {
+          call_to_action: Json | null
+          campaign_type: Database["public"]["Enums"]["campaign_type"]
+          created_at: string | null
+          demands: Json | null
+          end_date: string | null
+          featured_image_url: string | null
+          how_to_participate: Json | null
+          icon_name: string | null
+          id: string
+          is_featured: boolean
+          resources: Json | null
+          slug: string
+          start_date: string | null
+          stats: Json | null
+          status: Database["public"]["Enums"]["campaign_status"]
+          sub_campaign_id: string | null
+          success_stories: Json | null
+          targets: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          call_to_action?: Json | null
+          campaign_type: Database["public"]["Enums"]["campaign_type"]
+          created_at?: string | null
+          demands?: Json | null
+          end_date?: string | null
+          featured_image_url?: string | null
+          how_to_participate?: Json | null
+          icon_name?: string | null
+          id?: string
+          is_featured?: boolean
+          resources?: Json | null
+          slug: string
+          start_date?: string | null
+          stats?: Json | null
+          status?: Database["public"]["Enums"]["campaign_status"]
+          sub_campaign_id?: string | null
+          success_stories?: Json | null
+          targets?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          call_to_action?: Json | null
+          campaign_type?: Database["public"]["Enums"]["campaign_type"]
+          created_at?: string | null
+          demands?: Json | null
+          end_date?: string | null
+          featured_image_url?: string | null
+          how_to_participate?: Json | null
+          icon_name?: string | null
+          id?: string
+          is_featured?: boolean
+          resources?: Json | null
+          slug?: string
+          start_date?: string | null
+          stats?: Json | null
+          status?: Database["public"]["Enums"]["campaign_status"]
+          sub_campaign_id?: string | null
+          success_stories?: Json | null
+          targets?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_sub_campaign_id_fkey"
+            columns: ["sub_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "sub_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns_translations: {
+        Row: {
+          campaign_id: string
+          created_at: string | null
+          description: string
+          id: string
+          language: string
+          short_description: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string | null
+          description: string
+          id?: string
+          language: string
+          short_description?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string | null
+          description?: string
+          id?: string
+          language?: string
+          short_description?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_translations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           alt_texts: string | null
@@ -155,6 +270,145 @@ export type Database = {
         }
         Relationships: []
       }
+      site_content: {
+        Row: {
+          content_type: string | null
+          created_at: string
+          id: string
+          key: string | null
+          locale: string | null
+          namespace: string | null
+          updated_at: string | null
+          updated_by: string | null
+          value: string | null
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string
+          id?: string
+          key?: string | null
+          locale?: string | null
+          namespace?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: string | null
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string
+          id?: string
+          key?: string | null
+          locale?: string | null
+          namespace?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+          value?: string | null
+        }
+        Relationships: []
+      }
+      sub_campaigns: {
+        Row: {
+          campaign_type: string | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          featured_image_url: string | null
+          icon_name: string | null
+          id: string
+          parent_campaign_id: string | null
+          short_description: string | null
+          slug: string | null
+          start_date: string | null
+          stats: Json | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          campaign_type?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          featured_image_url?: string | null
+          icon_name?: string | null
+          id?: string
+          parent_campaign_id?: string | null
+          short_description?: string | null
+          slug?: string | null
+          start_date?: string | null
+          stats?: Json | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Update: {
+          campaign_type?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          featured_image_url?: string | null
+          icon_name?: string | null
+          id?: string
+          parent_campaign_id?: string | null
+          short_description?: string | null
+          slug?: string | null
+          start_date?: string | null
+          stats?: Json | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sub_campaigns_parent_campaign_id_fkey"
+            columns: ["parent_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sub_campaigns_translations: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          language: string
+          short_description: string | null
+          sub_campaign_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          language: string
+          short_description?: string | null
+          sub_campaign_id: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          language?: string
+          short_description?: string | null
+          sub_campaign_id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sub_campaigns_translations_sub_campaign_id_fkey"
+            columns: ["sub_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "sub_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_role: {
         Row: {
           created_at: string
@@ -183,6 +437,7 @@ export type Database = {
           id: number
           name: string | null
           role_id: number | null
+          supabase_id: string | null
         }
         Insert: {
           created_at?: string
@@ -190,6 +445,7 @@ export type Database = {
           id?: number
           name?: string | null
           role_id?: number | null
+          supabase_id?: string | null
         }
         Update: {
           created_at?: string
@@ -197,6 +453,7 @@ export type Database = {
           id?: number
           name?: string | null
           role_id?: number | null
+          supabase_id?: string | null
         }
         Relationships: []
       }
@@ -208,7 +465,24 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      campaign_status:
+        | "active"
+        | "completed"
+        | "draft"
+        | "paused"
+        | "cancelled"
+        | "archived"
+      campaign_type:
+        | "awareness"
+        | "advocacy"
+        | "fundraising"
+        | "community_building"
+        | "education"
+        | "solidarity"
+        | "humanitarian"
+        | "political"
+        | "cultural"
+        | "environmental"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -335,6 +609,27 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      campaign_status: [
+        "active",
+        "completed",
+        "draft",
+        "paused",
+        "cancelled",
+        "archived",
+      ],
+      campaign_type: [
+        "awareness",
+        "advocacy",
+        "fundraising",
+        "community_building",
+        "education",
+        "solidarity",
+        "humanitarian",
+        "political",
+        "cultural",
+        "environmental",
+      ],
+    },
   },
 } as const

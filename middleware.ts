@@ -1,4 +1,4 @@
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/src/lib/supabase/middleware";
 import createIntlMiddleware from "next-intl/middleware";
 import { routing } from "@/src/i18n/routing";
@@ -6,6 +6,13 @@ import { routing } from "@/src/i18n/routing";
 const intlMiddleware = createIntlMiddleware(routing);
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Redirect root path to default locale
+  if (pathname === "/") {
+    return NextResponse.redirect(new URL("/fi", request.url));
+  }
+
   // First, handle i18n routing
   const intlResponse = intlMiddleware(request);
   
@@ -22,13 +29,23 @@ export async function middleware(request: NextRequest) {
     return sessionResponse;
   }
 
-  // Return the intl response with any cookies set by Supabase
-  // Copy cookies from session response to intl response
-  sessionResponse.cookies.getAll().forEach((cookie) => {
-    intlResponse.cookies.set(cookie.name, cookie.value, cookie);
+  // Merge cookies from session response into intl response
+  const response = NextResponse.next({
+    request,
+    headers: intlResponse.headers,
   });
 
-  return intlResponse;
+  // Copy intl response cookies
+  intlResponse.cookies.getAll().forEach((cookie) => {
+    response.cookies.set(cookie.name, cookie.value, cookie);
+  });
+
+  // Copy Supabase session cookies
+  sessionResponse.cookies.getAll().forEach((cookie) => {
+    response.cookies.set(cookie.name, cookie.value, cookie);
+  });
+
+  return response;
 }
 
 export const config = {
@@ -40,6 +57,8 @@ export const config = {
      * - favicon.ico (favicon file)
      * Feel free to modify this pattern to include more paths.
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/",
+    "/(fi|en|ar)/:path*",
+    "/((?!_next/static|_next/image|favicon.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

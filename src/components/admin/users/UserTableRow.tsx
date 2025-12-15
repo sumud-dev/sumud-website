@@ -28,7 +28,12 @@ const UserTableRow = ({
       <div className="flex items-center gap-3">
         <UserAvatar name={user.name} avatar={user.avatar} />
         <div className="flex flex-col">
-          <span className="font-medium">{user.name}</span>
+          <button
+            onClick={() => onViewProfile(user)}
+            className="font-medium text-left hover:text-[#781D32] hover:underline transition-colors"
+          >
+            {user.name}
+          </button>
           <span className="text-sm text-muted-foreground">{user.email}</span>
         </div>
       </div>

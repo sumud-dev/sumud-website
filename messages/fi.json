@@ -29,7 +29,16 @@
     "popular": "Suosittu",
     "recommendedForSupport": "Suositeltu jatkuvaan tukeen",
     "contactSupport": "Ota yhteyttä tukeen",
-    "siteName": "Sumud"
+    "siteName": "Sumud",
+    "upload": {
+      "dragDrop": "Vedä ja pudota kuva tähän tai napsauta valitaksesi",
+      "dropHere": "Pudota kuva tähän",
+      "uploading": "Ladataan...",
+      "fileInfo": "PNG, JPG, WEBP, GIF enintään {maxSize} Mt",
+      "fileTooLarge": "Tiedoston koko on oltava alle {maxSize} Mt",
+      "invalidFileType": "Vain kuvatiedostot ovat sallittuja",
+      "error": "Kuvan lataus epäonnistui. Yritä uudelleen."
+    }
   },
   "navigation": {
     "home": "Etusivu",
@@ -44,15 +53,22 @@
     "signup": "Rekisteröidy",
     "signout": "Kirjaudu ulos",
     "language": "Kieli",
-    "menu": "Valikko"
+    "menu": "Valikko",
+    "campaigns": "Kampanjat",
+    "becomeAMember": "Ryhdy jäseneksi",
+    "volunteer": "Vapaaehtoistyö",
+    "dashboard": "Hallintapaneeli"
   },
   "homepage": {
     "hero": {
       "title": "Seiso Palestiinan rinnalla",
       "subtitle": "Rakentamassa solidaarisuutta koulutuksen, edunvalvonnan ja toiminnan kautta",
       "description": "Liity yhteisöömme, joka pyrkii palestiinalaisten oikeuksien ja suomalais-palestiinalaisen ymmärryksen edistämiseen merkityksellisen sitoutumisen ja ruohonjuuritason aktivismin kautta.",
+      "tagline": "Sumud Suomen Palestiina-verkosto juhlistaa ja säilyttää palestiinalaista perintöä rakentaen samalla solidaarisuussiltoja. Koulutuksen, kulttuurivaihdon ja humanitaarisen toiminnan kautta kunnioitamme palestiinalaisten yhteisöjen sitkeyttä ja rikkaita perinteitä Suomessa ja muualla.",
       "joinButton": "Liity liikkeeseen",
-      "learnButton": "Lue lisää"
+      "learnButton": "Lue lisää",
+      "imageCaption": "Oliivipuun oksa - Palestiinalaisen perinnön ja sitkeyden symboli",
+      "scrollPrompt": "Vieritä tutkimaan"
     },
     "stats": {
       "members": "Aktiivista jäsentä",
@@ -81,10 +97,34 @@
       "subtitle": "Pysy ajan tasalla viimeisimmistä toimistamme ja kannanotoistamme",
       "viewAll": "Näytä kaikki artikkelit"
     },
+    "newsUpdates": {
+      "title": "Uusimmat uutiset ja päivitykset",
+      "winterReport": {
+        "title": "Talven solidaarisuusraportti",
+        "excerpt": "Lue kattavat päivityksemme humanitaarisesta avusta, solidaarisuuskampanjoista ja yhteisötoiminnasta ympäri Suomea tältä vuosineljännekseltä.",
+        "category": "Raportti",
+        "readTime": "5 min lukuaika"
+      },
+      "voiceMatters": {
+        "title": "Äänelläsi on merkitystä",
+        "excerpt": "Jokainen allekirjoitus Palestiinan puolesta edunvalvonnan, koulutuksen ja yhteisön mobilisoinnin kautta tekee eron.",
+        "category": "Toimintakutsu",
+        "readTime": "2 min lukuaika"
+      },
+      "readFullReport": "Lue koko raportti",
+      "getInvolved": "Osallistu",
+      "learnMore": "Lue lisää"
+    },
     "events": {
       "title": "Tulevat tapahtumat",
-      "subtitle": "Liity mukaan tuleviin aktiviteetteihin ja yhteisötapaamisiin",
-      "viewAll": "Näytä kaikki tapahtumat"
+      "subtitle": "Liity yhteisöömme merkityksellisten tapahtumien kautta, jotka edistävät tietoisuutta, solidaarisuutta ja kulttuurivaihtoa.",
+      "viewAll": "Näytä kaikki tapahtumat",
+      "registerNow": "Ilmoittaudu nyt"
+    },
+    "campaigns": {
+      "title": "Kampanjat",
+      "subtitle": "Liity boikotti-, edunvalvonta- ja yhteisötoimintakampanjoihimme. Anna äänesi kuulua ja luo todellista muutosta.",
+      "viewAll": "Näytä kaikki kampanjat"
     },
     "testimonials": {
       "title": "Yhteisön ääniä",
@@ -333,6 +373,117 @@
       }
     }
   },
+  "articlesPage": {
+    "hero": {
+      "title": "Tarinat ja artikkelit",
+      "subtitle": "Ääniä palestiinalaisten oikeuksien puolesta",
+      "description": "Tutustu vaikuttaviin tarinoihin, näkemyksiin ja näkökulmiin oikeudenmukaisuudesta, arvokkuudesta ja ihmisoikeuksista"
+    },
+    "search": {
+      "placeholder": "Hae artikkeleita...",
+      "noResults": {
+        "title": "Artikkeleita ei löytynyt",
+        "message": "Emme löytäneet kriteerejäsi vastaavia artikkeleita.",
+        "clearButton": "Tyhjennä suodattimet"
+      }
+    },
+    "filters": {
+      "selectCategory": "Valitse kategoria"
+    },
+    "categories": {
+      "all": "Kaikki artikkelit",
+      "news": "Tuoreet uutiset",
+      "analysis": "Analyysi",
+      "culture": "Kulttuuri",
+      "history": "Historia",
+      "activism": "Aktivismi",
+      "personal": "Tarinat"
+    },
+    "featured": {
+      "title": "Suositeltu artikkeli",
+      "subtitle": "Viikon toimittajan valinta"
+    },
+    "latest": {
+      "title": "Uusimmat artikkelit",
+      "subtitle": "Tutustu kokoelmaamme syväluotaavia artikkeleita oikeudenmukaisuudesta, ihmisoikeuksista ja palestiinalaisesta solidaarisuudesta."
+    },
+    "newsletter": {
+      "title": "Pysy ajan tasalla tarinoistamme",
+      "subtitle": "Saat uusimmat artikkelit oikeudenmukaisuudesta, solidaarisuudesta ja ihmisoikeuksista suoraan sähköpostiisi.",
+      "placeholder": "Syötä sähköpostiosoitteesi",
+      "subscribe": "Tilaa",
+      "joinText": "Liity yli 15 000 lukijan joukkoon. Voit peruuttaa tilauksen milloin tahansa."
+    },
+    "loadMore": {
+      "showing": "Näytetään {count} artikkelia",
+      "subtitle": "Löydä lisää tarinoita oikeudenmukaisuudesta, solidaarisuudesta ja ihmisoikeuksista.",
+      "button": "Lataa lisää artikkeleita",
+      "loading": "Ladataan lisää tarinoita...",
+      "newArticles": "Uusia artikkeleita lisätään säännöllisesti"
+    },
+    "error": {
+      "title": "Artikkelien lataaminen epäonnistui",
+      "message": "Meillä on teknisiä ongelmia. Yritä myöhemmin uudelleen.",
+      "tryAgain": "Yritä uudelleen"
+    }
+  },
+  "campaignsPage": {
+    "hero": {
+      "title": "Aktiiviset kampanjat",
+      "subtitle": "Toimi palestiinalaisten oikeuksien puolesta",
+      "description": "Liity edunvalvontakampanjoihin, jotka luovat todellista muutosta. Jokainen teko vie meitä lähemmäs oikeudenmukaisuutta ja vapautta"
+    },
+    "search": {
+      "placeholder": "Hae kampanjoita...",
+      "noResults": {
+        "title": "Kampanjoita ei löytynyt",
+        "message": "Kokeile muuttaa haku- tai suodatusehtoja",
+        "clearButton": "Tyhjennä suodattimet"
+      }
+    },
+    "filters": {
+      "allCampaigns": "Kaikki kampanjat",
+      "sortBy": "Järjestä"
+    },
+    "sort": {
+      "featured": "Suositellut",
+      "recent": "Viimeksi lisätyt"
+    },
+    "types": {
+      "awareness": "Tietoisuus",
+      "advocacy": "Edunvalvonta",
+      "fundraising": "Varainkeruu",
+      "community_building": "Yhteisön rakentaminen",
+      "education": "Koulutus",
+      "solidarity": "Solidaarisuus",
+      "humanitarian": "Humanitaarinen",
+      "political": "Poliittinen",
+      "cultural": "Kulttuurinen",
+      "environmental": "Ympäristö"
+    },
+    "loading": {
+      "title": "Ladataan kampanjoita...",
+      "message": "Odota hetki, haemme uusimmat kampanjat"
+    },
+    "error": {
+      "title": "Virhe kampanjoiden lataamisessa",
+      "defaultMessage": "Jotain meni pieleen. Yritä myöhemmin uudelleen.",
+      "tryAgain": "Yritä uudelleen"
+    },
+    "card": {
+      "campaignType": "Kampanjan tyyppi",
+      "priority": "Prioriteetti",
+      "featured": "Suositeltu",
+      "active": "Aktiivinen",
+      "learnMore": "Lue lisää"
+    },
+    "cta": {
+      "title": "Valmis liittymään kampanjaan?",
+      "description": "Toimi ja ole osa jotain merkityksellistä. Jokainen panos vahvistaa yhteistä ääntämme palestiinalaisten oikeuksien ja oikeudenmukaisuuden puolesta.",
+      "exploreButton": "Tutustu kampanjoihin",
+      "learnMoreButton": "Lue lisää"
+    }
+  },
   "errors": {
     "pageNotFound": "Sivua ei löydy",
     "serverError": "Palvelinvirhe",
@@ -341,5 +492,176 @@
     "unauthorized": "Luvaton pääsy",
     "tryAgain": "Yritä uudelleen",
     "goHome": "Mene etusivulle"
+  },
+  "about": {
+    "hero": {
+      "title": "Tietoa Sumudista",
+      "subtitle": "Suomen Palestiina-verkosto",
+      "description": "Olemme yhteisövetoinen järjestö, joka edistää solidaarisuutta, koulutusta ja palestiinalaisten oikeuksien edunvalvontaa Suomessa."
+    },
+    "mission": {
+      "title": "Missiomme",
+      "description": "Sumud (صمود) tarkoittaa arabiaksi \"sinnikkäästi kestämistä\". Toteutamme tätä henkeä edistämällä ymmärrystä, tarjoamalla koulutusta ja ajamalla palestiinalaisten oikeuksia suomalaisessa yhteiskunnassa. Kulttuurivaihdon, yhteisön rakentamisen ja rauhanomaisen aktivismin kautta työskentelemme oikeudenmukaisemman ja valistuneemman maailman puolesta."
+    },
+    "whatWeDo": {
+      "title": "Mitä teemme",
+      "subtitle": "Työmme kattaa koulutuksen, edunvalvonnan, kulttuurivaihdon ja yhteisötuen palestiinalaisten oikeuksien ja solidaarisuuden edistämiseksi.",
+      "education": {
+        "title": "Koulutus ja tietoisuus",
+        "description": "Tarjoamme tarkkaa tietoa Palestiinan historiasta, kulttuurista ja ajankohtaisista tapahtumista työpajojen, seminaarien ja julkisten tapahtumien kautta."
+      },
+      "advocacy": {
+        "title": "Edunvalvonta ja kampanjat",
+        "description": "Tuemme BDS-aloitteita, apartheidvapaita vyöhykkeitä sekä kulttuuri- ja akateemisia boikotteja palestiinalaisten oikeuksien edistämiseksi."
+      },
+      "cultural": {
+        "title": "Kulttuurivaihto",
+        "description": "Juhlistamme palestiinalaista perintöä ja edistämme yhteyksiä suomalaisten ja palestiinalaisten yhteisöjen välillä."
+      },
+      "community": {
+        "title": "Yhteisötuki",
+        "description": "Järjestämme varainkeruutapahtumia ja humanitaarisia aloitteita palestiinalaisten yhteisöjen tukemiseksi."
+      }
+    },
+    "values": {
+      "title": "Arvomme",
+      "subtitle": "Nämä perusperiaatteet ohjaavat kaikkea työtämme palestiinalaisen solidaarisuuden puolesta.",
+      "solidarity": {
+        "title": "Solidaarisuus",
+        "description": "Rakennamme ymmärryksen ja tuen siltoja suomalaisten ja palestiinalaisten yhteisöjen välille."
+      },
+      "justice": {
+        "title": "Oikeudenmukaisuus",
+        "description": "Ajamme ihmisoikeuksia ja ihmisarvoa kaikille palestiinalaisille."
+      },
+      "community": {
+        "title": "Yhteisö",
+        "description": "Luomme osallistavia tiloja vuoropuhelulle, koulutukselle ja yhteiselle toiminnalle."
+      }
+    },
+    "engage": {
+      "title": "Tapoja osallistua",
+      "subtitle": "On monia tapoja tukea missiota ja tulla osaksi Sumud-yhteisöä.",
+      "petitions": {
+        "title": "Vetoomukset ja aloitteet",
+        "description": "Allekirjoita ja tue käynnissä olevia vetoomuksiamme oikeudenmukaisuuden ja palestiinalaisten oikeuksien puolesta.",
+        "action": "Selaa vetoomuksia"
+      },
+      "membership": {
+        "title": "Jäsenyysohjelma",
+        "description": "Liity yhteisöömme jäseneksi ja saa eksklusiivinen pääsy tapahtumiin ja päivityksiin.",
+        "action": "Ryhdy jäseneksi"
+      },
+      "donate": {
+        "title": "Tee lahjoitus",
+        "description": "Tue missiota lahjoituksella ohjelmiemme ja kampanjoidemme rahoittamiseksi.",
+        "action": "Lahjoita nyt"
+      },
+      "volunteer": {
+        "title": "Vapaaehtoistyö",
+        "description": "Osallistu vapaaehtoisena antamalla aikaa ja taitoja aloitteidemme tukemiseksi.",
+        "action": "Lue lisää"
+      }
+    },
+    "cta": {
+      "title": "Valmis liittymään liikkeeseemme?",
+      "description": "Tule osaksi yhteisöä, joka on omistautunut oikeudenmukaisuudelle, koulutukselle ja solidaarisuudelle. Äänelläsi ja osallistumisellasi on todellinen merkitys.",
+      "memberButton": "Ryhdy jäseneksi",
+      "learnButton": "Lue lisää"
+    }
+  },
+  "adminSettings": {
+    "pageTitle": "Asetukset",
+    "pageDescription": "Hallitse tilisi asetuksia ja mieltymyksiä",
+    "tabs": {
+      "profile": "Profiili",
+      "notifications": "Ilmoitukset",
+      "security": "Turvallisuus",
+      "appearance": "Ulkoasu",
+      "site": "Sivusto"
+    },
+    "profile": {
+      "title": "Profiilitiedot",
+      "description": "Päivitä henkilötietosi ja profiilikuvasi",
+      "name": "Koko nimi",
+      "namePlaceholder": "Syötä nimesi",
+      "email": "Sähköpostiosoite",
+      "emailPlaceholder": "Syötä sähköpostiosoitteesi",
+      "role": "Rooli",
+      "roleHint": "Ota yhteyttä pääylläpitäjään vaihtaaksesi roolisi",
+      "bio": "Kuvaus",
+      "bioPlaceholder": "Kerro itsestäsi",
+      "avatar": "Profiilikuva",
+      "changePhoto": "Vaihda kuva",
+      "photoHint": "JPG, PNG tai GIF. Enintään 2 Mt.",
+      "saveButton": "Tallenna profiili",
+      "successMessage": "Profiili päivitetty onnistuneesti"
+    },
+    "security": {
+      "title": "Turvallisuusasetukset",
+      "description": "Hallitse turvallisuusmieltymyksiäsi",
+      "passwordTitle": "Salasana",
+      "passwordDescription": "Vaihda salasanasi pitääksesi tilisi turvassa",
+      "twoFactorTitle": "Kaksivaiheinen tunnistautuminen",
+      "twoFactorDescription": "Lisää ylimääräinen suojakerros tilillesi",
+      "twoFactorEnable": "Ota kaksivaiheinen tunnistautuminen käyttöön",
+      "twoFactorEnableDescription": "Käytä todennussovellusta lisäturvallisuutta varten",
+      "sessionTitle": "Istuntoasetukset",
+      "sessionDescription": "Hallitse istuntoasi ja kirjautumisasetuksiasi",
+      "sessionTimeout": "Istunnon aikakatkaisu (minuuttia)",
+      "activeSessions": "Aktiiviset istunnot",
+      "activeSessionsInfo": "Olet tällä hetkellä kirjautuneena yhdellä laitteella",
+      "signOutOther": "Kirjaudu ulos kaikista muista istunnoista",
+      "currentPassword": "Nykyinen salasana",
+      "currentPasswordPlaceholder": "Syötä nykyinen salasana",
+      "newPassword": "Uusi salasana",
+      "newPasswordPlaceholder": "Syötä uusi salasana",
+      "confirmPassword": "Vahvista salasana",
+      "confirmPasswordPlaceholder": "Vahvista uusi salasana",
+      "updatePassword": "Päivitä salasana",
+      "saveButton": "Tallenna asetukset",
+      "successMessage": "Turvallisuusasetukset päivitetty"
+    },
+    "appearance": {
+      "title": "Ulkoasuasetukset",
+      "description": "Mukauta hallintapaneelin ulkoasua",
+      "theme": "Teema",
+      "themeDescription": "Valitse haluamasi värimaailma",
+      "compactMode": "Kompakti tila",
+      "compactModeDescription": "Käytä tiiviimpää asettelua vähemmällä välillä",
+      "showAnimations": "Näytä animaatiot",
+      "showAnimationsDescription": "Ota käyttöön sujuvat siirtymät ja animaatiot",
+      "saveButton": "Tallenna ulkoasu",
+      "successMessage": "Ulkoasuasetukset tallennettu"
+    },
+    "site": {
+      "title": "Sivustoasetukset",
+      "description": "Määritä yleiset sivustoasetukset ja mieltymykset",
+      "siteName": "Sivuston nimi",
+      "siteNamePlaceholder": "Syötä sivuston nimi",
+      "contactEmail": "Yhteyssähköposti",
+      "contactEmailPlaceholder": "Syötä yhteyssähköposti",
+      "siteDescription": "Sivuston kuvaus",
+      "siteDescriptionPlaceholder": "Kuvaile sivustoasi",
+      "siteDescriptionHint": "Käytetään hakukoneoptimointiin ja sosiaalisen median jakamiseen",
+      "defaultLanguage": "Oletuskieli",
+      "timezone": "Aikavyöhyke",
+      "saveButton": "Tallenna sivustoasetukset",
+      "successMessage": "Sivustoasetukset päivitetty"
+    },
+    "sidebar": {
+      "adminTitle": "Sumud Hallinta",
+      "dashboard": "Hallintapaneeli",
+      "articles": "Artikkelit",
+      "campaigns": "Kampanjat",
+      "events": "Tapahtumat",
+      "categories": "Kategoriat",
+      "users": "Käyttäjät",
+      "content": "Sisältö",
+      "settings": "Asetukset",
+      "logout": "Kirjaudu ulos",
+      "loggingOut": "Kirjaudutaan ulos...",
+      "toggleSidebar": "Vaihda sivupalkkia"
+    }
   }
 }
