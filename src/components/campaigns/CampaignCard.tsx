@@ -18,7 +18,7 @@ import { Card, CardContent } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Progress } from "@/src/components/ui/progress";
-import type { Campaign } from "@/src/lib/types";
+import type { Campaign } from "@/src/types/Campaigns";
 
 interface CampaignCardProps {
   campaign: Campaign;
@@ -54,23 +54,23 @@ export default function CampaignCard({
 
   const calculateProgress = () => {
     if (
-      campaign.campaign_type === "fundraising" &&
-      campaign.target_metrics &&
-      campaign.progress_indicators
+      campaign.campaignType === "fundraising" &&
+      campaign.stats &&
+      campaign.stats
     ) {
-      const target = (campaign.target_metrics as any)?.fundingGoal || 0;
-      const current = (campaign.progress_indicators as any)?.fundsRaised || 0;
+      const target = (campaign.stats as any)?.fundingGoal || 0;
+      const current = (campaign.stats as any)?.fundsRaised || 0;
       return target > 0 ? Math.min((current / target) * 100, 100) : 0;
     }
 
-    if (campaign.target_metrics && campaign.progress_indicators) {
+    if (campaign.stats && campaign.stats) {
       const target =
-        (campaign.target_metrics as any)?.participantTarget ||
-        (campaign.target_metrics as any)?.signatureTarget ||
+        (campaign.stats as any)?.participantTarget ||
+        (campaign.stats as any)?.signatureTarget ||
         0;
       const current =
-        (campaign.progress_indicators as any)?.participants ||
-        (campaign.progress_indicators as any)?.signatures ||
+        (campaign.stats as any)?.participants ||
+        (campaign.stats as any)?.signatures ||
         0;
       return target > 0 ? Math.min((current / target) * 100, 100) : 0;
     }
@@ -79,9 +79,9 @@ export default function CampaignCard({
   };
 
   const getProgressStats = () => {
-    if (campaign.campaign_type === "fundraising") {
-      const current = (campaign.progress_indicators as any)?.fundsRaised || 0;
-      const target = (campaign.target_metrics as any)?.fundingGoal || 0;
+    if (campaign.campaignType === "fundraising") {
+      const current = (campaign.stats as any)?.fundsRaised || 0;
+      const target = (campaign.stats as any)?.fundingGoal || 0;
       return {
         current: `$${current.toLocaleString()}`,
         target: target > 0 ? `$${target.toLocaleString()}` : null,
@@ -91,12 +91,12 @@ export default function CampaignCard({
     }
 
     const participants =
-      (campaign.progress_indicators as any)?.participants || 0;
-    const signatures = (campaign.progress_indicators as any)?.signatures || 0;
+      (campaign.stats as any)?.participants || 0;
+    const signatures = (campaign.stats as any)?.signatures || 0;
     const current = participants || signatures;
     const target =
-      (campaign.target_metrics as any)?.participantTarget ||
-      (campaign.target_metrics as any)?.signatureTarget ||
+      (campaign.stats as any)?.participantTarget ||
+      (campaign.stats as any)?.signatureTarget ||
       0;
 
     return {
@@ -108,15 +108,15 @@ export default function CampaignCard({
   };
 
   const getDaysLeft = () => {
-    if (!campaign.end_date) return null;
+    if (!campaign.endDate) return null;
     const now = new Date();
-    const end = new Date(campaign.end_date);
+    const end = new Date(campaign.endDate);
     const diffTime = end.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays > 0 ? diffDays : 0;
   };
 
-  const typeColor = getCampaignTypeColor(campaign.campaign_type);
+  const typeColor = getCampaignTypeColor(campaign.campaignType);
   const progress = calculateProgress();
   const stats = getProgressStats();
   const daysLeft = getDaysLeft();
@@ -137,9 +137,9 @@ export default function CampaignCard({
         <div
           className={`relative ${isFeatured ? "h-64" : "h-48"} overflow-hidden`}
         >
-          {campaign.featured_image_url ? (
+          {campaign.featuredImageUrl ? (
             <Image
-              src={campaign.featured_image_url}
+              src={campaign.featuredImageUrl}
               alt={campaign.title}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -155,7 +155,7 @@ export default function CampaignCard({
           )}
 
           {/* Overlay with gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent" />
 
           {/* Campaign Type Badge */}
           <div className="absolute top-3 left-3">
@@ -163,7 +163,7 @@ export default function CampaignCard({
               className="text-white border-white/20"
               style={{ backgroundColor: typeColor }}
             >
-              {formatCampaignType(campaign.campaign_type)}
+              {formatCampaignType(campaign.campaignType)}
             </Badge>
           </div>
 
@@ -253,7 +253,7 @@ export default function CampaignCard({
                   <span>
                     Started{" "}
                     {new Date(
-                      campaign.start_date || campaign.created_at,
+                      campaign.startDate || campaign.createdAt,
                     ).toLocaleDateString()}
                   </span>
                 </div>
@@ -296,7 +296,7 @@ export default function CampaignCard({
           >
             <Link href={`/campaigns/${campaign.slug}`}>
               <span>
-                {campaign.campaign_type === "fundraising" ? (
+                {campaign.campaignType === "fundraising" ? (
                   <>
                     <Heart className="mr-2 h-4 w-4" />
                     Support Campaign

@@ -48,7 +48,7 @@ export default function TrendingBanner({
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -50 }}
-        className={`bg-gradient-to-r from-[#781D32]/10 via-[#55613C]/10 to-[#3E442B]/10 border border-[#781D32]/20 rounded-lg p-4 ${className}`}
+        className={`bg-linear-to-r from-[#781D32]/10 via-[#55613C]/10 to-[#3E442B]/10 border border-[#781D32]/20 rounded-lg p-4 ${className}`}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -59,7 +59,7 @@ export default function TrendingBanner({
               >
                 <TrendingUp className="h-5 w-5 text-[#781D32]" />
               </motion.div>
-              <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-white font-medium px-2 py-1 text-xs">
+              <Badge className="bg-linear-to-r from-orange-500 to-red-500 text-white font-medium px-2 py-1 text-xs">
                 Trending Now
               </Badge>
             </div>

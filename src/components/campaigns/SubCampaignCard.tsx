@@ -16,7 +16,24 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
-import type { Campaign } from "@prisma/client";
+
+// Local campaign interface for this component
+interface CampaignBase {
+  id: string;
+  slug: string;
+  title: string;
+  description?: string | null;
+  campaignType?: string | null;
+  status?: string | null;
+  sectionType?: string | null;
+  iconName?: string | null;
+  featuredImageUrl?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  _count?: { updates: number; translations: number; subCampaigns: number };
+}
+
+type Campaign = CampaignBase;
 
 // Icon mapping based on sectionType or iconName
 const SECTION_ICONS: Record<string, LucideIcon> = {
@@ -69,7 +86,7 @@ export function SubCampaignCard({
 }: SubCampaignCardProps) {
   const IconComponent =
     SECTION_ICONS[campaign.sectionType ?? ""] ||
-    SECTION_ICONS[campaign.campaignType] ||
+    SECTION_ICONS[campaign.campaignType ?? ""] ||
     Target;
 
   const colorClass =
@@ -84,11 +101,11 @@ export function SubCampaignCard({
         className="relative pl-8 pb-8 last:pb-0"
       >
         {/* Timeline line */}
-        <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-gradient-to-b from-[#781D32] to-[#55613C]" />
+        <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-linear-to-b from-[#781D32] to-[#55613C]" />
 
         {/* Timeline dot */}
         <div
-          className={`absolute left-0 top-0 w-6 h-6 rounded-full bg-gradient-to-br ${colorClass} flex items-center justify-center ring-4 ring-white shadow-md`}
+          className={`absolute left-0 top-0 w-6 h-6 rounded-full bg-linear-to-br ${colorClass} flex items-center justify-center ring-4 ring-white shadow-md`}
         >
           <IconComponent className="w-3 h-3 text-white" />
         </div>
@@ -137,7 +154,7 @@ export function SubCampaignCard({
         onClick={onClick}
       >
         <div
-          className={`w-10 h-10 rounded-lg bg-gradient-to-br ${colorClass} flex items-center justify-center flex-shrink-0`}
+          className={`w-10 h-10 rounded-lg bg-linear-to-br ${colorClass} flex items-center justify-center shrink-0`}
         >
           <IconComponent className="w-5 h-5 text-white" />
         </div>
@@ -149,7 +166,7 @@ export function SubCampaignCard({
             {campaign.description}
           </p>
         </div>
-        <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#781D32] group-hover:translate-x-1 transition-all flex-shrink-0" />
+        <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#781D32] group-hover:translate-x-1 transition-all shrink-0" />
       </motion.div>
     );
   }
@@ -167,7 +184,7 @@ export function SubCampaignCard({
       >
         {/* Colored header */}
         <div
-          className={`h-24 bg-gradient-to-r ${colorClass} relative overflow-hidden`}
+          className={`h-24 bg-linear-to-r ${colorClass} relative overflow-hidden`}
         >
           {/* Pattern overlay */}
           <div className="absolute inset-0 opacity-10">

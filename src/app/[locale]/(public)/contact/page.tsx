@@ -121,7 +121,7 @@ export default function ContactPage() {
     <>
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-[#F4F3F0] to-white py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="text-center max-w-3xl mx-auto mb-16"
             variants={fadeInUp}
@@ -175,7 +175,7 @@ export default function ContactPage() {
 
       {/* Contact Form Section */}
       <section className="py-16 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             variants={fadeInUp}
             initial="initial"
@@ -337,7 +337,7 @@ export default function ContactPage() {
 
       {/* Additional Info Section */}
       <section className="py-16 bg-gray-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-8">
             {/* Office Hours */}
             <motion.div

@@ -15,7 +15,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Progress } from "@/src/components/ui/progress";
 import { Badge } from "@/src/components/ui/badge";
-import { type Campaign } from "@/src/lib/types";
+import { type Campaign } from "@/src/types/Campaigns";
 
 interface CampaignProgressProps {
   campaign: Campaign;
@@ -33,11 +33,11 @@ interface ProgressMetric {
 
 export function CampaignProgress({ campaign }: CampaignProgressProps) {
   const progressData =
-    (campaign.progress_indicators as Record<string, any>) || {};
-  const targetData = (campaign.target_metrics as Record<string, any>) || {};
+    (campaign.stats as Record<string, any>) || {};
+  const targetData = (campaign.stats as Record<string, any>) || {};
 
-  const startDate = campaign.start_date ? new Date(campaign.start_date) : null;
-  const endDate = campaign.end_date ? new Date(campaign.end_date) : null;
+  const startDate = campaign.startDate ? new Date(campaign.startDate) : null;
+  const endDate = campaign.endDate ? new Date(campaign.endDate) : null;
   const now = new Date();
 
   // Calculate time progress

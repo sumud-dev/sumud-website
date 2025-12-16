@@ -21,9 +21,25 @@ import {
 } from "@/src/components/ui/accordion";
 import { SubCampaignCard } from "./SubCampaignCard";
 import { CampaignScrollspyNav } from "./SubCampaignSection";
-import type { Campaign } from "@prisma/client";
 
-interface CampaignWithSubCampaigns extends Campaign {
+// Local campaign interface for this component
+interface CampaignBase {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  campaignType: string;
+  status: string;
+  bannerImageUrl?: string | null;
+  featuredImageUrl?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  goalsObjectives?: string | null;
+  detailedContent?: string | null;
+  sectionType?: string | null;
+}
+
+interface CampaignWithSubCampaigns extends CampaignBase {
   category?: {
     id: string;
     name: string;
@@ -31,7 +47,7 @@ interface CampaignWithSubCampaigns extends Campaign {
     type: string;
   } | null;
   subCampaigns?: Array<
-    Campaign & {
+    CampaignBase & {
       _count?: { updates: number; translations: number; subCampaigns: number };
     }
   >;
@@ -154,10 +170,10 @@ export function CampaignOnePageLayout({
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url(${campaign.bannerImageUrl})` }}
           >
-            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
+            <div className="absolute inset-0 bg-linear-to-b from-black/60 via-black/40 to-black/70" />
           </div>
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-[#781D32] via-[#5a1626] to-[#3e442b]">
+          <div className="absolute inset-0 bg-linear-to-br from-[#781D32] via-[#5a1626] to-[#3e442b]">
             {/* Pattern overlay */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-10 right-10 w-64 h-64 border-8 border-white rounded-full" />
@@ -172,7 +188,7 @@ export function CampaignOnePageLayout({
           initial="hidden"
           animate="visible"
           variants={staggerContainer}
-          className="relative z-10 max-w-4xl mx-auto text-center px-4 py-20"
+          className="relative z-10 max-w-7xl mx-auto text-center px-4 py-20"
         >
           {/* Badge */}
           <motion.div variants={fadeInUp} className="mb-6">
@@ -263,7 +279,7 @@ export function CampaignOnePageLayout({
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
             variants={staggerContainer}
-            className="max-w-4xl mx-auto px-4"
+            className="max-w-7xl mx-auto px-4"
           >
             <motion.div variants={fadeInUp} className="text-center mb-12">
               <Badge className="bg-[#55613C]/10 text-[#55613C] mb-4">
@@ -309,7 +325,7 @@ export function CampaignOnePageLayout({
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
             variants={staggerContainer}
-            className="max-w-6xl mx-auto px-4"
+            className="max-w-7xl mx-auto px-4"
           >
             <motion.div variants={fadeInUp} className="text-center mb-12">
               <Badge className="bg-amber-100 text-amber-800 mb-4">
@@ -348,7 +364,7 @@ export function CampaignOnePageLayout({
             whileInView="visible"
             viewport={{ once: true, margin: "-100px" }}
             variants={staggerContainer}
-            className="max-w-6xl mx-auto px-4"
+            className="max-w-7xl mx-auto px-4"
           >
             <motion.div variants={fadeInUp} className="text-center mb-12">
               <Badge className="bg-blue-100 text-blue-800 mb-4">Our Plan</Badge>
@@ -400,14 +416,14 @@ export function CampaignOnePageLayout({
       {/* Call to Action Section */}
       <section
         ref={(el) => registerSection("cta", el)}
-        className="py-20 bg-gradient-to-r from-[#781D32] to-[#55613C] text-white"
+        className="py-20 bg-linear-to-r from-[#781D32] to-[#55613C] text-white"
       >
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
           variants={staggerContainer}
-          className="max-w-4xl mx-auto px-4 text-center"
+          className="max-w-7xl mx-auto px-4 text-center"
         >
           <motion.div variants={fadeInUp}>
             <Target className="w-16 h-16 mx-auto mb-6 opacity-80" />
@@ -455,7 +471,7 @@ export function CampaignOnePageLayout({
       {/* Detailed Content Section (if available) */}
       {campaign.detailedContent && (
         <section className="py-20 bg-white">
-          <div className="max-w-4xl mx-auto px-4">
+          <div className="max-w-7xl mx-auto px-4">
             <div
               className="prose prose-lg max-w-none prose-headings:text-[#3e442b] prose-a:text-[#781D32]"
               dangerouslySetInnerHTML={{ __html: campaign.detailedContent }}

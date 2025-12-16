@@ -15,7 +15,7 @@ export interface EventsHeroProps {
  */
 export function EventsHero({ totalEvents, isLoading }: EventsHeroProps) {
   return (
-    <section className="relative overflow-hidden py-20 bg-gradient-to-br from-[#1A1D14] via-[#2D3320] to-[#3E442B]">
+    <section className="relative overflow-hidden py-20 bg-linear-to-br from-[#1A1D14] via-[#2D3320] to-[#3E442B]">
       <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(120,29,50,0.1)_0%,transparent_50%,rgba(85,97,60,0.1)_100%)]" />
       <div className="absolute inset-0 glass-strong gpu-accelerated opacity-30" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">

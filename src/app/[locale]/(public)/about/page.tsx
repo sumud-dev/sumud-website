@@ -151,7 +151,7 @@ export default function AboutPage() {
             />
           </div>
 
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <motion.div
               className="text-center space-y-8"
               variants={fadeInUp}
@@ -192,7 +192,7 @@ export default function AboutPage() {
           initial="initial"
           animate="animate"
         >
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div
               className="backdrop-blur-xl rounded-3xl p-12"
               style={{
@@ -222,7 +222,7 @@ export default function AboutPage() {
           whileInView="animate"
           viewport={{ once: true }}
         >
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               className="text-center mb-12"
               variants={fadeInUp}
@@ -275,7 +275,7 @@ export default function AboutPage() {
           whileInView="animate"
           viewport={{ once: true }}
         >
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               className="text-center mb-12"
               variants={fadeInUp}
@@ -335,7 +335,7 @@ export default function AboutPage() {
           whileInView="animate"
           viewport={{ once: true }}
         >
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
               className="text-center mb-12"
               variants={fadeInUp}
@@ -406,7 +406,7 @@ export default function AboutPage() {
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#6B8E23]/10 rounded-full blur-3xl" />
           </div>
 
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div
               className="backdrop-blur-xl rounded-3xl p-12 text-center transition-all duration-300 hover:scale-105"
               style={{

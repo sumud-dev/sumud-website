@@ -357,7 +357,7 @@ export default function VolunteerPage() {
         <div className="absolute inset-0 glass-burgundy gpu-accelerated" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
-            className="text-center max-w-4xl mx-auto"
+            className="text-center max-w-7xl mx-auto"
             variants={fadeInUp}
             initial="initial"
             animate="animate"
@@ -698,7 +698,7 @@ export default function VolunteerPage() {
       <section className="relative py-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#F4F3F0] via-white to-[#F4F3F0]" />
         <div className="absolute inset-0 glass-subtle gpu-accelerated" />
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
             className="text-center mb-16"
             variants={fadeInUp}
@@ -800,7 +800,7 @@ export default function VolunteerPage() {
           backgroundSize: '30px 30px'
         }} />
 
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
             className="text-center"
             variants={fadeInUp}

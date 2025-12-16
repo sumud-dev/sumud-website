@@ -13,7 +13,7 @@ export default function MembershipPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4] py-12">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <header className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-[#3E442B] mb-2">Become a Member</h1>
           <p className="text-lg text-gray-600">

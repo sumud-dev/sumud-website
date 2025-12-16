@@ -4,7 +4,7 @@ import type {
   Campaign,
   CampaignType,
   CampaignStatus,
-} from "@/src/types/campaign.types";
+} from "@/src/types/Campaigns";
 
 export async function GET(request: Request) {
   try {
@@ -77,15 +77,25 @@ export async function GET(request: Request) {
         id: item.id,
         title: translation?.title || "",
         description: translation?.description || "",
+        shortDescription: translation?.short_description || null,
         slug: item.slug,
-        campaign_type: item.campaign_type as CampaignType,
+        campaignType: item.campaign_type as CampaignType,
         status: item.status as CampaignStatus,
-        icon_name: item.icon_name,
-        featured_image_url: item.featured_image_url,
-        is_featured: item.is_featured,
-        language: translation?.language || language,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
+        iconName: item.icon_name,
+        featuredImageUrl: item.featured_image_url,
+        isFeatured: item.is_featured,
+        startDate: item.start_date,
+        endDate: item.end_date,
+        stats: item.stats,
+        targets: item.targets,
+        demands: item.demands,
+        howToParticipate: item.how_to_participate,
+        resources: item.resources,
+        successStories: item.success_stories,
+        callToAction: item.call_to_action,
+        subCampaigns: null,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at,
       };
     });
 

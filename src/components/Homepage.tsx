@@ -191,7 +191,7 @@ const Homepage = React.memo(function Homepage({ events = [] }: HomepageProps) {
         {/* Warm gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#F5F5F4] via-[#FAFAF9] to-[#E7E5E4]" />
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             className="text-center mb-16"
             variants={fadeInUp}
@@ -363,7 +363,7 @@ const Homepage = React.memo(function Homepage({ events = [] }: HomepageProps) {
         {/* Soft gradient background */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#FAFAF9] via-[#F5F5F4] to-[#E7E5E4]" />
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             className="text-center mb-16"
             variants={fadeInUp}
@@ -525,7 +525,7 @@ const Homepage = React.memo(function Homepage({ events = [] }: HomepageProps) {
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#6B8E23]/10 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             className="text-center mb-16"
             variants={fadeInUp}
@@ -693,7 +693,7 @@ const Homepage = React.memo(function Homepage({ events = [] }: HomepageProps) {
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#6B8E23]/15 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
               className="space-y-6"
@@ -766,7 +766,7 @@ const Homepage = React.memo(function Homepage({ events = [] }: HomepageProps) {
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#FFF8F0]/10 rounded-full blur-3xl"></div>
         </div>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <NewsletterSignup variant="default" />
         </div>
       </section>

@@ -40,7 +40,7 @@ export function EventsEmptyState({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="text-center py-16 relative bg-gradient-to-br from-[#F8F6F0] to-white rounded-2xl border-2 border-[#2D3320]/20 shadow-lg"
+      className="text-center py-16 relative bg-linear-to-br from-[#F8F6F0] to-white rounded-2xl border-2 border-[#2D3320]/20 shadow-lg"
     >
       {/* Animated calendar icon */}
       <motion.div
@@ -51,7 +51,7 @@ export function EventsEmptyState({
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         className="mb-8"
       >
-        <div className="w-28 h-28 mx-auto mb-6 bg-gradient-to-br from-[#781D32]/20 to-[#2D3320]/20 rounded-full flex items-center justify-center shadow-xl border-2 border-[#781D32]/30">
+        <div className="w-28 h-28 mx-auto mb-6 bg-linear-to-br from-[#781D32]/20 to-[#2D3320]/20 rounded-full flex items-center justify-center shadow-xl border-2 border-[#781D32]/30">
           <motion.span
             className="text-5xl"
             animate={{ rotate: [0, 10, -10, 0] }}

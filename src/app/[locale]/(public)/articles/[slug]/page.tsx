@@ -149,7 +149,7 @@ export default function ArticlePage({ params }: ArticlePageProps) {
   if (articleLoading) {
     return (
       <div className="min-h-screen bg-[#F4F3F0]">
-        <div className="max-w-4xl mx-auto px-4 py-12">
+        <div className="max-w-7xl mx-auto px-4 py-12">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-gray-200 rounded w-1/4"></div>
             <div className="h-12 bg-gray-200 rounded w-3/4"></div>
@@ -168,7 +168,7 @@ export default function ArticlePage({ params }: ArticlePageProps) {
   if (articleError || !article) {
     return (
       <div className="min-h-screen bg-[#F4F3F0]">
-        <div className="max-w-4xl mx-auto px-4 py-12 text-center">
+        <div className="max-w-7xl mx-auto px-4 py-12 text-center">
           <h1 className="text-2xl font-bold text-[#3E442B] mb-4">
             Article Not Found
           </h1>
@@ -202,13 +202,13 @@ export default function ArticlePage({ params }: ArticlePageProps) {
           value={readingProgress}
           className="h-1 rounded-none bg-transparent border-none"
         >
-          <div className="h-full bg-gradient-to-r from-[#781D32] to-[#55613C] transition-all duration-300"></div>
+          <div className="h-full bg-linear-to-r from-[#781D32] to-[#55613C] transition-all duration-300"></div>
         </Progress>
       </div>
 
       {/* Article Header */}
       <section className="relative overflow-hidden bg-white border-b border-[#55613C]/10">
-        <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto px-4 py-8">
           {/* Navigation */}
           <motion.div
             variants={fadeInLeft}
@@ -367,13 +367,13 @@ export default function ArticlePage({ params }: ArticlePageProps) {
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
         </motion.div>
       </section>
 
       {/* Article Content */}
       <section className="py-12">
-        <div className="max-w-4xl mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="grid lg:grid-cols-4 gap-8">
             {/* Sidebar */}
             <div className="lg:col-span-1">
@@ -498,7 +498,7 @@ export default function ArticlePage({ params }: ArticlePageProps) {
       {/* Related Articles */}
       {relatedArticles.length > 0 && (
         <section className="py-16 bg-white">
-          <div className="max-w-6xl mx-auto px-4">
+          <div className="max-w-7xl mx-auto px-4">
             <motion.div
               variants={fadeInUp}
               initial="initial"

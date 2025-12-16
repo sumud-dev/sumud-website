@@ -88,7 +88,7 @@ export default function Footer() {
 
       {/* Main Footer Content */}
       <div className="py-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="grid lg:grid-cols-12 gap-8"
             variants={staggerContainer}
@@ -183,7 +183,7 @@ export default function Footer() {
         whileInView="animate"
         viewport={{ once: true }}
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6">
               <p className="text-white/60 text-sm">

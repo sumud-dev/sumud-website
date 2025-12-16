@@ -100,7 +100,7 @@ export default function CampaignsPage() {
 
     // Type filter
     if (selectedType !== "All") {
-      filtered = filtered.filter((c) => c.campaign_type === selectedType);
+      filtered = filtered.filter((c) => c.campaignType === selectedType);
     }
 
     // Search filter
@@ -123,8 +123,8 @@ export default function CampaignsPage() {
       case "featured":
       default:
         filtered = [...filtered].sort((a, b) => {
-          if (a.is_featured && !b.is_featured) return -1;
-          if (!a.is_featured && b.is_featured) return 1;
+          if (a.isFeatured && !b.isFeatured) return -1;
+          if (!a.isFeatured && b.isFeatured) return 1;
           return 0;
         });
     }
@@ -136,7 +136,7 @@ export default function CampaignsPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4]">
+      <div className="min-h-screen bg-linear-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4]">
         {/* Hero Section with Liquid Glass - Petitions Style */}
         <motion.section
           className="relative py-24 overflow-hidden"
@@ -145,7 +145,7 @@ export default function CampaignsPage() {
           transition={{ duration: 0.6 }}
         >
           {/* Gradient Background with Decorative Orbs */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#781D32] via-[#722F37] to-[#55613C]" />
+          <div className="absolute inset-0 bg-linear-to-br from-[#781D32] via-[#722F37] to-[#55613C]" />
 
           {/* Decorative Glass Orbs */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -195,7 +195,7 @@ export default function CampaignsPage() {
             />
           </div>
 
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <motion.div
               className="text-center space-y-8"
               initial={{ opacity: 0, y: 30 }}
@@ -236,7 +236,7 @@ export default function CampaignsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div
               className="backdrop-blur-xl rounded-3xl p-6"
               style={{
@@ -318,7 +318,7 @@ export default function CampaignsPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {isLoading ? (
               <motion.div
                 className="text-center py-16"
@@ -436,7 +436,7 @@ export default function CampaignsPage() {
           transition={{ duration: 0.6 }}
         >
           {/* Gradient Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#FFF8F0] via-[#E8DCC4]/30 to-[#FFF8F0]" />
+          <div className="absolute inset-0 bg-linear-to-br from-[#FFF8F0] via-[#E8DCC4]/30 to-[#FFF8F0]" />
 
           {/* Decorative Orbs */}
           <div className="absolute inset-0 pointer-events-none">
@@ -444,7 +444,7 @@ export default function CampaignsPage() {
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#6B8E23]/10 rounded-full blur-3xl" />
           </div>
 
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div
               className="backdrop-blur-xl rounded-3xl p-12 text-center transition-all duration-300 hover:scale-105"
               style={{
@@ -559,19 +559,19 @@ function CampaignCard({ campaign, index, t }: CampaignCardProps) {
           {/* Stats Grid - Fixed Height */}
           <div className="grid grid-cols-2 gap-3 mb-4 pb-4 border-b border-gray-200/60 h-16">
             <div className="flex items-center gap-2">
-              <CampaignIcon className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              <CampaignIcon className="w-4 h-4 text-gray-500 shrink-0" />
               <div className="min-w-0">
                 <div className="text-sm font-semibold text-gray-900 capitalize truncate">
-                  {t(`types.${campaign.campaign_type}`)}
+                  {t(`types.${campaign.campaignType}`)}
                 </div>
                 <div className="text-xs text-gray-600">{t("card.campaignType")}</div>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-gray-500 flex-shrink-0" />
+              <Users className="w-4 h-4 text-gray-500 shrink-0" />
               <div className="min-w-0">
                 <div className="text-sm font-semibold text-gray-900 truncate">
-                  {campaign.is_featured ? t("card.featured") : t("card.active")}
+                  {campaign.isFeatured ? t("card.featured") : t("card.active")}
                 </div>
                 <div className="text-xs text-gray-600">{t("card.priority")}</div>
               </div>

@@ -165,7 +165,7 @@ function SubCampaignTabs({ campaign, theme }: SubCampaignTabsProps) {
 
       <Tabs defaultValue={subCampaignTabs[0]?.id} className="w-full">
         {/* Tab Navigation */}
-        <TabsList className="w-full flex flex-wrap justify-center gap-2 bg-transparent h-auto p-2">
+        <TabsList className="w-full flex flex-wrap justify-center gap-6 bg-transparent h-auto p-2">
           {subCampaignTabs.map((tab, idx) => {
             const IconComponent = tab.icon;
             return (
@@ -473,7 +473,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
     <>
       <div className="min-h-screen bg-linear-to-b from-[#fbfbfd] via-white to-[#f5f5f7]">
         {/* Back Navigation */}
-        <div className="max-w-[980px] mx-auto px-4 sm:px-6 pt-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
           <Link
             href="/campaigns"
             className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors group"
@@ -492,7 +492,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
             )}
           />
 
-          <div className="relative max-w-[980px] mx-auto px-4 sm:px-6 py-12 sm:py-16">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -504,7 +504,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
               </h1>
 
               {/* Short Description */}
-              <p className="text-xl sm:text-2xl text-gray-700 mb-8 max-w-4xl font-light leading-relaxed">
+              <p className="text-xl sm:text-2xl text-gray-700 mb-8 max-w-7xl font-light leading-relaxed">
                 {campaign.shortDescription[locale]}
               </p>
 
@@ -539,12 +539,12 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
         </section>
 
         {/* Sub-Campaigns Tabs Section */}
-        <section className="max-w-[980px] mx-auto px-4 sm:px-6 py-12">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <SubCampaignTabs campaign={campaign} locale={locale} theme={theme} />
         </section>
 
         {/* Main Content */}
-        <section className="max-w-[980px] mx-auto px-4 sm:px-6 pb-12 space-y-12">
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-12">
 
           {/* Related Campaigns */}
           {relatedCampaigns.length > 0 && (

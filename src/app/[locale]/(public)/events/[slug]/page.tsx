@@ -134,7 +134,7 @@ export default function EventDetailPage() {
     return (
       <>
         {/* Hero Skeleton */}
-        <section className="relative py-20 bg-gradient-to-br from-[#1A1D14] via-[#2D3320] to-[#3E442B]">
+        <section className="relative py-20 bg-linear-to-br from-[#1A1D14] via-[#2D3320] to-[#3E442B]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="animate-pulse space-y-6">
               <div className="h-6 bg-white/20 rounded w-32" />
@@ -164,7 +164,7 @@ export default function EventDetailPage() {
   if (error || !event) {
     return (
       <>
-        <section className="relative py-20 bg-gradient-to-br from-[#1A1D14] via-[#2D3320] to-[#3E442B]">
+        <section className="relative py-20 bg-linear-to-br from-[#1A1D14] via-[#2D3320] to-[#3E442B]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <motion.div {...fadeInUp}>
               <div className="w-24 h-24 mx-auto mb-6 bg-white/10 rounded-full flex items-center justify-center">
@@ -199,7 +199,7 @@ export default function EventDetailPage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-16 lg:py-24 bg-gradient-to-br from-[#1A1D14] via-[#2D3320] to-[#3E442B]">
+      <section className="relative overflow-hidden py-16 lg:py-24 bg-linear-to-br from-[#1A1D14] via-[#2D3320] to-[#3E442B]">
         <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(120,29,50,0.15)_0%,transparent_50%,rgba(85,97,60,0.15)_100%)]" />
         
         {/* Decorative elements */}
@@ -248,7 +248,7 @@ export default function EventDetailPage() {
                   </span>
                 </Badge>
                 {event.is_featured && (
-                  <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white border-0 px-3 py-1">
+                  <Badge className="bg-linear-to-r from-yellow-400 to-yellow-500 text-white border-0 px-3 py-1">
                     <Sparkles className="h-3 w-3 mr-1" />
                     Featured
                   </Badge>
@@ -351,7 +351,7 @@ export default function EventDetailPage() {
               className="relative"
             >
               {event.featured_image ? (
-                <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10">
+                <div className="relative aspect-4/3 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10">
                   <Image
                     src={event.featured_image}
                     alt={event.title}
@@ -359,10 +359,10 @@ export default function EventDetailPage() {
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
                     className="object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent" />
                 </div>
               ) : (
-                <div className="aspect-[4/3] rounded-2xl bg-gradient-to-br from-[#781D32]/30 to-[#2D3320]/30 border-4 border-white/10 flex items-center justify-center">
+                <div className="aspect-4/3 rounded-2xl bg-linear-to-br from-[#781D32]/30 to-[#2D3320]/30 border-4 border-white/10 flex items-center justify-center">
                   <Calendar className="h-24 w-24 text-white/30" />
                 </div>
               )}
@@ -372,7 +372,7 @@ export default function EventDetailPage() {
       </section>
 
       {/* Main Content */}
-      <section className="py-12 lg:py-16 bg-gradient-to-b from-[#F8F6F0] to-white">
+      <section className="py-12 lg:py-16 bg-linear-to-b from-[#F8F6F0] to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Main Content */}
@@ -385,7 +385,7 @@ export default function EventDetailPage() {
               {/* About Section */}
               <motion.div variants={fadeInUp}>
                 <Card className="border-2 border-[#2D3320]/10 shadow-lg overflow-hidden">
-                  <div className="bg-gradient-to-r from-[#2D3320] to-[#3E442B] p-6">
+                  <div className="bg-linear-to-r from-[#2D3320] to-[#3E442B] p-6">
                     <h2 className="text-2xl font-bold text-white flex items-center gap-3">
                       <Info className="h-6 w-6" />
                       About This Event
@@ -521,7 +521,7 @@ export default function EventDetailPage() {
             >
               {/* Registration Card */}
               <Card className="border-2 border-[#781D32]/20 shadow-xl sticky top-24 overflow-hidden">
-                <div className="bg-gradient-to-r from-[#781D32] to-[#5E1727] p-6">
+                <div className="bg-linear-to-r from-[#781D32] to-[#5E1727] p-6">
                   <h3 className="text-xl font-bold text-white flex items-center gap-2">
                     <Ticket className="h-5 w-5" />
                     Registration

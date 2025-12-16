@@ -105,8 +105,8 @@ export default function MobileFilters({
               <div className="grid grid-cols-1 gap-3">
                 {categories.map((category) => (
                   <motion.button
-                    key={category.value}
-                    onClick={() => onCategoryChange(category.value)}
+                    key={String(category.value)}
+                    onClick={() => onCategoryChange(String(category.value))}
                     className={`p-4 rounded-lg border-2 text-left transition-all duration-200 ${
                       selectedCategory === category.value
                         ? "border-[#781D32] bg-[#781D32]/10 text-[#781D32]"

@@ -497,7 +497,7 @@ export default function TeamPage() {
       <section className="relative py-16 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-[#781D32] to-[#55613C]" />
         <div className="absolute inset-0 glass-burgundy gpu-accelerated" />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
           <motion.div
             className="glass-strong blur-transition border-glass-glow shadow-glass-xl rounded-3xl p-12 gpu-accelerated"
             variants={fadeInUp}

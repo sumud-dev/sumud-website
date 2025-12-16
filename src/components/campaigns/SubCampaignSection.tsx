@@ -11,7 +11,24 @@ import {
   AccordionTrigger,
 } from "@/src/components/ui/accordion";
 import { SubCampaignCard } from "./SubCampaignCard";
-import type { Campaign } from "@prisma/client";
+
+// Local campaign interface for this component
+interface CampaignBase {
+  id: string;
+  slug: string;
+  title: string;
+  description?: string | null;
+  campaignType?: string | null;
+  status?: string | null;
+  sectionType?: string | null;
+  iconName?: string | null;
+  featuredImageUrl?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  _count?: { updates: number; translations: number; subCampaigns: number };
+}
+
+type Campaign = CampaignBase;
 
 type ViewMode = "grid" | "timeline" | "list";
 
@@ -251,7 +268,7 @@ export function CampaignScrollspyNav({
 }: CampaignScrollspyNavProps) {
   return (
     <nav className="sticky top-16 z-40 bg-white/95 backdrop-blur-sm border-b py-3">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4">
         <ul className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
           {subCampaigns.map((sub) => (
             <li key={sub.id}>

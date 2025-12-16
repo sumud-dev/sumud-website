@@ -197,7 +197,7 @@ export default function JoinPage() {
             />
           </div>
 
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <motion.div
               className="text-center space-y-8"
               variants={fadeInUp}
@@ -232,7 +232,7 @@ export default function JoinPage() {
           </div>
         </motion.section>
 
-        <div className="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Main Donation Card */}
             <motion.div

@@ -56,7 +56,7 @@ export function EventsFilters({
   };
 
   return (
-    <section className="hidden md:block relative py-8 border-b-2 border-[#2D3320]/30 overflow-hidden bg-gradient-to-r from-[#F8F6F0] to-white shadow-sm w-full">
+    <section className="hidden md:block relative py-8 border-b-2 border-[#2D3320]/30 overflow-hidden bg-linear-to-r from-[#F8F6F0] to-white shadow-sm w-full">
       <div className="absolute inset-0 glass-subtle gpu-accelerated opacity-50" />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -83,7 +83,7 @@ export function EventsFilters({
             </form>
 
             {/* Desktop Filter Controls */}
-            <div className="flex items-center gap-4 flex-shrink-0">
+            <div className="flex items-center gap-4 shrink-0">
               <Filter className="h-5 w-5 text-[#781D32]" />
               <Select
                 value={filters.eventType || "all"}

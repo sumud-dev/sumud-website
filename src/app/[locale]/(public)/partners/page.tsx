@@ -512,7 +512,7 @@ export default function PartnersPage() {
 
       {/* Become Partner CTA Section */}
       <section className="py-16 bg-gradient-to-r from-[#781D32] to-[#55613C]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             variants={fadeInUp}
             initial="initial"

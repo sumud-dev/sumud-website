@@ -6,6 +6,9 @@ export interface CampaignFilters {
   status?: string;
   campaignType?: string;
   isFeatured?: boolean;
+  search?: string;
+  page?: number;
+  limit?: number;
 }
 
 export interface ArticleFilters {

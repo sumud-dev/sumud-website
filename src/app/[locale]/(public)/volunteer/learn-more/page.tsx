@@ -429,7 +429,7 @@ export default function VolunteerLearnMorePage() {
         <div className="absolute inset-0 glass-subtle gpu-accelerated" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
-            className="text-center max-w-4xl mx-auto"
+            className="text-center max-w-7xl mx-auto"
             variants={fadeInUp}
             initial="initial"
             animate="animate"
@@ -919,7 +919,7 @@ export default function VolunteerLearnMorePage() {
 
       {/* FAQs */}
       <section className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             className="text-center mb-16"
             variants={fadeInUp}
@@ -965,7 +965,7 @@ export default function VolunteerLearnMorePage() {
       <section className="relative py-24 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-[#781D32] via-[#781D32]/95 to-[#55613C]" />
         <div className="absolute inset-0 glass-burgundy gpu-accelerated" />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
           <motion.div
             variants={fadeInUp}
             initial="initial"

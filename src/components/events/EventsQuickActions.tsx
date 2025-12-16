@@ -28,7 +28,7 @@ export function EventsQuickActions({
 }: EventsQuickActionsProps) {
   return (
     <Card className="mt-6 glass-cream blur-transition border-2 border-[#2D3320]/30 shadow-lg hover:shadow-xl gpu-accelerated rounded-xl transition-all duration-200">
-      <CardHeader className="bg-gradient-to-br from-[#F8F6F0] to-white border-b-2 border-[#2D3320]/20">
+      <CardHeader className="bg-linear-to-br from-[#F8F6F0] to-white border-b-2 border-[#2D3320]/20">
         <CardTitle className="flex items-center gap-2 text-lg text-[#1A1D14] font-bold">
           <Sparkles className="h-5 w-5 text-[#781D32]" />
           Quick Actions

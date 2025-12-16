@@ -67,7 +67,7 @@ function ArticleNavigation({
         transition={{ duration: 0.6 }}
       >
         {/* Gradient Background with Decorative Orbs */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#781D32] via-[#722F37] to-[#55613C]" />
+        <div className="absolute inset-0 bg-linear-to-br from-[#781D32] via-[#722F37] to-[#55613C]" />
 
         {/* Decorative Glass Orbs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -117,7 +117,7 @@ function ArticleNavigation({
           />
         </div>
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <motion.div
             className="text-center space-y-8"
             variants={fadeInUp}
@@ -152,12 +152,12 @@ function ArticleNavigation({
       </motion.section>{" "}
       {/* Search and Filters with Liquid Glass */}
       <motion.section
-        className="py-8 relative bg-gradient-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4]"
+        className="py-8 relative bg-linear-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4]"
         variants={fadeInUp}
         initial="initial"
         animate="animate"
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div
             className="backdrop-blur-xl rounded-3xl p-6"
             style={{
@@ -234,9 +234,9 @@ function FeaturedSection({ articles }: { articles: Article[] }) {
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="py-16 lg:py-20 bg-gradient-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4] relative overflow-hidden"
+      className="py-16 lg:py-20 bg-linear-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4] relative overflow-hidden"
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="mb-12">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
@@ -255,7 +255,7 @@ function FeaturedSection({ articles }: { articles: Article[] }) {
         </div>
 
         {/* Featured Article Card */}
-        <div className="max-w-5xl">
+        <div className="max-w-7xl">
           <ArticleCard
             article={featuredArticle}
             size="large"
@@ -284,9 +284,9 @@ function ArticlesGrid({
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.1 }}
-      className="py-16 bg-gradient-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4]"
+      className="py-16 bg-linear-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4]"
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="mb-12">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
@@ -355,14 +355,14 @@ function NewsletterSection() {
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="py-16 bg-gradient-to-b from-white to-[rgba(255,248,240,0.50)] border-t border-[rgba(232,220,196,0.4)] relative overflow-hidden"
+      className="py-16 bg-linear-to-b from-white to-[rgba(255,248,240,0.50)] border-t border-[rgba(232,220,196,0.4)] relative overflow-hidden"
     >
       {/* Subtle decorative glass overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[rgba(85,97,60,0.03)] via-transparent to-[rgba(212,175,55,0.05)] pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-br from-[rgba(85,97,60,0.03)] via-transparent to-[rgba(212,175,55,0.05)] pointer-events-none" />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
         {/* Glass container */}
-        <div className="p-8 md:p-12 rounded-3xl bg-[rgba(255,248,240,0.90)] backdrop-blur-[16px] border border-[rgba(212,175,55,0.3)] shadow-[0_12px_32px_rgba(120,29,50,0.08),0_6px_16px_rgba(85,97,60,0.06),inset_0_2px_0_rgba(255,255,255,0.8)]">
+        <div className="p-8 md:p-12 rounded-3xl bg-[rgba(255,248,240,0.90)] backdrop-blur-lg border border-[rgba(212,175,55,0.3)] shadow-[0_12px_32px_rgba(120,29,50,0.08),0_6px_16px_rgba(85,97,60,0.06),inset_0_2px_0_rgba(255,255,255,0.8)]">
           <div className="mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
               {t("newsletter.title")}
@@ -409,9 +409,9 @@ function LoadMoreSection({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="py-16 bg-gradient-to-t from-[rgba(255,248,240,0.30)] to-white border-t border-[rgba(232,220,196,0.4)]"
+      className="py-16 bg-linear-to-t from-[rgba(255,248,240,0.30)] to-white border-t border-[rgba(232,220,196,0.4)]"
     >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div className="mb-8">
           <h3 className="text-xl font-semibold text-gray-900 mb-2">
             {t("loadMore.showing", { count: currentCount })}
@@ -466,7 +466,7 @@ export default function ArticlesPage() {
   }, []);
 
   return (
-      <div className="min-h-screen bg-gradient-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4]">
+      <div className="min-h-screen bg-linear-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4]">
         {/* Navigation & Search */}
         <ArticleNavigation
           filters={filters}
@@ -497,7 +497,7 @@ export default function ArticlesPage() {
 
         {/* Error State */}
         {error && (
-          <div className="max-w-4xl mx-auto px-4 py-16 text-center">
+          <div className="max-w-7xl mx-auto px-4 py-16 text-center">
             <div className="max-w-md mx-auto">
               <div className="text-6xl mb-4">📚</div>
               <h3 className="text-2xl font-bold text-gray-900 mb-4">

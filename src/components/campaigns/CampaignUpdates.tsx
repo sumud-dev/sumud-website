@@ -19,7 +19,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/ca
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Separator } from "@/src/components/ui/separator";
-import { type CampaignUpdate } from "@/src/lib/types";
+
+// Define the update type locally since it may differ from Campaign type
+interface CampaignUpdate {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: string;
+  updateType?: string;
+  author?: string;
+}
 
 interface CampaignUpdatesProps {
   updates: CampaignUpdate[];
@@ -108,7 +117,7 @@ export function CampaignUpdates({
     .map(parseUpdateContent)
     .sort(
       (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
 
   const displayedUpdates = showAllUpdates
@@ -147,8 +156,8 @@ export function CampaignUpdates({
           <div className="space-y-4">
             <AnimatePresence>
               {displayedUpdates.map((update, index) => {
-                const Icon = getUpdateTypeIcon(update.update_type);
-                const typeColor = getUpdateTypeColor(update.update_type);
+                const Icon = getUpdateTypeIcon(update.updateType);
+                const typeColor = getUpdateTypeColor(update.updateType);
                 const isExpanded = expandedUpdates.has(update.id);
                 const hasRichContent = update.parsedContent;
 
@@ -174,7 +183,7 @@ export function CampaignUpdates({
                         <div className="flex space-x-4">
                           {/* Icon */}
                           <div
-                            className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
+                            className="shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
                             style={{ backgroundColor: `${typeColor}20` }}
                           >
                             <Icon
@@ -196,12 +205,12 @@ export function CampaignUpdates({
                                     className="text-white text-xs"
                                     style={{ backgroundColor: typeColor }}
                                   >
-                                    {getUpdateTypeLabel(update.update_type)}
+                                    {getUpdateTypeLabel(update.updateType)}
                                   </Badge>
                                   <span className="flex items-center">
                                     <Calendar className="h-4 w-4 mr-1" />
                                     {new Date(
-                                      update.created_at,
+                                      update.createdAt,
                                     ).toLocaleDateString("en-US", {
                                       month: "long",
                                       day: "numeric",

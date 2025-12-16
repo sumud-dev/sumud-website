@@ -38,6 +38,7 @@ import {
   isEventUpcoming,
   canRegisterForEvent,
   getEventTypeColor,
+  getEventTypeHexColor,
   EVENT_TYPES,
   EVENT_LOCATION_MODES,
 } from "@/src/lib/types/event";
@@ -66,6 +67,7 @@ export function EventCard({
   const isUpcoming = isEventUpcoming(event.start_date);
   const canRegister = canRegisterForEvent(event);
   const eventTypeColor = getEventTypeColor(event.event_type);
+  const eventTypeHexColor = getEventTypeHexColor(event.event_type);
 
   const formatCapacity = () => {
     if (event.max_capacity) {
@@ -198,7 +200,7 @@ export function EventCard({
       'https://calendar.google.com/calendar/render?action=TEMPLATE',
       `&text=${encodeURIComponent(event.title)}`,
       `&dates=${startDate.toISOString().replace(/[-:]/g, '').replace(/\.\\d{3}/, '')}/${endDate.toISOString().replace(/[-:]/g, '').replace(/\.\\d{3}/, '')}`,
-      `&details=${encodeURIComponent(event.description || event.short_description || '')}`,
+      `&details=${encodeURIComponent(event.content || '')}`,
       `&location=${encodeURIComponent(getLocationText())}`,
     ].join('');
     
@@ -223,19 +225,19 @@ export function EventCard({
       whileHover={{ y: -2 }}
       className={`group ${className}`}
     >
-      <Card className="h-full border border-[#55613C]/20 hover:border-[#781D32]/30 hover:shadow-xl transition-all duration-300 overflow-hidden bg-gradient-to-br from-white to-gray-50/30">
+      <Card className="h-full border border-[#55613C]/20 hover:border-[#781D32]/30 hover:shadow-xl transition-all duration-300 overflow-hidden bg-linear-to-br from-white to-gray-50/30">
         <CardHeader className="p-0 relative">
-          {event.featured_image_url && (
+          {event.featured_image && (
             <div className="relative aspect-video overflow-hidden">
               <Image
-                src={event.featured_image_url}
+                src={event.featured_image}
                 alt={event.title}
                 fill
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
               />
               
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent" />
               
               <div className="absolute top-4 left-4 flex flex-col gap-2">
                 {event.is_featured && (
@@ -244,7 +246,7 @@ export function EventCard({
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white border-0 shadow-lg">
+                    <Badge className="bg-linear-to-r from-yellow-400 to-yellow-500 text-white border-0 shadow-lg">
                       <Sparkles className="h-3 w-3 mr-1" />
                       Featured
                     </Badge>
@@ -307,7 +309,7 @@ export function EventCard({
         </CardHeader>
         
         <CardContent className="p-6 flex flex-col h-full">
-          <div className="space-y-4 flex-grow">
+          <div className="space-y-4 grow">
             <div>
               <div className="flex items-start justify-between gap-3 mb-2">
                 <Link
@@ -323,13 +325,13 @@ export function EventCard({
                 </div>
               </div>
               <p className="text-gray-600 text-sm line-clamp-3 leading-relaxed">
-                {event.short_description || event.description}
+                {event.content}
               </p>
             </div>
 
             <div className="space-y-3 text-sm">
               <div className="flex items-center gap-3 p-2 rounded-lg bg-[#f4f3f0] border border-[#55613C]/10">
-                <Calendar className="h-4 w-4 flex-shrink-0 text-[#781D32]" />
+                <Calendar className="h-4 w-4 shrink-0 text-[#781D32]" />
                 <span className="font-medium text-[#3E442B]">
                   {formatEventDate(event.start_date)}
                 </span>
@@ -352,7 +354,7 @@ export function EventCard({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-gray-700">
-                    <Users className="h-4 w-4 flex-shrink-0 text-[#781D32]" />
+                    <Users className="h-4 w-4 shrink-0 text-[#781D32]" />
                     <span className="font-medium">
                       {formatCapacity()} registered
                     </span>
@@ -382,13 +384,13 @@ export function EventCard({
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
-                {event.cost && event.cost > 0 ? (
-                  <Badge variant="outline" className="text-xs border-[#781D32]/30 text-[#781D32]">
-                    {event.currency} {event.cost}
-                  </Badge>
-                ) : (
+                {!event.registration_required ? (
                   <Badge className="text-xs bg-green-100 text-green-700 border-green-200 hover:bg-green-100">
                     Free Event
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-xs border-[#781D32]/30 text-[#781D32]">
+                    Registration Required
                   </Badge>
                 )}
                 
@@ -400,24 +402,6 @@ export function EventCard({
               </div>
             </div>
 
-            {event.tags && event.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {event.tags.slice(0, 3).map((tag) => (
-                  <Badge 
-                    key={tag} 
-                    variant="outline" 
-                    className="text-xs border-[#55613C]/20 text-[#55613C] hover:bg-[#55613C]/10 transition-colors"
-                  >
-                    {tag}
-                  </Badge>
-                ))}
-                {event.tags.length > 3 && (
-                  <Badge variant="outline" className="text-xs text-gray-400 border-gray-200">
-                    +{event.tags.length - 3} more
-                  </Badge>
-                )}
-              </div>
-            )}
           </div>
 
           <div className="flex flex-col gap-3 pt-4 border-t border-[#55613C]/10 mt-auto">
@@ -444,7 +428,7 @@ export function EventCard({
                       className={`flex-1 text-white transition-all duration-200 hover:shadow-lg ${
                         isRegistering ? 'opacity-70 cursor-not-allowed' : ''
                       }`}
-                      style={{ backgroundColor: eventTypeColor }}
+                      style={{ backgroundColor: eventTypeHexColor }}
                     >
                       {isRegistering ? (
                         <div className="flex items-center gap-2">

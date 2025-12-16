@@ -222,12 +222,12 @@ export function EventCalendar({
                   }
                   ${
                     day.isToday
-                      ? "bg-gradient-to-br from-[#55613C]/10 to-[#55613C]/5 border-[#55613C]/40 font-bold text-[#3E442B] shadow-sm"
+                      ? "bg-linear-to-br from-[#55613C]/10 to-[#55613C]/5 border-[#55613C]/40 font-bold text-[#3E442B] shadow-sm"
                       : "bg-white hover:bg-gray-50"
                   }
                   ${
                     day.isSelected
-                      ? "bg-gradient-to-br from-[#781D32] to-[#781D32]/90 text-white border-[#781D32] shadow-lg"
+                      ? "bg-linear-to-br from-[#781D32] to-[#781D32]/90 text-white border-[#781D32] shadow-lg"
                       : ""
                   }
                   ${
@@ -350,7 +350,7 @@ export function EventCalendar({
                           className="flex items-center gap-3 p-2 rounded-md bg-gray-50/50 hover:bg-gray-50 transition-colors"
                         >
                           <div
-                            className="w-3 h-3 rounded-full flex-shrink-0"
+                            className="w-3 h-3 rounded-full shrink-0"
                             style={{
                               backgroundColor: getEventTypeHexColor(event.event_type),
                             }}

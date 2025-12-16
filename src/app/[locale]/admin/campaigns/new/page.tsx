@@ -28,8 +28,9 @@ import type { CampaignFormData } from "@/src/types/Campaigns";
 const mockInitialData: CampaignFormData = {
   title: "",
   description: "",
-  goal: 10000,
+  campaignType: "awareness",
   status: "draft",
+  goal: 10000,
   startDate: new Date().toISOString().split("T")[0],
   endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
     .toISOString()

@@ -44,7 +44,7 @@ function ArticleCardSkeleton({
   if (size === "featured" || size === "large") {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="aspect-[2/1] bg-gray-200 rounded-lg"></div>
+        <div className="aspect-2/1 bg-gray-200 rounded-lg"></div>
         <div className="space-y-3">
           <div className="h-3 bg-gray-200 rounded w-20"></div>
           <div className="h-6 bg-gray-200 rounded w-full"></div>
@@ -62,7 +62,7 @@ function ArticleCardSkeleton({
   if (size === "medium") {
     return (
       <div className="animate-pulse space-y-3">
-        <div className="aspect-[16/9] bg-gray-200 rounded-lg"></div>
+        <div className="aspect-video bg-gray-200 rounded-lg"></div>
         <div className="space-y-2">
           <div className="h-3 bg-gray-200 rounded w-16"></div>
           <div className="h-5 bg-gray-200 rounded w-full"></div>
@@ -79,7 +79,7 @@ function ArticleCardSkeleton({
   if (size === "compact") {
     return (
       <div className="animate-pulse flex items-start gap-4 py-4">
-        <div className="w-20 h-20 bg-gray-200 rounded-lg flex-shrink-0"></div>
+        <div className="w-20 h-20 bg-gray-200 rounded-lg shrink-0"></div>
         <div className="flex-1 space-y-2">
           <div className="h-3 bg-gray-200 rounded w-16"></div>
           <div className="h-4 bg-gray-200 rounded w-full"></div>
@@ -94,7 +94,7 @@ function ArticleCardSkeleton({
 
   return (
     <div className="animate-pulse space-y-3">
-      <div className="aspect-[16/9] bg-gray-200 rounded-lg"></div>
+      <div className="aspect-video bg-gray-200 rounded-lg"></div>
       <div className="space-y-2">
         <div className="h-3 bg-gray-200 rounded w-16"></div>
         <div className="h-5 bg-gray-200 rounded w-full"></div>
@@ -172,7 +172,7 @@ export default function ArticleCard({
         <Link href={`/articles/${article.slug}`} className="block">
           <div className="space-y-4">
             {/* Large Image */}
-            <div className="aspect-[2/1] relative overflow-hidden rounded-lg bg-gray-100">
+            <div className="aspect-2/1 relative overflow-hidden rounded-lg bg-gray-100">
               <Image
                 src="/images/placeholder-article.svg"
                 alt={article.featuredImage.alt}
@@ -306,7 +306,7 @@ export default function ArticleCard({
         <Link href={`/articles/${article.slug}`} className="block">
           <div className="space-y-3">
             {/* Image */}
-            <div className="aspect-[16/9] relative overflow-hidden rounded-lg bg-gray-100">
+            <div className="aspect-video relative overflow-hidden rounded-lg bg-gray-100">
               <Image
                 src={article.featuredImage.url}
                 alt={article.featuredImage.alt}
@@ -387,7 +387,7 @@ export default function ArticleCard({
       >
         <Link href={`/articles/${article.slug}`} className="block">
           <div className="flex items-start gap-4 py-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors px-3 -mx-3 rounded-lg">
-            <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+            <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-gray-100">
               <Image
                 src={article.featuredImage.url}
                 alt={article.featuredImage.alt}
@@ -475,7 +475,7 @@ export default function ArticleCard({
       <Link href={`/articles/${article.slug}`} className="block">
         <div className="space-y-3">
           {/* Image */}
-          <div className="aspect-[16/9] relative overflow-hidden rounded-lg bg-gray-100">
+          <div className="aspect-video relative overflow-hidden rounded-lg bg-gray-100">
             <Image
               src={article.featuredImage.url}
               alt={article.featuredImage.alt}

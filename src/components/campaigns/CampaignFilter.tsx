@@ -20,7 +20,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/src/components/ui/sheet";
-import type { CampaignType, CampaignFilters } from "@/src/lib/types";
+import type { CampaignType } from "@/src/types/Campaigns";
+import type { CampaignFilters } from "@/src/lib/types";
 
 interface CampaignFilterProps {
   filters: CampaignFilters;
@@ -92,7 +93,7 @@ export default function CampaignFilter({
     filters.search ||
     filters.campaignType ||
     filters.status ||
-    filters.featured !== undefined,
+    filters.isFeatured !== undefined,
   );
 
   const getActiveFilterCount = () => {
@@ -100,7 +101,7 @@ export default function CampaignFilter({
     if (filters.search) count++;
     if (filters.campaignType) count++;
     if (filters.status && filters.status !== "active") count++;
-    if (filters.featured !== undefined) count++;
+    if (filters.isFeatured !== undefined) count++;
     return count;
   };
 
@@ -182,11 +183,11 @@ export default function CampaignFilter({
         </label>
         <div className="flex gap-2">
           <Button
-            variant={filters.featured === undefined ? "default" : "outline"}
+            variant={filters.isFeatured === undefined ? "default" : "outline"}
             size="sm"
-            onClick={() => updateFilter("featured", undefined)}
+            onClick={() => updateFilter("isFeatured", undefined)}
             className={
-              filters.featured === undefined
+              filters.isFeatured === undefined
                 ? "bg-[#781D32] text-white"
                 : "border-[#55613C]/20"
             }
@@ -194,11 +195,11 @@ export default function CampaignFilter({
             All
           </Button>
           <Button
-            variant={filters.featured === true ? "default" : "outline"}
+            variant={filters.isFeatured === true ? "default" : "outline"}
             size="sm"
-            onClick={() => updateFilter("featured", true)}
+            onClick={() => updateFilter("isFeatured", true)}
             className={
-              filters.featured === true
+              filters.isFeatured === true
                 ? "bg-[#781D32] text-white"
                 : "border-[#55613C]/20"
             }
@@ -364,7 +365,7 @@ export default function CampaignFilter({
                 </Badge>
               )}
 
-              {filters.featured === true && (
+              {filters.isFeatured === true && (
                 <Badge
                   variant="secondary"
                   className="bg-[#781D32]/10 text-[#781D32] pr-1"
@@ -373,7 +374,7 @@ export default function CampaignFilter({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => updateFilter("featured", undefined)}
+                    onClick={() => updateFilter("isFeatured", undefined)}
                     className="ml-1 h-4 w-4 p-0 hover:bg-transparent"
                   >
                     <X className="h-3 w-3" />
