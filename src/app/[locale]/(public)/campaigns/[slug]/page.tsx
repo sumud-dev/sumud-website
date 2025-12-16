@@ -323,8 +323,8 @@ function SubCampaignTabs({ campaign, theme }: SubCampaignTabsProps) {
                     campaign.successStories?.map((story, index) => (
                       <SubCampaignCard
                         key={index}
-                        title={`Achievement ${index + 1}`}
-                        description={story.substring(0, 80) + (story.length > 80 ? "..." : "")}
+                        title={story.title || `Achievement ${index + 1}`}
+                        description={story.description.substring(0, 80) + (story.description.length > 80 ? "..." : "")}
                         icon={TrendingUp}
                         theme={theme}
                         index={index}
@@ -336,7 +336,7 @@ function SubCampaignTabs({ campaign, theme }: SubCampaignTabsProps) {
                         }
                         expandedContent={
                           <div className="space-y-3">
-                            <p className="text-gray-700">{story}</p>
+                            <p className="text-gray-700">{story.description}</p>
                           </div>
                         }
                       />

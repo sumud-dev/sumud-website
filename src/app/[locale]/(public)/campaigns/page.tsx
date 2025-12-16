@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/src/components/ui/select";
 import { useCampaigns, Campaign } from "@/src/lib/hooks/use-campaigns";
-import type { CampaignType } from "@/src/types/campaign.types";
+import type { CampaignType } from "@/src/types/Campaigns";
 
 // Campaign type colors matching real data
 const campaignTypeColors: Record<CampaignType, string> = {
