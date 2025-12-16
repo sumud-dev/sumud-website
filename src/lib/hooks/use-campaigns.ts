@@ -8,7 +8,7 @@ import type {
   CampaignApiResponse,
   CampaignInsert,
   CampaignUpdate,
-} from "@/src/types/campaign.types";
+} from "@/src/types/Campaigns";
 
 // API fetch functions
 async function fetchCampaigns(

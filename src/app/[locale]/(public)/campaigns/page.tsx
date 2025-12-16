@@ -515,8 +515,8 @@ interface CampaignCardProps {
 }
 
 function CampaignCard({ campaign, index, t }: CampaignCardProps) {
-  const typeColor = campaignTypeColors[campaign.campaign_type] || "#781D32";
-  const CampaignIcon = campaignIconMap[campaign.icon_name || "megaphone"] || Target;
+  const typeColor = campaignTypeColors[campaign.campaignType] || "#781D32";
+  const CampaignIcon = campaignIconMap[campaign.iconName || "megaphone"] || Target;
 
   // Create gradient background for fallback
   const gradientStyle = {

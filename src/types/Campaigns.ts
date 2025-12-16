@@ -260,6 +260,25 @@ export function transformCampaignsToUI(
   return campaigns.map(campaign => transformCampaignToUI(campaign, locale));
 }
 
+// API response types
+export interface CampaignsApiResponse {
+  data: Campaign[];
+  pagination?: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface CampaignApiResponse {
+  data: Campaign;
+}
+
+// Insert/Update types for API
+export type CampaignInsert = Omit<Campaign, 'id' | 'createdAt' | 'updatedAt'>;
+export type CampaignUpdate = Partial<CampaignInsert>;
+
 // Status colors for UI display
 export const campaignStatusColors: Record<CampaignStatus, string> = {
   draft: "bg-yellow-100 text-yellow-800",
