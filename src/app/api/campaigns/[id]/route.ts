@@ -3,7 +3,7 @@ import {
   getCampaignById,
   updateCampaign,
   deleteCampaign,
-} from "@/actions/campaigns.actions";
+} from "@/src/actions/campaigns.actions";
 
 // GET - Fetch single campaign
 export const GET = async (
