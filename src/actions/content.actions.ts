@@ -15,8 +15,13 @@ import { translateToAllLocales } from "@/src/lib/services/translation.service";
 // Define locales inline to avoid importing constants in "use server" file
 const LOCALES: Locale[] = ["en", "ar", "fi"];
 
-// Create admin client once for all content operations
-const supabase = createAdminClient();
+/**
+ * Get admin client lazily to avoid initialization errors
+ * This ensures environment variables are available when the client is created
+ */
+function getSupabaseAdmin() {
+  return createAdminClient();
+}
 
 /**
  * Fetch all content for a specific locale
@@ -25,6 +30,7 @@ const supabase = createAdminClient();
 export async function getContentByLocale(
   locale: Locale
 ): Promise<ContentResponse> {
+  const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("site_content")
     .select("*")
@@ -48,6 +54,7 @@ export async function getContentByNamespace(
   namespace: ContentNamespace,
   locale: Locale
 ): Promise<ContentResponse> {
+  const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("site_content")
     .select("*")
@@ -70,6 +77,7 @@ export async function getContentByNamespace(
 export async function getNamespaces(
   locale: Locale
 ): Promise<{ data: string[] | null; error: string | null }> {
+  const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("site_content")
     .select("namespace")
@@ -94,6 +102,7 @@ export async function updateContent(
   id: string,
   value: string
 ): Promise<ContentUpdateResponse> {
+  const supabase = getSupabaseAdmin();
   const { error } = await supabase
     .from("site_content")
     .update({
@@ -117,6 +126,7 @@ export async function updateContent(
 export async function bulkUpdateContent(
   updates: BulkContentUpdate[]
 ): Promise<ContentUpdateResponse> {
+  const supabase = getSupabaseAdmin();
   // Process updates in parallel
   const results = await Promise.all(
     updates.map(async ({ id, value }) => {
@@ -156,6 +166,7 @@ export async function createContent(
   value: string,
   contentType: string = "text"
 ): Promise<ContentUpdateResponse> {
+  const supabase = getSupabaseAdmin();
   const { error } = await supabase.from("site_content").insert({
     locale,
     namespace,
@@ -205,6 +216,7 @@ export async function createContentWithTranslation(
     content_type: contentType,
   }));
 
+  const supabase = getSupabaseAdmin();
   const { error } = await supabase.from("site_content").insert(insertData);
 
   if (error) {
@@ -227,6 +239,7 @@ export async function updateContentWithTranslation(
   key: string,
   translateToOthers: boolean = false
 ): Promise<ContentUpdateResponse & { translatedLocales?: Locale[] }> {
+  const supabase = getSupabaseAdmin();
   // Update the source content first
   const { error: updateError } = await supabase
     .from("site_content")
@@ -324,6 +337,7 @@ export async function updateContentWithTranslation(
  * Delete a content item
  */
 export async function deleteContent(id: string): Promise<ContentUpdateResponse> {
+  const supabase = getSupabaseAdmin();
   const { error } = await supabase.from("site_content").delete().eq("id", id);
 
   if (error) {
@@ -343,6 +357,7 @@ export async function searchContent(
   query: string,
   locale?: Locale
 ): Promise<ContentResponse> {
+  const supabase = getSupabaseAdmin();
   let queryBuilder = supabase
     .from("site_content")
     .select("*")
@@ -370,6 +385,7 @@ export async function getContentStats(): Promise<{
   data: { locale: string; count: number; namespaces: number }[] | null;
   error: string | null;
 }> {
+  const supabase = getSupabaseAdmin();
   const { data, error } = await supabase.from("site_content").select("locale, namespace");
 
   if (error) {
