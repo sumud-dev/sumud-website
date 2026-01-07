@@ -30,8 +30,8 @@ export default function EditCampaignPage({ params }: EditCampaignPageProps) {
       // Fetch the campaign from the database
       try {
         const result = await fetchCampaigns(resolved.slug, 'en');
-        if (result.success) {
-          const dbCampaign = result.data;
+        if (result.success && result.data) {
+          const dbCampaign = result.data as any;
           
           // Map database fields to form-compatible fields
           const mappedCampaign = {
@@ -61,7 +61,7 @@ export default function EditCampaignPage({ params }: EditCampaignPageProps) {
           
           setCampaign(mappedCampaign);
         } else {
-          setError(result.error);
+          setError((result as any).error || "Failed to load campaign");
         }
       } catch (err) {
         setError("Failed to load campaign");
@@ -126,7 +126,7 @@ export default function EditCampaignPage({ params }: EditCampaignPageProps) {
       }
 
       // Update local campaign state for UI feedback
-      setCampaign(prev => ({
+      setCampaign((prev: any) => ({
         ...prev,
         title: data.title,
         description: data.description,

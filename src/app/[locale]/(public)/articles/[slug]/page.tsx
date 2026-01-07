@@ -183,11 +183,14 @@ export default function ArticlePage() {
   }
 
   const categoryStyle = getCategoryConfig(article.category) || {
-    label: article.categoryLabel || "Article",
-    color: "bg-gray-500 text-white",
-    hoverColor: "hover:bg-gray-500/90",
-    description: "Article content",
+    label: "Article",
+    icon: "Newspaper",
+    color: "text-gray-600",
   };
+
+  // Calculate read time based on content (200 words per minute)
+  const wordCount = article.content ? article.content.split(/\s+/).length : 0;
+  const readTime = Math.max(1, Math.round(wordCount / 200));
 
   return (
     <div className="min-h-screen bg-[#F4F3F0]">
@@ -238,7 +241,7 @@ export default function ArticlePage() {
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
-                  <span>{article.readTime} min read</span>
+                  <span>{readTime} min read</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Eye className="h-4 w-4" />
@@ -425,7 +428,8 @@ export default function ArticlePage() {
                   </CardContent>
                 </Card>
 
-                {/* Tags */}
+                {/* Tags - Currently not implemented in Article interface */}
+                {/* 
                 {article.tags && article.tags.length > 0 && (
                   <Card className="border border-[#55613C]/20">
                     <CardContent className="p-4">
@@ -446,6 +450,7 @@ export default function ArticlePage() {
                     </CardContent>
                   </Card>
                 )}
+                */}
               </div>
             </div>
 

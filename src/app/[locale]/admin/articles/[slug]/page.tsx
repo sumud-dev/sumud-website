@@ -29,6 +29,9 @@ import { Separator } from "@/src/components/ui/separator";
 import { getPostBySlug, deletePost } from "@/src/actions/article.actions";
 import { getCategoryName, type PostWithCategory } from "@/src/lib/utils/article.utils";
 
+// Allow flexible article structure for compatibility with different data sources
+type Article = PostWithCategory & Record<string, any>;
+
 const statusColors: Record<string, string> = {
   draft: "bg-yellow-100 text-yellow-800",
   published: "bg-green-100 text-green-800",
@@ -43,7 +46,7 @@ interface ArticleDetailPageProps {
 
 export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
   const router = useRouter();
-  const [article, setArticle] = React.useState<PostWithCategory | null>(null);
+  const [article, setArticle] = React.useState<Article | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [deleting, setDeleting] = React.useState(false);
 
@@ -162,13 +165,13 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Featured Image */}
-          {article.featured_image && (
+          {article.coverImage && (
             <Card>
               <CardContent className="p-0">
                 <div className="relative aspect-video w-full overflow-hidden rounded-lg">
                   <Image
-                    src={article.featured_image}
-                    alt={article.alt_texts?.[0] ?? article.title ?? "Article image"}
+                    src={article.coverImage}
+                    alt={article.title ?? "Article image"}
                     fill
                     sizes="(max-width: 768px) 100vw, 66vw"
                     className="object-cover"
@@ -306,7 +309,7 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
-                  {article.categories.map((category, index) => (
+                  {article.categories.map((category: string, index: number) => (
                     <Badge key={index} variant="secondary">
                       {category}
                     </Badge>

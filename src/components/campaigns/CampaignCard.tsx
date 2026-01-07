@@ -116,7 +116,7 @@ export default function CampaignCard({
     return diffDays > 0 ? diffDays : 0;
   };
 
-  const typeColor = getCampaignTypeColor(campaign.campaignType);
+  const typeColor = getCampaignTypeColor(campaign.campaignType || 'awareness');
   const progress = calculateProgress();
   const stats = getProgressStats();
   const daysLeft = getDaysLeft();
@@ -137,9 +137,9 @@ export default function CampaignCard({
         <div
           className={`relative ${isFeatured ? "h-64" : "h-48"} overflow-hidden`}
         >
-          {campaign.featuredImageUrl ? (
+          {campaign.featuredImage ? (
             <Image
-              src={campaign.featuredImageUrl}
+              src={campaign.featuredImage}
               alt={campaign.title}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -163,7 +163,7 @@ export default function CampaignCard({
               className="text-white border-white/20"
               style={{ backgroundColor: typeColor }}
             >
-              {formatCampaignType(campaign.campaignType)}
+              {formatCampaignType(campaign.campaignType || 'awareness')}
             </Badge>
           </div>
 
@@ -223,7 +223,11 @@ export default function CampaignCard({
             </h3>
 
             <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-              {campaign.description}
+              {typeof campaign.description === 'string' 
+                ? campaign.description 
+                : campaign.description && typeof campaign.description === 'object' && 'data' in campaign.description
+                ? (typeof campaign.description.data === 'string' ? campaign.description.data : '')
+                : ''}
             </p>
 
             {/* Stats Row */}
@@ -252,9 +256,9 @@ export default function CampaignCard({
                   <Calendar className="h-4 w-4 mr-2" />
                   <span>
                     Started{" "}
-                    {new Date(
-                      campaign.startDate || campaign.createdAt,
-                    ).toLocaleDateString()}
+                    {campaign.startDate || campaign.createdAt
+                      ? new Date(campaign.startDate || campaign.createdAt!).toLocaleDateString()
+                      : 'N/A'}
                   </span>
                 </div>
 

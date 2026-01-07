@@ -9,6 +9,11 @@ import {
   Mail,
   Phone,
   MapPin,
+  Facebook,
+  Twitter,
+  Instagram,
+  Linkedin,
+  Youtube,
 } from "lucide-react";
 import { Separator } from "@/src/components/ui/separator";
 import { getFooterConfig, type FooterConfig, type Locale } from "@/src/actions/navigation.actions";
@@ -66,20 +71,20 @@ const defaultFooterSections = [
 ];
 
 const defaultSocialLinks = [
-  { name: "Facebook", icon: "📘", href: "#", color: "hover:text-blue-600" },
-  { name: "Twitter", icon: "🐦", href: "#", color: "hover:text-blue-400" },
-  { name: "Instagram", icon: "📷", href: "#", color: "hover:text-pink-600" },
-  { name: "LinkedIn", icon: "💼", href: "#", color: "hover:text-blue-700" },
+  { name: "Facebook", icon: Facebook, href: "#", color: "hover:text-blue-600" },
+  { name: "Twitter", icon: Twitter, href: "#", color: "hover:text-blue-400" },
+  { name: "Instagram", icon: Instagram, href: "#", color: "hover:text-pink-600" },
+  { name: "LinkedIn", icon: Linkedin, href: "#", color: "hover:text-blue-700" },
 ];
 
 // Social icon mapping
-const socialIconMap: Record<string, { icon: string; color: string }> = {
-  facebook: { icon: "📘", color: "hover:text-blue-600" },
-  twitter: { icon: "🐦", color: "hover:text-blue-400" },
-  x: { icon: "🐦", color: "hover:text-blue-400" },
-  instagram: { icon: "📷", color: "hover:text-pink-600" },
-  linkedin: { icon: "💼", color: "hover:text-blue-700" },
-  youtube: { icon: "📺", color: "hover:text-red-600" },
+const socialIconMap: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
+  facebook: { icon: Facebook, color: "hover:text-blue-600" },
+  twitter: { icon: Twitter, color: "hover:text-blue-400" },
+  x: { icon: Twitter, color: "hover:text-blue-400" },
+  instagram: { icon: Instagram, color: "hover:text-pink-600" },
+  linkedin: { icon: Linkedin, color: "hover:text-blue-700" },
+  youtube: { icon: Youtube, color: "hover:text-red-600" },
 };
 
 interface FooterProps {
@@ -144,7 +149,7 @@ export default function Footer({ locale = "en" }: FooterProps) {
     
     return config.socialLinks.map(link => {
       const platformLower = link.platform.toLowerCase();
-      const iconData = socialIconMap[platformLower] || { icon: "🔗", color: "hover:text-gray-400" };
+      const iconData = socialIconMap[platformLower] || { icon: Linkedin, color: "hover:text-gray-400" };
       return {
         name: link.platform,
         icon: iconData.icon,
@@ -209,18 +214,21 @@ export default function Footer({ locale = "en" }: FooterProps) {
 
               {/* Social Links */}
               <div className="flex space-x-4">
-                {socialLinks.map((social) => (
-                  <motion.a
-                    key={social.name}
-                    href={social.href}
-                    className={`p-2 bg-white/10 rounded-lg transition-all ${social.color} hover:bg-white/20 hover:scale-110 text-lg`}
-                    whileHover={{ y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                    aria-label={social.name}
-                  >
-                    {social.icon}
-                  </motion.a>
-                ))}
+                {socialLinks.map((social) => {
+                  const IconComponent = social.icon;
+                  return (
+                    <motion.a
+                      key={social.name}
+                      href={social.href}
+                      className={`p-2 bg-white/10 rounded-lg transition-all ${social.color} hover:bg-white/20 hover:scale-110`}
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                      aria-label={social.name}
+                    >
+                      <IconComponent className="h-5 w-5" />
+                    </motion.a>
+                  );
+                })}
               </div>
             </motion.div>
 

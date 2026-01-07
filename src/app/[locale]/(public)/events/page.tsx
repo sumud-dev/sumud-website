@@ -211,7 +211,7 @@ export default function EventsPage() {
               isLoading={isLoading}
               onMobileCalendarChange={filterState.setShowMobileCalendar}
               onMobileFiltersChange={filterState.setShowMobileFilters}
-              onFilterChange={filterState.handleFilterChange}
+              onFilterChange={filterState.handleFilterChange as any}
               onSearchChange={filterState.setSearchInput}
               onSearch={filterState.handleSearch}
               onUpcomingToggle={() =>
@@ -230,7 +230,7 @@ export default function EventsPage() {
               showUpcomingOnly={filterState.showUpcomingOnly}
               selectedDate={filterState.selectedDate}
               activeFiltersCount={filterState.activeFiltersCount}
-              onFilterChange={filterState.handleFilterChange}
+              onFilterChange={filterState.handleFilterChange as any}
               onSearchChange={filterState.setSearchInput}
               onSearch={filterState.handleSearch}
               onUpcomingToggle={() =>

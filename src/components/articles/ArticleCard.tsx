@@ -135,20 +135,23 @@ export default function ArticleCard({
 
   // Get category style with fallback for unknown categories
   const categoryStyle = getCategoryConfig(article.category) || {
-    label: article.categoryLabel || "Article",
-    color: "bg-gray-100 text-gray-700",
-    hoverColor: "hover:bg-gray-200",
-    description: "Article content",
+    label: "Article",
+    color: "text-gray-600",
+    icon: "Newspaper",
   };
+
+  // Calculate read time based on content (200 words per minute)
+  const wordCount = article.content ? article.content.split(/\s+/).length : 0;
+  const readTime = Math.max(1, Math.round(wordCount / 200));
 
   // Mock engagement data (in real app, this would come from API)
   const engagementData = {
     views: Math.floor(Math.random() * 1000) + 100,
     likes: Math.floor(Math.random() * 100) + 10,
     shares: Math.floor(Math.random() * 50) + 5,
-    isNew:
-      new Date(article.publishedAt) >
-      new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    isNew: article.publishedAt
+      ? new Date(article.publishedAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      : false,
     isTrending: Math.random() > 0.8,
   };
 
@@ -240,7 +243,7 @@ export default function ArticleCard({
                 <div className="flex items-center gap-4 text-sm text-gray-500">
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    <span>{article.readTime} min read</span>
+                    <span>{readTime} min read</span>
                   </div>
                   <span>·</span>
                   <div className="flex items-center gap-1">
@@ -370,7 +373,7 @@ export default function ArticleCard({
               <div className="flex items-center gap-3 text-xs text-gray-500 pt-1 border-t border-gray-100">
                 <div className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  <span>{article.readTime} min</span>
+                  <span>{readTime} min</span>
                 </div>
                 <span>·</span>
                 <div className="flex items-center gap-1">
@@ -435,7 +438,7 @@ export default function ArticleCard({
               <div className="flex items-center gap-3 text-xs text-gray-500">
                 <div className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  <span>{article.readTime} min</span>
+                  <span>{readTime} min</span>
                 </div>
                 <span>·</span>
                 <span>{formatArticleDate(article.publishedAt)}</span>
@@ -540,7 +543,7 @@ export default function ArticleCard({
               <div className="flex items-center gap-3 text-xs text-gray-500">
                 <div className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  <span>{article.readTime} min</span>
+                  <span>{readTime} min</span>
                 </div>
                 <span>·</span>
                 <span>{formatArticleDate(article.publishedAt)}</span>

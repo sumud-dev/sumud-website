@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db, pool } from '@/src/lib/db';
+import { db } from '@/src/lib/db';
 import { posts, campaigns, events } from '@/src/lib/db/schema';
 import { sql, count } from 'drizzle-orm';
 
@@ -18,21 +18,25 @@ export async function GET() {
     ]);
 
     // Test 3: List all tables (using raw query)
-    const tablesResult = await pool.query(`
-      SELECT table_schema, table_name 
-      FROM information_schema.tables 
-      WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
-      AND table_type = 'BASE TABLE'
-      ORDER BY table_schema, table_name
-    `);
+    const tablesResult = await db.execute<{ table_schema: string; table_name: string }>(
+      sql`
+        SELECT table_schema, table_name 
+        FROM information_schema.tables 
+        WHERE table_schema NOT IN ('pg_catalog', 'information_schema')
+        AND table_type = 'BASE TABLE'
+        ORDER BY table_schema, table_name
+      `
+    );
 
     // Test 4: Get database stats
-    const statsResult = await pool.query(`
-      SELECT 
-        (SELECT count(*) FROM pg_stat_activity WHERE state = 'active') as active_connections,
-        (SELECT count(*) FROM pg_stat_activity) as total_connections,
-        current_database() as database_name
-    `);
+    const statsResult = await db.execute<{ active_connections: number; total_connections: number; database_name: string }>(
+      sql`
+        SELECT 
+          (SELECT count(*) FROM pg_stat_activity WHERE state = 'active') as active_connections,
+          (SELECT count(*) FROM pg_stat_activity) as total_connections,
+          current_database() as database_name
+      `
+    );
 
     return NextResponse.json({
       success: true,

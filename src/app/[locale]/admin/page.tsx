@@ -602,13 +602,13 @@ export default function DashboardPage() {
               </TabsList>
               <TabsContent value="create" className="mt-4 space-y-2">
                 <Button variant="outline" className="w-full justify-start" asChild>
-                  <Link href="/articles/new">
+                  <Link href="/admin/articles/new">
                     <FileText className="h-4 w-4 mr-2" />
                     Create new article
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
-                  <Link href="/campaigns/new">
+                  <Link href="/admin/campaigns/new">
                     <Megaphone className="h-4 w-4 mr-2" />
                     Start a campaign
                   </Link>
@@ -620,21 +620,21 @@ export default function DashboardPage() {
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
-                  <Link href="/categories/new">
+                  <Link href="/admin/page-builder/new">
                     <TrendingUp className="h-4 w-4 mr-2" />
-                    Add new category
+                    Add new page
                   </Link>
                 </Button>
               </TabsContent>
               <TabsContent value="manage" className="mt-4 space-y-2">
                 <Button variant="outline" className="w-full justify-start" asChild>
-                  <Link href="/articles">
+                  <Link href="/admin/articles">
                     <FileText className="h-4 w-4 mr-2" />
                     Manage articles
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
-                  <Link href="/campaigns">
+                  <Link href="/admin/campaigns">
                     <Megaphone className="h-4 w-4 mr-2" />
                     View campaigns
                   </Link>
@@ -646,9 +646,9 @@ export default function DashboardPage() {
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
-                  <Link href="/users">
+                  <Link href="/admin/page-builder">
                     <Users className="h-4 w-4 mr-2" />
-                    Manage users
+                    Manage pages
                   </Link>
                 </Button>
               </TabsContent>

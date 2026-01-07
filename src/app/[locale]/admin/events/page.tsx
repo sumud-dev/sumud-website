@@ -113,8 +113,8 @@ const EventsPage: React.FC = () => {
     return events.filter(
       (event) =>
         event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.locations?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.categories?.toLowerCase().includes(searchQuery.toLowerCase())
+        (typeof event.locations === 'string' && event.locations.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (typeof event.categories === 'string' && event.categories.toLowerCase().includes(searchQuery.toLowerCase()))
     );
   }, [searchQuery, events]);
 
@@ -155,9 +155,10 @@ const EventsPage: React.FC = () => {
     }
   };
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
+  const formatDate = (dateInput: string | Date | null) => {
+    if (!dateInput) return "N/A";
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    return date.toLocaleDateString("en-US", {
       weekday: "short",
       year: "numeric",
       month: "short",

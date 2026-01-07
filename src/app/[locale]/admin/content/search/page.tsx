@@ -34,7 +34,7 @@ export default function ContentSearchPage() {
   const initialLocale = (searchParams.get("locale") as Locale) || "en";
 
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [activeLocale, setActiveLocale] = React.useState<Locale | undefined>(
+  const [activeLocale, setActiveLocale] = React.useState<Locale | "all">(
     initialLocale
   );
   const [results, setResults] = React.useState<SiteContent[]>([]);
@@ -80,7 +80,7 @@ export default function ContentSearchPage() {
 
     setIsSaving(true);
     try {
-      const result = await updateContent(editItem.id, editValue);
+      const result = await updateContent(editItem.id, { value: editValue });
       if (result.success) {
         toast.success("Content updated");
         // Update local results
@@ -148,9 +148,9 @@ export default function ContentSearchPage() {
 
         <div className="flex items-center gap-2">
           <Button
-            variant={activeLocale === undefined ? "default" : "outline"}
+            variant={activeLocale === "all" ? "default" : "outline"}
             size="sm"
-            onClick={() => setActiveLocale(undefined)}
+            onClick={() => setActiveLocale("all")}
           >
             All Languages
           </Button>

@@ -13,9 +13,11 @@ const sql = neon(process.env.DATABASE_URL);
 export const db = drizzle(sql, { schema });
 
 // Helper function for raw queries (use sparingly, prefer Drizzle queries)
+// Note: This is a simplified wrapper - for parameterized queries, use Drizzle's sql tagged template
 export async function query<T = unknown>(text: string, params?: unknown[]): Promise<T[]> {
   const start = Date.now();
-  const res = await sql(text, params as (string | number | boolean | null)[]);
+  // Cast to any to work around template string requirement
+  const res = await (sql as any)(text, params);
   const duration = Date.now() - start;
   console.log('executed query', { text, duration, rows: res.length });
   return res as T[];

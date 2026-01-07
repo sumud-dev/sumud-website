@@ -9,6 +9,7 @@ export interface CampaignFilters {
   search?: string;
   page?: number;
   limit?: number;
+  category?: string;
 }
 
 export interface ArticleFilters {

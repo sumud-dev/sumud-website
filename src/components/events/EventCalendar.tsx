@@ -266,7 +266,7 @@ export function EventCalendar({
                                 ? 'white' 
                                 : getEventTypeHexColor(event.event_type),
                             }}
-                            title={`${event.title} (${EVENT_TYPES[event.event_type]})`}
+                            title={`${event.title}${event.event_type ? ` (${(EVENT_TYPES as any)[event.event_type]})` : ''}`}
                           />
                         ))}
                       </div>
@@ -376,7 +376,7 @@ export function EventCalendar({
                             variant="outline" 
                             className="text-xs border-[#55613C]/20 text-[#55613C]"
                           >
-                            {EVENT_TYPES[event.event_type]}
+                            {event.event_type ? (EVENT_TYPES as any)[event.event_type] : 'Event'}
                           </Badge>
                         </motion.div>
                       ))}

@@ -26,7 +26,6 @@ const navigationKeys = [
   { key: "articles", href: "/admin/articles", icon: FileText },
   { key: "campaigns", href: "/admin/campaigns", icon: Megaphone },
   { key: "events", href: "/admin/events", icon: Calendar },
-  { key: "categories", href: "/admin/categories", icon: FolderOpen },
   { key: "content", href: "/admin/content", icon: Languages },
   { key: "pageBuilder", href: "/admin/page-builder", icon: LayoutTemplate },
 ];

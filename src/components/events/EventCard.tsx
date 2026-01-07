@@ -105,6 +105,8 @@ export function EventCard({
   };
 
   const getEventStatus = () => {
+    if (!event.start_date) return "upcoming";
+    
     const now = new Date();
     const startDate = new Date(event.start_date);
     const endDate = event.end_date ? new Date(event.end_date) : startDate;
@@ -195,13 +197,15 @@ export function EventCard({
   };
 
   const handleAddToCalendar = () => {
+    if (!event.start_date) return;
+    
     const startDate = new Date(event.start_date);
     const endDate = event.end_date ? new Date(event.end_date) : new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
     
     const googleCalendarUrl = [
       'https://calendar.google.com/calendar/render?action=TEMPLATE',
       `&text=${encodeURIComponent(event.title)}`,
-      `&dates=${startDate.toISOString().replace(/[-:]/g, '').replace(/\.\\d{3}/, '')}/${endDate.toISOString().replace(/[-:]/g, '').replace(/\.\\d{3}/, '')}`,
+      `&dates=${startDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}/${endDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')}`,
       `&details=${encodeURIComponent(event.content || '')}`,
       `&location=${encodeURIComponent(getLocationText())}`,
     ].join('');
@@ -263,7 +267,7 @@ export function EventCard({
                   className="text-white border-white/20 backdrop-blur-sm shadow-lg"
                   style={{ backgroundColor: `${eventTypeColor}CC` }}
                 >
-                  {EVENT_TYPES[event.event_type]}
+                  {event.event_type ? (EVENT_TYPES as any)[event.event_type] : 'Event'}
                 </Badge>
                 
                 {showSocialActions && (
@@ -345,7 +349,7 @@ export function EventCard({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-gray-500 uppercase tracking-wide">
-                    {EVENT_LOCATION_MODES[event.location_mode]}
+                    {event.location_mode ? (EVENT_LOCATION_MODES as any)[event.location_mode] : 'Location'}
                   </p>
                   <p className="font-medium text-[#3E442B] line-clamp-1">
                     {getLocationText()}

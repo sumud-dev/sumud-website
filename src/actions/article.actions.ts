@@ -28,10 +28,10 @@ export async function getArticlesAction(options: ArticleQueryOptions = {}) {
     const result = await getArticles(options);
     return {
       success: true,
-      data: result.articles,
-      total: result.total,
-      page: result.page,
-      limit: result.limit,
+      data: result,
+      total: result.length,
+      page: options.page || 1,
+      limit: options.limit || 10,
     };
   } catch (error) {
     console.error("Error fetching articles:", error);
@@ -123,30 +123,32 @@ export async function getPosts(options: GetPostsOptions = {}) {
     }
 
     // Transform results to match expected format
-    const transformedPosts: PostWithCategory[] = results.map((post) => {
-      // Parse categories - it could be a JSON array or object
-      let categoryName = "Uncategorized";
-      if (post.categories) {
-        const cats = post.categories as string[] | { name: string }[];
-        if (Array.isArray(cats) && cats.length > 0) {
-          categoryName = typeof cats[0] === "string" ? cats[0] : cats[0]?.name || "Uncategorized";
+    const transformedPosts: PostWithCategory[] = results
+      .filter((post) => post.slug) // Filter out posts without slug
+      .map((post) => {
+        // Parse categories - it could be a JSON array or object
+        let categoryName = "Uncategorized";
+        if (post.categories) {
+          const cats = post.categories as string[] | { name: string }[];
+          if (Array.isArray(cats) && cats.length > 0) {
+            categoryName = typeof cats[0] === "string" ? cats[0] : cats[0]?.name || "Uncategorized";
+          }
         }
-      }
 
-      return {
-        id: post.id,
-        title: post.title,
-        slug: post.slug,
-        status: post.status,
-        published_at: post.publishedAt?.toISOString() ?? null,
-        updated_at: post.updatedAt?.toISOString() ?? null,
-        excerpt: post.excerpt,
-        category: { name: categoryName },
-        type: post.type,
-        authorName: post.authorName,
-        featuredImage: post.featuredImage,
-      };
-    });
+        return {
+          id: post.id,
+          title: post.title,
+          slug: post.slug!,
+          status: post.status,
+          published_at: post.publishedAt?.toISOString() ?? null,
+          updated_at: post.updatedAt?.toISOString() ?? null,
+          excerpt: post.excerpt,
+          category: { name: categoryName },
+          type: post.type,
+          authorName: post.authorName,
+          featuredImage: post.featuredImage,
+        };
+      });
 
     return { 
       success: true, 

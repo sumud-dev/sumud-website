@@ -88,8 +88,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
         for (const lang of languages) {
           const result = await getPostBySlug(resolvedParams.slug, lang);
           if (result.success && result.post) {
-            foundPost = result.post;
-            foundLanguage = lang;
+          foundPost = result.post as any;
             break;
           }
         }

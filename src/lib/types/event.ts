@@ -45,6 +45,13 @@ export interface BaseEvent {
 export type EventType = 'online' | 'offline' | 'hybrid';
 export type EventLocationMode = 'physical' | 'online' | 'hybrid';
 
+export interface EventFilters {
+  eventType?: string;
+  locationMode?: string;
+  search?: string;
+  featured?: boolean;
+}
+
 export const EVENT_TYPES: Record<EventType, string> = {
   online: 'Online Event',
   offline: 'In-Person Event',

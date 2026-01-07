@@ -208,7 +208,7 @@ const ArticlesPage: React.FC = () => {
                               {(post.status ?? "draft").charAt(0).toUpperCase() + (post.status ?? "draft").slice(1)}
                             </Badge>
                             <Badge variant="outline" className="capitalize text-xs">
-                              {getCategoryName(post)}
+                              {getCategoryName(post as any)}
                             </Badge>
                           </div>
                           {post.excerpt && (

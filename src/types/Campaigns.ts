@@ -29,6 +29,36 @@ export const CAMPAIGN_TYPES: CampaignType[] = [
   'environmental',
 ];
 
+export type CampaignDescription = string | { type: 'blocks' | 'markdown' | 'html'; data: unknown } | null;
+
+export interface Campaign {
+  id: string;
+  title: string;
+  slug: string;
+  description: CampaignDescription;
+  content?: string;
+  category?: string;
+  campaignType: CampaignType | null;
+  status?: string;
+  isFeatured?: boolean;
+  isActive?: boolean;
+  iconName?: string;
+  image?: string;
+  featuredImage?: string;
+  language?: string;
+  featured?: boolean;
+  demands?: unknown;
+  callToAction?: unknown;
+  howToParticipate?: CampaignParticipationStep[] | string[];
+  resources?: CampaignResource[];
+  successStories?: CampaignSuccessStory[] | string[];
+  targets?: unknown;
+  stats?: unknown;
+  endDate?: string | Date;
+  startDate?: string | Date;
+  createdAt?: string | Date;
+}
+
 export interface CampaignParticipationStep {
   title?: string;
   description?: string;
