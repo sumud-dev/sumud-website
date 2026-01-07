@@ -9,6 +9,7 @@ import Image from "next/image";
 import { ArrowLeft, Save, Eye, Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { ImageUpload } from "@/src/components/ui/image-upload";
+import { RichTextEditor } from "@/src/components/ui/rich-text-editor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import {
   Form,
@@ -58,6 +59,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
   const [isLoading, setIsLoading] = React.useState(true);
   const [article, setArticle] = React.useState<PostWithCategory | null>(null);
   const [currentSlug, setCurrentSlug] = React.useState<string>("");
+  const [articleLanguage, setArticleLanguage] = React.useState<string>("en");
 
   const form = useForm<ArticleFormData>({
     resolver: zodResolver(articleSchema),
@@ -65,115 +67,93 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
       title: "",
       excerpt: "",
       content: "",
-      status: "published",
+      status: "draft",
       featuredImageUrl: "",
       metaDescription: "",
     },
   });
 
-  // Resolve params and fetch article data
   React.useEffect(() => {
     const fetchArticle = async () => {
       try {
         setIsLoading(true);
-
-        // Properly unwrap the params Promise
         const resolvedParams = await params;
-        const articleSlug = resolvedParams.slug;
-        setCurrentSlug(articleSlug);
-
-        const { data, error } = await getPostBySlug(articleSlug);
-
-        if (error) {
-          console.error("Error fetching article:", error);
+        setCurrentSlug(resolvedParams.slug);
+        
+        // Try fetching in different languages (en, fi, ar)
+        const languages = ["en", "fi", "ar"];
+        let foundPost = null;
+        let foundLanguage = "en";
+        
+        for (const lang of languages) {
+          const result = await getPostBySlug(resolvedParams.slug, lang);
+          if (result.success && result.post) {
+            foundPost = result.post;
+            foundLanguage = lang;
+            break;
+          }
+        }
+        
+        if (foundPost) {
+          setArticle(foundPost);
+          setArticleLanguage(foundLanguage);
+          
+          // Update form with fetched data
+          form.reset({
+            title: foundPost.title || "",
+            excerpt: foundPost.excerpt || "",
+            content: foundPost.content || "",
+            status: (foundPost.status as "draft" | "published" | "archived") || "draft",
+            featuredImageUrl: foundPost.featuredImage || "",
+            metaDescription: "",
+          });
+        } else {
           toast.error("Failed to load article");
-          router.push("/admin/articles");
-          return;
         }
-
-        if (!data) {
-          toast.error("Article not found");
-          router.push("/admin/articles");
-          return;
-        }
-
-        // Update form with article data
-        form.reset({
-          title: data.title || "",
-          excerpt: data.excerpt || "",
-          content: data.content || "",
-          status: (data.status as "draft" | "published" | "archived") || "published",
-          featuredImageUrl: data.featured_image || "",
-          metaDescription: "",
-        });
-
-        setArticle(data);
       } catch (error) {
         console.error("Error fetching article:", error);
         toast.error("Failed to load article");
-        router.push("/admin/articles");
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchArticle();
-  }, [params, form, router]);
+  }, [params, form]);
 
   const onSubmit = async (data: ArticleFormData) => {
     if (!article) {
       console.error("No article loaded");
+      toast.error("No article loaded");
       return;
     }
 
-    console.log("Submitting update for article:", {
-      id: article.id,
-      idType: typeof article.id,
-      currentSlug: currentSlug,
-    });
-
     setIsSubmitting(true);
     try {
-      // Generate new slug from title if title changed
-      const newSlug = data.title
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, "") // Remove special characters
-        .replace(/\s+/g, "-") // Replace spaces with hyphens
-        .trim();
-
-      const shouldUpdateSlug = newSlug !== currentSlug;
-
-      console.log("Calling updatePost with:", {
-        id: article.id,
-        data: {
+      const result = await updatePost(
+        currentSlug,
+        {
           title: data.title,
-          slug: shouldUpdateSlug ? newSlug : undefined,
-          content: data.content?.substring(0, 100) + "...",
           excerpt: data.excerpt,
+          content: data.content,
           status: data.status,
-          featured_image: data.featuredImageUrl,
-          language: article.language || "en",
+          featured_image: data.featuredImageUrl || null,
+          meta_description: data.metaDescription || null,
         },
-      });
+        articleLanguage
+      );
 
-      const { success, error } = await updatePost(article.id, {
-        title: data.title,
-        slug: shouldUpdateSlug ? newSlug : undefined,
-        content: data.content,
-        excerpt: data.excerpt,
-        status: data.status,
-        featured_image: data.featuredImageUrl,
-        language: article.language || "en",
-      });
+      if (result.success) {
+        toast.success("Article updated successfully");
+        
+        // Generate new slug from title if title changed
+        const newSlug = data.title
+          .toLowerCase()
+          .replace(/[^\w\s-]/g, "") // Remove special characters
+          .replace(/\s+/g, "-") // Replace spaces with hyphens
+          .trim();
 
-      console.log("updatePost response:", { success, error });
-
-      if (error) {
-        throw new Error(error);
-      }
-
-      if (success) {
-        toast.success("Article updated successfully!");
+        const shouldUpdateSlug = newSlug !== currentSlug;
 
         // Redirect to the updated slug if it changed
         if (shouldUpdateSlug) {
@@ -181,14 +161,12 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
         } else {
           router.push("/admin/articles");
         }
+      } else {
+        toast.error(result.error || "Failed to update article");
       }
     } catch (error) {
       console.error("Error updating article:", error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to update article. Please try again.",
-      );
+      toast.error("Failed to update article");
     } finally {
       setIsSubmitting(false);
     }
@@ -199,7 +177,6 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
 
     // Open admin article detail page in new tab
     window.open(`/admin/articles/${currentSlug}`, "_blank");
-    toast.info("Opening article preview in new tab");
   };
 
   if (isLoading) {
@@ -306,10 +283,11 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                       <FormItem>
                         <FormLabel>Content</FormLabel>
                         <FormControl>
-                          <Textarea
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={field.onChange}
                             placeholder="Write your article content..."
                             className="min-h-[300px]"
-                            {...field}
                           />
                         </FormControl>
                         <FormMessage />

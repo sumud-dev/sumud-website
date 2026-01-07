@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Link } from "@/src/i18n/navigation";
+import { useLocale } from "next-intl";
 import { toast } from "sonner";
 import {
   Plus,
@@ -13,6 +14,8 @@ import {
   FileText,
   Play,
   Archive,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import {
@@ -39,13 +42,21 @@ import {
   TableRow,
 } from "@/src/components/ui/table";
 import {
-  getEvents,
-  deleteEvent,
-  updateEventStatus,
+  fetchAllEventsAdminAction,
+  deleteEventAction,
+  updateEventAction,
   type Event,
   type EventStatus,
 } from "@/src/actions/events.actions";
-import { calculateEventStats } from "@/src/lib/utils/event.utils";
+
+const ITEMS_PER_PAGE = 16;
+
+interface PaginationData {
+  page: number;
+  pages: number;
+  total: number;
+  limit: number;
+}
 
 const statusColors: Record<string, string> = {
   draft: "bg-yellow-100 text-yellow-800",
@@ -61,24 +72,40 @@ const truncateText = (text: string, wordLimit: number): string => {
 };
 
 const EventsPage: React.FC = () => {
+  const locale = useLocale() as "en" | "fi" | "ar";
   const [searchQuery, setSearchQuery] = React.useState("");
   const [events, setEvents] = React.useState<Event[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [pagination, setPagination] = React.useState<PaginationData | null>(null);
 
-  // Fetch events on mount
+  // Fetch events with pagination
+  const fetchEvents = React.useCallback(async (page: number = 1) => {
+    setIsLoading(true);
+    const result = await fetchAllEventsAdminAction({ 
+      locale, 
+      page,
+      limit: ITEMS_PER_PAGE,
+    });
+    if (result.success) {
+      const data = result.data as { events: Event[]; pagination: PaginationData };
+      setEvents(data.events);
+      setPagination(data.pagination);
+    } else {
+      toast.error(`Failed to load events: ${result.error}`);
+    }
+    setIsLoading(false);
+  }, [locale]);
+
+  // Fetch events on mount and when page changes
   React.useEffect(() => {
-    const fetchEvents = async () => {
-      setIsLoading(true);
-      const { data, error } = await getEvents();
-      if (error) {
-        toast.error(`Failed to load events: ${error}`);
-      } else if (data) {
-        setEvents(data);
-      }
-      setIsLoading(false);
-    };
-    fetchEvents();
-  }, []);
+    fetchEvents(currentPage);
+  }, [fetchEvents, currentPage]);
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   // Filter events based on search
   const filteredEvents = React.useMemo(() => {
@@ -91,16 +118,22 @@ const EventsPage: React.FC = () => {
     );
   }, [searchQuery, events]);
 
-  // Calculate stats from actual data
-  const stats = React.useMemo(() => calculateEventStats(events), [events]);
+  // Calculate stats from pagination total
+  const stats = React.useMemo(() => ({
+    total: pagination?.total || events.length,
+    published: events.filter((e) => e.status === "published").length,
+    drafts: events.filter((e) => e.status === "draft").length,
+    archived: events.filter((e) => e.status === "archived").length,
+  }), [events, pagination]);
 
   const handleDelete = async (id: string, title: string) => {
     if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
     
-    const result = await deleteEvent(id);
+    const result = await deleteEventAction(id);
     if (result.success) {
-      setEvents((prev) => prev.filter((e) => e.id !== id));
       toast.success(`"${title}" deleted successfully`);
+      // Refetch to update pagination
+      fetchEvents(currentPage);
     } else {
       toast.error(result.error || "Failed to delete event");
     }
@@ -111,7 +144,7 @@ const EventsPage: React.FC = () => {
     newStatus: EventStatus,
     title: string
   ) => {
-    const result = await updateEventStatus(id, newStatus);
+    const result = await updateEventAction(id, { status: newStatus });
     if (result.success) {
       setEvents((prev) =>
         prev.map((e) => (e.id === id ? { ...e, status: newStatus } : e))
@@ -245,7 +278,7 @@ const EventsPage: React.FC = () => {
                         </TableCell>
                         <TableCell className="py-3 whitespace-nowrap">
                           <span className="text-sm text-gray-600">
-                            {formatDate(event.published_at)}
+                            {formatDate(event.publishedAt)}
                           </span>
                         </TableCell>
                         <TableCell className="py-3">
@@ -335,6 +368,65 @@ const EventsPage: React.FC = () => {
               </Table>
             </div>
           </div>
+
+          {/* Pagination */}
+          {pagination && pagination.pages > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <div className="text-sm text-gray-500">
+                Showing {((pagination.page - 1) * pagination.limit) + 1} to{" "}
+                {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+                {pagination.total} events
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage <= 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                
+                {/* Page numbers */}
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
+                    let pageNum: number;
+                    if (pagination.pages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= pagination.pages - 2) {
+                      pageNum = pagination.pages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={pageNum === currentPage ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(pageNum)}
+                        className={pageNum === currentPage ? "bg-[#781D32] hover:bg-[#781D32]/90" : ""}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage >= pagination.pages}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

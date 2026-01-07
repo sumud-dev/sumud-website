@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { Link } from "@/src/i18n/navigation";
+import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Calendar,
@@ -25,7 +26,6 @@ import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import { Progress } from "@/src/components/ui/progress";
-import MainHeader from "@/src/components/navigation/main-header";
 import Footer from "@/src/components/navigation/footer";
 import ArticleCard from "@/src/components/articles/ArticleCard";
 import { useArticle, useRelatedArticles } from "@/src/lib/hooks/use-articles";
@@ -43,14 +43,9 @@ const fadeInLeft = {
   transition: { duration: 0.5, ease: "easeOut" },
 };
 
-interface ArticlePageProps {
-  params: Promise<{
-    slug: string;
-  }>;
-}
-
-export default function ArticlePage({ params }: ArticlePageProps) {
-  const { slug } = React.use(params);
+export default function ArticlePage() {
+  const params = useParams();
+  const slug = params.slug as string;
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
@@ -66,7 +61,7 @@ export default function ArticlePage({ params }: ArticlePageProps) {
   } = useArticle(slug);
 
   const { data: relatedArticles = [], isLoading: relatedLoading } =
-    useRelatedArticles(slug, 2);
+    useRelatedArticles(article?.category, slug);
 
   // Scroll tracking for reading progress
   React.useEffect(() => {
@@ -353,22 +348,33 @@ export default function ArticlePage({ params }: ArticlePageProps) {
         </div>
 
         {/* Featured Image */}
-        <motion.div
-          variants={fadeInUp}
-          initial="initial"
-          animate="animate"
-          className="relative h-64 lg:h-96 overflow-hidden"
-        >
-          <Image
-            src={article.featuredImage.url}
-            alt={article.featuredImage.alt}
-            fill
-            sizes="100vw"
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
-        </motion.div>
+        {(() => {
+          const imageUrl = (article as any).featuredImage?.url 
+            || article.image 
+            || "/images/placeholder-article.svg";
+          const imageAlt = (article as any).featuredImage?.alt 
+            || article.title 
+            || "Article image";
+          
+          return (
+            <motion.div
+              variants={fadeInUp}
+              initial="initial"
+              animate="animate"
+              className="relative h-64 lg:h-96 overflow-hidden"
+            >
+              <Image
+                src={imageUrl}
+                alt={imageAlt}
+                fill
+                sizes="100vw"
+                className="object-cover"
+                priority
+              />
+              <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent" />
+            </motion.div>
+          );
+        })()}
       </section>
 
       {/* Article Content */}

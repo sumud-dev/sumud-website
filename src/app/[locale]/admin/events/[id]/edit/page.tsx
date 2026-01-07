@@ -4,13 +4,9 @@ import * as React from "react";
 import { useRouter, Link } from "@/src/i18n/navigation";
 import { ArrowLeft, Eye, Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
-import { toast } from "sonner";
-import {
-  getEventById,
-  updateEvent,
-  type Event,
-} from "@/src/actions/events.actions";
 import { EventForm, type EventFormData } from "@/src/components/forms/event-form";
+import { fetchEventByIdAction, updateEventAction } from "@/src/actions/events.actions";
+import { type Event } from "@/src/lib/db/schema";
 
 interface EditEventPageProps {
   params: Promise<{
@@ -24,48 +20,36 @@ export default function EditEventPage({ params }: EditEventPageProps) {
   const [isLoading, setIsLoading] = React.useState(true);
   const [event, setEvent] = React.useState<Event | null>(null);
   const [currentId, setCurrentId] = React.useState<string>("");
+  const [error, setError] = React.useState<string | null>(null);
 
-  // Resolve params and fetch event data
+  // Resolve params and fetch event
   React.useEffect(() => {
     const fetchEvent = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
-        setIsLoading(true);
-
-        // Properly unwrap the params Promise
         const resolvedParams = await params;
-        const eventId = resolvedParams.id;
-        setCurrentId(eventId);
-
-        const { data, error } = await getEventById(eventId);
-
-        if (error) {
-          console.error("Error fetching event:", error);
-          toast.error("Failed to load event");
-          router.push("/admin/events");
-          return;
+        setCurrentId(resolvedParams.id);
+        
+        const result = await fetchEventByIdAction(resolvedParams.id);
+        if (result.success) {
+          setEvent(result.data as Event);
+        } else {
+          setError(result.error);
         }
-
-        if (!data) {
-          toast.error("Event not found");
-          router.push("/admin/events");
-          return;
-        }
-
-        setEvent(data);
-      } catch (error) {
-        console.error("Error fetching event:", error);
-        toast.error("Failed to load event");
-        router.push("/admin/events");
+      } catch (err) {
+        console.error("Error fetching event:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch event");
       } finally {
         setIsLoading(false);
       }
     };
-
+    
     fetchEvent();
-  }, [params, router]);
+  }, [params]);
 
   const handleSubmit = async (data: EventFormData) => {
-    if (!event) {
+    if (!event || !currentId) {
       console.error("No event loaded");
       return;
     }
@@ -81,35 +65,30 @@ export default function EditEventPage({ params }: EditEventPageProps) {
 
       const shouldUpdateSlug = newSlug !== event.slug;
 
-      const { success, error } = await updateEvent(event.id, {
+      // Helper to convert empty strings to undefined
+      const cleanValue = (val: string | undefined) => val && val.trim() ? val.trim() : undefined;
+
+      const result = await updateEventAction(currentId, {
         title: data.title,
         slug: shouldUpdateSlug ? newSlug : undefined,
-        content: data.content,
+        content: cleanValue(data.content),
         status: data.status,
-        featured_image: data.featuredImageUrl,
-        alt_texts: data.altTexts,
-        categories: data.categories,
-        locations: data.locations,
-        organizers: data.organizers,
-        language: data.language || "en",
-        author_name: data.authorName,
+        featuredImage: cleanValue(data.featuredImageUrl),
+        altTexts: cleanValue(data.altTexts),
+        categories: cleanValue(data.categories),
+        locations: cleanValue(data.locations),
+        organizers: cleanValue(data.organizers),
+        language: (data.language as "en" | "fi" | "ar") || "en",
+        authorName: cleanValue(data.authorName),
       });
 
-      if (error) {
-        throw new Error(error);
-      }
-
-      if (success) {
-        toast.success("Event updated successfully!");
+      if (result.success) {
         router.push("/admin/events");
+      } else {
+        console.error(`Error updating event: ${result.error}`);
       }
     } catch (error) {
       console.error("Error updating event:", error);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to update event. Please try again.",
-      );
     } finally {
       setIsSubmitting(false);
     }
@@ -127,6 +106,20 @@ export default function EditEventPage({ params }: EditEventPageProps) {
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin" />
         <span className="ml-2">Loading event...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">
+          Error Loading Event
+        </h2>
+        <p className="text-gray-600 mb-4">{error}</p>
+        <Button asChild>
+          <Link href="/admin/events">Back to Events</Link>
+        </Button>
       </div>
     );
   }

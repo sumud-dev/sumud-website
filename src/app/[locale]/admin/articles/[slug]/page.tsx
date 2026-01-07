@@ -52,46 +52,39 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
       try {
         setLoading(true);
         const resolvedParams = await params;
-        const { data, error } = await getPostBySlug(resolvedParams.slug);
-
-        if (error) {
-          toast.error("Failed to fetch article");
-          console.error(error);
-          return;
+        const result = await getPostBySlug(resolvedParams.slug);
+        
+        if (result.success && result.post) {
+          setArticle(result.post as any);
+        } else {
+          toast.error(result.error || "Failed to load article");
         }
-
-        if (!data) {
-          toast.error("Article not found");
-          router.push("/admin/articles");
-          return;
-        }
-
-        setArticle(data);
-      } catch (err) {
-        console.error("Error fetching article:", err);
-        toast.error("An error occurred while fetching the article");
+      } catch (error) {
+        console.error("Error fetching article:", error);
+        toast.error("Failed to load article");
       } finally {
         setLoading(false);
       }
     };
 
     fetchArticle();
-  }, [params, router]);
+  }, [params]);
 
   const handleDelete = async () => {
     if (!article) return;
     if (!confirm(`Are you sure you want to delete "${article.title}"?`)) return;
 
     setDeleting(true);
-    const { success, error } = await deletePost(article.id);
-
-    if (error) {
-      toast.error("Failed to delete article");
-      console.error(error);
-      setDeleting(false);
-    } else if (success) {
-      toast.success(`"${article.title}" deleted successfully`);
+    
+    try {
+      const resolvedParams = await params;
+      await deletePost(resolvedParams.slug);
+      toast.success("Article deleted successfully");
       router.push("/admin/articles");
+    } catch (error) {
+      console.error("Error deleting article:", error);
+      toast.error("Failed to delete article");
+      setDeleting(false);
     }
   };
 

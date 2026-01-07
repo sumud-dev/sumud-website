@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import { Link } from "@/src/i18n/navigation";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Calendar,
   MapPin,
@@ -41,7 +42,12 @@ import {
   DialogDescription,
 } from "@/src/components/ui/dialog";
 import { useEvent } from "@/src/lib/hooks/use-events";
-import type { EventRegistrationFormData } from "@/src/lib/types/event";
+import { usePage } from "@/src/lib/hooks/use-pages";
+import type { 
+  EventRegistrationFormData,
+  EventType,
+  EventLocationMode,
+} from "@/src/lib/types/event";
 import {
   formatEventDate,
   formatEventTime,
@@ -73,8 +79,59 @@ const staggerContainer = {
 export default function EventDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
+  const locale = useLocale();
+  const t = useTranslations("eventsDetail");
 
   const { data: eventResponse, isLoading, error } = useEvent(slug);
+  
+  // Fetch page builder content for event detail labels
+  const { data: pageData } = usePage("event-detail");
+  
+  // Extract localized content from page builder with message file fallback
+  const pageContent = useMemo(() => {
+    if (!pageData) return null;
+    
+    const textBlock = pageData.translations.en?.blocks?.find(
+      (b) => b.id === "event-detail-text"
+    );
+    
+    type EventDetailContent = {
+      content?: {
+        [locale: string]: {
+          backToEvents?: string;
+          status?: { upcoming?: string; happeningNow?: string; pastEvent?: string };
+          eventNotFound?: { title?: string; description?: string };
+          sections?: { aboutEvent?: string; eventDetails?: string; organizer?: string; tags?: string };
+          details?: { date?: string; time?: string; location?: string; capacity?: string; spotsLeft?: string; soldOut?: string; free?: string; eventType?: string; locationMode?: string };
+          buttons?: { register?: string; share?: string; copyLink?: string; linkCopied?: string; addToCalendar?: string; getDirections?: string; joinOnline?: string; viewMore?: string };
+          registration?: { title?: string; description?: string; firstName?: string; lastName?: string; email?: string; phone?: string; numberOfAttendees?: string; specialRequirements?: string; specialRequirementsPlaceholder?: string; agreeToTerms?: string; submitButton?: string; successMessage?: string; errorMessage?: string };
+          contact?: { title?: string; email?: string; phone?: string; website?: string };
+          relatedEvents?: { title?: string; viewAll?: string };
+        };
+      };
+    };
+    
+    const textContent = (textBlock?.content as EventDetailContent)?.content;
+    const localeKey = locale as "en" | "fi" | "ar";
+    
+    return textContent?.[localeKey] || textContent?.en || null;
+  }, [pageData, locale]);
+  
+  // Helper to get content from page builder with message file fallback
+  const getText = (key: string, fallbackKey?: string): string => {
+    // Try page builder content first (nested keys supported with dots)
+    if (pageContent) {
+      const keys = key.split(".");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let value: any = pageContent;
+      for (const k of keys) {
+        value = value?.[k];
+      }
+      if (typeof value === "string") return value;
+    }
+    // Fall back to message file translations
+    return t(fallbackKey || key);
+  };
 
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -89,7 +146,7 @@ export default function EventDetailPage() {
       agreeToTerms: false,
     });
 
-  const event = eventResponse?.data;
+  const event = eventResponse;
 
   const handleCopyLink = async () => {
     await navigator.clipboard.writeText(window.location.href);
@@ -115,18 +172,19 @@ export default function EventDetailPage() {
 
   const getEventStatus = () => {
     if (!event) return { label: "Unknown", color: "bg-gray-500" };
-    if (isEventUpcoming(event.start_date)) {
-      return { label: "Upcoming", color: "bg-green-500" };
+    const eventDate = event.start_date || event.date || event.startAt;
+    if (isEventUpcoming(eventDate)) {
+      return { label: getText("status.upcoming"), color: "bg-green-500" };
     }
-    if (isEventOngoing(event.start_date, event.end_date)) {
-      return { label: "Happening Now", color: "bg-blue-500 animate-pulse" };
+    if (isEventOngoing(eventDate, event.end_date || event.endAt)) {
+      return { label: getText("status.happeningNow"), color: "bg-blue-500 animate-pulse" };
     }
-    return { label: "Past Event", color: "bg-gray-500" };
+    return { label: getText("status.pastEvent"), color: "bg-gray-500" };
   };
 
   const getCapacityPercentage = () => {
     if (!event?.max_capacity) return 0;
-    return Math.min((event.current_registrations / event.max_capacity) * 100, 100);
+    return Math.min(((event.current_registrations || 0) / event.max_capacity) * 100, 100);
   };
 
   // Loading State
@@ -171,10 +229,10 @@ export default function EventDetailPage() {
                 <Calendar className="h-12 w-12 text-white/60" />
               </div>
               <h1 className="text-4xl font-bold text-white mb-4">
-                Event Not Found
+                {getText("eventNotFound.title")}
               </h1>
               <p className="text-xl text-white/80 mb-8 max-w-md mx-auto">
-                The event you&apos;re looking for doesn&apos;t exist or has been removed.
+                {getText("eventNotFound.description")}
               </p>
               <Button
                 asChild
@@ -183,7 +241,7 @@ export default function EventDetailPage() {
               >
                 <Link href="/events">
                   <ArrowLeft className="h-5 w-5 mr-2" />
-                  Back to Events
+                  {getText("backToEvents")}
                 </Link>
               </Button>
             </motion.div>
@@ -221,7 +279,7 @@ export default function EventDetailPage() {
             >
               <Link href="/events">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Events
+                {getText("backToEvents")}
               </Link>
             </Button>
           </motion.div>
@@ -239,18 +297,18 @@ export default function EventDetailPage() {
                 <Badge
                   className={`${typeColor.bg} ${typeColor.text} ${typeColor.border} border px-3 py-1 text-sm font-semibold`}
                 >
-                  {EVENT_TYPES[event.event_type]}
+                  {EVENT_TYPES[event.event_type as EventType] || 'Event'}
                 </Badge>
                 <Badge className={`${status.color} text-white px-3 py-1`}>
                   <span className="flex items-center gap-1.5">
-                    <span className={`w-2 h-2 rounded-full bg-white ${status.label === "Happening Now" ? "animate-pulse" : ""}`} />
+                    <span className={`w-2 h-2 rounded-full bg-white ${status.label === getText("status.happeningNow") ? "animate-pulse" : ""}`} />
                     {status.label}
                   </span>
                 </Badge>
                 {event.is_featured && (
                   <Badge className="bg-linear-to-r from-yellow-400 to-yellow-500 text-white border-0 px-3 py-1">
                     <Sparkles className="h-3 w-3 mr-1" />
-                    Featured
+                    {getText("badges.featured")}
                   </Badge>
                 )}
               </div>
@@ -267,21 +325,21 @@ export default function EventDetailPage() {
                     <Calendar className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-sm text-white/60">Date</p>
-                    <p className="font-medium">{formatEventDate(event.start_date)}</p>
+                    <p className="text-sm text-white/60">{t("quickInfo.date")}</p>
+                    <p className="font-medium">{formatEventDate(event.start_date || event.date || event.startAt)}</p>
                   </div>
                 </div>
                 
-                {event.start_time && (
+                {(event.start_time || event.startAt) && (
                   <div className="flex items-center gap-2">
                     <div className="p-2 bg-white/10 rounded-lg">
                       <Clock className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-sm text-white/60">Time</p>
+                      <p className="text-sm text-white/60">{t("quickInfo.time")}</p>
                       <p className="font-medium">
-                        {formatEventTime(event.start_time)}
-                        {event.end_time && ` - ${formatEventTime(event.end_time)}`}
+                        {event.start_time ? formatEventTime(event.start_time) : event.startAt ? new Date(event.startAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : 'TBA'}
+                        {(event.end_time || event.endAt) && ` - ${event.end_time ? formatEventTime(event.end_time) : event.endAt ? new Date(event.endAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''}`}
                       </p>
                     </div>
                   </div>
@@ -298,13 +356,13 @@ export default function EventDetailPage() {
                     )}
                   </div>
                   <div>
-                    <p className="text-sm text-white/60">Location</p>
+                    <p className="text-sm text-white/60">{t("quickInfo.location")}</p>
                     <p className="font-medium">
                       {event.location_mode === "virtual"
-                        ? "Online Event"
+                        ? t("quickInfo.onlineEvent")
                         : event.location_mode === "hybrid"
-                          ? "Hybrid"
-                          : event.venue_name || "Location TBD"}
+                          ? t("quickInfo.hybrid")
+                          : event.venue_name || t("quickInfo.locationTbd")}
                     </p>
                   </div>
                 </div>
@@ -319,24 +377,24 @@ export default function EventDetailPage() {
                     className="bg-[#781D32] hover:bg-[#5E1727] text-white shadow-xl hover:shadow-2xl transition-all duration-300"
                   >
                     <Ticket className="h-5 w-5 mr-2" />
-                    Register Now
+                    {t("buttons.registerNow")}
                   </Button>
                 )}
                 <Button
                   size="lg"
                   variant="outline"
                   onClick={handleShare}
-                  className="border-white/30 text-white hover:bg-white/10"
+                  className="border-white/30 text-black hover:bg-white/10"
                 >
                   {copied ? (
                     <>
                       <Check className="h-5 w-5 mr-2" />
-                      Copied!
+                      {t("buttons.copied")}
                     </>
                   ) : (
                     <>
                       <Share2 className="h-5 w-5 mr-2" />
-                      Share Event
+                      {t("buttons.shareEvent")}
                     </>
                   )}
                 </Button>
@@ -350,16 +408,17 @@ export default function EventDetailPage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="relative"
             >
-              {event.featured_image ? (
+              {(event.featured_image || event.featuredImage) ? (
                 <div className="relative aspect-4/3 rounded-2xl overflow-hidden shadow-2xl border-4 border-white/10">
                   <Image
-                    src={event.featured_image}
+                    src={event.featured_image || event.featuredImage || ''}
                     alt={event.title}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
                     className="object-cover"
+                    priority
                   />
-                  <div className="absolute inset-0 bg-linear-to-t from-black/30 to-transparent" />
+                  <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
                 </div>
               ) : (
                 <div className="aspect-4/3 rounded-2xl bg-linear-to-br from-[#781D32]/30 to-[#2D3320]/30 border-4 border-white/10 flex items-center justify-center">
@@ -384,20 +443,24 @@ export default function EventDetailPage() {
             >
               {/* About Section */}
               <motion.div variants={fadeInUp}>
-                <Card className="border-2 border-[#2D3320]/10 shadow-lg overflow-hidden">
-                  <div className="bg-linear-to-r from-[#2D3320] to-[#3E442B] p-6">
-                    <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                      <Info className="h-6 w-6" />
-                      About This Event
+                <Card className="border-2 border-[#2D3320]/20 shadow-xl overflow-hidden rounded-2xl bg-white hover:shadow-2xl transition-shadow duration-300">
+                  <div className="bg-linear-to-r from-[#2D3320] to-[#3E442B] p-8">
+                    <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+                      <div className="p-2 bg-white/20 rounded-lg">
+                        <Info className="h-6 w-6" />
+                      </div>
+                      {t("sections.aboutThisEvent")}
                     </h2>
                   </div>
-                  <CardContent className="p-6 lg:p-8">
-                    <div className="prose prose-lg max-w-none text-[#1A1D14]">
+                  <CardContent className="p-8 lg:p-10">
+                    <div className="prose prose-lg max-w-none text-[#1A1D14] leading-relaxed">
                       {event.content ? (
-                        <div dangerouslySetInnerHTML={{ __html: event.content }} />
+                        <div className="whitespace-pre-wrap text-[#3E442B] text-base leading-loose">{event.content}</div>
+                      ) : event.description ? (
+                        <div className="whitespace-pre-wrap text-[#3E442B] text-base leading-loose">{event.description}</div>
                       ) : (
-                        <p className="text-gray-600 italic">
-                          Event details coming soon...
+                        <p className="text-gray-500 italic text-center py-8">
+                          {t("sections.eventDetailsComingSoon")}
                         </p>
                       )}
                     </div>
@@ -409,67 +472,80 @@ export default function EventDetailPage() {
               <motion.div variants={fadeInUp}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Date & Time Card */}
-                  <Card className="border-2 border-[#2D3320]/10 shadow-md hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="p-3 bg-[#781D32]/10 rounded-xl">
-                          <Calendar className="h-6 w-6 text-[#781D32]" />
+                  <Card className="group border-2 border-[#781D32]/20 shadow-lg hover:shadow-2xl transition-all duration-300 rounded-2xl bg-linear-to-br from-white to-[#781D32]/5 hover:border-[#781D32]/40">
+                    <CardContent className="p-8">
+                      <div className="flex items-start gap-5">
+                        <div className="p-4 bg-[#781D32]/15 rounded-2xl group-hover:bg-[#781D32]/25 transition-colors duration-300">
+                          <Calendar className="h-7 w-7 text-[#781D32]" />
                         </div>
-                        <div className="space-y-1">
-                          <h3 className="font-bold text-[#1A1D14]">Date & Time</h3>
-                          <p className="text-[#3E442B] font-medium">
-                            {formatEventDate(event.start_date)}
-                          </p>
-                          {event.start_time && (
-                            <p className="text-[#55613C]">
-                              {formatEventTime(event.start_time)}
-                              {event.end_time && ` - ${formatEventTime(event.end_time)}`}
+                        <div className="space-y-2 flex-1">
+                          <h3 className="text-lg font-bold text-[#1A1D14] flex items-center gap-2">
+                            {t("sections.dateTime")}
+                          </h3>
+                          <div className="space-y-1">
+                            <p className="text-[#3E442B] font-semibold text-base">
+                              {formatEventDate(event.start_date || event.date || event.startAt)}
                             </p>
-                          )}
-                          {event.end_date && event.end_date !== event.start_date && (
-                            <p className="text-sm text-[#55613C]">
-                              Until {formatEventDate(event.end_date)}
-                            </p>
-                          )}
+                            {event.start_time && (
+                              <p className="text-[#55613C] text-sm flex items-center gap-2">
+                                <Clock className="h-4 w-4" />
+                                {formatEventTime(event.start_time)}
+                                {event.end_time && ` - ${formatEventTime(event.end_time)}`}
+                              </p>
+                            )}
+                            {event.end_date && event.end_date !== event.start_date && (
+                              <p className="text-sm text-[#55613C]">
+                                {t("sections.until")} {formatEventDate(event.end_date)}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
                   {/* Location Card */}
-                  <Card className="border-2 border-[#2D3320]/10 shadow-md hover:shadow-lg transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <div className="p-3 bg-[#2D3320]/10 rounded-xl">
+                  <Card className="group border-2 border-[#2D3320]/20 shadow-lg hover:shadow-2xl transition-all duration-300 rounded-2xl bg-linear-to-br from-white to-[#2D3320]/5 hover:border-[#2D3320]/40">
+                    <CardContent className="p-8">
+                      <div className="flex items-start gap-5">
+                        <div className="p-4 bg-[#2D3320]/15 rounded-2xl group-hover:bg-[#2D3320]/25 transition-colors duration-300">
                           {event.location_mode === "virtual" ? (
-                            <Video className="h-6 w-6 text-[#2D3320]" />
+                            <Video className="h-7 w-7 text-[#2D3320]" />
                           ) : event.location_mode === "hybrid" ? (
-                            <Globe className="h-6 w-6 text-[#2D3320]" />
+                            <Globe className="h-7 w-7 text-[#2D3320]" />
                           ) : (
-                            <MapPin className="h-6 w-6 text-[#2D3320]" />
+                            <MapPin className="h-7 w-7 text-[#2D3320]" />
                           )}
                         </div>
-                        <div className="space-y-1">
-                          <h3 className="font-bold text-[#1A1D14]">Location</h3>
-                          <p className="text-[#3E442B] font-medium">
-                            {EVENT_LOCATION_MODES[event.location_mode]}
-                          </p>
-                          {event.venue_name && (
-                            <p className="text-[#55613C]">{event.venue_name}</p>
-                          )}
-                          {event.venue_address && (
-                            <p className="text-sm text-[#55613C]">{event.venue_address}</p>
-                          )}
-                          {event.virtual_link && (
-                            <a
-                              href={event.virtual_link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-[#781D32] hover:underline text-sm mt-2"
-                            >
-                              Join Online <ExternalLink className="h-3 w-3" />
-                            </a>
-                          )}
+                        <div className="space-y-2 flex-1">
+                          <h3 className="text-lg font-bold text-[#1A1D14] flex items-center gap-2">
+                            {t("sections.location")}
+                          </h3>
+                          <div className="space-y-1.5">
+                            <p className="text-[#3E442B] font-semibold text-base">
+                              {EVENT_LOCATION_MODES[event.location_mode as EventLocationMode] || t("sections.location")}
+                            </p>
+                            {event.venue_name && (
+                              <p className="text-[#55613C] font-medium">{event.venue_name}</p>
+                            )}
+                            {event.venue_address && (
+                              <p className="text-sm text-[#55613C] flex items-start gap-2">
+                                <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
+                                {event.venue_address}
+                              </p>
+                            )}
+                            {event.virtual_link && (
+                              <a
+                                href={event.virtual_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 text-[#781D32] hover:text-[#5E1727] font-medium text-sm mt-3 px-4 py-2 bg-[#781D32]/10 hover:bg-[#781D32]/20 rounded-lg transition-colors duration-200"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                                {t("sections.joinOnline")}
+                              </a>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -480,29 +556,31 @@ export default function EventDetailPage() {
               {/* Contact Info */}
               {(event.contact_email || event.contact_phone) && (
                 <motion.div variants={fadeInUp}>
-                  <Card className="border-2 border-[#2D3320]/10 shadow-md">
-                    <CardContent className="p-6">
-                      <h3 className="font-bold text-[#1A1D14] mb-4 flex items-center gap-2">
-                        <Users className="h-5 w-5 text-[#781D32]" />
-                        Contact Information
+                  <Card className="border-2 border-[#2D3320]/20 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl bg-linear-to-br from-white to-gray-50">
+                    <CardContent className="p-8">
+                      <h3 className="text-xl font-bold text-[#1A1D14] mb-6 flex items-center gap-3">
+                        <div className="p-2 bg-[#781D32]/15 rounded-lg">
+                          <Users className="h-5 w-5 text-[#781D32]" />
+                        </div>
+                        {t("sections.contactInformation")}
                       </h3>
-                      <div className="flex flex-wrap gap-6">
+                      <div className="flex flex-col gap-4">
                         {event.contact_email && (
                           <a
                             href={`mailto:${event.contact_email}`}
-                            className="flex items-center gap-2 text-[#3E442B] hover:text-[#781D32] transition-colors"
+                            className="flex items-center gap-3 text-[#3E442B] hover:text-[#781D32] transition-colors p-4 bg-gray-50 hover:bg-[#781D32]/10 rounded-xl border border-gray-200 hover:border-[#781D32]/30"
                           >
-                            <Mail className="h-5 w-5" />
-                            {event.contact_email}
+                            <Mail className="h-5 w-5 text-[#781D32]" />
+                            <span className="font-medium">{event.contact_email}</span>
                           </a>
                         )}
                         {event.contact_phone && (
                           <a
                             href={`tel:${event.contact_phone}`}
-                            className="flex items-center gap-2 text-[#3E442B] hover:text-[#781D32] transition-colors"
+                            className="flex items-center gap-3 text-[#3E442B] hover:text-[#781D32] transition-colors p-4 bg-gray-50 hover:bg-[#781D32]/10 rounded-xl border border-gray-200 hover:border-[#781D32]/30"
                           >
-                            <Phone className="h-5 w-5" />
-                            {event.contact_phone}
+                            <Phone className="h-5 w-5 text-[#781D32]" />
+                            <span className="font-medium">{event.contact_phone}</span>
                           </a>
                         )}
                       </div>
@@ -524,7 +602,7 @@ export default function EventDetailPage() {
                 <div className="bg-linear-to-r from-[#781D32] to-[#5E1727] p-6">
                   <h3 className="text-xl font-bold text-white flex items-center gap-2">
                     <Ticket className="h-5 w-5" />
-                    Registration
+                    {t("registration.title")}
                   </h3>
                 </div>
                 <CardContent className="p-6 space-y-6">
@@ -532,9 +610,9 @@ export default function EventDetailPage() {
                   {event.max_capacity && (
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-[#3E442B]">Spots Available</span>
+                        <span className="text-[#3E442B]">{t("registration.spotsAvailable")}</span>
                         <span className="font-bold text-[#1A1D14]">
-                          {event.max_capacity - event.current_registrations} / {event.max_capacity}
+                          {event.max_capacity - (event.current_registrations || 0)} / {event.max_capacity}
                         </span>
                       </div>
                       <Progress
@@ -543,7 +621,7 @@ export default function EventDetailPage() {
                       />
                       {getCapacityPercentage() >= 80 && (
                         <p className="text-xs text-[#781D32] font-medium">
-                          ⚡ Filling up fast!
+                          {t("registration.fillingUpFast")}
                         </p>
                       )}
                     </div>
@@ -558,19 +636,19 @@ export default function EventDetailPage() {
                       onClick={() => setIsRegistrationOpen(true)}
                       className="w-full bg-[#781D32] hover:bg-[#5E1727] text-white shadow-lg hover:shadow-xl transition-all duration-300"
                     >
-                      Register Now
+                      {t("buttons.registerNow")}
                       <ChevronRight className="h-5 w-5 ml-2" />
                     </Button>
                   ) : (
                     <div className="text-center space-y-2">
                       <Button disabled className="w-full">
-                        {isEventUpcoming(event.start_date)
-                          ? "Registration Closed"
-                          : "Event Has Ended"}
+                        {isEventUpcoming(event.start_date || event.date || event.startAt)
+                          ? t("registration.registrationClosed")
+                          : t("registration.eventHasEnded")}
                       </Button>
-                      {event.registration_deadline && isEventUpcoming(event.start_date) && (
+                      {event.registration_deadline && isEventUpcoming(event.start_date || event.date || event.startAt) && (
                         <p className="text-xs text-[#55613C]">
-                          Registration closed on {formatEventDate(event.registration_deadline)}
+                          {t("registration.registrationClosedOn")} {formatEventDate(event.registration_deadline)}
                         </p>
                       )}
                     </div>
@@ -579,44 +657,46 @@ export default function EventDetailPage() {
                   {/* Registration Info */}
                   {event.registration_required && event.registration_deadline && isEventUpcoming(event.registration_deadline) && (
                     <p className="text-sm text-[#55613C] text-center">
-                      Register by {formatEventDate(event.registration_deadline)}
+                      {t("registration.registerBy")} {formatEventDate(event.registration_deadline)}
                     </p>
                   )}
                 </CardContent>
               </Card>
 
               {/* Share Card */}
-              <Card className="border-2 border-[#2D3320]/10 shadow-md">
-                <CardContent className="p-6">
-                  <h3 className="font-bold text-[#1A1D14] mb-4 flex items-center gap-2">
-                    <Heart className="h-5 w-5 text-[#781D32]" />
-                    Share This Event
+              <Card className="border-2 border-[#781D32]/20 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl bg-linear-to-br from-white to-[#781D32]/5">
+                <CardContent className="p-8">
+                  <h3 className="text-xl font-bold text-[#1A1D14] mb-6 flex items-center gap-3">
+                    <div className="p-2 bg-[#781D32]/15 rounded-lg">
+                      <Heart className="h-5 w-5 text-[#781D32]" />
+                    </div>
+                    {t("share.title")}
                   </h3>
-                  <div className="flex gap-3">
+                  <div className="flex flex-col gap-3">
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="lg"
                       onClick={handleShare}
-                      className="flex-1 border-[#2D3320]/30 hover:bg-[#2D3320] hover:text-white transition-colors"
+                      className="w-full border-2 border-[#2D3320]/30 hover:bg-[#2D3320] hover:text-white hover:border-[#2D3320] transition-all duration-300 font-semibold"
                     >
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Share
+                      <Share2 className="h-5 w-5 mr-2" />
+                      {t("buttons.shareEvent")}
                     </Button>
                     <Button
                       variant="outline"
-                      size="sm"
+                      size="lg"
                       onClick={handleCopyLink}
-                      className="flex-1 border-[#2D3320]/30 hover:bg-[#2D3320] hover:text-white transition-colors"
+                      className="w-full border-2 border-[#2D3320]/30 hover:bg-[#2D3320] hover:text-white hover:border-[#2D3320] transition-all duration-300 font-semibold"
                     >
                       {copied ? (
                         <>
-                          <Check className="h-4 w-4 mr-2" />
-                          Copied!
+                          <Check className="h-5 w-5 mr-2" />
+                          {t("buttons.linkCopied")}
                         </>
                       ) : (
                         <>
-                          <Copy className="h-4 w-4 mr-2" />
-                          Copy Link
+                          <Copy className="h-5 w-5 mr-2" />
+                          {t("buttons.copyLink")}
                         </>
                       )}
                     </Button>
@@ -625,18 +705,28 @@ export default function EventDetailPage() {
               </Card>
 
               {/* Categories/Tags */}
-              {event.categories && (
-                <Card className="border-2 border-[#2D3320]/10 shadow-md">
-                  <CardContent className="p-6">
-                    <h3 className="font-bold text-[#1A1D14] mb-4">Categories</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {event.categories.split(",").map((category, index) => (
+              {event.categories && (Array.isArray(event.categories) ? event.categories.length > 0 : true) && (
+                <Card className="border-2 border-[#2D3320]/20 shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl bg-linear-to-br from-white to-[#2D3320]/5">
+                  <CardContent className="p-8">
+                    <h3 className="text-xl font-bold text-[#1A1D14] mb-6 flex items-center gap-3">
+                      <div className="p-2 bg-[#2D3320]/15 rounded-lg">
+                        <Sparkles className="h-5 w-5 text-[#2D3320]" />
+                      </div>
+                      {t("categories.title")}
+                    </h3>
+                    <div className="flex flex-wrap gap-3">
+                      {(Array.isArray(event.categories) 
+                        ? event.categories 
+                        : typeof event.categories === 'string' 
+                          ? event.categories.split(",")
+                          : []
+                      ).map((category: string, index: number) => (
                         <Badge
                           key={index}
                           variant="secondary"
-                          className="bg-[#2D3320]/10 text-[#2D3320] hover:bg-[#2D3320]/20 cursor-pointer"
+                          className="bg-[#2D3320]/10 text-[#2D3320] hover:bg-[#2D3320] hover:text-white border border-[#2D3320]/20 hover:border-[#2D3320] cursor-pointer transition-all duration-300 px-4 py-2 text-sm font-semibold"
                         >
-                          {category.trim()}
+                          {typeof category === 'string' ? category.trim() : category}
                         </Badge>
                       ))}
                     </div>
@@ -653,82 +743,78 @@ export default function EventDetailPage() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-[#1A1D14]">
-              Register for Event
+              {t("registrationModal.title")}
             </DialogTitle>
             <DialogDescription className="text-[#3E442B]">
-              Fill out the form below to register for &quot;{event.title}&quot;
+              {t("registrationModal.description", { eventTitle: event.title })}
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-6 py-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First Name *</Label>
+                <Label htmlFor="firstName">{t("registrationModal.firstName")} *</Label>
                 <Input
                   id="firstName"
                   value={registrationForm.firstName}
                   onChange={(e) =>
-                    setRegistrationForm((prev) => ({
+                    setRegistrationForm((prev: EventRegistrationFormData) => ({
                       ...prev,
                       firstName: e.target.value,
                     }))
                   }
-                  placeholder="John"
                   className="border-[#2D3320]/30 focus:border-[#781D32]"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name *</Label>
+                <Label htmlFor="lastName">{t("registrationModal.lastName")} *</Label>
                 <Input
                   id="lastName"
                   value={registrationForm.lastName}
                   onChange={(e) =>
-                    setRegistrationForm((prev) => ({
+                    setRegistrationForm((prev: EventRegistrationFormData) => ({
                       ...prev,
                       lastName: e.target.value,
                     }))
                   }
-                  placeholder="Doe"
                   className="border-[#2D3320]/30 focus:border-[#781D32]"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address *</Label>
+              <Label htmlFor="email">{t("registrationModal.email")} *</Label>
               <Input
                 id="email"
                 type="email"
                 value={registrationForm.email}
                 onChange={(e) =>
-                  setRegistrationForm((prev) => ({
+                  setRegistrationForm((prev: EventRegistrationFormData) => ({
                     ...prev,
                     email: e.target.value,
                   }))
                 }
-                placeholder="john@example.com"
                 className="border-[#2D3320]/30 focus:border-[#781D32]"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number (Optional)</Label>
+              <Label htmlFor="phone">{t("registrationModal.phone")}</Label>
               <Input
                 id="phone"
                 value={registrationForm.phone}
                 onChange={(e) =>
-                  setRegistrationForm((prev) => ({
+                  setRegistrationForm((prev: EventRegistrationFormData) => ({
                     ...prev,
                     phone: e.target.value,
                   }))
                 }
-                placeholder="+1 234 567 8900"
                 className="border-[#2D3320]/30 focus:border-[#781D32]"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="numberOfAttendees">Number of Attendees</Label>
+              <Label htmlFor="numberOfAttendees">{t("registrationModal.numberOfAttendees")}</Label>
               <Input
                 id="numberOfAttendees"
                 type="number"
@@ -736,7 +822,7 @@ export default function EventDetailPage() {
                 max={10}
                 value={registrationForm.numberOfAttendees}
                 onChange={(e) =>
-                  setRegistrationForm((prev) => ({
+                  setRegistrationForm((prev: EventRegistrationFormData) => ({
                     ...prev,
                     numberOfAttendees: parseInt(e.target.value) || 1,
                   }))
@@ -747,18 +833,18 @@ export default function EventDetailPage() {
 
             <div className="space-y-2">
               <Label htmlFor="specialRequirements">
-                Special Requirements or Questions (Optional)
+                {t("registrationModal.specialRequirements")}
               </Label>
               <Textarea
                 id="specialRequirements"
                 value={registrationForm.specialRequirements}
                 onChange={(e) =>
-                  setRegistrationForm((prev) => ({
+                  setRegistrationForm((prev: EventRegistrationFormData) => ({
                     ...prev,
                     specialRequirements: e.target.value,
                   }))
                 }
-                placeholder="Any dietary restrictions, accessibility needs, or questions?"
+                placeholder={t("registrationModal.specialRequirementsPlaceholder")}
                 rows={3}
                 className="border-[#2D3320]/30 focus:border-[#781D32]"
               />
@@ -768,19 +854,18 @@ export default function EventDetailPage() {
               <Button
                 onClick={() => {
                   // Handle registration submission
-                  console.log("Registration submitted:", registrationForm);
                   setIsRegistrationOpen(false);
                 }}
                 className="flex-1 bg-[#781D32] hover:bg-[#5E1727] text-white"
               >
-                Complete Registration
+                {t("registrationModal.completeRegistration")}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => setIsRegistrationOpen(false)}
                 className="border-[#2D3320]/30"
               >
-                Cancel
+                {t("registrationModal.cancel")}
               </Button>
             </div>
           </div>

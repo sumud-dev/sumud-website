@@ -1,210 +1,118 @@
 "use client";
 
-import { useState } from "react";
-import { Link } from "@/src/i18n/navigation";
+import * as React from "react";
+import { Link, useRouter } from "@/src/i18n/navigation";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
-import { Textarea } from "@/src/components/ui/textarea";
-import { ImageUpload } from "@/src/components/ui/image-upload";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/src/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/src/components/ui/card";
-import type { CampaignFormData } from "@/src/types/Campaigns";
-
-// Mock initial data for the form
-const mockInitialData: CampaignFormData = {
-  title: "",
-  description: "",
-  campaignType: "awareness",
-  status: "draft",
-  goal: 10000,
-  startDate: new Date().toISOString().split("T")[0],
-  endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split("T")[0],
-  imageUrl: "",
-};
+import { CampaignForm, type CampaignFormData } from "@/src/components/forms/campaign-form";
+import { createCampaignAction } from "@/src/actions/campaigns.actions";
+import { slugify } from "@/src/lib/utils/article.utils";
+import { toast } from "sonner";
 
 export default function NewCampaignPage() {
-  const [formData, setFormData] = useState<CampaignFormData>(mockInitialData);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isTranslating, setIsTranslating] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === "goal" ? Number(value) : value,
-    }));
-  };
-
-  const handleStatusChange = (value: CampaignFormData["status"]) => {
-    setFormData((prev) => ({
-      ...prev,
-      status: value,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (data: CampaignFormData) => {
     setIsSubmitting(true);
+    setError(null);
+    
+    if (data.autoTranslate) {
+      setIsTranslating(true);
+    }
 
-    // Mock submission - just simulate a delay
-    console.log("Form data:", formData);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      // Generate slug from title
+      const slug = slugify(data.title);
 
-    alert("Campaign created successfully! (Mock)");
-    setIsSubmitting(false);
+      // Prepare FormData for the action
+      const formData = new FormData();
+      formData.append("slug", slug);
+      formData.append("category", data.category || "");
+      formData.append("campaignType", data.campaignType || "");
+      formData.append("iconName", "");
+      formData.append("isActive", "true");
+      formData.append("isFeatured", String(data.isFeatured ?? false));
+      formData.append("status", data.status);
+      formData.append("autoTranslate", String(data.autoTranslate ?? true));
+
+      // Get the selected language (default to English)
+      const sourceLocale = data.language || "en";
+
+      // Prepare translations array with the source language
+      const translations = [
+        {
+          locale: sourceLocale,
+          title: data.title,
+          description: data.description,
+          demands: data.demands || [],
+          callToAction: data.callToAction || {},
+          howToParticipate: data.howToParticipate || [],
+          resources: [],
+          successStories: [],
+          targets: data.targets || [],
+          seoTitle: data.seoTitle || data.title,
+          seoDescription: data.seoDescription || data.description?.substring(0, 160),
+        },
+      ];
+
+      formData.append("translations", JSON.stringify(translations));
+
+      // Call the server action
+      const result = await createCampaignAction(formData);
+
+      if (!result.success) {
+        setError(result.error);
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success(result.message || "Campaign created successfully!");
+      router.push("/admin/campaigns");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to create campaign";
+      console.error("Error creating campaign:", err);
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+      setIsTranslating(false);
+    }
   };
 
   return (
-    <div className="container mx-auto py-8 max-w-2xl">
-      <div className="mb-6">
-        <Link
-          href="/admin/campaigns"
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          ← Back to Campaigns
-        </Link>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/admin/campaigns">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Campaigns
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">New Campaign</h1>
+            <p className="text-gray-600">
+              Create a new campaign to raise awareness and mobilize support.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Create New Campaign</CardTitle>
-          <CardDescription>
-            Create a new campaign.
-          </CardDescription>
-        </CardHeader>
+      {error && (
+        <div className="rounded-md bg-red-50 p-4">
+          <p className="text-sm text-red-800">{error}</p>
+        </div>
+      )}
 
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-6">
-            {/* Title */}
-            <div className="space-y-2">
-              <Label htmlFor="title">Campaign Title</Label>
-              <Input
-                id="title"
-                name="title"
-                placeholder="Enter campaign title"
-                value={formData.title}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                name="description"
-                placeholder="Describe your campaign..."
-                value={formData.description}
-                onChange={handleInputChange}
-                rows={4}
-                required
-              />
-            </div>
-
-            {/* Status */}
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={handleStatusChange}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="paused">Paused</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Date Range */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="startDate">Start Date</Label>
-                <Input
-                  id="startDate"
-                  name="startDate"
-                  type="date"
-                  value={formData.startDate}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="endDate">End Date</Label>
-                <Input
-                  id="endDate"
-                  name="endDate"
-                  type="date"
-                  value={formData.endDate}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Campaign Image */}
-            <div className="space-y-2">
-              <Label htmlFor="imageUrl">Campaign Image</Label>
-              <ImageUpload
-                value={formData.imageUrl || ""}
-                onChange={(url) => setFormData((prev) => ({ ...prev, imageUrl: url }))}
-                disabled={isSubmitting}
-                folder="campaigns"
-                maxSize={5}
-              />
-              <p className="text-xs text-muted-foreground">
-                Upload an image or enter URL below. Maximum size: 5MB.
-              </p>
-            </div>
-
-            {/* Image URL */}
-            <div className="space-y-2">
-              <Label htmlFor="imageUrl">Or enter image URL</Label>
-              <Input
-                id="imageUrl"
-                name="imageUrl"
-                type="url"
-                placeholder="https://example.com/image.jpg"
-                value={formData.imageUrl || ""}
-                onChange={handleInputChange}
-                disabled={isSubmitting}
-              />
-            </div>
-          </CardContent>
-
-          <CardFooter className="flex justify-between">
-            <Button type="button" variant="outline" asChild>
-              <Link href="/admin/campaigns">Cancel</Link>
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creating..." : "Create Campaign"}
-            </Button>
-          </CardFooter>
-        </form>
-      </Card>
+      <CampaignForm
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+        submitLabel="Create Campaign"
+        submittingLabel={isTranslating ? "Translating..." : "Creating..."}
+      />
     </div>
   );
 }

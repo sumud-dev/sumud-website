@@ -1,0 +1,382 @@
+{
+  "slug": "about",
+  "path": "/about",
+  "status": "published",
+  "createdAt": "2026-01-06T12:00:00.000Z",
+  "updatedAt": "2026-01-06T23:20:15.863Z",
+  "translations": {
+    "en": {
+      "title": "About Us - Sumud",
+      "description": "Learn more about Sumud and our mission to support Palestinian rights",
+      "blocks": [
+        {
+          "id": "page-hero-1",
+          "type": "page-hero",
+          "content": {
+            "icon": "Globe",
+            "content": {
+              "en": {
+                "title": "About Sumud",
+                "subtitle": "Finnish Palestine Network",
+                "description": "We are a community-driven organization dedicated to promoting solidarity, education, and advocacy for Palestinian rights in Finland."
+              },
+              "fi": {
+                "title": "Tietoa Sumudista",
+                "subtitle": "Suomen Palestiina-verkosto",
+                "description": "Olemme yhteisövetoinen järjestö, joka edistää solidaarisuutta, koulutusta ja palestiinalaisten oikeuksien edunvalvontaa Suomessa."
+              },
+              "ar": {
+                "title": "عن صمود",
+                "subtitle": "شبكة فلسطين الفنلندية",
+                "description": "نحن منظمة يقودها المجتمع مكرسة لتعزيز التضامن والتعليم والدفاع عن حقوق الفلسطينيين في فنلندا."
+              }
+            }
+          }
+        },
+        {
+          "id": "mission-1",
+          "type": "mission-section",
+          "content": {
+            "content": {
+              "en": {
+                "title": "Our Mission",
+                "description": "Sumud (صمود) means \"steadfast perseverance\" in Arabic. We embody this spirit by fostering understanding, providing education, and advocating for Palestinian rights within Finnish society. Through cultural exchange, community building, and peaceful activism, we work to create a more just and informed world."
+              },
+              "fi": {
+                "title": "Missiomme",
+                "description": "Sumud (صمود) tarkoittaa arabiaksi \"sinnikkäästi kestämistä\". Toteutamme tätä henkeä edistämällä ymmärrystä, tarjoamalla koulutusta ja ajamalla palestiinalaisten oikeuksia suomalaisessa yhteiskunnassa. Kulttuurivaihdon, yhteisön rakentamisen ja rauhanomaisen aktivismin kautta työskentelemme oikeudenmukaisemman ja valistuneemman maailman puolesta."
+              },
+              "ar": {
+                "title": "مهمتنا",
+                "description": "صمود تعني \"المثابرة الصامدة\" بالعربية. نجسد هذه الروح من خلال تعزيز التفاهم وتوفير التعليم والدفاع عن حقوق الفلسطينيين في المجتمع الفنلندي. من خلال التبادل الثقافي وبناء المجتمع والنشاط السلمي، نعمل على خلق عالم أكثر عدلاً ووعياً."
+              }
+            }
+          }
+        },
+        {
+          "id": "features-1",
+          "type": "features-section",
+          "content": {
+            "header": {
+              "en": {
+                "title": "What We Do",
+                "subtitle": "Our work spans education, advocacy, cultural exchange, and community support to advance Palestinian rights and solidarity."
+              },
+              "fi": {
+                "title": "Mitä teemme",
+                "subtitle": "Työmme kattaa koulutuksen, edunvalvonnan, kulttuurivaihdon ja yhteisötuen palestiinalaisten oikeuksien ja solidaarisuuden edistämiseksi."
+              },
+              "ar": {
+                "title": "ماذا نفعل",
+                "subtitle": "يشمل عملنا التعليم والدعوة والتبادل الثقافي ودعم المجتمع لتعزيز حقوق الفلسطينيين والتضامن."
+              }
+            },
+            "items": [
+              {
+                "key": "education",
+                "icon": "BookOpen",
+                "color": "bg-[#781D32]",
+                "content": {
+                  "en": {
+                    "title": "Education & Awareness",
+                    "description": "Providing accurate information about Palestinian history, culture, and current events through workshops, seminars, and public events."
+                  },
+                  "fi": {
+                    "title": "Koulutus ja tietoisuus 2",
+                    "description": "Tarjoamme tarkkaa tietoa Palestiinan historiasta, kulttuurista ja ajankohtaisista tapahtumista työpajojen, seminaarien ja julkisten tapahtumien kautta."
+                  },
+                  "ar": {
+                    "title": "التعليم والتوعية",
+                    "description": "تقديم معلومات دقيقة حول التاريخ والثقافة والأحداث الجارية الفلسطينية من خلال ورش العمل والندوات والفعاليات العامة."
+                  }
+                }
+              },
+              {
+                "key": "advocacy",
+                "icon": "Megaphone",
+                "color": "bg-[#55613C]",
+                "content": {
+                  "en": {
+                    "title": "Advocacy & Campaigns",
+                    "description": "Supporting BDS initiatives, apartheid-free zones, and cultural/academic boycotts to promote Palestinian rights."
+                  },
+                  "fi": {
+                    "title": "Edunvalvonta ja kampanjat",
+                    "description": "Tuemme BDS-aloitteita, apartheidvapaita vyöhykkeitä sekä kulttuuri- ja akateemisia boikotteja palestiinalaisten oikeuksien edistämiseksi."
+                  },
+                  "ar": {
+                    "title": "المناصرة والحملات",
+                    "description": "دعم مبادرات المقاطعة وسحب الاستثمارات والعقوبات والمناطق الخالية من الفصل العنصري والمقاطعات الثقافية والأكاديمية لتعزيز حقوق الفلسطينيين."
+                  }
+                }
+              },
+              {
+                "key": "cultural",
+                "icon": "Globe",
+                "color": "bg-[#3E442B]",
+                "content": {
+                  "en": {
+                    "title": "Cultural Exchange",
+                    "description": "Celebrating Palestinian heritage and fostering connections between Finnish and Palestinian communities."
+                  },
+                  "fi": {
+                    "title": "Kulttuurivaihto",
+                    "description": "Juhlistamme palestiinalaista perintöä ja edistämme yhteyksiä suomalaisten ja palestiinalaisten yhteisöjen välillä."
+                  },
+                  "ar": {
+                    "title": "التبادل الثقافي",
+                    "description": "الاحتفاء بالتراث الفلسطيني وتعزيز الروابط بين المجتمعات الفنلندية والفلسطينية."
+                  }
+                }
+              },
+              {
+                "key": "community",
+                "icon": "HandshakeIcon",
+                "color": "bg-[#781D32]",
+                "content": {
+                  "en": {
+                    "title": "Community Support",
+                    "description": "Organizing fundraising events and humanitarian initiatives to support Palestinian communities."
+                  },
+                  "fi": {
+                    "title": "Yhteisötuki",
+                    "description": "Järjestämme varainkeruutapahtumia ja humanitaarisia aloitteita palestiinalaisten yhteisöjen tukemiseksi."
+                  },
+                  "ar": {
+                    "title": "دعم المجتمع",
+                    "description": "تنظيم فعاليات جمع التبرعات والمبادرات الإنسانية لدعم المجتمعات الفلسطينية."
+                  }
+                }
+              }
+            ],
+            "columns": 4
+          }
+        },
+        {
+          "id": "values-1",
+          "type": "values-section",
+          "content": {
+            "header": {
+              "en": {
+                "title": "Our Values",
+                "subtitle": "These core principles guide everything we do in our work for Palestinian solidarity."
+              },
+              "fi": {
+                "title": "Arvomme",
+                "subtitle": "Nämä perusperiaatteet ohjaavat kaikkea työtämme palestiinalaisen solidaarisuuden puolesta."
+              },
+              "ar": {
+                "title": "قيمنا",
+                "subtitle": "هذه المبادئ الأساسية توجه كل ما نقوم به في عملنا من أجل التضامن الفلسطيني."
+              }
+            },
+            "items": [
+              {
+                "key": "solidarity",
+                "icon": "Heart",
+                "content": {
+                  "en": {
+                    "title": "Solidarity",
+                    "description": "Building bridges of understanding and support between Finnish and Palestinian communities."
+                  },
+                  "fi": {
+                    "title": "Solidaarisuus",
+                    "description": "Rakennamme ymmärryksen ja tuen siltoja suomalaisten ja palestiinalaisten yhteisöjen välille."
+                  },
+                  "ar": {
+                    "title": "التضامن",
+                    "description": "بناء جسور التفاهم والدعم بين المجتمعات الفنلندية والفلسطينية."
+                  }
+                }
+              },
+              {
+                "key": "justice",
+                "icon": "Shield",
+                "content": {
+                  "en": {
+                    "title": "Justice",
+                    "description": "Advocating for human rights and dignity for all Palestinian people."
+                  },
+                  "fi": {
+                    "title": "Oikeudenmukaisuus",
+                    "description": "Ajamme ihmisoikeuksia ja ihmisarvoa kaikille palestiinalaisille."
+                  },
+                  "ar": {
+                    "title": "العدالة",
+                    "description": "الدفاع عن حقوق الإنسان والكرامة لجميع الفلسطينيين."
+                  }
+                }
+              },
+              {
+                "key": "community",
+                "icon": "Users",
+                "content": {
+                  "en": {
+                    "title": "Community",
+                    "description": "Creating inclusive spaces for dialogue, education, and collective action."
+                  },
+                  "fi": {
+                    "title": "Yhteisö",
+                    "description": "Luomme osallistavia tiloja vuoropuhelulle, koulutukselle ja yhteiselle toiminnalle."
+                  },
+                  "ar": {
+                    "title": "المجتمع",
+                    "description": "خلق مساحات شاملة للحوار والتعليم والعمل الجماعي."
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "engagement-1",
+          "type": "engagement-section",
+          "content": {
+            "header": {
+              "en": {
+                "title": "Ways to Engage",
+                "subtitle": "There are many ways to support our mission and become part of the Sumud community."
+              },
+              "fi": {
+                "title": "Tapoja osallistua",
+                "subtitle": "On monia tapoja tukea missiota ja tulla osaksi Sumud-yhteisöä."
+              },
+              "ar": {
+                "title": "طرق المشاركة",
+                "subtitle": "هناك العديد من الطرق لدعم مهمتنا وأن تصبح جزءًا من مجتمع صمود."
+              }
+            },
+            "items": [
+              {
+                "key": "petitions",
+                "icon": "FileText",
+                "href": "/campaigns",
+                "content": {
+                  "en": {
+                    "title": "Petitions & Initiatives",
+                    "description": "Sign and support our ongoing petitions for justice and Palestinian rights.",
+                    "action": "Browse Petitions"
+                  },
+                  "fi": {
+                    "title": "Vetoomukset ja aloitteet",
+                    "description": "Allekirjoita ja tue käynnissä olevia vetoomuksiamme oikeudenmukaisuuden ja palestiinalaisten oikeuksien puolesta.",
+                    "action": "Selaa vetoomuksia"
+                  },
+                  "ar": {
+                    "title": "العرائض والمبادرات",
+                    "description": "وقّع وادعم عرائضنا المستمرة من أجل العدالة وحقوق الفلسطينيين.",
+                    "action": "تصفح العرائض"
+                  }
+                }
+              },
+              {
+                "key": "membership",
+                "icon": "Users",
+                "href": "/membership",
+                "content": {
+                  "en": {
+                    "title": "Membership Program",
+                    "description": "Join our community as a member and get exclusive access to events and updates.",
+                    "action": "Become a Member"
+                  },
+                  "fi": {
+                    "title": "Jäsenyysohjelma",
+                    "description": "Liity yhteisöömme jäseneksi ja saa eksklusiivinen pääsy tapahtumiin ja päivityksiin.",
+                    "action": "Ryhdy jäseneksi"
+                  },
+                  "ar": {
+                    "title": "برنامج العضوية",
+                    "description": "انضم إلى مجتمعنا كعضو واحصل على وصول حصري للفعاليات والتحديثات.",
+                    "action": "انضم كعضو"
+                  }
+                }
+              },
+              {
+                "key": "donate",
+                "icon": "Heart",
+                "href": "/join",
+                "content": {
+                  "en": {
+                    "title": "Make a Donation",
+                    "description": "Support our mission with a donation to help fund our programs and campaigns.",
+                    "action": "Donate Now"
+                  },
+                  "fi": {
+                    "title": "Tee lahjoitus",
+                    "description": "Tue missiota lahjoituksella ohjelmiemme ja kampanjoidemme rahoittamiseksi.",
+                    "action": "Lahjoita nyt"
+                  },
+                  "ar": {
+                    "title": "قدم تبرعًا",
+                    "description": "ادعم مهمتنا بتبرع للمساعدة في تمويل برامجنا وحملاتنا.",
+                    "action": "تبرع الآن"
+                  }
+                }
+              },
+              {
+                "key": "volunteer",
+                "icon": "Megaphone",
+                "href": "/volunteer",
+                "content": {
+                  "en": {
+                    "title": "Volunteer With Us",
+                    "description": "Get involved by volunteering your time and skills to support our initiatives.",
+                    "action": "Learn More"
+                  },
+                  "fi": {
+                    "title": "Vapaaehtoistyö",
+                    "description": "Osallistu vapaaehtoisena antamalla aikaa ja taitoja aloitteidemme tukemiseksi.",
+                    "action": "Lue lisää"
+                  },
+                  "ar": {
+                    "title": "تطوع معنا",
+                    "description": "شارك من خلال التطوع بوقتك ومهاراتك لدعم مبادراتنا.",
+                    "action": "اعرف المزيد"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "cta-1",
+          "type": "cta-section",
+          "content": {
+            "primaryButtonHref": "/membership",
+            "secondaryButtonHref": "/campaigns",
+            "content": {
+              "en": {
+                "title": "Ready to Join Our Movement?",
+                "description": "Become part of a community dedicated to justice, education, and solidarity. Your voice and participation can make a real difference.",
+                "primaryButtonText": "Become a Member",
+                "secondaryButtonText": "Learn More"
+              },
+              "fi": {
+                "title": "Valmis liittymään liikkeeseemme?",
+                "description": "Tule osaksi yhteisöä, joka on omistautunut oikeudenmukaisuudelle, koulutukselle ja solidaarisuudelle. Äänelläsi ja osallistumisellasi on todellinen merkitys.",
+                "primaryButtonText": "Ryhdy jäseneksi",
+                "secondaryButtonText": "Lue lisää"
+              },
+              "ar": {
+                "title": "هل أنت مستعد للانضمام إلى حركتنا؟",
+                "description": "كن جزءًا من مجتمع مكرس للعدالة والتعليم والتضامن. صوتك ومشاركتك يمكن أن يحدثا فرقًا حقيقيًا.",
+                "primaryButtonText": "انضم كعضو",
+                "secondaryButtonText": "اعرف المزيد"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "fi": {
+      "title": "Tietoa meistä - Sumud",
+      "description": "Lue lisää Sumudista ja missiostamme tukea palestiinalaisten oikeuksia",
+      "blocks": []
+    },
+    "ar": {
+      "title": "من نحن - صمود",
+      "description": "تعرف على المزيد عن صمود ومهمتنا لدعم الحقوق الفلسطينية",
+      "blocks": []
+    }
+  }
+}

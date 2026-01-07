@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
-import { toast } from "sonner";
 import { ArrowLeft, Globe, Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
@@ -14,13 +13,55 @@ import {
 } from "@/src/components/ui/tabs";
 import { Link } from "@/src/i18n/navigation";
 import ContentEditor from "@/src/components/admin/content/ContentEditor";
-import { getContentByNamespace } from "@/src/actions/content.actions";
-import {
-  NAMESPACE_INFO,
-  type ContentNamespace,
-  type Locale,
-  type SiteContent,
-} from "@/src/types/Content";
+
+// Mock types
+type ContentNamespace = string;
+type Locale = "en" | "ar" | "fi";
+
+interface SiteContent {
+  id: string;
+  namespace: string;
+  key: string;
+  value: string;
+  locale: Locale;
+}
+
+// Mock namespace info
+const NAMESPACE_INFO: Record<string, { label: string; description: string }> = {
+  common: { label: "Common", description: "Common UI elements and shared content" },
+  navigation: { label: "Navigation", description: "Menu items and navigation labels" },
+  homepage: { label: "Homepage", description: "Homepage content and sections" },
+  about: { label: "About", description: "About page content" },
+  team: { label: "Team", description: "Team member information" },
+  articles: { label: "Articles", description: "Article-related content" },
+};
+
+// Mock data
+const createMockContent = (namespace: string, locale: Locale): SiteContent[] => {
+  return [
+    {
+      id: `${namespace}-${locale}-1`,
+      namespace,
+      key: "title",
+      value: locale === "ar" ? "عنوان تجريبي" : locale === "fi" ? "Otsikko" : "Sample Title",
+      locale,
+    },
+    {
+      id: `${namespace}-${locale}-2`,
+      namespace,
+      key: "description",
+      value: locale === "ar" ? "وصف تجريبي للمحتوى" : locale === "fi" ? "Kuvaus sisällöstä" : "Sample description content",
+      locale,
+    },
+    {
+      id: `${namespace}-${locale}-3`,
+      namespace,
+      key: "cta",
+      value: locale === "ar" ? "انقر هنا" : locale === "fi" ? "Klikkaa tästä" : "Click here",
+      locale,
+    },
+  ];
+};
 
 interface NamespacePageProps {
   params: Promise<{ namespace: string }>;
@@ -43,7 +84,7 @@ export default function NamespaceEditorPage({ params }: NamespacePageProps) {
     ar: [],
     fi: [],
   });
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   // Resolve params
   React.useEffect(() => {
@@ -53,32 +94,16 @@ export default function NamespaceEditorPage({ params }: NamespacePageProps) {
   const namespace = resolvedParams?.namespace as ContentNamespace;
   const namespaceInfo = namespace ? NAMESPACE_INFO[namespace] : null;
 
-  // Load content for all locales
+  // Load mock content for all locales
   React.useEffect(() => {
-    async function loadContent() {
-      if (!namespace) return;
-      
-      setIsLoading(true);
-      try {
-        const [enResult, arResult, fiResult] = await Promise.all([
-          getContentByNamespace(namespace, "en"),
-          getContentByNamespace(namespace, "ar"),
-          getContentByNamespace(namespace, "fi"),
-        ]);
-
-        setContent({
-          en: enResult.data || [],
-          ar: arResult.data || [],
-          fi: fiResult.data || [],
-        });
-      } catch (error) {
-        console.error("Error loading content:", error);
-        toast.error("Failed to load content");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadContent();
+    if (!namespace) return;
+    
+    // Set mock data
+    setContent({
+      en: createMockContent(namespace, "en"),
+      ar: createMockContent(namespace, "ar"),
+      fi: createMockContent(namespace, "fi"),
+    });
   }, [namespace]);
 
   // Handle locale change
@@ -90,17 +115,15 @@ export default function NamespaceEditorPage({ params }: NamespacePageProps) {
     window.history.pushState({}, "", url);
   };
 
-  // Refresh content after save
-  const handleSaveSuccess = async () => {
+  // Handle save success
+  const handleSaveSuccess = () => {
     if (!namespace) return;
     
-    const result = await getContentByNamespace(namespace, activeLocale);
-    if (result.data) {
-      setContent((prev) => ({
-        ...prev,
-        [activeLocale]: result.data || [],
-      }));
-    }
+    // Optionally refresh mock data
+    setContent((prev) => ({
+      ...prev,
+      [activeLocale]: createMockContent(namespace, activeLocale),
+    }));
   };
 
   if (!resolvedParams) {

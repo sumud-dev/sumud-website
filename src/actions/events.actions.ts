@@ -1,465 +1,525 @@
-"use server";
+/**
+ * Next.js Server Actions for Events
+ * 
+ * Server Actions provide a simpler alternative to API routes
+ * for mutations and form submissions with better type safety.
+ */
 
-import { revalidatePath } from "next/cache";
-import { createClient } from "@/src/lib/supabase/server";
-import { createAdminClient } from "@/src/lib/supabase/admin";
-import type { Database } from "@/src/lib/database.types";
+'use server';
+
+import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
+import { requirePermission } from '@/src/lib/auth/server-auth';
 import {
-  generateSlug,
-  generateEventId,
-  type Event,
-  type EventStatus,
-  type CreateEventData,
-  type UpdateEventData,
-  type ActionResponse,
-  type MutationResponse,
-} from "@/src/lib/utils/event.utils";
-
-// Re-export types for consumers
-export type { Event, EventStatus, CreateEventData, UpdateEventData };
-
-// Database types for internal use
-type EventInsert = Database["public"]["Tables"]["events"]["Insert"];
-type EventUpdate = Database["public"]["Tables"]["events"]["Update"];
+  getAllEvents,
+  getEventBySlug,
+  getEventById,
+  getPublishedEvents,
+  getUpcomingEvents,
+  getEventsByCategory,
+  searchEvents,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+} from '@/src/lib/db/queries/events';
 
 // ============================================
-// READ OPERATIONS (using regular client with RLS)
+// VALIDATION SCHEMAS
+// ============================================
+
+const eventBaseSchema = z.object({
+  slug: z.string().max(200).regex(/^[a-z0-9-]*$/, 'Slug must be lowercase alphanumeric with hyphens').optional().nullable(),
+  title: z.string().max(500).optional().nullable(),
+  description: z.string().max(2000).optional().nullable(),
+  content: z.string().optional().nullable(),
+  location: z.string().max(500).optional().nullable(),
+  status: z.enum(['draft', 'published', 'archived']).optional().nullable(),
+  author: z.string().optional().nullable(),
+  authorName: z.string().optional().nullable(),
+  language: z.enum(['en', 'fi', 'ar']).optional().nullable(),
+  date: z.coerce.date().optional().nullable(),
+  startAt: z.coerce.date().optional().nullable(),
+  endAt: z.coerce.date().optional().nullable(),
+  publishedAt: z.coerce.date().optional().nullable(),
+  featuredImage: z.string().max(500).optional().nullable(),
+  altTexts: z.any().optional().nullable(),
+  categories: z.any().optional().nullable(),
+  locations: z.any().optional().nullable(),
+  organizers: z.any().optional().nullable(),
+});
+
+const createEventSchema = z.object({
+  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens'),
+  title: z.string().min(1).max(500),
+  description: z.string().max(2000).optional(),
+  content: z.string().optional(),
+  location: z.string().max(500).optional(),
+  status: z.enum(['draft', 'published', 'archived']).default('draft'),
+  author: z.string().optional(),
+  authorName: z.string().optional(),
+  language: z.enum(['en', 'fi', 'ar']).default('en'),
+  date: z.coerce.date().optional(),
+  startAt: z.coerce.date().optional(),
+  endAt: z.coerce.date().optional(),
+  publishedAt: z.coerce.date().optional(),
+  featuredImage: z.string().max(500).optional(),
+  altTexts: z.any().optional(),
+  categories: z.any().optional(),
+  locations: z.any().optional(),
+  organizers: z.any().optional(),
+});
+
+// ============================================
+// RESULT TYPE
+// ============================================
+
+type ActionResult<T = unknown> = 
+  | { success: true; data: T; message?: string }
+  | { success: false; error: string; errors?: Record<string, string[]> };
+
+// ============================================
+// EVENT ACTIONS - READ
 // ============================================
 
 /**
- * Fetch all events ordered by published date
+ * Fetch all events (public read access - no auth required)
+ * This allows anyone to view events regardless of status
  */
-export async function getEvents(): Promise<ActionResponse<Event[]>> {
+export async function fetchAllEventsAdminAction(
+  filters?: {
+    limit?: number;
+    offset?: number;
+    page?: number;
+    status?: string;
+    language?: string;
+    locale?: string;
+  }
+): Promise<ActionResult> {
   try {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from("events")
-      .select("*")
-      .order("published_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching events:", error);
-      return { data: null, error: error.message };
-    }
-
-    return { data, error: null };
-  } catch (err) {
-    console.error("Unexpected error fetching events:", err);
-    return { data: null, error: "An unexpected error occurred" };
+    // No permission check - public read access allowed
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 16;
+    const offset = filters?.offset ?? (page - 1) * limit;
+    
+    const result = await getAllEvents({
+      ...filters,
+      page,
+      limit,
+      offset,
+    });
+    
+    return {
+      success: true,
+      data: {
+        events: result.events,
+        pagination: {
+          page: result.page,
+          limit: result.limit,
+          total: result.total,
+          pages: result.pages,
+        },
+      },
+    };
+  } catch (error) {
+    console.error('Error fetching all events:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch events',
+    };
   }
 }
 
 /**
- * Fetch published events only (for public pages)
+ * Fetch all published events with optional filters
  */
-export async function getPublishedEvents(): Promise<ActionResponse<Event[]>> {
+export async function fetchPublishedEventsAction(
+  filters?: {
+    limit?: number;
+    offset?: number;
+    language?: string;
+  }
+): Promise<ActionResult> {
   try {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from("events")
-      .select("*")
-      .eq("status", "published")
-      .order("published_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching published events:", error);
-      return { data: null, error: error.message };
-    }
-
-    return { data, error: null };
-  } catch (err) {
-    console.error("Unexpected error fetching published events:", err);
-    return { data: null, error: "An unexpected error occurred" };
+    const events = await getPublishedEvents(filters);
+    
+    return {
+      success: true,
+      data: events,
+    };
+  } catch (error) {
+    console.error('Error fetching published events:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch events',
+    };
   }
 }
 
 /**
- * Fetch a single event by ID
+ * Fetch upcoming events
  */
-export async function getEventById(id: string): Promise<ActionResponse<Event>> {
-  if (!id || typeof id !== "string") {
-    return { data: null, error: "Invalid event ID" };
+export async function fetchUpcomingEventsAction(
+  filters?: {
+    limit?: number;
+    language?: string;
   }
-
+): Promise<ActionResult> {
   try {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from("events")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Error fetching event by ID:", error);
-      return { data: null, error: error.message };
-    }
-
-    if (!data) {
-      return { data: null, error: "Event not found" };
-    }
-
-    return { data, error: null };
-  } catch (err) {
-    console.error("Unexpected error fetching event:", err);
-    return { data: null, error: "An unexpected error occurred" };
+    const events = await getUpcomingEvents(filters);
+    
+    return {
+      success: true,
+      data: events,
+    };
+  } catch (error) {
+    console.error('Error fetching upcoming events:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch upcoming events',
+    };
   }
 }
 
 /**
- * Fetch a single event by slug
+ * Fetch event by slug
  */
-export async function getEventBySlug(slug: string): Promise<ActionResponse<Event>> {
-  if (!slug || typeof slug !== "string") {
-    return { data: null, error: "Invalid slug" };
-  }
-
+export async function fetchEventBySlugAction(
+  slug: string
+): Promise<ActionResult> {
   try {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from("events")
-      .select("*")
-      .eq("slug", slug)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Error fetching event by slug:", error);
-      return { data: null, error: error.message };
+    if (!slug) {
+      return {
+        success: false,
+        error: 'Slug is required',
+      };
     }
 
-    if (!data) {
-      return { data: null, error: "Event not found" };
+    const event = await getEventBySlug(slug);
+    
+    if (!event) {
+      return {
+        success: false,
+        error: 'Event not found',
+      };
     }
 
-    return { data, error: null };
-  } catch (err) {
-    console.error("Unexpected error fetching event:", err);
-    return { data: null, error: "An unexpected error occurred" };
+    return {
+      success: true,
+      data: event,
+    };
+  } catch (error) {
+    console.error('Error fetching event by slug:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch event',
+    };
+  }
+}
+
+/**
+ * Fetch event by ID
+ */
+export async function fetchEventByIdAction(
+  id: string
+): Promise<ActionResult> {
+  try {
+    if (!id) {
+      return {
+        success: false,
+        error: 'ID is required',
+      };
+    }
+
+    const event = await getEventById(id);
+    
+    if (!event) {
+      return {
+        success: false,
+        error: 'Event not found',
+      };
+    }
+
+    return {
+      success: true,
+      data: event,
+    };
+  } catch (error) {
+    console.error('Error fetching event by ID:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch event',
+    };
   }
 }
 
 /**
  * Fetch events by category
  */
-export async function getEventsByCategory(
-  category: string
-): Promise<ActionResponse<Event[]>> {
-  if (!category || typeof category !== "string") {
-    return { data: null, error: "Invalid category" };
+export async function fetchEventsByCategoryAction(
+  category: string,
+  filters?: {
+    limit?: number;
+    offset?: number;
+    language?: string;
   }
-
+): Promise<ActionResult> {
   try {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-      .from("events")
-      .select("*")
-      .ilike("categories", `%${category}%`)
-      .eq("status", "published")
-      .order("published_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching events by category:", error);
-      return { data: null, error: error.message };
+    if (!category) {
+      return {
+        success: false,
+        error: 'Category is required',
+      };
     }
 
-    return { data, error: null };
-  } catch (err) {
-    console.error("Unexpected error fetching events by category:", err);
-    return { data: null, error: "An unexpected error occurred" };
+    const events = await getEventsByCategory(category, filters);
+    
+    return {
+      success: true,
+      data: events,
+    };
+  } catch (error) {
+    console.error('Error fetching events by category:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch events',
+    };
+  }
+}
+
+/**
+ * Search events
+ */
+export async function searchEventsAction(
+  query: string,
+  filters?: {
+    limit?: number;
+    language?: string;
+  }
+): Promise<ActionResult> {
+  try {
+    if (!query || query.trim().length === 0) {
+      return {
+        success: false,
+        error: 'Search query is required',
+      };
+    }
+
+    const events = await searchEvents(query, filters);
+    
+    return {
+      success: true,
+      data: events,
+    };
+  } catch (error) {
+    console.error('Error searching events:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to search events',
+    };
+  }
+}
+
+/**
+ * Get event count
+ */
+export async function getEventCountAction(
+  status?: string,
+  language?: string
+): Promise<ActionResult> {
+  try {
+    const { db } = await import('@/src/lib/db');
+    const { events } = await import('@/src/lib/db/schema');
+    const { eq, and, sql } = await import('drizzle-orm');
+    
+    const whereConditions: ReturnType<typeof eq>[] = [];
+    if (language) {
+      whereConditions.push(eq(events.language, language));
+    }
+    if (status) {
+      whereConditions.push(eq(events.status, status));
+    }
+    
+    const baseQuery = db.select({ count: sql<number>`count(*)` }).from(events);
+    const result = whereConditions.length > 0
+      ? await baseQuery.where(and(...whereConditions))
+      : await baseQuery;
+    
+    const count = result[0]?.count || 0;
+    
+    return {
+      success: true,
+      data: { count },
+    };
+  } catch (error) {
+    console.error('Error getting event count:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get event count',
+    };
   }
 }
 
 // ============================================
-// WRITE OPERATIONS (using admin client to bypass RLS)
+// EVENT ACTIONS - WRITE (Admin Only)
 // ============================================
 
 /**
  * Create a new event
  */
-export async function createEvent(
-  data: CreateEventData
-): Promise<MutationResponse & { id?: string; slug?: string }> {
-  // Validate required fields
-  if (!data.title?.trim()) {
-    return { success: false, error: "Title is required" };
-  }
-
-  if (!data.content?.trim()) {
-    return { success: false, error: "Content is required" };
-  }
-
+export async function createEventAction(
+  input: z.infer<typeof createEventSchema>
+): Promise<ActionResult> {
   try {
-    const supabase = createAdminClient();
+    // Check permissions
+    await requirePermission('create_events');
 
-    const eventId = generateEventId();
-    const slug = data.slug?.trim() || generateSlug(data.title);
-    const now = new Date().toISOString();
+    // Validate input
+    const validated = createEventSchema.parse(input);
 
-    // Check if slug already exists
-    const { data: existingEvent } = await supabase
-      .from("events")
-      .select("id")
-      .eq("slug", slug)
-      .maybeSingle();
+    // Create event
+    const event = await createEvent({
+      ...validated,
+      slug: validated.slug.toLowerCase(),
+    });
 
-    if (existingEvent) {
-      return { success: false, error: "An event with this slug already exists" };
-    }
+    // Revalidate cache
+    revalidatePath('/admin/events');
+    revalidatePath('/events');
 
-    const insertData: EventInsert = {
-      id: eventId,
-      title: data.title.trim(),
-      slug,
-      content: data.content.trim(),
-      status: data.status || "draft",
-      featured_image: data.featured_image || null,
-      alt_texts: data.alt_texts || null,
-      categories: data.categories || null,
-      locations: data.locations || null,
-      organizers: data.organizers || null,
-      language: data.language || "en",
-      author_name: data.author_name || null,
-      published_at: data.status === "published" ? now : null,
-      updated_at: now,
+    return {
+      success: true,
+      data: event,
+      message: 'Event created successfully',
     };
-
-    const { error } = await supabase.from("events").insert(insertData);
-
-    if (error) {
-      console.error("Error creating event:", error);
-      return { success: false, error: error.message };
-    }
-
-    revalidatePath("/admin/events");
-
-    return { success: true, error: null, id: eventId, slug };
-  } catch (err) {
-    console.error("Unexpected error creating event:", err);
-    return { success: false, error: "An unexpected error occurred" };
-  }
-}
-
-/**
- * Update an existing event
- */
-export async function updateEvent(
-  id: string,
-  data: UpdateEventData
-): Promise<MutationResponse & { slug?: string }> {
-  if (!id || typeof id !== "string") {
-    return { success: false, error: "Invalid event ID" };
-  }
-
-  try {
-    const supabase = createAdminClient();
-
-    // Verify event exists
-    const { data: existingEvent, error: fetchError } = await supabase
-      .from("events")
-      .select("id, slug")
-      .eq("id", id)
-      .maybeSingle();
-
-    if (fetchError) {
-      console.error("Error fetching event for update:", fetchError);
-      return { success: false, error: fetchError.message };
-    }
-
-    if (!existingEvent) {
-      return { success: false, error: `Event with ID ${id} not found` };
-    }
-
-    // Check for slug conflicts if updating slug
-    if (data.slug && data.slug !== existingEvent.slug) {
-      const { data: slugConflict } = await supabase
-        .from("events")
-        .select("id")
-        .eq("slug", data.slug)
-        .neq("id", id)
-        .maybeSingle();
-
-      if (slugConflict) {
-        return { success: false, error: "An event with this slug already exists" };
-      }
-    }
-
-    const updateData: EventUpdate = {
-      updated_at: new Date().toISOString(),
-    };
-
-    // Only update provided fields
-    if (data.title !== undefined) updateData.title = data.title.trim();
-    if (data.slug !== undefined) updateData.slug = data.slug.trim();
-    if (data.content !== undefined) updateData.content = data.content.trim();
-    if (data.featured_image !== undefined) updateData.featured_image = data.featured_image;
-    if (data.alt_texts !== undefined) updateData.alt_texts = data.alt_texts;
-    if (data.categories !== undefined) updateData.categories = data.categories;
-    if (data.locations !== undefined) updateData.locations = data.locations;
-    if (data.organizers !== undefined) updateData.organizers = data.organizers;
-    if (data.language !== undefined) updateData.language = data.language;
-    if (data.author_name !== undefined) updateData.author_name = data.author_name;
-
-    // Handle status changes
-    if (data.status !== undefined) {
-      updateData.status = data.status;
-      if (data.status === "published") {
-        updateData.published_at = new Date().toISOString();
-      } else if (data.status === "draft") {
-        updateData.published_at = null;
-      }
-    }
-
-    const { data: result, error } = await supabase
-      .from("events")
-      .update(updateData)
-      .eq("id", id)
-      .select();
-
-    if (error) {
-      console.error("Error updating event:", error);
-      return { success: false, error: error.message };
-    }
-
-    if (!result || result.length === 0) {
+  } catch (error) {
+    console.error('Error creating event:', error);
+    
+    if (error instanceof z.ZodError) {
+      const errors: Record<string, string[]> = {};
+      error.issues.forEach((issue) => {
+        const path = issue.path.join('.');
+        if (!errors[path]) errors[path] = [];
+        errors[path].push(issue.message);
+      });
       return {
         success: false,
-        error: "Update failed. You may not have permission to update this event.",
+        error: 'Validation failed',
+        errors,
       };
     }
 
-    revalidatePath("/admin/events");
-    if (data.slug || existingEvent.slug) {
-      revalidatePath(`/admin/events/${data.slug || existingEvent.slug}`);
-    }
-
-    return { success: true, error: null, slug: data.slug || existingEvent.slug || undefined };
-  } catch (err) {
-    console.error("Unexpected error updating event:", err);
-    return { success: false, error: "An unexpected error occurred" };
-  }
-}
-
-/**
- * Update event status (publish, unpublish, archive)
- */
-export async function updateEventStatus(
-  id: string,
-  newStatus: EventStatus
-): Promise<MutationResponse> {
-  if (!id || typeof id !== "string") {
-    return { success: false, error: "Invalid event ID" };
-  }
-
-  const validStatuses: EventStatus[] = ["draft", "published", "archived"];
-  if (!validStatuses.includes(newStatus)) {
-    return { success: false, error: "Invalid status" };
-  }
-
-  try {
-    const supabase = createAdminClient();
-
-    const updateData: EventUpdate = {
-      status: newStatus,
-      updated_at: new Date().toISOString(),
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create event',
     };
-
-    if (newStatus === "published") {
-      updateData.published_at = new Date().toISOString();
-    } else if (newStatus === "draft") {
-      updateData.published_at = null;
-    }
-
-    const { error } = await supabase.from("events").update(updateData).eq("id", id);
-
-    if (error) {
-      console.error("Error updating event status:", error);
-      return { success: false, error: error.message };
-    }
-
-    revalidatePath("/admin/events");
-
-    return { success: true, error: null };
-  } catch (err) {
-    console.error("Unexpected error updating event status:", err);
-    return { success: false, error: "An unexpected error occurred" };
   }
 }
 
 /**
- * Delete an event by ID
+ * Update an event
  */
-export async function deleteEvent(id: string): Promise<MutationResponse> {
-  if (!id || typeof id !== "string") {
-    return { success: false, error: "Invalid event ID" };
-  }
-
+export async function updateEventAction(
+  id: string,
+  input: z.infer<typeof eventBaseSchema>
+): Promise<ActionResult> {
   try {
-    const supabase = createAdminClient();
+    // Check permissions
+    await requirePermission('edit_events');
 
-    // Verify event exists before deleting
-    const { data: existingEvent, error: fetchError } = await supabase
-      .from("events")
-      .select("id")
-      .eq("id", id)
-      .maybeSingle();
-
-    if (fetchError) {
-      console.error("Error fetching event for deletion:", fetchError);
-      return { success: false, error: fetchError.message };
+    if (!id) {
+      return {
+        success: false,
+        error: 'Event ID is required',
+      };
     }
 
-    if (!existingEvent) {
-      return { success: false, error: "Event not found" };
+    // Validate input
+    const validated = eventBaseSchema.parse(input);
+
+    // Remove null values to match updateEvent's expected type
+    const updates = Object.fromEntries(
+      Object.entries(validated).filter(([, value]) => value !== null)
+    );
+
+    // Update event
+    const event = await updateEvent(id, updates);
+
+    // Revalidate cache
+    revalidatePath('/admin/events');
+    revalidatePath('/events');
+    if (input.slug) {
+      revalidatePath(`/events/${input.slug}`);
     }
 
-    const { error } = await supabase.from("events").delete().eq("id", id);
-
-    if (error) {
-      console.error("Error deleting event:", error);
-      return { success: false, error: error.message };
+    return {
+      success: true,
+      data: event,
+      message: 'Event updated successfully',
+    };
+  } catch (error) {
+    console.error('Error updating event:', error);
+    
+    if (error instanceof z.ZodError) {
+      const errors: Record<string, string[]> = {};
+      error.issues.forEach((issue) => {
+        const path = issue.path.join('.');
+        if (!errors[path]) errors[path] = [];
+        errors[path].push(issue.message);
+      });
+      return {
+        success: false,
+        error: 'Validation failed',
+        errors,
+      };
     }
 
-    revalidatePath("/admin/events");
-
-    return { success: true, error: null };
-  } catch (err) {
-    console.error("Unexpected error deleting event:", err);
-    return { success: false, error: "An unexpected error occurred" };
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update event',
+    };
   }
 }
 
 /**
- * Delete multiple events by IDs
+ * Delete an event
  */
-export async function deleteEvents(ids: string[]): Promise<MutationResponse> {
-  if (!Array.isArray(ids) || ids.length === 0) {
-    return { success: false, error: "No event IDs provided" };
-  }
-
-  // Validate all IDs
-  if (!ids.every((id) => typeof id === "string" && id.trim())) {
-    return { success: false, error: "Invalid event IDs" };
-  }
-
+export async function deleteEventAction(
+  id: string
+): Promise<ActionResult> {
   try {
-    const supabase = createAdminClient();
+    // Check permissions
+    await requirePermission('delete_events');
 
-    const { error } = await supabase.from("events").delete().in("id", ids);
-
-    if (error) {
-      console.error("Error deleting events:", error);
-      return { success: false, error: error.message };
+    if (!id) {
+      return {
+        success: false,
+        error: 'Event ID is required',
+      };
     }
 
-    revalidatePath("/admin/events");
+    // Delete event
+    await deleteEvent(id);
 
-    return { success: true, error: null };
-  } catch (err) {
-    console.error("Unexpected error deleting events:", err);
-    return { success: false, error: "An unexpected error occurred" };
+    // Revalidate cache
+    revalidatePath('/admin/events');
+    revalidatePath('/events');
+
+    return {
+      success: true,
+      data: null,
+      message: 'Event deleted successfully',
+    };
+  } catch (error) {
+    console.error('Error deleting event:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to delete event',
+    };
   }
 }
+
+// ============================================
+// TYPE EXPORTS
+// ============================================
+
+export type { Event, EventStatus } from '@/src/lib/db/schema';

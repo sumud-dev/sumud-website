@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -36,16 +37,18 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} data-scroll-behavior="smooth">
-      <body>
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <ReactQueryProvider>
-            {children}
-            <Toaster />
-          </ReactQueryProvider>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} data-scroll-behavior="smooth">
+        <body suppressHydrationWarning>
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <ReactQueryProvider>
+              {children}
+              <Toaster />
+            </ReactQueryProvider>
+          </NextIntlClientProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
 

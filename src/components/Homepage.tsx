@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { Link } from "@/src/i18n/navigation";
 import { motion } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Calendar,
   ArrowRight,
@@ -88,8 +88,8 @@ const campaignIconMap: Record<string, string> = {
 const featuredCampaigns = [
   {
     id: "1",
-    title: { en: "Justice Not Arms" },
-    shortDescription: { en: "Demand Finland to end all arms trade and military cooperation with Israel." },
+    title: { en: "Justice Not Arms", fi: "Oikeutta, ei aseita", ar: "العدالة وليس الأسلحة" },
+    shortDescription: { en: "Demand Finland to end all arms trade and military cooperation with Israel.", fi: "Vaadi Suomelta kaiken asekeiskaupan ja sotilaallisen yhteistyön lopettamista Israelin kanssa.", ar: "اطلب من فنلندا إنهاء جميع تجارة الأسلحة والتعاون العسكري مع إسرائيل." },
     slug: "justice-not-arms",
     type: "advocacy",
     status: "active",
@@ -100,8 +100,8 @@ const featuredCampaigns = [
   },
   {
     id: "2",
-    title: { en: "BDS Movement" },
-    shortDescription: { en: "Join the global movement for Palestinian rights through economic pressure on companies profiting from occupation." },
+    title: { en: "BDS Movement", fi: "BDS-liike", ar: "حركة BDS" },
+    shortDescription: { en: "Join the global movement for Palestinian rights through economic pressure on companies profiting from occupation.", fi: "Liity globaaliin liikkeeseen palestiinalaisten oikeuksien puolesta taloudellisen painostuksen kautta yrityksiä vastaan, jotka hyötyvät miehityksestä.", ar: "انضم إلى الحركة العالمية لحقوق الفلسطينيين من خلال الضغط الاقتصادي على الشركات التي تستفيد من الاحتلال." },
     slug: "bds-movement",
     type: "advocacy",
     status: "active",
@@ -112,8 +112,8 @@ const featuredCampaigns = [
   },
   {
     id: "3",
-    title: { en: "Apartheid Free Zone" },
-    shortDescription: { en: "Join us in declaring your community, institution, or organization as an Apartheid Free Zone - committed to opposing Israeli apartheid." },
+    title: { en: "Apartheid Free Zone", fi: "Apartheid-vapaa alue", ar: "منطقة خالية من الفصل العنصري" },
+    shortDescription: { en: "Join us in declaring your community, institution, or organization as an Apartheid Free Zone - committed to opposing Israeli apartheid.", fi: "Liity meihin ilmoittamalla yhteisösi, instituutiosi tai organisaatiosi apartheid-vapaa alueeksi - sitoutunut vastustamaan Israelin apartheid-politiikkaa.", ar: "انضم إلينا في إعلان مجتمعك أو مؤسستك أو منظمتك كمنطقة خالية من الفصل العنصري - ملتزمة بمعارضة الفصل العنصري الإسرائيلي." },
     slug: "apartheid-free-zone",
     type: "advocacy",
     status: "active",
@@ -124,8 +124,8 @@ const featuredCampaigns = [
   },
   {
     id: "4",
-    title: { en: "Cultural & Academic Boycott" },
-    shortDescription: { en: "Join the Palestinian-led campaign for cultural and academic boycott of Israeli institutions." },
+    title: { en: "Cultural & Academic Boycott", fi: "Kulttuurinen ja akateeminen boikotti", ar: "المقاطعة الثقافية والأكاديمية" },
+    shortDescription: { en: "Join the Palestinian-led campaign for cultural and academic boycott of Israeli institutions.", fi: "Liity palestiinalaisten johtamaan kampanjaan Israelin kulttuurilaitosten ja akateemisten instituutioiden boikotille.", ar: "انضم إلى الحملة التي يقودها الفلسطينيون لمقاطعة المؤسسات الثقافية والأكاديمية الإسرائيلية." },
     slug: "cultural-academic-boycott",
     type: "advocacy",
     status: "active",
@@ -136,8 +136,8 @@ const featuredCampaigns = [
   },
   {
     id: "5",
-    title: { en: "Israeli Products Out of Shops" },
-    shortDescription: { en: "Campaign to remove Israeli products from Finnish stores through consumer boycotts and advocacy." },
+    title: { en: "Israeli Products Out of Shops", fi: "Israelin tuotteet pois myymälöistä", ar: "المنتجات الإسرائيلية خارج المتاجر" },
+    shortDescription: { en: "Campaign to remove Israeli products from Finnish stores through consumer boycotts and advocacy.", fi: "Kampanja Israelin tuotteiden poistamiseksi suomalaisista myymälöistä kuluttajaboikottien ja vaikuttamisen kautta.", ar: "حملة لإزالة المنتجات الإسرائيلية من المتاجر الفنلندية من خلال المقاطعات الاستهلاكية والدعوة." },
     slug: "israeli-products-out-of-shops",
     type: "advocacy",
     status: "active",
@@ -148,8 +148,8 @@ const featuredCampaigns = [
   },
   {
     id: "6",
-    title: { en: "Boycott Israel in Eurovision" },
-    shortDescription: { en: "Join the campaign to boycott Israel's participation in Eurovision due to its violations of international law." },
+    title: { en: "Boycott Israel in Eurovision", fi: "Boikotoi Israelia Euroviisueissa", ar: "مقاطعة إسرائيل في يوروفيجن" },
+    shortDescription: { en: "Join the campaign to boycott Israel's participation in Eurovision due to its violations of international law.", fi: "Liity kampanjaan Israelin osallistumisen boikotille Euroviisueissa sen kansainvälisen oikeuden rikkomusten vuoksi.", ar: "انضم إلى الحملة لمقاطعة مشاركة إسرائيل في يوروفيجن بسبب انتهاكاتها للقانون الدولي." },
     slug: "israel-boikottiin-euroviisuissa",
     type: "advocacy",
     status: "urgent",
@@ -180,6 +180,7 @@ interface HomepageProps {
 const Homepage = React.memo(function Homepage({ events = [] }: HomepageProps) {
   const t = useTranslations("homepage");
   const tCommon = useTranslations("common");
+  const locale = useLocale() as "en" | "fi" | "ar";
   
   return (
     <>
@@ -576,7 +577,7 @@ const Homepage = React.memo(function Homepage({ events = [] }: HomepageProps) {
                       {campaign.image && (
                         <Image
                           src={campaign.image}
-                          alt={campaign.title.en}
+                          alt={campaign.title[locale]}
                           fill
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           className="object-cover group-hover:scale-110 transition-transform duration-500"
@@ -634,10 +635,10 @@ const Homepage = React.memo(function Homepage({ events = [] }: HomepageProps) {
                           className="text-xl font-bold mb-3 group-hover:text-opacity-80 transition-colors"
                           style={{ color: "#722F37" }}
                         >
-                          {campaign.title.en}
+                          {campaign.title[locale]}
                         </h3>
                         <p className="text-gray-700 text-sm leading-relaxed line-clamp-3">
-                          {campaign.shortDescription.en}
+                          {campaign.shortDescription[locale]}
                         </p>
                       </div>
 

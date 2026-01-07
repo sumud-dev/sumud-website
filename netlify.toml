@@ -7,5 +7,5 @@
 
 # Notes:
 # - The Netlify Next.js plugin will handle SSR and Edge Functions for supported Next.js features.
-# - If your site needs environment variables (e.g., Supabase keys, Cloudinary), add them in the Netlify UI.
+# - If your site needs environment variables (e.g., Cloudinary API keys), add them in the Netlify UI.
 # - If you prefer to pin a different plugin version, add it in `package.json` devDependencies.

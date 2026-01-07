@@ -45,3 +45,5 @@ next-env.d.ts
 /scripts
 # Local Netlify folder
 .netlify
+/usage-of-campagins-schema-actions
+backup.sql

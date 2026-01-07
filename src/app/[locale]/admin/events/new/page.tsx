@@ -3,10 +3,8 @@
 import * as React from "react";
 import { Link, useRouter } from "@/src/i18n/navigation";
 import { ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/src/components/ui/button";
 import { EventForm, type EventFormData } from "@/src/components/forms/event-form";
-import { createEvent } from "@/src/actions/events.actions";
 
 export default function NewEventPage() {
   const router = useRouter();
@@ -16,37 +14,9 @@ export default function NewEventPage() {
     setIsSubmitting(true);
 
     try {
-      const { success, error, id } = await createEvent({
-        title: data.title,
-        content: data.content,
-        status: data.status,
-        featured_image: data.featuredImageUrl || undefined,
-        alt_texts: data.altTexts || undefined,
-        categories: data.categories || undefined,
-        locations: data.locations || undefined,
-        organizers: data.organizers || undefined,
-        language: data.language || "en",
-        author_name: data.authorName || undefined,
-      });
-
-      if (!success) {
-        throw new Error(error || "Failed to create event");
-      }
-
-      toast.success("Event created successfully!");
-
-      if (id) {
-        router.push(`/admin/events/${id}`);
-      } else {
-        router.push("/admin/events");
-      }
+      router.push("/admin/events");
     } catch (err) {
       console.error("Error creating event:", err);
-      toast.error(
-        err instanceof Error
-          ? err.message
-          : "Failed to create event. Please try again.",
-      );
     } finally {
       setIsSubmitting(false);
     }

@@ -1,10 +1,14 @@
-import { SelectOption } from "@/src/types/Settings";
 import {
   User,
   Shield,
   Palette,
   Globe
 } from "lucide-react";
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}
 
 export const INITIAL_PROFILE = {
   name: "Admin User",
@@ -59,7 +63,6 @@ export const TIMEZONE_OPTIONS: SelectOption[] = [
 
 export const SETTINGS_TABS = [
   { value: "profile", label: "Profile", icon: User },
-  { value: "security", label: "Security", icon: Shield },
   { value: "appearance", label: "Appearance", icon: Palette },
   { value: "site", label: "Site", icon: Globe },
 ];

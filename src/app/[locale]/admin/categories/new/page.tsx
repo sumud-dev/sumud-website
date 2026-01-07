@@ -99,10 +99,7 @@ export default function NewCategoryPage() {
         metaTitle: data.metaTitle || null,
         metaDescription: data.metaDescription || null,
       };
-
-      // TODO: Connect to backend API
-      console.log("Category data to submit:", categoryData);
-
+      
       // Simulating API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 

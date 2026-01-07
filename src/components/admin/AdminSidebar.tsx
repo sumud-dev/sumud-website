@@ -2,6 +2,7 @@
 
 import { Link, usePathname, useRouter } from "@/src/i18n/navigation";
 import { useTranslations } from "next-intl";
+import { useClerk } from "@clerk/nextjs";
 import Image from "next/image";
 import {
   LayoutDashboard,
@@ -9,17 +10,16 @@ import {
   Calendar,
   Megaphone,
   FolderOpen,
-  Users,
   Settings,
   LogOut,
   Menu,
   X,
   Languages,
+  LayoutTemplate,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/src/lib/utils/utils";
 import { Button } from "@/src/components/ui/button";
-import { createClient } from "@/src/lib/supabase/client";
 
 const navigationKeys = [
   { key: "dashboard", href: "/admin", icon: LayoutDashboard },
@@ -27,8 +27,8 @@ const navigationKeys = [
   { key: "campaigns", href: "/admin/campaigns", icon: Megaphone },
   { key: "events", href: "/admin/events", icon: Calendar },
   { key: "categories", href: "/admin/categories", icon: FolderOpen },
-  { key: "users", href: "/admin/users", icon: Users },
   { key: "content", href: "/admin/content", icon: Languages },
+  { key: "pageBuilder", href: "/admin/page-builder", icon: LayoutTemplate },
 ];
 
 const bottomNavigationKeys = [
@@ -46,16 +46,14 @@ export function AdminSidebar({ userEmail, userInitial = "A" }: AdminSidebarProps
   const t = useTranslations("adminSettings.sidebar");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { signOut } = useClerk();
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
-      router.push("/auth/login");
+      await signOut({ redirectUrl: "/" });
     } catch (error) {
-      console.error("Error logging out:", error);
-    } finally {
+      console.error("Logout error:", error);
       setIsLoggingOut(false);
     }
   };
@@ -79,14 +77,16 @@ export function AdminSidebar({ userEmail, userInitial = "A" }: AdminSidebarProps
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-16 items-center justify-between px-6 border-b border-sidebar-border">
+          <div className="flex h-20 items-center justify-between px-6 border-b border-sidebar-border">
             <Link href="/" className="flex items-center gap-2">
               <Image
                 src="/Logo.svg"
                 alt="Sumud Admin"
                 width={120}
-                height={32}
+                height={8}
                 className="h-8 w-auto"
+                priority
+                style={{ width: "auto", height: "auto" }}
               />
             </Link>
             <Button

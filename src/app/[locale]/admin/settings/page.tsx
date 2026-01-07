@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { toast } from "sonner";
 import { useTranslations } from "next-intl";
 import {
   Tabs,
@@ -12,12 +11,10 @@ import {
 import ProfileTab from "@/src/components/admin/settings/tabs/ProfileTab";
 import {
     INITIAL_PROFILE,
-    INITIAL_SECURITY,
     INITIAL_APPEARANCE,
     INITIAL_SITE_SETTINGS,
     SETTINGS_TABS
 } from "@/src/lib/constants";
-import SecurityTab from "@/src/components/admin/settings/tabs/SecurityTab";
 import AppearanceTab from "@/src/components/admin/settings/tabs/AppearanceTab";
 import SiteSettingsTab from "@/src/components/admin/settings/tabs/SiteSettingsTab";
 
@@ -25,7 +22,6 @@ const SettingsPage = () => {
   const t = useTranslations("adminSettings");
   const [isSaving, setIsSaving] = React.useState(false);
   const [profile, setProfile] = React.useState(INITIAL_PROFILE);
-  const [security, setSecurity] = React.useState(INITIAL_SECURITY);
   const [appearance, setAppearance] = React.useState(INITIAL_APPEARANCE);
   const [siteSettings, setSiteSettings] = React.useState(INITIAL_SITE_SETTINGS);
 
@@ -50,11 +46,8 @@ const SettingsPage = () => {
       
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      toast.success(t("profile.successMessage"));
     } catch (error) {
       console.error("Error saving profile:", error);
-      toast.error("Failed to save profile");
     } finally {
       setIsSaving(false);
     }
@@ -64,10 +57,8 @@ const SettingsPage = () => {
     setIsSaving(true);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     setIsSaving(false);
-    toast.success(t(successMessageKey));
   };
 
-  const handleSaveSecurity = createSaveHandler("security.successMessage");
   const handleSaveAppearance = createSaveHandler("appearance.successMessage");
   const handleSaveSiteSettings = createSaveHandler("site.successMessage");
 
@@ -97,15 +88,6 @@ const SettingsPage = () => {
             profile={profile}
             setProfile={setProfile}
             onSave={handleSaveProfile}
-            isSaving={isSaving}
-          />
-        </TabsContent>
-
-        <TabsContent value="security">
-          <SecurityTab
-            security={security}
-            setSecurity={setSecurity}
-            onSave={handleSaveSecurity}
             isSaving={isSaving}
           />
         </TabsContent>

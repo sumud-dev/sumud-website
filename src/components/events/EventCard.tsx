@@ -70,10 +70,11 @@ export function EventCard({
   const eventTypeHexColor = getEventTypeHexColor(event.event_type);
 
   const formatCapacity = () => {
+    const currentRegs = event.current_registrations ?? 0;
     if (event.max_capacity) {
-      return `${event.current_registrations}/${event.max_capacity}`;
+      return `${currentRegs}/${event.max_capacity}`;
     }
-    return event.current_registrations.toString();
+    return currentRegs.toString();
   };
 
   const getLocationIcon = () => {
@@ -99,7 +100,8 @@ export function EventCard({
 
   const getCapacityPercentage = () => {
     if (!event.max_capacity || event.max_capacity === 0) return 0;
-    return Math.min((event.current_registrations / event.max_capacity) * 100, 100);
+    const currentRegs = event.current_registrations ?? 0;
+    return Math.min((currentRegs / event.max_capacity) * 100, 100);
   };
 
   const getEventStatus = () => {
@@ -376,7 +378,7 @@ export function EventCard({
                     <div className="flex justify-between text-xs text-gray-500">
                       <span>Available spots</span>
                       <span>
-                        {Math.max(0, event.max_capacity - event.current_registrations)} remaining
+                        {Math.max(0, event.max_capacity - (event.current_registrations ?? 0))} remaining
                       </span>
                     </div>
                   </div>
@@ -394,7 +396,7 @@ export function EventCard({
                   </Badge>
                 )}
                 
-                {event.max_capacity && event.current_registrations >= event.max_capacity && (
+                {event.max_capacity && (event.current_registrations ?? 0) >= event.max_capacity && (
                   <Badge variant="secondary" className="text-xs bg-red-100 text-red-700">
                     Sold Out
                   </Badge>
@@ -449,7 +451,7 @@ export function EventCard({
                       disabled 
                       className="flex-1 bg-gray-100 text-gray-500"
                     >
-                      {event.max_capacity && event.current_registrations >= event.max_capacity
+                      {event.max_capacity && (event.current_registrations ?? 0) >= event.max_capacity
                         ? "Event Full"
                         : !isUpcoming
                         ? "Event Ended" 
@@ -479,7 +481,7 @@ export function EventCard({
                   <div className="flex items-center gap-3 text-xs text-gray-500">
                     <div className="flex items-center gap-1">
                       <Heart className={`h-3 w-3 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
-                      <span>{event.current_registrations > 10 ? Math.floor(event.current_registrations / 5) : 0}</span>
+                      <span>{(event.current_registrations ?? 0) > 10 ? Math.floor((event.current_registrations ?? 0) / 5) : 0}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <MessageCircle className="h-3 w-3" />

@@ -16,8 +16,13 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "res.cloudinary.com",
       },
+      {
+        protocol: "https",
+        hostname: "cdn.sanity.io",
+      },
     ],
   },
+  serverExternalPackages: ["pg", "pg-hstore"],
 };
 
 export default withSentryConfig(withNextIntl(nextConfig), {

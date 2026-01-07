@@ -1,152 +1,114 @@
-"use client";
+'use client';
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/src/lib/react-query/query-keys";
-import type {
-  BaseEvent,
-  EventsApiResponse,
-  EventApiResponse,
-  EventFilters,
-} from "@/src/lib/types/event";
+import { useQuery } from '@tanstack/react-query';
+import { useLocale } from 'next-intl';
+import { queryKeys } from '@/src/lib/react-query/query-keys';
+import type { EventFilters } from '@/src/lib/react-query/query-keys';
+import type { BaseEvent } from '@/src/lib/types/event';
 
-// API fetch functions
-async function fetchEvents(filters?: EventFilters): Promise<EventsApiResponse> {
-  const params = new URLSearchParams();
-
-  if (filters?.status) params.set("status", filters.status);
-  if (filters?.eventType) params.set("eventType", filters.eventType);
-  if (filters?.locationMode) params.set("locationMode", filters.locationMode);
-  if (filters?.language) params.set("language", filters.language);
-  if (filters?.search) params.set("search", filters.search);
-  if (filters?.upcoming !== undefined) params.set("upcoming", String(filters.upcoming));
-  if (filters?.featured !== undefined) params.set("featured", String(filters.featured));
-  if (filters?.startDate) params.set("startDate", filters.startDate);
-  if (filters?.endDate) params.set("endDate", filters.endDate);
-  if (filters?.page) params.set("page", String(filters.page));
-  if (filters?.limit) params.set("limit", String(filters.limit));
-
-  const response = await fetch(`/api/events?${params.toString()}`);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch events");
-  }
-
-  return response.json();
+interface EventsResponse {
+  data: BaseEvent[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
 }
 
-async function fetchEventBySlug(slug: string): Promise<EventApiResponse> {
-  const response = await fetch(`/api/events/${slug}`);
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch event");
-  }
-
-  return response.json();
-}
-
-async function createEvent(
-  data: Partial<BaseEvent>
-): Promise<EventApiResponse> {
-  const response = await fetch("/api/events", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to create event");
-  }
-
-  return response.json();
-}
-
-async function updateEvent({
-  slug,
-  data,
-}: {
-  slug: string;
-  data: Partial<BaseEvent>;
-}): Promise<EventApiResponse> {
-  const response = await fetch(`/api/events/${slug}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to update event");
-  }
-
-  return response.json();
-}
-
-async function deleteEvent(slug: string): Promise<void> {
-  const response = await fetch(`/api/events/${slug}`, {
-    method: "DELETE",
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to delete event");
-  }
-}
-
-// Query hooks
+/**
+ * Hook to fetch events with filters
+ * Automatically includes the current locale in the request
+ */
 export function useEvents(filters?: EventFilters) {
-  return useQuery({
-    queryKey: queryKeys.events.list(filters),
-    queryFn: () => fetchEvents(filters),
+  const locale = useLocale();
+  
+  const { data, isLoading, error, isError } = useQuery<EventsResponse>({
+    queryKey: queryKeys.events.list({ ...filters, language: filters?.language || locale }),
+    queryFn: async () => {
+      // Build query parameters
+      const params = new URLSearchParams();
+      
+      if (filters?.search) params.append('search', filters.search);
+      if (filters?.eventType) params.append('eventType', filters.eventType);
+      if (filters?.locationMode) params.append('locationMode', filters.locationMode);
+      if (filters?.status) params.append('status', filters.status);
+      // Use the locale if no language filter is specified
+      const language = filters?.language || locale;
+      params.append('language', language);
+      if (filters?.upcoming) params.append('upcoming', String(filters.upcoming));
+      if (filters?.featured) params.append('featured', String(filters.featured));
+      if (filters?.startDate) params.append('startDate', filters.startDate);
+      if (filters?.endDate) params.append('endDate', filters.endDate);
+      if (filters?.page) params.append('page', String(filters.page));
+      if (filters?.limit) params.append('limit', String(filters.limit));
+
+      const response = await fetch(`/api/events?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
+      }
+      
+      const result = await response.json();
+      
+      // Handle API response - normalize to consistent structure
+      // API returns { events: [...], total, page, limit, pages }
+      if (result.events) {
+        return {
+          data: result.events as BaseEvent[],
+          pagination: {
+            page: result.page,
+            limit: result.limit,
+            total: result.total,
+            pages: result.pages,
+          },
+        };
+      }
+      
+      // Fallback for array response (shouldn't happen but handle gracefully)
+      return {
+        data: Array.isArray(result) ? result : [],
+        pagination: undefined,
+      };
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  return {
+    data: data ?? { data: [], pagination: undefined },
+    isLoading,
+    error: isError ? error : null,
+  };
 }
 
+/**
+ * Hook to fetch a single event by slug
+ * Automatically includes the current locale in the request
+ */
 export function useEvent(slug: string) {
-  return useQuery({
+  const locale = useLocale();
+  
+  const { data, isLoading, error, isError } = useQuery({
     queryKey: queryKeys.events.detail(slug),
-    queryFn: () => fetchEventBySlug(slug),
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append('language', locale);
+      
+      const response = await fetch(`/api/events/${slug}?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch event');
+      }
+      
+      return response.json() as Promise<BaseEvent>;
+    },
     enabled: !!slug,
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
+
+  return {
+    data: data || null,
+    isLoading,
+    error: isError ? error : null,
+  };
 }
-
-// Mutation hooks
-export function useCreateEvent() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: createEvent,
-    onSuccess: () => {
-      // Invalidate all event lists to refetch with new data
-      queryClient.invalidateQueries({ queryKey: queryKeys.events.lists() });
-    },
-  });
-}
-
-export function useUpdateEvent() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: updateEvent,
-    onSuccess: (data, variables) => {
-      // Update the specific event in cache
-      queryClient.setQueryData(
-        queryKeys.events.detail(variables.slug),
-        data
-      );
-      // Invalidate lists to ensure consistency
-      queryClient.invalidateQueries({ queryKey: queryKeys.events.lists() });
-    },
-  });
-}
-
-export function useDeleteEvent() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: deleteEvent,
-    onSuccess: () => {
-      // Invalidate all event queries
-      queryClient.invalidateQueries({ queryKey: queryKeys.events.all });
-    },
-  });
-}
-
-// Re-export types for convenience
-export type { BaseEvent, EventsApiResponse, EventFilters };

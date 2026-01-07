@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { toast } from "sonner";
 import {
   Globe,
   Home,
@@ -30,13 +29,29 @@ import {
 } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
-import { getContentStats, getNamespaces } from "@/src/actions/content.actions";
-import {
-  NAMESPACE_INFO,
-  type ContentNamespace,
-  type Locale,
-} from "@/src/types/Content";
 import { Link } from "@/src/i18n/navigation";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/src/components/ui/tabs";
+import HeaderMenuEditor from "@/src/components/admin/content/HeaderMenuEditor";
+import FooterEditor from "@/src/components/admin/content/FooterEditor";
+
+// Mock types
+type Locale = "en" | "ar" | "fi";
+type ContentNamespace = string;
+
+// Mock namespace info
+const NAMESPACE_INFO: Record<string, { label: string; description: string; icon: string }> = {
+  common: { label: "Common", description: "Common UI elements and shared content", icon: "Globe" },
+  navigation: { label: "Navigation", description: "Menu items and navigation labels", icon: "Menu" },
+  homepage: { label: "Homepage", description: "Homepage content and sections", icon: "Home" },
+  about: { label: "About", description: "About page content", icon: "Info" },
+  team: { label: "Team", description: "Team member information", icon: "Users" },
+  articles: { label: "Articles", description: "Article-related content", icon: "FileText" },
+};
 
 // Icon mapping for namespaces
 const iconMap: Record<string, React.ElementType> = {
@@ -96,40 +111,23 @@ function NamespaceCard({ namespace, locale, itemCount }: NamespaceCardProps) {
   );
 }
 
+// Mock data
+const mockNamespaces = ["common", "navigation", "homepage", "about", "team", "articles"];
+const mockStats = [
+  { locale: "en", count: 145, namespaces: 6 },
+  { locale: "ar", count: 132, namespaces: 6 },
+  { locale: "fi", count: 138, namespaces: 6 },
+];
+
 export default function AdminContentPage() {
   const [activeLocale, setActiveLocale] = React.useState<Locale>("en");
-  const [namespaces, setNamespaces] = React.useState<string[]>([]);
+  const [activeSection, setActiveSection] = React.useState<"translations" | "header" | "footer">("header");
+  const [namespaces] = React.useState<string[]>(mockNamespaces);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [stats, setStats] = React.useState<
+  const [stats] = React.useState<
     { locale: string; count: number; namespaces: number }[]
-  >([]);
-  const [isLoading, setIsLoading] = React.useState(true);
-
-  // Load namespaces and stats
-  React.useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      try {
-        const [namespacesResult, statsResult] = await Promise.all([
-          getNamespaces(activeLocale),
-          getContentStats(),
-        ]);
-
-        if (namespacesResult.data) {
-          setNamespaces(namespacesResult.data);
-        }
-        if (statsResult.data) {
-          setStats(statsResult.data);
-        }
-      } catch (error) {
-        console.error("Error loading content data:", error);
-        toast.error("Failed to load content");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    loadData();
-  }, [activeLocale]);
+  >(mockStats);
+  const [isLoading] = React.useState(false);
 
   const filteredNamespaces = namespaces.filter((ns) =>
     ns.toLowerCase().includes(searchQuery.toLowerCase())
@@ -150,94 +148,157 @@ export default function AdminContentPage() {
         </div>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {(["en", "ar", "fi"] as Locale[]).map((locale) => {
-          const localeStats = stats.find((s) => s.locale === locale);
-          return (
-            <Card
-              key={locale}
-              className={`cursor-pointer transition-all ${
-                activeLocale === locale
-                  ? "border-primary ring-2 ring-primary/20"
-                  : "hover:border-primary/50"
-              }`}
-              onClick={() => setActiveLocale(locale)}
-            >
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center justify-between">
-                  {localeNames[locale]}
-                  <Badge variant={activeLocale === locale ? "default" : "outline"}>
-                    {locale.toUpperCase()}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>{localeStats?.count || 0} keys</span>
-                  <span>{localeStats?.namespaces || 0} sections</span>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      {/* Main Section Tabs */}
+      <Tabs value={activeSection} onValueChange={(v) => setActiveSection(v as typeof activeSection)}>
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="header" className="gap-2">
+            <Menu className="h-4 w-4" />
+            Header Menu
+          </TabsTrigger>
+          <TabsTrigger value="footer" className="gap-2">
+            <LayoutTemplate className="h-4 w-4" />
+            Footer
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Search and Filter */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search sections..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Button variant="outline" asChild>
-          <Link href={`/admin/content/search?locale=${activeLocale}`}>
-            <Search className="h-4 w-4 mr-2" />
-            Search All Content
-          </Link>
-        </Button>
-      </div>
-
-      {/* Namespaces Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {[...Array(8)].map((_, i) => (
-            <Card key={i} className="h-[140px] animate-pulse">
-              <CardHeader className="pb-3">
-                <div className="h-10 w-10 rounded-lg bg-muted" />
-                <div className="h-5 w-24 bg-muted rounded mt-3" />
-                <div className="h-4 w-full bg-muted rounded mt-2" />
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
-      ) : filteredNamespaces.length === 0 ? (
-        <Card className="p-12 text-center">
-          <div className="text-muted-foreground">
-            <Globe className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <h3 className="text-lg font-medium mb-2">No content found</h3>
-            <p className="text-sm">
-              {searchQuery
-                ? `No sections matching "${searchQuery}"`
-                : "No content has been seeded yet. Run the seed script to populate the database."}
-            </p>
+        {/* Translations Tab Content */}
+        <TabsContent value="translations" className="mt-6 space-y-6">
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {(["en", "ar", "fi"] as Locale[]).map((locale) => {
+              const localeStats = stats.find((s) => s.locale === locale);
+              return (
+                <Card
+                  key={locale}
+                  className={`cursor-pointer transition-all ${
+                    activeLocale === locale
+                      ? "border-primary ring-2 ring-primary/20"
+                      : "hover:border-primary/50"
+                  }`}
+                  onClick={() => setActiveLocale(locale)}
+                >
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      {localeNames[locale]}
+                      <Badge variant={activeLocale === locale ? "default" : "outline"}>
+                        {locale.toUpperCase()}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>{localeStats?.count || 0} keys</span>
+                      <span>{localeStats?.namespaces || 0} sections</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredNamespaces.map((namespace) => (
-            <NamespaceCard
-              key={namespace}
-              namespace={namespace as ContentNamespace}
-              locale={activeLocale}
-            />
-          ))}
-        </div>
-      )}
+
+          {/* Search and Filter */}
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search sections..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button variant="outline" asChild>
+              <Link href={`/admin/content/search?locale=${activeLocale}`}>
+                <Search className="h-4 w-4 mr-2" />
+                Search All Content
+              </Link>
+            </Button>
+          </div>
+
+          {/* Namespaces Grid */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {[...Array(8)].map((_, i) => (
+                <Card key={i} className="h-[140px] animate-pulse">
+                  <CardHeader className="pb-3">
+                    <div className="h-10 w-10 rounded-lg bg-muted" />
+                    <div className="h-5 w-24 bg-muted rounded mt-3" />
+                    <div className="h-4 w-full bg-muted rounded mt-2" />
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          ) : filteredNamespaces.length === 0 ? (
+            <Card className="p-12 text-center">
+              <div className="text-muted-foreground">
+                <Globe className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <h3 className="text-lg font-medium mb-2">No content found</h3>
+                <p className="text-sm">
+                  {searchQuery
+                    ? `No sections matching "${searchQuery}"`
+                    : "No content has been seeded yet. Run the seed script to populate the database."}
+                </p>
+              </div>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredNamespaces.map((namespace) => (
+                <NamespaceCard
+                  key={namespace}
+                  namespace={namespace as ContentNamespace}
+                  locale={activeLocale}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Header Menu Tab Content */}
+        <TabsContent value="header" className="mt-6 space-y-6">
+          {/* Locale Selector for Header */}
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium">Select Language:</span>
+            <div className="flex gap-2">
+              {(["en", "ar", "fi"] as Locale[]).map((locale) => (
+                <Button
+                  key={locale}
+                  variant={activeLocale === locale ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveLocale(locale)}
+                  className="gap-2"
+                >
+                  <Globe className="h-3 w-3" />
+                  {localeNames[locale]}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <HeaderMenuEditor locale={activeLocale} />
+        </TabsContent>
+
+        {/* Footer Tab Content */}
+        <TabsContent value="footer" className="mt-6 space-y-6">
+          {/* Locale Selector for Footer */}
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium">Select Language:</span>
+            <div className="flex gap-2">
+              {(["en", "ar", "fi"] as Locale[]).map((locale) => (
+                <Button
+                  key={locale}
+                  variant={activeLocale === locale ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveLocale(locale)}
+                  className="gap-2"
+                >
+                  <Globe className="h-3 w-3" />
+                  {localeNames[locale]}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <FooterEditor locale={activeLocale} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

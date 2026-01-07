@@ -125,6 +125,14 @@ export default function ArticleCard({
     return <ArticleCardSkeleton size={size} />;
   }
 
+  // Safely extract image URL and alt text with fallbacks
+  const imageUrl = (article as { featuredImage?: { url?: string } }).featuredImage?.url 
+    || article.image 
+    || "/images/placeholder-article.svg";
+  const imageAlt = (article as { featuredImage?: { alt?: string } }).featuredImage?.alt 
+    || article.title 
+    || "Article image";
+
   // Get category style with fallback for unknown categories
   const categoryStyle = getCategoryConfig(article.category) || {
     label: article.categoryLabel || "Article",
@@ -174,8 +182,8 @@ export default function ArticleCard({
             {/* Large Image */}
             <div className="aspect-2/1 relative overflow-hidden rounded-lg bg-gray-100">
               <Image
-                src="/images/placeholder-article.svg"
-                alt={article.featuredImage.alt}
+                src={imageUrl}
+                alt={imageAlt}
                 fill
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                 priority={priority}
@@ -308,8 +316,8 @@ export default function ArticleCard({
             {/* Image */}
             <div className="aspect-video relative overflow-hidden rounded-lg bg-gray-100">
               <Image
-                src={article.featuredImage.url}
-                alt={article.featuredImage.alt}
+                src={imageUrl}
+                alt={imageAlt}
                 fill
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -389,8 +397,8 @@ export default function ArticleCard({
           <div className="flex items-start gap-4 py-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors px-3 -mx-3 rounded-lg">
             <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-gray-100">
               <Image
-                src={article.featuredImage.url}
-                alt={article.featuredImage.alt}
+                src={imageUrl}
+                alt={imageAlt}
                 fill
                 className="object-cover"
                 sizes="80px"
@@ -477,8 +485,8 @@ export default function ArticleCard({
           {/* Image */}
           <div className="aspect-video relative overflow-hidden rounded-lg bg-gray-100">
             <Image
-              src={article.featuredImage.url}
-              alt={article.featuredImage.alt}
+              src={imageUrl}
+              alt={imageAlt}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"

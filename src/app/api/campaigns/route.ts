@@ -1,112 +1,57 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/src/lib/supabase/server";
-import type {
-  Campaign,
-  CampaignType,
-  CampaignStatus,
-} from "@/src/types/Campaigns";
+import { NextRequest, NextResponse } from 'next/server';
+import { 
+  getActiveCampaigns, 
+  searchCampaigns, 
+  getCampaignsByCategory,
+  getFeaturedCampaigns 
+} from '@/src/lib/db/queries/campaigns';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const language = searchParams.get("language") || "en";
-    const status = searchParams.get("status") as CampaignStatus | null;
-    const campaignType = searchParams.get("campaignType") as CampaignType | null;
-    const isFeatured = searchParams.get("isFeatured");
+    const searchParams = request.nextUrl.searchParams;
+    
+    const language = searchParams.get('language') || 'en';
+    const search = searchParams.get('search');
+    const category = searchParams.get('category');
+    const isFeatured = searchParams.get('isFeatured') === 'true';
+    const limit = searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined;
 
-    const supabase = await createClient();
+    let campaigns;
 
-    // Query campaigns with translations for the specified language
-    let query = supabase
-      .from("campaigns")
-      .select(`
-        id,
-        slug,
-        campaign_type,
-        status,
-        icon_name,
-        featured_image_url,
-        is_featured,
-        start_date,
-        end_date,
-        targets,
-        demands,
-        how_to_participate,
-        resources,
-        success_stories,
-        call_to_action,
-        stats,
-        created_at,
-        updated_at,
-        campaigns_translations!inner (
-          language,
-          title,
-          short_description,
-          description
-        )
-      `)
-      .eq("campaigns_translations.language", language);
-
-    // Apply filters
-    if (status) {
-      query = query.eq("status", status);
+    // If searching, use search query
+    if (search) {
+      const searchResult = await searchCampaigns(search, language);
+      campaigns = searchResult;
+    }
+    // If filtering by category
+    else if (category) {
+      campaigns = await getCampaignsByCategory(category, language);
+    }
+    // If only featured
+    else if (isFeatured) {
+      campaigns = await getFeaturedCampaigns(language);
+    }
+    // Default: get all active campaigns
+    else {
+      campaigns = await getActiveCampaigns(language);
     }
 
-    if (campaignType) {
-      query = query.eq("campaign_type", campaignType);
+    // Apply limit if specified
+    if (limit && Array.isArray(campaigns)) {
+      campaigns = campaigns.slice(0, limit);
     }
-
-    if (isFeatured !== null) {
-      query = query.eq("is_featured", isFeatured === "true");
-    }
-
-    const { data, error, count } = await query;
-
-    if (error) {
-      console.error("Supabase error:", error);
-      throw error;
-    }
-
-    // Transform data to flatten the translation fields
-    const campaigns: Campaign[] = (data || []).map((item) => {
-      const translation = Array.isArray(item.campaigns_translations)
-        ? item.campaigns_translations[0]
-        : item.campaigns_translations;
-
-      return {
-        id: item.id,
-        title: translation?.title || "",
-        description: translation?.description || "",
-        shortDescription: translation?.short_description || null,
-        slug: item.slug,
-        campaignType: item.campaign_type as CampaignType,
-        status: item.status as CampaignStatus,
-        iconName: item.icon_name,
-        featuredImageUrl: item.featured_image_url,
-        isFeatured: item.is_featured,
-        startDate: item.start_date,
-        endDate: item.end_date,
-        stats: item.stats,
-        targets: item.targets,
-        demands: item.demands,
-        howToParticipate: item.how_to_participate,
-        resources: item.resources,
-        successStories: item.success_stories,
-        callToAction: item.call_to_action,
-        subCampaigns: null,
-        createdAt: item.created_at,
-        updatedAt: item.updated_at,
-      };
-    });
 
     return NextResponse.json({
+      success: true,
       data: campaigns,
-      count: campaigns.length,
     });
   } catch (error) {
-    console.error("Error fetching campaigns:", error);
+    console.error('Error in campaigns API:', error);
     return NextResponse.json(
-      { error: "Failed to fetch campaigns" },
+      { 
+        success: false,
+        error: 'Failed to fetch campaigns' 
+      },
       { status: 500 }
     );
   }

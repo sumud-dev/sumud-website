@@ -1,0 +1,55 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1766953045952,
+      "tag": "0000_green_colonel_america",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1767000460019,
+      "tag": "0001_tiny_darkstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1767201287014,
+      "tag": "0002_create_auth_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1767517370496,
+      "tag": "0003_add_event_translations",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1735975200000,
+      "tag": "0004_update_events_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1767624918955,
+      "tag": "0005_sturdy_king_bedlam",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1736179200000,
+      "tag": "0011_rename_content_to_description",
+      "breakpoints": true
+    }
+  ]
+}

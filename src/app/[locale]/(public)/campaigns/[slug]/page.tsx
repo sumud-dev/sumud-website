@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { notFound } from "next/navigation";
 import { Link } from "@/src/i18n/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/src/components/ui/tabs";
+import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   Share2,
@@ -15,431 +15,53 @@ import {
   TrendingUp,
   ChevronRight,
   CheckCircle2,
+  AlertCircle,
+  Zap,
   Heart,
   FileText,
   Video,
   BookOpen,
   Shield,
+  Loader,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/src/components/ui/card";
-import { cn } from "@/src/lib/utils/utils";
-import {
-  getCampaignBySlug,
-  getRelatedCampaigns,
-} from "@/src/lib/data/campaigns";
+import { Badge } from "@/src/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
+import { useCampaign, getDescriptionText } from "@/src/lib/hooks/use-campaigns";
+import { type CampaignType, type CampaignParticipationStep, type CampaignResource, type CampaignSuccessStory } from "@/src/types/Campaigns";
 
-// Campaign type colors and gradients
-const campaignThemes = {
-  boycott: {
-    color: "#ea580c",
-    gradient: "from-orange-500/20 via-orange-400/10 to-transparent",
-    badgeClass: "bg-orange-500 text-white",
-    iconBg: "bg-orange-500/10",
-    iconColor: "text-orange-600",
-    accentClass: "text-orange-600",
-    activeTabClass: "bg-orange-600 border-orange-600 text-green-800",
-    hoverTabClass: "border-orange-500 bg-orange-50 text-orange-700",
-  },
-  "policy-advocacy": {
-    color: "#dc2626",
-    gradient: "from-red-500/20 via-red-400/10 to-transparent",
-    badgeClass: "bg-red-500 text-white",
-    iconBg: "bg-red-500/10",
-    iconColor: "text-red-600",
-    accentClass: "text-red-600",
-    activeTabClass: "bg-red-600 border-red-600 text-green-800",
-    hoverTabClass: "border-red-500 bg-red-50 text-red-700",
-  },
-  "community-action": {
-    color: "#16a34a",
-    gradient: "from-green-500/20 via-green-400/10 to-transparent",
-    badgeClass: "bg-green-500 text-white",
-    iconBg: "bg-green-500/10",
-    iconColor: "text-green-600",
-    accentClass: "text-green-600",
-    activeTabClass: "bg-green-600 border-green-600 text-green-800",
-    hoverTabClass: "border-green-500 bg-green-50 text-green-700",
-  },
-  awareness: {
-    color: "#059669",
-    gradient: "from-emerald-500/20 via-emerald-400/10 to-transparent",
-    badgeClass: "bg-emerald-500 text-white",
-    iconBg: "bg-emerald-500/10",
-    iconColor: "text-emerald-600",
-    accentClass: "text-emerald-600",
-    activeTabClass: "bg-emerald-600 border-emerald-600 text-green-800",
-    hoverTabClass: "border-emerald-500 bg-emerald-50 text-emerald-700",
-  },
+// Campaign type colors matching the main page
+const campaignTypeColors: Record<CampaignType, string> = {
+  awareness: "#059669", // emerald-600
+  advocacy: "#dc2626", // red-600
+  fundraising: "#ea580c", // orange-600
+  community_building: "#16a34a", // green-600
+  education: "#0891b2", // cyan-600
+  solidarity: "#7c3aed", // violet-600
+  humanitarian: "#db2777", // rose-600
+  political: "#854d0e", // amber-700
+  cultural: "#1e40af", // blue-700
+  environmental: "#166534", // green-800
+};
+
+// Icon mapping for campaign types
+const campaignIconMap: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
+  "shield-check": Shield,
+  "shield-off": Shield,
+  "shopping-cart": Download,
+  flag: Target,
+  church: Heart,
+  megaphone: TrendingUp,
 };
 
 // Resource type icons
-const resourceIcons = {
+const resourceIcons: Record<CampaignResource['type'], React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
   guide: BookOpen,
   toolkit: FileText,
   article: FileText,
   video: Video,
   petition: Shield,
 };
-
-// Sub-campaign tab definitions
-interface SubCampaignTab {
-  id: string;
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  description: string;
-}
-
-// SubCampaignTabs Component
-interface SubCampaignTabsProps {
-  campaign: ReturnType<typeof getCampaignBySlug>;
-  locale: "en" | "fi" | "ar";
-  theme: (typeof campaignThemes)[keyof typeof campaignThemes];
-}
-
-function SubCampaignTabs({ campaign, theme }: SubCampaignTabsProps) {
-  const [expandedCard, setExpandedCard] = useState<string | null>(null);
-
-  if (!campaign) return null;
-
-  // Generate sub-campaign tabs based on available campaign data
-  const subCampaignTabs: SubCampaignTab[] = [];
-
-  if (campaign.targets && campaign.targets.length > 0) {
-    subCampaignTabs.push({
-      id: "targets",
-      title: "Boycott Targets",
-      icon: Target,
-      description: "Companies and products to boycott",
-    });
-  }
-
-  if (campaign.demands && campaign.demands.length > 0) {
-    subCampaignTabs.push({
-      id: "demands",
-      title: "Our Demands",
-      icon: CheckCircle2,
-      description: "Key demands of this campaign",
-    });
-  }
-
-  if (campaign.howToParticipate && campaign.howToParticipate.length > 0) {
-    subCampaignTabs.push({
-      id: "participate",
-      title: "Take Action",
-      icon: Users,
-      description: "Ways to get involved",
-    });
-  }
-
-  if (campaign.resources && campaign.resources.length > 0) {
-    subCampaignTabs.push({
-      id: "resources",
-      title: "Resources",
-      icon: Download,
-      description: "Guides, toolkits and materials",
-    });
-  }
-
-  if (campaign.successStories && campaign.successStories.length > 0) {
-    subCampaignTabs.push({
-      id: "impact",
-      title: "Impact",
-      icon: TrendingUp,
-      description: "Success stories and achievements",
-    });
-  }
-
-  if (subCampaignTabs.length === 0) return null;
-
-  return (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-          Campaign Initiatives
-        </h2>
-        <p className="text-gray-600">
-          Explore different aspects of this campaign
-        </p>
-      </div>
-
-      <Tabs defaultValue={subCampaignTabs[0]?.id} className="w-full">
-        {/* Tab Navigation */}
-        <TabsList className="w-full flex flex-wrap justify-center gap-6 bg-transparent h-auto p-2">
-          {subCampaignTabs.map((tab, idx) => {
-            const IconComponent = tab.icon;
-            return (
-              <TabsTrigger
-                key={tab.id}
-                value={tab.id}
-                data-theme={idx}
-                className={cn(
-                  "px-5 py-3 rounded-full text-sm font-semibold transition-all duration-200 border-2",
-                  "bg-white text-gray-700 border-gray-300",
-                  "hover:shadow-md hover:scale-[1.02]",
-                  "active:scale-100",
-                  "data-[state=active]:shadow-xl data-[state=active]:scale-105",
-                  theme.activeTabClass.split(" ").map(cls => `data-[state=active]:${cls}`).join(" "),
-                  theme.hoverTabClass.split(" ").map(cls => `hover:${cls}`).join(" ")
-                )}
-              >
-                <IconComponent className="w-4 h-4 mr-2" />
-                {tab.title}
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-
-        {/* Tab Content */}
-        {subCampaignTabs.map((tab) => (
-          <TabsContent key={tab.id} value={tab.id} className="mt-6">
-            <AnimatePresence mode="wait">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.3 }}
-              >
-                {/* Cards Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {tab.id === "targets" &&
-                    campaign.targets?.map((target, index) => (
-                      <SubCampaignCard
-                        key={index}
-                        title={target.split(" - ")[0] || target}
-                        description={target.split(" - ")[1] || "Target for boycott"}
-                        icon={Target}
-                        theme={theme}
-                        index={index}
-                        isExpanded={expandedCard === `target-${index}`}
-                        onToggle={() =>
-                          setExpandedCard(
-                            expandedCard === `target-${index}` ? null : `target-${index}`
-                          )
-                        }
-                        expandedContent={
-                          <div className="space-y-3">
-                            <p className="text-gray-700">{target}</p>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="rounded-full border-2 border-gray-900 text-gray-900 hover:bg-gray-900 hover:text-white transition-all duration-200"
-                            >
-                              Learn Why
-                              <ChevronRight className="w-4 h-4 ml-1" />
-                            </Button>
-                          </div>
-                        }
-                      />
-                    ))}
-
-                  {tab.id === "demands" &&
-                    campaign.demands?.map((demand, index) => (
-                      <SubCampaignCard
-                        key={index}
-                        title={`Demand ${index + 1}`}
-                        description={demand}
-                        icon={CheckCircle2}
-                        theme={theme}
-                        index={index}
-                        isExpanded={expandedCard === `demand-${index}`}
-                        onToggle={() =>
-                          setExpandedCard(
-                            expandedCard === `demand-${index}` ? null : `demand-${index}`
-                          )
-                        }
-                        expandedContent={
-                          <div className="space-y-3">
-                            <p className="text-gray-700">{demand}</p>
-                          </div>
-                        }
-                      />
-                    ))}
-
-                  {tab.id === "participate" &&
-                    campaign.howToParticipate?.map((step, index) => (
-                      <SubCampaignCard
-                        key={index}
-                        title={`Step ${index + 1}`}
-                        description={step.substring(0, 80) + (step.length > 80 ? "..." : "")}
-                        icon={Users}
-                        theme={theme}
-                        index={index}
-                        isExpanded={expandedCard === `step-${index}`}
-                        onToggle={() =>
-                          setExpandedCard(
-                            expandedCard === `step-${index}` ? null : `step-${index}`
-                          )
-                        }
-                        expandedContent={
-                          <div className="space-y-3">
-                            <p className="text-gray-700">{step}</p>
-                          </div>
-                        }
-                      />
-                    ))}
-
-                  {tab.id === "resources" &&
-                    campaign.resources?.map((resource, index) => {
-                      const Icon = resourceIcons[resource.type] || FileText;
-                      return (
-                        <SubCampaignCard
-                          key={index}
-                          title={resource.title}
-                          description={`${resource.type.charAt(0).toUpperCase() + resource.type.slice(1)} resource`}
-                          icon={Icon}
-                          theme={theme}
-                          index={index}
-                          isExpanded={expandedCard === `resource-${index}`}
-                          onToggle={() =>
-                            setExpandedCard(
-                              expandedCard === `resource-${index}` ? null : `resource-${index}`
-                            )
-                          }
-                          expandedContent={
-                            <div className="space-y-3">
-                              <p className="text-gray-700">{resource.title}</p>
-                              <Button
-                                asChild
-                                size="sm"
-                                className="rounded-full bg-gray-900 text-white hover:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-200"
-                              >
-                                <a
-                                  href={resource.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  Open Resource
-                                  <ExternalLink className="w-4 h-4 ml-1" />
-                                </a>
-                              </Button>
-                            </div>
-                          }
-                        />
-                      );
-                    })}
-
-                  {tab.id === "impact" &&
-                    campaign.successStories?.map((story, index) => (
-                      <SubCampaignCard
-                        key={index}
-                        title={story.title || `Achievement ${index + 1}`}
-                        description={story.description.substring(0, 80) + (story.description.length > 80 ? "..." : "")}
-                        icon={TrendingUp}
-                        theme={theme}
-                        index={index}
-                        isExpanded={expandedCard === `story-${index}`}
-                        onToggle={() =>
-                          setExpandedCard(
-                            expandedCard === `story-${index}` ? null : `story-${index}`
-                          )
-                        }
-                        expandedContent={
-                          <div className="space-y-3">
-                            <p className="text-gray-700">{story.description}</p>
-                          </div>
-                        }
-                      />
-                    ))}
-                </div>
-              </motion.div>
-            </AnimatePresence>
-          </TabsContent>
-        ))}
-      </Tabs>
-    </div>
-  );
-}
-
-// SubCampaignCard Component
-interface SubCampaignCardProps {
-  title: string;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-  theme: (typeof campaignThemes)[keyof typeof campaignThemes];
-  index: number;
-  isExpanded: boolean;
-  onToggle: () => void;
-  expandedContent: React.ReactNode;
-}
-
-function SubCampaignCard({
-  title,
-  description,
-  icon: IconComponent,
-  theme,
-  index,
-  isExpanded,
-  onToggle,
-  expandedContent,
-}: SubCampaignCardProps) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.3 }}
-    >
-      <Card
-        className={cn(
-          "group cursor-pointer transition-all duration-300 overflow-hidden",
-          "border-2",
-          isExpanded
-            ? "ring-2 ring-gray-900 shadow-xl border-gray-900 bg-gray-50"
-            : "border-gray-200 hover:border-gray-400 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
-        )}
-        onClick={onToggle}
-      >
-        <CardHeader className="pb-2">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-start gap-3">
-              <div className={cn(
-                "p-2.5 rounded-xl shrink-0 transition-all duration-200",
-                theme.iconBg,
-                isExpanded && "shadow-md scale-110"
-              )}>
-                <IconComponent className={cn("w-5 h-5", theme.iconColor)} />
-              </div>
-              <div>
-                <h3 className={cn(
-                  "font-semibold line-clamp-1 transition-colors",
-                  isExpanded ? "text-gray-900" : "text-gray-800 group-hover:text-gray-900"
-                )}>
-                  {title}
-                </h3>
-                <p className="text-sm text-gray-600 line-clamp-2 mt-1">
-                  {description}
-                </p>
-              </div>
-            </div>
-            <ChevronRight
-              className={cn(
-                "w-5 h-5 shrink-0 transition-all duration-200",
-                isExpanded
-                  ? "rotate-90 text-gray-900"
-                  : "text-gray-400 group-hover:text-gray-600"
-              )}
-            />
-          </div>
-        </CardHeader>
-
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <CardContent className="pt-0 pb-4 border-t border-gray-100 mt-2">
-                <div className="pt-4">{expandedContent}</div>
-              </CardContent>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Card>
-    </motion.div>
-  );
-}
 
 interface CampaignDetailPageProps {
   params: Promise<{
@@ -449,221 +71,389 @@ interface CampaignDetailPageProps {
 }
 
 export default function CampaignDetailPage({ params }: CampaignDetailPageProps) {
+  const t = useTranslations("campaignsPage");
+
   const resolvedParams = React.use(params);
-  
   if (!resolvedParams || !resolvedParams.slug) {
     notFound();
   }
-  
   const slug = resolvedParams.slug;
   const localeParam = resolvedParams.locale || "en";
 
-  const campaign = getCampaignBySlug(slug);
+  // Fetch campaign data
+  const { data: campaign, isLoading, error } = useCampaign(slug);
 
-  if (!campaign) {
-    notFound();
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-linear-to-b from-[#fbfbfd] via-white to-[#f5f5f7] flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="h-12 w-12 animate-spin text-[#781D32] mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900">{t("loading.title")}</h2>
+          <p className="text-gray-600 mt-2">{t("loading.message")}</p>
+        </div>
+      </div>
+    );
   }
 
-  const campaignType = campaign.type as keyof typeof campaignThemes;
-  const theme = campaignThemes[campaignType] || campaignThemes["awareness"];
-  const relatedCampaigns = getRelatedCampaigns(campaign.id);
-  const locale = (localeParam || "en") as "en" | "fi" | "ar";
+  if (error || !campaign) {
+    return (
+      <div className="min-h-screen bg-linear-to-b from-[#fbfbfd] via-white to-[#f5f5f7] flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900">{t("error.title")}</h2>
+          <p className="text-gray-600 mt-2">
+            {error instanceof Error ? error.message : t("error.defaultMessage")}
+          </p>
+          <Button
+            onClick={() => window.location.reload()}
+            className="mt-4"
+          >
+            {t("error.tryAgain")}
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const typeColor = (campaign.campaignType && campaignTypeColors[campaign.campaignType]) || "#781D32";
+  const CampaignIcon = campaignIconMap[campaign.iconName || "megaphone"] || Target;
 
   return (
-    <>
-      <div className="min-h-screen bg-linear-to-b from-[#fbfbfd] via-white to-[#f5f5f7]">
-        {/* Back Navigation */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
-          <Link
-            href="/campaigns"
-            className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors group"
+    <div className="min-h-screen bg-linear-to-b from-[#fbfbfd] via-white to-[#f5f5f7]">
+      {/* Back Navigation */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
+        <Link
+          href="/campaigns"
+          className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors group"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+          Back to Campaigns
+        </Link>
+      </div>
+
+      {/* Hero Section */}
+      <section className="relative overflow-hidden">
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            background: `linear-gradient(135deg, ${typeColor}20 0%, ${typeColor}05 100%)`,
+          }}
+        />
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-            Back to Campaigns
-          </Link>
+            {/* Campaign Type Badge */}
+            <div className="flex flex-wrap items-center gap-3 mb-6">
+              <Badge
+                className="px-4 py-1.5 text-sm font-semibold rounded-full shadow-lg backdrop-blur-sm border-0 flex items-center gap-2"
+                style={{
+                  backgroundColor: typeColor,
+                  color: "white",
+                }}
+              >
+                <CampaignIcon className="w-4 h-4" />
+                {campaign.campaignType ? t(`types.${campaign.campaignType}`) : t("card.general")}
+              </Badge>
+              {campaign.isFeatured && (
+                <Badge className="px-4 py-1.5 text-sm font-medium rounded-full bg-yellow-400 text-gray-900 shadow-lg backdrop-blur-sm border-0 flex items-center gap-1.5">
+                  <Zap className="w-4 h-4" />
+                  Featured
+                </Badge>
+              )}
+            </div>
+
+            {/* Campaign Title */}
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6 tracking-tight leading-tight">
+              {campaign.title}
+            </h1>
+
+            {/* Short Description */}
+            <p className="text-xl sm:text-2xl text-gray-700 mb-8 max-w-4xl font-light leading-relaxed line-clamp-2">
+              {getDescriptionText(campaign.description)}
+            </p>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center gap-4">
+              <Button
+                className="rounded-full px-6 h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                style={{
+                  backgroundColor: typeColor,
+                  color: "white",
+                }}
+              >
+                Join Campaign
+                <ChevronRight className="ml-2 h-5 w-5" />
+              </Button>
+              <Button
+                variant="outline"
+                className="rounded-full px-6 h-12 text-base font-medium border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
+              >
+                <Share2 className="mr-2 h-4 w-4" />
+                Share Campaign
+              </Button>
+            </div>
+          </motion.div>
         </div>
+      </section>
 
-        {/* Hero Section with Gradient Background */}
-        <section className="relative overflow-hidden">
-          <div
-            className={cn(
-              "absolute inset-0 bg-linear-to-br",
-              theme.gradient
-            )}
-          />
+      {/* Main Content with Tabs */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-5 mb-8">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="participate">How to Participate</TabsTrigger>
+            <TabsTrigger value="resources">Resources</TabsTrigger>
+            <TabsTrigger value="impact">Impact</TabsTrigger>
+            <TabsTrigger value="action">Call to Action</TabsTrigger>
+          </TabsList>
 
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              {/* Campaign Title */}
-              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6 tracking-tight leading-tight">
-                {campaign.title[locale]}
-              </h1>
-
-              {/* Short Description */}
-              <p className="text-xl sm:text-2xl text-gray-700 mb-8 max-w-7xl font-light leading-relaxed">
-                {campaign.shortDescription[locale]}
-              </p>
-
-              {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-4">
-                <Button
-                  asChild
-                  className={cn(
-                    "rounded-full px-6 h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-200",
-                    "bg-gray-900 hover:bg-gray-800 text-white hover:scale-105 active:scale-95"
-                  )}
-                >
-                  <a
-                    href={campaign.callToAction.actionUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {campaign.callToAction.primary}
-                    <ChevronRight className="ml-2 h-5 w-5" />
-                  </a>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="rounded-full px-6 h-12 text-base font-medium border-2 border-gray-400 text-gray-900 hover:border-gray-900 hover:bg-gray-900 hover:text-white hover:scale-105 active:scale-95 transition-all duration-200"
-                >
-                  <Share2 className="mr-2 h-4 w-4" />
-                  Share Campaign
-                </Button>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Sub-Campaigns Tabs Section */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <SubCampaignTabs campaign={campaign} locale={locale} theme={theme} />
-        </section>
-
-        {/* Main Content */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-12">
-
-          {/* Related Campaigns */}
-          {relatedCampaigns.length > 0 && (
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.9 }}
               className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-lg p-8 sm:p-10"
             >
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                Related Campaigns
+              <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <div
+                  className="p-3 rounded-2xl"
+                  style={{ backgroundColor: `${typeColor}15` }}
+                >
+                  <Target style={{ color: typeColor }} className="w-6 h-6" />
+                </div>
+                About This Campaign
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {relatedCampaigns.map((related, index) => {
-                  return (
-                    <Link
-                      key={related.id}
-                      href={`/campaigns/${related.slug}`}
-                      className="group"
-                    >
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 1 + index * 0.1 }}
-                        className="p-5 bg-linear-to-br from-gray-50 to-white rounded-2xl border-2 border-gray-300 hover:shadow-xl hover:border-gray-500 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200"
-                      >
-                        <h4 className="font-semibold text-gray-900 mb-2 group-hover:text-gray-700 transition-colors">
-                          {related.title[locale]}
-                        </h4>
-                        <p className="text-sm text-gray-600 line-clamp-2">
-                          {related.shortDescription[locale]}
-                        </p>
-                      </motion.div>
-                    </Link>
-                  );
-                })}
+              <div className="prose prose-lg max-w-none">
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                  {getDescriptionText(campaign.description)}
+                </p>
               </div>
             </motion.div>
-          )}
+          </TabsContent>
 
-          {/* Call-to-Action Footer */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1 }}
-            className="bg-linear-to-br from-gray-900 to-gray-800 rounded-3xl border border-gray-700/60 shadow-2xl p-10 sm:p-12 text-center"
-          >
-            <div
-              className={cn(
-                "inline-flex items-center justify-center w-16 h-16 rounded-full mb-6",
-                theme.iconBg
-              )}
+          {/* How to Participate Tab */}
+          <TabsContent value="participate" className="space-y-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-lg p-8 sm:p-10"
             >
-              <Heart className={cn("w-8 h-8", theme.iconColor)} />
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-              Ready to Take Action?
-            </h2>
-            <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
-              Join thousands of supporters working for Palestinian freedom and
-              justice. Every action counts.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button
-                asChild
-                className="rounded-full px-8 h-12 text-base font-semibold bg-white text-gray-900 hover:bg-gray-100 shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                <a
-                  href={campaign.callToAction.actionUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+              <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <div
+                  className="p-3 rounded-2xl"
+                  style={{ backgroundColor: `${typeColor}15` }}
                 >
-                  {campaign.callToAction.primary}
+                  <Users style={{ color: typeColor }} className="w-6 h-6" />
+                </div>
+                How to Participate
+              </h2>
+              <div className="space-y-4">
+                {campaign.howToParticipate && Array.isArray(campaign.howToParticipate) && campaign.howToParticipate.length > 0 ? (
+                  campaign.howToParticipate.map((step: CampaignParticipationStep | string, index: number) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="flex items-start gap-4 p-5 bg-linear-to-br from-gray-50 to-white rounded-2xl border border-gray-200/60 hover:shadow-md transition-shadow duration-200"
+                    >
+                      <div
+                        className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg"
+                        style={{
+                          backgroundColor: `${typeColor}15`,
+                          color: typeColor,
+                        }}
+                      >
+                        {index + 1}
+                      </div>
+                      <p className="text-gray-700 leading-relaxed pt-1.5">
+                        {typeof step === 'string' ? step : step.title || step.description || 'Step details'}
+                      </p>
+                    </motion.div>
+                  ))
+                ) : (
+                  <p className="text-gray-600">Participation details will be available soon.</p>
+                )}
+              </div>
+            </motion.div>
+          </TabsContent>
+
+          {/* Resources Tab */}
+          <TabsContent value="resources" className="space-y-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-lg p-8 sm:p-10"
+            >
+              <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <div
+                  className="p-3 rounded-2xl"
+                  style={{ backgroundColor: `${typeColor}15` }}
+                >
+                  <Download style={{ color: typeColor }} className="w-6 h-6" />
+                </div>
+                Resources & Materials
+              </h2>
+              {campaign.resources && Array.isArray(campaign.resources) && campaign.resources.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {campaign.resources.map((resource: CampaignResource, index: number) => {
+                    const Icon = resourceIcons[resource.type] || FileText;
+                    return (
+                      <motion.a
+                        key={index}
+                        href={resource.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="group p-5 bg-linear-to-br from-gray-50 to-white rounded-2xl border border-gray-200/60 hover:shadow-lg hover:border-gray-300 transition-all duration-200"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="p-2.5 rounded-xl"
+                              style={{ backgroundColor: `${typeColor}15` }}
+                            >
+                              <Icon style={{ color: typeColor }} className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900 group-hover:text-gray-700 transition-colors">
+                                {resource.title}
+                              </h4>
+                              <p className="text-sm text-gray-600 capitalize">
+                                {resource.type}
+                              </p>
+                            </div>
+                          </div>
+                          <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                        </div>
+                      </motion.a>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-gray-600">Resources will be available soon.</p>
+              )}
+            </motion.div>
+          </TabsContent>
+
+          {/* Impact Tab */}
+          <TabsContent value="impact" className="space-y-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-lg p-8 sm:p-10"
+            >
+              <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <div
+                  className="p-3 rounded-2xl"
+                  style={{ backgroundColor: `${typeColor}15` }}
+                >
+                  <TrendingUp style={{ color: typeColor }} className="w-6 h-6" />
+                </div>
+                Success Stories & Impact
+              </h2>
+              {campaign.successStories && Array.isArray(campaign.successStories) && campaign.successStories.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {campaign.successStories.map((story: CampaignSuccessStory | string, index: number) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="p-5 bg-linear-to-br from-gray-50 to-white rounded-2xl border border-gray-200/60"
+                    >
+                      <div className="flex items-start gap-3">
+                        <CheckCircle2
+                          style={{ color: typeColor }}
+                          className="w-5 h-5 shrink-0 mt-0.5"
+                        />
+                        <p className="text-gray-700 leading-relaxed">
+                          {typeof story === 'string' ? story : story.title || story.content || 'Success story'}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-600">Success stories will be shared soon.</p>
+              )}
+            </motion.div>
+          </TabsContent>
+
+          {/* Call to Action Tab */}
+          <TabsContent value="action" className="space-y-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-linear-to-br from-gray-900 to-gray-800 rounded-3xl border border-gray-700/60 shadow-2xl p-10 sm:p-12 text-center"
+            >
+              <div
+                className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-6"
+                style={{ backgroundColor: `${typeColor}20` }}
+              >
+                <Heart style={{ color: typeColor }} className="w-8 h-8" />
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+                Ready to Take Action?
+              </h2>
+              <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
+                Join thousands of supporters working for Palestinian freedom and justice. Every action counts.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <Button
+                  className="rounded-full px-8 h-12 text-base font-semibold bg-white text-gray-900 hover:bg-gray-100 shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  Join Campaign
                   <ChevronRight className="ml-2 h-5 w-5" />
-                </a>
-              </Button>
-              {campaign.callToAction.secondary && (
+                </Button>
                 <Button
                   variant="outline"
-                  className="rounded-full px-8 h-12 text-base font-medium border-2 border-gray-600 text-black hover:bg-white/10 transition-all duration-200"
+                  className="rounded-full px-8 h-12 text-base font-medium border-2 border-gray-600 text-white hover:bg-white/10 transition-all duration-200"
                 >
-                  {campaign.callToAction.secondary}
-                </Button>
-              )}
-            </div>
-
-            {/* Social Share Buttons */}
-            <div className="mt-8 pt-8 border-t border-gray-700/60">
-              <p className="text-sm text-gray-400 mb-4">Share this campaign</p>
-              <div className="flex items-center justify-center gap-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
-                >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Twitter
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
-                >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Facebook
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
-                >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Email
+                  Learn More
                 </Button>
               </div>
-            </div>
-          </motion.div>
-        </section>
-      </div>
-    </>
+
+              {/* Social Share Buttons */}
+              <div className="mt-8 pt-8 border-t border-gray-700/60">
+                <p className="text-sm text-gray-400 mb-4">Share this campaign</p>
+                <div className="flex items-center justify-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Twitter
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Facebook
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Email
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </TabsContent>
+        </Tabs>
+      </section>
+    </div>
   );
 }

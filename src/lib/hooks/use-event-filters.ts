@@ -1,155 +1,127 @@
-"use client";
+'use client';
 
-import { useState, useMemo, useCallback } from "react";
-import type { EventFilters } from "@/src/lib/types/event";
+import { useState, useCallback, useMemo } from 'react';
+import type { EventFilters } from '@/src/lib/react-query/query-keys';
 
-export interface UseEventFiltersOptions {
-  initialFilters?: Partial<EventFilters>;
-  defaultLimit?: number;
-}
-
-export interface UseEventFiltersReturn {
-  // State
+interface UseEventFiltersReturn {
   filters: EventFilters;
   searchInput: string;
   showUpcomingOnly: boolean;
   selectedDate: Date | null;
+  activeFiltersCount: number;
   showMobileCalendar: boolean;
   showMobileFilters: boolean;
-  activeFiltersCount: number;
-
-  // Setters
   setSearchInput: (value: string) => void;
   setShowUpcomingOnly: (value: boolean) => void;
   setSelectedDate: (date: Date | null) => void;
-  setShowMobileCalendar: (open: boolean) => void;
-  setShowMobileFilters: (open: boolean) => void;
-
-  // Handlers
-  handleFilterChange: (
-    key: keyof EventFilters,
-    value: string | boolean | undefined
-  ) => void;
+  setShowMobileCalendar: (value: boolean) => void;
+  setShowMobileFilters: (value: boolean) => void;
+  handleFilterChange: (key: keyof EventFilters, value: string | boolean | undefined) => void;
   handleSearch: () => void;
-  handleClearFilters: () => void;
   handleDateSelect: (date: Date | null) => void;
+  handleClearFilters: () => void;
   handlePageChange: (page: number) => void;
 }
 
 /**
- * Custom hook for managing event filter state and handlers.
- * Extracts filter logic from the events page for better maintainability.
+ * Custom hook for managing event filter state
+ * Centralizes all filter-related state and handlers
  */
-export function useEventFilters(
-  options: UseEventFiltersOptions = {}
-): UseEventFiltersReturn {
-  const { initialFilters, defaultLimit = 12 } = options;
-
+export function useEventFilters(): UseEventFiltersReturn {
   // Filter state
   const [filters, setFilters] = useState<EventFilters>({
-    status: "published",
+    status: 'published',
     page: 1,
-    limit: defaultLimit,
-    ...initialFilters,
+    limit: 12,
   });
-
-  // Search state
-  const [searchInput, setSearchInput] = useState("");
-
+  
+  // Search input (separate from filters for debouncing)
+  const [searchInput, setSearchInput] = useState('');
+  
   // Toggle states
   const [showUpcomingOnly, setShowUpcomingOnly] = useState(false);
-
-  // Date selection
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-
-  // Mobile sheet states
+  
+  // Mobile UI states
   const [showMobileCalendar, setShowMobileCalendar] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Calculate active filters count
   const activeFiltersCount = useMemo(() => {
     let count = 0;
-    if (searchInput.trim()) count++;
     if (filters.eventType) count++;
     if (filters.locationMode) count++;
+    if (filters.search) count++;
+    if (filters.featured) count++;
     if (showUpcomingOnly) count++;
     if (selectedDate) count++;
-    if (filters.featured) count++;
     return count;
-  }, [searchInput, filters, showUpcomingOnly, selectedDate]);
+  }, [filters, showUpcomingOnly, selectedDate]);
 
-  // Handler: Update a specific filter
-  const handleFilterChange = useCallback(
-    (key: keyof EventFilters, value: string | boolean | undefined) => {
-      setFilters((prev) => ({
-        ...prev,
-        [key]: value === "all" ? undefined : value,
-        page: 1, // Reset to first page when filtering
-      }));
-    },
-    []
-  );
-
-  // Handler: Trigger search (resets page)
-  const handleSearch = useCallback(() => {
-    setFilters((prev) => ({
+  // Handle filter changes
+  const handleFilterChange = useCallback((key: keyof EventFilters, value: string | boolean | undefined) => {
+    setFilters(prev => ({
       ...prev,
-      page: 1,
+      [key]: value,
+      page: 1, // Reset to first page on filter change
     }));
   }, []);
 
-  // Handler: Clear all filters
-  const handleClearFilters = useCallback(() => {
-    setFilters({
-      status: "published",
+  // Handle search submission
+  const handleSearch = useCallback(() => {
+    setFilters(prev => ({
+      ...prev,
+      search: searchInput.trim() || undefined,
       page: 1,
-      limit: defaultLimit,
-    });
-    setSearchInput("");
-    setShowUpcomingOnly(false);
-    setSelectedDate(null);
-  }, [defaultLimit]);
+    }));
+  }, [searchInput]);
 
-  // Handler: Select a date
+  // Handle date selection
   const handleDateSelect = useCallback((date: Date | null) => {
     setSelectedDate(date);
-    setFilters((prev) => ({
+    setFilters(prev => ({
       ...prev,
       page: 1,
     }));
   }, []);
 
-  // Handler: Change page
-  const handlePageChange = useCallback((newPage: number) => {
-    setFilters((prev) => ({
+  // Handle clearing all filters
+  const handleClearFilters = useCallback(() => {
+    setFilters({
+      status: 'published',
+      page: 1,
+      limit: 12,
+    });
+    setSearchInput('');
+    setShowUpcomingOnly(false);
+    setSelectedDate(null);
+  }, []);
+
+  // Handle page change
+  const handlePageChange = useCallback((page: number) => {
+    setFilters(prev => ({
       ...prev,
-      page: newPage,
+      page,
     }));
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   return {
-    // State
     filters,
     searchInput,
     showUpcomingOnly,
     selectedDate,
+    activeFiltersCount,
     showMobileCalendar,
     showMobileFilters,
-    activeFiltersCount,
-
-    // Setters
     setSearchInput,
     setShowUpcomingOnly,
     setSelectedDate,
     setShowMobileCalendar,
     setShowMobileFilters,
-
-    // Handlers
     handleFilterChange,
     handleSearch,
-    handleClearFilters,
     handleDateSelect,
+    handleClearFilters,
     handlePageChange,
   };
 }

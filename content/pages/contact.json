@@ -1,0 +1,177 @@
+{
+  "slug": "contact",
+  "path": "/contact",
+  "status": "published",
+  "createdAt": "2026-01-07T12:00:00.000Z",
+  "updatedAt": "2026-01-06T23:38:56.760Z",
+  "translations": {
+    "en": {
+      "title": "Contact Us - Sumud",
+      "description": "Get in touch with Sumud. We're here to listen, support, and work together for Palestinian solidarity.",
+      "blocks": [
+        {
+          "id": "page-hero-1",
+          "type": "page-hero",
+          "content": {
+            "icon": "Mail",
+            "content": {
+              "en": {
+                "title": "Get in Touch",
+                "subtitle": "Contact Us",
+                "description": "We're here to listen, support, and work together for Palestinian solidarity. Reach out to us through any of the channels below."
+              },
+              "fi": {
+                "title": "Ota yhteyttä",
+                "subtitle": "Yhteystiedot",
+                "description": "Olemme täällä kuunnellaksemme, tukeaksemme ja tehdäksemme yhteistyötä palestiinalaisen solidaarisuuden puolesta. Ota meihin yhteyttä alla olevien kanavien kautta."
+              },
+              "ar": {
+                "title": "تواصل معنا",
+                "subtitle": "اتصل بنا",
+                "description": "نحن هنا للاستماع والدعم والعمل معًا من أجل التضامن الفلسطيني. تواصل معنا من خلال أي من القنوات أدناه."
+              }
+            }
+          }
+        },
+        {
+          "id": "features-1",
+          "type": "features-section",
+          "content": {
+            "header": {
+              "en": {
+                "title": "Contact Methods",
+                "subtitle": "Choose the best way to reach us"
+              },
+              "fi": {
+                "title": "Yhteydenottotavat",
+                "subtitle": "Valitse paras tapa ottaa meihin yhteyttä"
+              },
+              "ar": {
+                "title": "طرق التواصل",
+                "subtitle": "اختر أفضل طريقة للتواصل معنا"
+              }
+            },
+            "items": [
+              {
+                "key": "email",
+                "icon": "Mail",
+                "color": "bg-[#781D32]",
+                "content": {
+                  "en": {
+                    "title": "Email",
+                    "description": "Send us an email at info@sumud.fi"
+                  },
+                  "fi": {
+                    "title": "Sähköposti",
+                    "description": "Lähetä meille sähköpostia osoitteeseen info@sumud.fi"
+                  },
+                  "ar": {
+                    "title": "البريد الإلكتروني",
+                    "description": "أرسل لنا بريدًا إلكترونيًا على info@sumud.fi"
+                  }
+                }
+              },
+              {
+                "key": "phone",
+                "icon": "Phone",
+                "color": "bg-[#55613C]",
+                "content": {
+                  "en": {
+                    "title": "Phone",
+                    "description": "Call us directly at +358 50 123 4567"
+                  },
+                  "fi": {
+                    "title": "Puhelin",
+                    "description": "Soita meille suoraan numeroon +358 50 123 4567"
+                  },
+                  "ar": {
+                    "title": "الهاتف",
+                    "description": "اتصل بنا مباشرة على +358 50 123 4567"
+                  }
+                }
+              },
+              {
+                "key": "address",
+                "icon": "MapPin",
+                "color": "bg-[#3E442B]",
+                "content": {
+                  "en": {
+                    "title": "Address",
+                    "description": "Visit our office in Helsinki, Finland"
+                  },
+                  "fi": {
+                    "title": "Osoite",
+                    "description": "Vieraile toimistollamme Helsingissä, Suomessa"
+                  },
+                  "ar": {
+                    "title": "العنوان",
+                    "description": "قم بزيارة مكتبنا في هلسنكي، فنلندا"
+                  }
+                }
+              }
+            ],
+            "columns": 3
+          }
+        },
+        {
+          "id": "mission-1",
+          "type": "mission-section",
+          "content": {
+            "content": {
+              "en": {
+                "title": "Send Us a Message Now",
+                "description": "Have a question, suggestion, or want to collaborate? Fill out the contact form on this page and we'll get back to you as soon as possible. We welcome all inquiries about our work, events, and how you can get involved."
+              },
+              "fi": {
+                "title": "Lähetä meille viesti",
+                "description": "Onko sinulla kysymys, ehdotus tai haluatko tehdä yhteistyötä? Täytä tämän sivun yhteydenottolomake, niin otamme sinuun yhteyttä mahdollisimman pian. Toivotamme tervetulleiksi kaikki tiedustelut työstämme, tapahtumistamme ja siitä, miten voit osallistua."
+              },
+              "ar": {
+                "title": "أرسل لنا رسالة",
+                "description": "هل لديك سؤال أو اقتراح أو ترغب في التعاون؟ املأ نموذج الاتصال في هذه الصفحة وسنرد عليك في أقرب وقت ممكن. نرحب بجميع الاستفسارات حول عملنا وفعالياتنا وكيف يمكنك المشاركة."
+              }
+            }
+          }
+        },
+        {
+          "id": "cta-1",
+          "type": "cta-section",
+          "content": {
+            "primaryButtonHref": "/membership",
+            "secondaryButtonHref": "/about",
+            "content": {
+              "en": {
+                "title": "Join Our Community",
+                "description": "Want to stay connected and be part of our movement? Become a member and receive updates about our events, campaigns, and initiatives.",
+                "primaryButtonText": "Become a Member",
+                "secondaryButtonText": "Learn About Us"
+              },
+              "fi": {
+                "title": "Liity yhteisöömme",
+                "description": "Haluatko pysyä yhteydessä ja olla osa liikettämme? Ryhdy jäseneksi ja saat päivityksiä tapahtumistamme, kampanjoistamme ja aloitteistamme.",
+                "primaryButtonText": "Ryhdy jäseneksi",
+                "secondaryButtonText": "Lue lisää meistä"
+              },
+              "ar": {
+                "title": "انضم إلى مجتمعنا",
+                "description": "هل تريد البقاء على اتصال وأن تكون جزءًا من حركتنا؟ انضم كعضو واحصل على تحديثات حول فعالياتنا وحملاتنا ومبادراتنا.",
+                "primaryButtonText": "انضم كعضو",
+                "secondaryButtonText": "تعرف علينا"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "fi": {
+      "title": "Yhteystiedot - Sumud",
+      "description": "Ota yhteyttä Sumudiin. Olemme täällä kuunnellaksemme, tukeaksemme ja tehdäksemme yhteistyötä palestiinalaisen solidaarisuuden puolesta.",
+      "blocks": []
+    },
+    "ar": {
+      "title": "اتصل بنا - صمود",
+      "description": "تواصل مع صمود. نحن هنا للاستماع والدعم والعمل معًا من أجل التضامن الفلسطيني.",
+      "blocks": []
+    }
+  }
+}

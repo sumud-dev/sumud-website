@@ -4,7 +4,7 @@ import React, { useState, useMemo } from "react";
 import { Link } from "@/src/i18n/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Search,
   ChevronRight,
@@ -34,8 +34,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/src/components/ui/select";
-import { useCampaigns, Campaign } from "@/src/lib/hooks/use-campaigns";
-import type { CampaignType } from "@/src/types/Campaigns";
+import { useCampaigns, Campaign, getDescriptionText } from "@/src/lib/hooks/use-campaigns";
+import { type CampaignType, CAMPAIGN_TYPES } from "@/src/types/Campaigns";
+import { usePage } from "@/src/lib/hooks/use-pages";
 
 // Campaign type colors matching real data
 const campaignTypeColors: Record<CampaignType, string> = {
@@ -61,20 +62,6 @@ const campaignIconMap: Record<string, LucideIcon> = {
   megaphone: Megaphone,
 };
 
-// Campaign type labels for filtering - now handled by translations
-const campaignTypes: CampaignType[] = [
-  "awareness",
-  "advocacy",
-  "fundraising",
-  "community_building",
-  "education",
-  "solidarity",
-  "humanitarian",
-  "political",
-  "cultural",
-  "environmental",
-];
-
 const SORT_OPTIONS = [
   { value: "featured", labelKey: "sort.featured" },
   { value: "recent", labelKey: "sort.recent" },
@@ -82,14 +69,43 @@ const SORT_OPTIONS = [
 
 export default function CampaignsPage() {
   const t = useTranslations("campaignsPage");
+  const locale = useLocale();
   const [selectedType, setSelectedType] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<string>("featured");
 
-  // Fetch campaigns from API
-  const { data: campaignsResponse, isLoading, error } = useCampaigns({
-    language: "en",
-  });
+  // Fetch page builder content
+  const { data: pageData } = usePage("campaigns");
+
+  // Extract localized content from page builder
+  const pageContent = useMemo(() => {
+    if (!pageData) return null;
+    
+    const textBlock = pageData.translations.en?.blocks?.find(
+      (b) => b.id === "campaigns-page-text"
+    );
+    const heroBlock = pageData.translations.en?.blocks?.find(
+      (b) => b.id === "campaigns-page-hero"
+    );
+    const typesBlock = pageData.translations.en?.blocks?.find(
+      (b) => b.id === "campaigns-page-types"
+    );
+    
+    const textContent = (textBlock?.content as { content?: Record<string, Record<string, string>> })?.content;
+    const heroContent = (heroBlock?.content as { content?: Record<string, { title: string; subtitle?: string; description: string }> })?.content;
+    const typesContent = (typesBlock?.content as { content?: Record<string, Record<string, string>> })?.content;
+    
+    const localeKey = locale as "en" | "fi" | "ar";
+    
+    return {
+      hero: heroContent?.[localeKey] || heroContent?.en,
+      text: textContent?.[localeKey] || textContent?.en,
+      types: typesContent?.[localeKey] || typesContent?.en,
+    };
+  }, [pageData, locale]);
+
+  // Fetch campaigns from API - uses current locale automatically via useLocale() in the hook
+  const { data: campaignsResponse, isLoading, error } = useCampaigns();
 
   // Get campaigns from API response (already typed correctly)
   const campaigns = campaignsResponse?.data ?? [];
@@ -109,7 +125,7 @@ export default function CampaignsPage() {
       filtered = filtered.filter(
         (c) =>
           c.title.toLowerCase().includes(query) ||
-          c.description.toLowerCase().includes(query),
+          getDescriptionText(c.description).toLowerCase().includes(query),
       );
     }
 
@@ -132,7 +148,7 @@ export default function CampaignsPage() {
     return filtered;
   }, [selectedType, searchQuery, sortBy, campaigns]);
 
-  const filterCategories = ["All", ...campaignTypes];
+  const filterCategories = ["All", ...CAMPAIGN_TYPES];
 
   return (
     <>
@@ -216,14 +232,14 @@ export default function CampaignsPage() {
               </div>
 
               <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white">
-                {t("hero.title")}
+                {pageContent?.hero?.title || t("hero.title")}
                 <span className="block text-3xl lg:text-4xl font-medium opacity-90 mt-3">
-                  {t("hero.subtitle")}
+                  {pageContent?.hero?.subtitle || t("hero.subtitle")}
                 </span>
               </h1>
 
               <p className="text-xl lg:text-2xl max-w-3xl mx-auto leading-relaxed text-white/90">
-                {t("hero.description")}
+                {pageContent?.hero?.description || t("hero.description")}
               </p>
             </motion.div>
           </div>
@@ -252,7 +268,7 @@ export default function CampaignsPage() {
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     type="text"
-                    placeholder={t("search.placeholder")}
+                    placeholder={pageContent?.text?.searchPlaceholder || t("search.placeholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-12 h-12 backdrop-blur-sm rounded-xl"
@@ -426,82 +442,6 @@ export default function CampaignsPage() {
             )}
           </div>
         </motion.section>
-
-        {/* Call to Action with Premium Glass */}
-        <motion.section
-          className="py-20 relative overflow-hidden"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-        >
-          {/* Gradient Background */}
-          <div className="absolute inset-0 bg-linear-to-br from-[#FFF8F0] via-[#E8DCC4]/30 to-[#FFF8F0]" />
-
-          {/* Decorative Orbs */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-[#781D32]/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#6B8E23]/10 rounded-full blur-3xl" />
-          </div>
-
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div
-              className="backdrop-blur-xl rounded-3xl p-12 text-center transition-all duration-300 hover:scale-105"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(255, 255, 255, 0.95) 50%, rgba(212, 175, 55, 0.1) 100%)",
-                border: "0.5px solid rgba(212, 175, 55, 0.4)",
-                boxShadow:
-                  "0 16px 40px rgba(212, 175, 55, 0.15), 0 8px 20px rgba(120, 29, 50, 0.1), inset 0 2px 0 rgba(255, 255, 255, 0.9), inset 0 0 40px rgba(212, 175, 55, 0.08)",
-              }}
-            >
-              <div
-                className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-md"
-                style={{
-                  background: "rgba(120, 29, 50, 0.15)",
-                  border: "0.5px solid rgba(120, 29, 50, 0.3)",
-                }}
-              >
-                <Target className="h-10 w-10 text-[#781D32]" />
-              </div>
-
-              <h2 className="text-4xl font-bold text-[#3E442B] mb-4">
-                {t("cta.title")}
-              </h2>
-
-              <p className="text-xl text-gray-700 max-w-2xl mx-auto mb-8 leading-relaxed">
-                {t("cta.description")}
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button
-                  size="lg"
-                  className="backdrop-blur-md rounded-xl px-8 py-4 text-lg font-semibold transition-all duration-300 hover:scale-105"
-                  style={{
-                    background: "#781D32",
-                    color: "white",
-                    border: "0.5px solid rgba(255, 255, 255, 0.2)",
-                    boxShadow: "0 4px 12px rgba(120, 29, 50, 0.25)",
-                  }}
-                >
-                  {t("cta.exploreButton")}
-                  <ChevronRight className="ml-2 h-5 w-5" />
-                </Button>
-                <Button
-                  size="lg"
-                  className="backdrop-blur-md rounded-xl px-8 py-4 text-lg font-semibold transition-all duration-300"
-                  style={{
-                    background: "rgba(255, 255, 255, 0.9)",
-                    border: "0.5px solid rgba(85, 97, 60, 0.3)",
-                    color: "#55613C",
-                  }}
-                >
-                  {t("cta.learnMoreButton")}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </motion.section>
       </div>
     </>
   );
@@ -515,7 +455,7 @@ interface CampaignCardProps {
 }
 
 function CampaignCard({ campaign, index, t }: CampaignCardProps) {
-  const typeColor = campaignTypeColors[campaign.campaignType] || "#781D32";
+  const typeColor = (campaign.campaignType && campaignTypeColors[campaign.campaignType]) || "#781D32";
   const CampaignIcon = campaignIconMap[campaign.iconName || "megaphone"] || Target;
 
   // Create gradient background for fallback
@@ -553,7 +493,7 @@ function CampaignCard({ campaign, index, t }: CampaignCardProps) {
 
           {/* Description - Fixed Height with 2-line clamp */}
           <p className="text-sm text-gray-600 mb-4 line-clamp-2 h-10 leading-5">
-            {campaign.description}
+            {getDescriptionText(campaign.description)}
           </p>
 
           {/* Stats Grid - Fixed Height */}
@@ -562,7 +502,7 @@ function CampaignCard({ campaign, index, t }: CampaignCardProps) {
               <CampaignIcon className="w-4 h-4 text-gray-500 shrink-0" />
               <div className="min-w-0">
                 <div className="text-sm font-semibold text-gray-900 capitalize truncate">
-                  {t(`types.${campaign.campaignType}`)}
+                  {campaign.campaignType ? t(`types.${campaign.campaignType}`) : t("card.general")}
                 </div>
                 <div className="text-xs text-gray-600">{t("card.campaignType")}</div>
               </div>

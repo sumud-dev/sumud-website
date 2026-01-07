@@ -1,0 +1,111 @@
+{
+  "slug": "events",
+  "path": "/events",
+  "status": "published",
+  "createdAt": "2026-01-06T12:00:00.000Z",
+  "updatedAt": "2026-01-06T12:00:00.000Z",
+  "translations": {
+    "en": {
+      "title": "Events Calendar - Sumud",
+      "description": "Join us for cultural events, activism campaigns, educational workshops, and community gatherings",
+      "blocks": [
+        {
+          "id": "events-page-hero",
+          "type": "page-hero",
+          "content": {
+            "icon": "Calendar",
+            "content": {
+              "en": {
+                "title": "Events Calendar",
+                "subtitle": "Join Our Community",
+                "description": "Join us for cultural events, activism campaigns, educational workshops, and community gatherings that strengthen our solidarity movement."
+              },
+              "fi": {
+                "title": "Tapahtumakalenteri",
+                "subtitle": "Liity yhteisöömme",
+                "description": "Liity mukaan kulttuuritapahtumiin, aktivismin kampanjoihin, koulutustyöpajoihin ja yhteisötapaamisiin, jotka vahvistavat solidaarisuusliikettämme."
+              },
+              "ar": {
+                "title": "تقويم الفعاليات",
+                "subtitle": "انضم إلى مجتمعنا",
+                "description": "انضم إلينا في الفعاليات الثقافية وحملات النشاط وورش العمل التعليمية والتجمعات المجتمعية التي تعزز حركة التضامن لدينا."
+              }
+            }
+          }
+        },
+        {
+          "id": "events-page-text",
+          "type": "text",
+          "content": {
+            "content": {
+              "en": {
+                "eventsLabel": "events",
+                "globalVirtualLabel": "Global & Virtual",
+                "communityDrivenLabel": "Community Driven",
+                "filterLabel": "Filters",
+                "searchPlaceholder": "Search events...",
+                "upcomingOnlyLabel": "Upcoming only",
+                "featuredLabel": "Featured",
+                "clearFiltersLabel": "Clear filters",
+                "noEventsTitle": "No events found",
+                "noEventsDescription": "Try adjusting your filters or check back later for new events.",
+                "loadingText": "Loading events...",
+                "showingText": "Showing",
+                "ofText": "of",
+                "eventsText": "events",
+                "failedToLoad": "Failed to load events",
+                "tryAgain": "Try Again"
+              },
+              "fi": {
+                "eventsLabel": "tapahtumaa",
+                "globalVirtualLabel": "Globaali & Virtuaalinen",
+                "communityDrivenLabel": "Yhteisövetoinen",
+                "filterLabel": "Suodattimet",
+                "searchPlaceholder": "Etsi tapahtumia...",
+                "upcomingOnlyLabel": "Vain tulevat",
+                "featuredLabel": "Suositellut",
+                "clearFiltersLabel": "Tyhjennä suodattimet",
+                "noEventsTitle": "Tapahtumia ei löytynyt",
+                "noEventsDescription": "Kokeile säätää suodattimia tai tarkista myöhemmin uudet tapahtumat.",
+                "loadingText": "Ladataan tapahtumia...",
+                "showingText": "Näytetään",
+                "ofText": "/",
+                "eventsText": "tapahtumaa",
+                "failedToLoad": "Tapahtumien lataaminen epäonnistui",
+                "tryAgain": "Yritä uudelleen"
+              },
+              "ar": {
+                "eventsLabel": "فعاليات",
+                "globalVirtualLabel": "عالمي وافتراضي",
+                "communityDrivenLabel": "بقيادة المجتمع",
+                "filterLabel": "التصفية",
+                "searchPlaceholder": "البحث في الفعاليات...",
+                "upcomingOnlyLabel": "القادمة فقط",
+                "featuredLabel": "مميزة",
+                "clearFiltersLabel": "مسح التصفية",
+                "noEventsTitle": "لم يتم العثور على فعاليات",
+                "noEventsDescription": "حاول ضبط الفلاتر أو تحقق لاحقاً من الفعاليات الجديدة.",
+                "loadingText": "جارٍ تحميل الفعاليات...",
+                "showingText": "عرض",
+                "ofText": "من",
+                "eventsText": "فعاليات",
+                "failedToLoad": "فشل تحميل الفعاليات",
+                "tryAgain": "حاول مرة أخرى"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "fi": {
+      "title": "Tapahtumakalenteri - Sumud",
+      "description": "Liity mukaan kulttuuritapahtumiin, aktivismin kampanjoihin, koulutustyöpajoihin ja yhteisötapaamisiin",
+      "blocks": []
+    },
+    "ar": {
+      "title": "تقويم الفعاليات - صمود",
+      "description": "انضم إلينا في الفعاليات الثقافية وحملات النشاط وورش العمل التعليمية والتجمعات المجتمعية",
+      "blocks": []
+    }
+  }
+}

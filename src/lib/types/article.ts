@@ -1,130 +1,100 @@
-import type { Database } from "@/src/lib/database.types";
+/**
+ * Article Types and Utilities
+ */
 
-// Database post type from Supabase
-export type PostRow = Database["public"]["Tables"]["posts"]["Row"];
-
-// Featured image structure for ArticleCard compatibility
-export interface ArticleFeaturedImage {
-  url: string;
-  alt: string;
-}
-
-// Article type for frontend use (mapped from posts table)
 export interface Article {
-  id: number;
+  id: string;
   title: string;
   slug: string;
-  excerpt: string | null;
-  content: string | null;
-  status: "draft" | "published" | "archived";
-  category: string; // Primary category for display
-  categoryLabel?: string; // Optional category label override
-  categories: string[] | null; // All categories from DB
-  tags: string[]; // Tags derived from categories
-  featuredImage: ArticleFeaturedImage; // Image object for ArticleCard
-  authorName: string | null;
-  publishedAt: string;
-  createdAt: string | null;
-  updatedAt: string | null;
-  language: string | null;
-  readTime: number; // Calculated read time in minutes
+  excerpt?: string;
+  content?: string;
+  category?: string;
+  status?: string;
+  publishedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  featured?: boolean;
+  image?: string;
+  author?: {
+    id: string;
+    name: string;
+    email?: string;
+  };
 }
 
-// Article category configuration
-export interface ArticleCategory {
-  value: string;
+export const ARTICLE_CATEGORIES = {
+  all: { label: 'All', icon: 'Newspaper', color: 'text-gray-600' },
+  news: { label: 'News', icon: 'Zap', color: 'text-blue-600' },
+  analysis: { label: 'Analysis', icon: 'BarChart3', color: 'text-purple-600' },
+  culture: { label: 'Culture', icon: 'Heart', color: 'text-red-600' },
+  history: { label: 'History', icon: 'Clock', color: 'text-amber-600' },
+  activism: { label: 'Activism', icon: 'Flame', color: 'text-orange-600' },
+  personal: { label: 'Personal', icon: 'User', color: 'text-green-600' },
+} as const;
+
+export type ArticleCategory = keyof typeof ARTICLE_CATEGORIES;
+
+export interface CategoryConfig {
   label: string;
-  color?: string;
-}
-
-// Default categories
-export const ARTICLE_CATEGORIES: ArticleCategory[] = [
-  { value: "news", label: "Breaking News", color: "red" },
-  { value: "analysis", label: "Analysis", color: "blue" },
-  { value: "culture", label: "Culture", color: "purple" },
-  { value: "history", label: "History", color: "amber" },
-  { value: "activism", label: "Activism", color: "green" },
-  { value: "personal", label: "Stories", color: "pink" },
-];
-
-// API Response types
-export interface ArticlesApiResponse {
-  data: Article[];
-  pagination?: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
-}
-
-export interface ArticleApiResponse {
-  data: Article | null;
-  error?: string;
+  icon: string;
+  color: string;
 }
 
 /**
- * Estimate read time based on content length
+ * Get category configuration by category key
  */
-function estimateReadTime(content: string | null): number {
-  if (!content) return 3; // Default read time
-  const wordsPerMinute = 200;
-  const wordCount = content.split(/\s+/).length;
-  return Math.max(1, Math.ceil(wordCount / wordsPerMinute));
-}
-
-/**
- * Map a database post row to the frontend Article type
- */
-export function mapPostToArticle(post: PostRow): Article {
-  const primaryCategory = post.categories?.[0] || "article";
-  const categoryConfig = getCategoryConfig(primaryCategory);
-  
+export function getCategoryConfig(category?: string): CategoryConfig {
+  const config = ARTICLE_CATEGORIES[category as ArticleCategory] || ARTICLE_CATEGORIES.all;
   return {
-    id: post.id,
-    title: post.title || "",
-    slug: post.slug || "",
-    excerpt: post.excerpt,
-    content: post.content,
-    status: (post.status as "draft" | "published" | "archived") || "draft",
-    category: primaryCategory,
-    categoryLabel: categoryConfig?.label,
-    categories: post.categories,
-    tags: post.categories || [], // Use categories as tags
-    featuredImage: {
-      url: post.featured_image || "/images/placeholder-article.svg",
-      alt: post.title || "Article image",
-    },
-    authorName: post.author_name,
-    publishedAt: post.published_at || new Date().toISOString(),
-    createdAt: post.published_at, // Using published_at as createdAt since there's no created_at
-    updatedAt: post.updated_at,
-    language: post.language,
-    readTime: estimateReadTime(post.content),
+    label: config.label,
+    icon: config.icon,
+    color: config.color,
   };
 }
 
 /**
- * Format article date for display
+ * Format article date
  */
-export function formatArticleDate(dateString: string | null): string {
-  if (!dateString) return "";
+export function formatArticleDate(date: string | Date | undefined): string {
+  if (!date) return '';
   
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch {
-    return "";
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  
+  if (isNaN(dateObj.getTime())) {
+    return '';
   }
+
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const isToday = dateObj.toDateString() === today.toDateString();
+  const isYesterday = dateObj.toDateString() === yesterday.toDateString();
+
+  if (isToday) {
+    return dateObj.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  }
+
+  if (isYesterday) {
+    return 'Yesterday';
+  }
+
+  return dateObj.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: dateObj.getFullYear() !== today.getFullYear() ? 'numeric' : undefined,
+  });
 }
 
 /**
- * Get category configuration by value
+ * Get reading time estimate
  */
-export function getCategoryConfig(categoryValue: string): ArticleCategory | undefined {
-  return ARTICLE_CATEGORIES.find((cat) => cat.value === categoryValue);
+export function getReadingTime(content?: string): number {
+  if (!content) return 0;
+  const wordCount = content.split(/\s+/).length;
+  return Math.max(1, Math.ceil(wordCount / 200));
 }

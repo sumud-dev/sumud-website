@@ -27,7 +27,9 @@ import {
   SelectValue,
 } from "@/src/components/ui/select";
 import { ImageUpload } from "@/src/components/ui/image-upload";
-import type { Event, EventStatus } from "@/src/actions/events.actions";
+import type { Event } from "@/src/lib/db/schema";
+
+type EventStatus = "draft" | "published" | "archived";
 
 const eventSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title too long"),
@@ -59,19 +61,26 @@ export function EventForm({
   submitLabel = "Save Event",
   submittingLabel = "Saving...",
 }: EventFormProps) {
+  // Helper to convert jsonb fields to string
+  const jsonbToString = (value: unknown): string => {
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    return JSON.stringify(value);
+  };
+
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
       title: event?.title || "",
       content: event?.content || "",
-      status: (event?.status as EventStatus) || "draft",
-      featuredImageUrl: event?.featured_image || "",
-      altTexts: event?.alt_texts || "",
-      categories: event?.categories || "",
-      locations: event?.locations || "",
-      organizers: event?.organizers || "",
+      status: (event?.status as EventStatus) ?? "draft",
+      featuredImageUrl: event?.featuredImage || "",
+      altTexts: jsonbToString(event?.altTexts),
+      categories: jsonbToString(event?.categories),
+      locations: jsonbToString(event?.locations),
+      organizers: jsonbToString(event?.organizers),
       language: event?.language || "en",
-      authorName: event?.author_name || "",
+      authorName: event?.authorName || "",
     },
   });
 
@@ -81,14 +90,14 @@ export function EventForm({
       form.reset({
         title: event.title || "",
         content: event.content || "",
-        status: (event.status as EventStatus) || "draft",
-        featuredImageUrl: event.featured_image || "",
-        altTexts: event.alt_texts || "",
-        categories: event.categories || "",
-        locations: event.locations || "",
-        organizers: event.organizers || "",
+        status: (event.status as EventStatus) ?? "draft",
+        featuredImageUrl: event.featuredImage || "",
+        altTexts: jsonbToString(event.altTexts),
+        categories: jsonbToString(event.categories),
+        locations: jsonbToString(event.locations),
+        organizers: jsonbToString(event.organizers),
         language: event.language || "en",
-        authorName: event.author_name || "",
+        authorName: event.authorName || "",
       });
     }
   }, [event, form]);
@@ -273,7 +282,7 @@ export function EventForm({
                         <SelectContent>
                           <SelectItem value="en">English</SelectItem>
                           <SelectItem value="ar">Arabic</SelectItem>
-                          <SelectItem value="fin">Finnish</SelectItem>
+                          <SelectItem value="fi">Finnish</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

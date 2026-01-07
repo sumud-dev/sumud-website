@@ -99,6 +99,73 @@
     "subtitle": "وصف المنصة هنا",
     "cta": "ابدأ الآن"
   },
+  "eventsDetail": {
+    "backToEvents": "العودة إلى الفعاليات",
+    "eventNotFound": {
+      "title": "الفعالية غير موجودة",
+      "description": "الفعالية التي تبحث عنها غير موجودة أو تم حذفها."
+    },
+    "status": {
+      "upcoming": "قادمة",
+      "happeningNow": "تحدث الآن",
+      "pastEvent": "فعالية سابقة"
+    },
+    "badges": {
+      "featured": "مميزة"
+    },
+    "quickInfo": {
+      "date": "التاريخ",
+      "time": "الوقت",
+      "location": "الموقع",
+      "onlineEvent": "فعالية عبر الإنترنت",
+      "hybrid": "هجين",
+      "locationTbd": "الموقع سيُحدد لاحقاً"
+    },
+    "buttons": {
+      "registerNow": "سجل الآن",
+      "shareEvent": "شارك الفعالية",
+      "copied": "تم النسخ!",
+      "copyLink": "نسخ الرابط",
+      "linkCopied": "تم نسخ الرابط!"
+    },
+    "sections": {
+      "aboutThisEvent": "حول هذه الفعالية",
+      "eventDetailsComingSoon": "تفاصيل الفعالية قريباً...",
+      "dateTime": "التاريخ والوقت",
+      "location": "الموقع",
+      "until": "حتى",
+      "joinOnline": "انضم عبر الإنترنت",
+      "contactInformation": "معلومات الاتصال"
+    },
+    "registration": {
+      "title": "التسجيل",
+      "spotsAvailable": "الأماكن المتاحة",
+      "fillingUpFast": "⚡ يمتلئ بسرعة!",
+      "registrationClosed": "التسجيل مغلق",
+      "eventHasEnded": "انتهت الفعالية",
+      "registrationClosedOn": "أُغلق التسجيل في",
+      "registerBy": "سجل قبل"
+    },
+    "share": {
+      "title": "شارك هذه الفعالية"
+    },
+    "categories": {
+      "title": "الفئات"
+    },
+    "registrationModal": {
+      "title": "سجل في الفعالية",
+      "description": "املأ النموذج أدناه للتسجيل في \"{eventTitle}\"",
+      "firstName": "الاسم الأول",
+      "lastName": "اسم العائلة",
+      "email": "البريد الإلكتروني",
+      "phone": "رقم الهاتف",
+      "numberOfAttendees": "عدد الحضور",
+      "specialRequirements": "متطلبات خاصة أو أسئلة",
+      "specialRequirementsPlaceholder": "أي قيود غذائية، احتياجات وصول، أو أسئلة؟",
+      "completeRegistration": "إتمام التسجيل",
+      "cancel": "إلغاء"
+    }
+  },
   "admin": {
     "dashboard": "لوحة التحكم",
     "users": "المستخدمون",
@@ -321,6 +388,7 @@
       "priority": "الأولوية",
       "featured": "مميزة",
       "active": "نشطة",
+      "general": "عام",
       "learnMore": "اعرف المزيد"
     },
     "cta": {
@@ -495,10 +563,62 @@
       "categories": "التصنيفات",
       "users": "المستخدمون",
       "content": "المحتوى",
+      "pageBuilder": "منشئ الصفحات",
       "settings": "الإعدادات",
       "logout": "تسجيل الخروج",
       "loggingOut": "جاري تسجيل الخروج...",
       "toggleSidebar": "تبديل الشريط الجانبي"
+    },
+    "content": {
+      "pageTitle": "إدارة المحتوى",
+      "pageDescription": "تحرير المحتوى القابل للترجمة عبر جميع الصفحات واللغات",
+      "tabs": {
+        "translations": "الترجمات",
+        "headerMenu": "قائمة الرأس",
+        "footer": "التذييل"
+      },
+      "selectLanguage": "اختر اللغة",
+      "headerMenu": {
+        "siteBranding": "العلامة التجارية للموقع",
+        "siteBrandingDescription": "تكوين اسم الموقع المعروض في الرأس",
+        "siteName": "اسم الموقع",
+        "navigationLinks": "روابط التنقل",
+        "navigationLinksDescription": "إدارة عناصر قائمة التنقل. تظهر هذه العناصر في الرأس الرئيسي.",
+        "translationKey": "مفتاح الترجمة (مثل: about)",
+        "linkLabel": "التسمية",
+        "linkPath": "المسار",
+        "addNavigationLink": "إضافة رابط تنقل",
+        "unsavedChanges": "تغييرات غير محفوظة",
+        "saveHeaderMenu": "حفظ قائمة الرأس",
+        "saveSuccess": "تم حفظ قائمة الرأس",
+        "saveError": "فشل حفظ قائمة الرأس"
+      },
+      "footer": {
+        "description": "وصف التذييل",
+        "descriptionHint": "النص الوصفي الرئيسي المعروض في التذييل",
+        "quickLinks": "روابط سريعة",
+        "quickLinksDescription": "روابط التنقل الرئيسية",
+        "getInvolved": "شارك معنا",
+        "getInvolvedDescription": "روابط المشاركة",
+        "resources": "الموارد",
+        "resourcesDescription": "روابط المساعدة والموارد",
+        "legal": "قانوني",
+        "legalDescription": "الروابط القانونية وسياسات الخصوصية",
+        "socialLinks": "روابط التواصل الاجتماعي",
+        "socialLinksDescription": "روابط وسائل التواصل الاجتماعي المعروضة في التذييل",
+        "platform": "المنصة",
+        "url": "الرابط",
+        "addSocialLink": "إضافة رابط تواصل اجتماعي",
+        "newsletter": "قسم النشرة الإخبارية",
+        "newsletterDescription": "نص الاشتراك في النشرة الإخبارية",
+        "newsletterTitle": "العنوان",
+        "newsletterSubtitle": "العنوان الفرعي",
+        "copyright": "نص حقوق النشر",
+        "copyrightDescription": "إشعار حقوق النشر المعروض في الأسفل",
+        "saveFooter": "حفظ التذييل",
+        "saveSuccess": "تم حفظ التذييل",
+        "saveError": "فشل حفظ التذييل"
+      }
     }
   }
 }

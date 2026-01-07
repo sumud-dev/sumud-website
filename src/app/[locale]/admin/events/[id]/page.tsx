@@ -1,10 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { use } from "react";
 import { Link, useRouter } from "@/src/i18n/navigation";
 import Image from "next/image";
-import { toast } from "sonner";
 import {
   ArrowLeft,
   Edit,
@@ -17,6 +15,7 @@ import {
   FileText,
   Play,
   Archive,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import {
@@ -27,13 +26,10 @@ import {
 } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import { Separator } from "@/src/components/ui/separator";
-import {
-  getEventById,
-  deleteEvent,
-  updateEventStatus,
-  type Event,
-  type EventStatus,
-} from "@/src/actions/events.actions";
+import { fetchEventByIdAction, deleteEventAction, updateEventAction } from "@/src/actions/events.actions";
+import { type Event, type EventTranslation } from "@/src/lib/db/schema";
+
+type EventStatus = "draft" | "published" | "archived";
 
 const statusColors: Record<string, string> = {
   draft: "bg-yellow-100 text-yellow-800",
@@ -46,59 +42,86 @@ interface EventDetailPageProps {
 }
 
 const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
-  const { id } = use(params);
   const router = useRouter();
-  const [event, setEvent] = React.useState<Event | null>(null);
+  const [event, setEvent] = React.useState<Event | EventTranslation | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
+  // Fetch event on mount
   React.useEffect(() => {
     const fetchEvent = async () => {
       setIsLoading(true);
-      const { data, error } = await getEventById(id);
-      if (error) {
-        toast.error(`Failed to load event: ${error}`);
-        router.push("/admin/events");
-      } else if (data) {
-        setEvent(data);
+      setError(null);
+      try {
+        const resolvedParams = await params;
+        const result = await fetchEventByIdAction(resolvedParams.id);
+        if (result.success) {
+          setEvent(result.data as Event);
+        } else {
+          setError(result.error);
+        }
+      } catch (err) {
+        console.error("Error fetching event:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch event");
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
+    
     fetchEvent();
-  }, [id, router]);
+  }, [params]);
 
   const handleDelete = async () => {
     if (!event) return;
     if (!confirm(`Are you sure you want to delete "${event.title}"?`)) return;
 
-    const result = await deleteEvent(event.id);
-    if (result.success) {
-      toast.success(`"${event.title}" deleted successfully`);
-      router.push("/admin/events");
-    } else {
-      toast.error(result.error || "Failed to delete event");
+    try {
+      const result = await deleteEventAction(event.id);
+      if (result.success) {
+        router.push("/admin/events");
+      } else {
+        console.error(`Error deleting event: ${result.error}`);
+      }
+    } catch (err) {
+      console.error("Error deleting event:", err);
     }
   };
 
   const handleStatusUpdate = async (newStatus: EventStatus) => {
     if (!event) return;
 
-    const result = await updateEventStatus(event.id, newStatus);
-    if (result.success) {
-      setEvent({ ...event, status: newStatus });
-      toast.success(`Status updated to ${newStatus}`);
-    } else {
-      toast.error(result.error || "Failed to update status");
+    try {
+      const result = await updateEventAction(event.id, { status: newStatus });
+      if (result.success) {
+        setEvent({ ...event, status: newStatus });
+      } else {
+        console.error(`Error updating status: ${result.error}`);
+      }
+    } catch (err) {
+      console.error("Error updating event:", err);
     }
   };
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
+  const formatDate = (dateValue: Date | string | null | undefined) => {
+    if (!dateValue) return "N/A";
+    const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+    return date.toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
     });
+  };
+
+  // Helper to display jsonb fields as string
+  const displayValue = (value: unknown): string => {
+    if (!value) return "";
+    if (typeof value === "string") return value;
+    if (Array.isArray(value)) {
+      if (value.length === 0) return "";
+      return value.join(", ");
+    }
+    return JSON.stringify(value);
   };
 
   if (isLoading) {
@@ -116,6 +139,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
         </div>
         <Card className="border-gray-200 shadow-sm">
           <CardContent className="py-12 text-center text-gray-500">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
             Loading event details...
           </CardContent>
         </Card>
@@ -123,7 +147,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
     );
   }
 
-  if (!event) {
+  if (error || !event) {
     return (
       <div className="space-y-6 md:space-y-8">
         <div className="flex items-center gap-4">
@@ -138,7 +162,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
         </div>
         <Card className="border-gray-200 shadow-sm">
           <CardContent className="py-12 text-center text-gray-500">
-            The event you&apos;re looking for doesn&apos;t exist or has been deleted.
+            {error || "The event you're looking for doesn't exist or has been deleted."}
           </CardContent>
         </Card>
       </div>
@@ -197,11 +221,11 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Featured Image */}
-            {event.featured_image && (
+            {event.featuredImage && (
               <div className="rounded-lg overflow-hidden relative h-64">
                 <Image
-                  src={event.featured_image}
-                  alt={event.alt_texts || event.title || "Event image"}
+                  src={event.featuredImage}
+                  alt={String(event.altTexts || event.title || "Event image")}
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover"
@@ -223,32 +247,32 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
 
             {/* Meta Information */}
             <div className="grid gap-4 sm:grid-cols-2">
-              {event.locations && (
+              {displayValue(event.locations) && (
                 <div className="flex items-start gap-3">
                   <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-gray-500">Location</p>
-                    <p className="text-gray-700">{event.locations}</p>
+                    <p className="text-gray-700">{displayValue(event.locations)}</p>
                   </div>
                 </div>
               )}
 
-              {event.categories && (
+              {displayValue(event.categories) && (
                 <div className="flex items-start gap-3">
                   <Tag className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-gray-500">Category</p>
-                    <p className="text-gray-700">{event.categories}</p>
+                    <p className="text-gray-700">{displayValue(event.categories)}</p>
                   </div>
                 </div>
               )}
 
-              {event.organizers && (
+              {displayValue(event.organizers) && (
                 <div className="flex items-start gap-3">
                   <User className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-gray-500">Organizer</p>
-                    <p className="text-gray-700">{event.organizers}</p>
+                    <p className="text-gray-700">{displayValue(event.organizers)}</p>
                   </div>
                 </div>
               )}
@@ -263,32 +287,32 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
                 </div>
               )}
 
-              {event.author_name && (
+              {event.authorName && (
                 <div className="flex items-start gap-3">
                   <User className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-gray-500">Author</p>
-                    <p className="text-gray-700">{event.author_name}</p>
+                    <p className="text-gray-700">{event.authorName}</p>
                   </div>
                 </div>
               )}
 
-              {event.published_at && (
+              {event.publishedAt && (
                 <div className="flex items-start gap-3">
                   <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-gray-500">Published</p>
-                    <p className="text-gray-700">{formatDate(event.published_at)}</p>
+                    <p className="text-gray-700">{formatDate(event.publishedAt)}</p>
                   </div>
                 </div>
               )}
 
-              {event.updated_at && (
+              {event.updatedAt && (
                 <div className="flex items-start gap-3">
                   <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-gray-500">Last Updated</p>
-                    <p className="text-gray-700">{formatDate(event.updated_at)}</p>
+                    <p className="text-gray-700">{formatDate(event.updatedAt)}</p>
                   </div>
                 </div>
               )}

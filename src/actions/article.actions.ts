@@ -1,508 +1,458 @@
 "use server";
 
+import { db } from "@/src/lib/db";
+import { posts, postTranslations } from "@/src/lib/db/schema";
+import { eq, desc, like, or, and, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/src/lib/supabase/server";
-import { createAdminClient } from "@/src/lib/supabase/admin";
-import type { PostWithCategory } from "@/src/lib/utils/article.utils";
 import {
-  translateArticleToAllLocales,
-  type ArticleTranslation,
+  translateContentToAllLocales,
+  ARTICLE_TRANSLATION_CONFIG,
+  type SupportedLocale,
 } from "@/src/lib/services/translation.service";
-import type { Locale } from "@/src/types/Content";
+import { getArticles, type ArticleQueryOptions } from "@/src/lib/db/queries/articles";
 
-// Define locales inline to avoid importing constants in "use server" file
-const LOCALES: Locale[] = ["en", "ar", "fi"];
-
-/**
- * Fetch all posts with their categories
- */
-export async function getPosts(): Promise<{
-  data: PostWithCategory[] | null;
-  error: string | null;
-}> {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("posts")
-    .select("*")
-    .order("published_at", { ascending: false });
-
-  if (error) {
-    console.error("Error fetching posts:", error);
-    return { data: null, error: error.message };
-  }
-
-  return { data: data as PostWithCategory[], error: null };
-}
-
-/**
- * Get a single post by slug
- */
-export async function getPostBySlug(
-  slug: string
-): Promise<{ data: PostWithCategory | null; error: string | null }> {
-  const supabase = await createClient();
-
-  console.log("getPostBySlug called with slug:", slug);
-
-  const { data, error } = await supabase
-    .from("posts")
-    .select("*")
-    .eq("slug", slug)
-    .maybeSingle();
-
-  console.log("getPostBySlug result:", data ? { id: data.id, title: data.title, slug: data.slug } : null);
-  console.log("getPostBySlug error:", error);
-
-  if (error) {
-    console.error("Error fetching post:", error);
-    return { data: null, error: error.message };
-  }
-
-  if (!data) {
-    return { data: null, error: "Post not found" };
-  }
-
-  return { data: data as PostWithCategory, error: null };
-}
-
-/**
- * Delete a post by ID
- */
-export async function deletePost(
-  id: number
-): Promise<{ success: boolean; error: string | null }> {
-  // Use admin client to bypass RLS for admin operations
-  const supabase = createAdminClient();
-
-  // Note: categories are stored as string[] directly in posts table, no junction table cleanup needed
-
-  const { error } = await supabase.from("posts").delete().eq("id", id);
-
-  if (error) {
-    console.error("Error deleting post:", error);
-    return { success: false, error: error.message };
-  }
-
-  revalidatePath("/admin/articles");
-  return { success: true, error: null };
-}
-
-/**
- * Update post status (publish, unpublish, archive)
- */
-export async function updatePostStatus(
-  id: number,
-  newStatus: "draft" | "published" | "archived"
-): Promise<{ success: boolean; error: string | null }> {
-  // Use admin client to bypass RLS for admin operations
-  const supabase = createAdminClient();
-
-  const updateData: { status: string; published_at?: string | null } = {
-    status: newStatus,
-  };
-
-  if (newStatus === "published") {
-    updateData.published_at = new Date().toISOString();
-  } else if (newStatus === "draft") {
-    updateData.published_at = null;
-  }
-
-  const { error } = await supabase.from("posts").update(updateData).eq("id", id);
-
-  if (error) {
-    console.error("Error updating post status:", error);
-    return { success: false, error: error.message };
-  }
-
-  revalidatePath("/admin/articles");
-  return { success: true, error: null };
-}
-
-export type UpdatePostData = {
-  title: string;
-  slug?: string;
-  content: string;
-  excerpt: string;
-  status: "draft" | "published" | "archived";
-  featured_image?: string;
+export interface GetPostsOptions {
+  search?: string;
+  status?: "draft" | "published" | "archived";
+  type?: "article" | "news";
   language?: string;
-};
+  page?: number;
+  limit?: number;
+}
 
 /**
- * Update a post by ID
+ * Get articles with filters - wrapper around query function
  */
-export async function updatePost(
-  id: number,
-  data: UpdatePostData
-): Promise<{ success: boolean; error: string | null; slug?: string }> {
-  // Use admin client to bypass RLS for admin operations
-  const supabase = createAdminClient();
-
-  console.log("updatePost called with id:", id, "type:", typeof id);
-  console.log("updatePost data:", JSON.stringify(data, null, 2));
-
-  // First, verify the post exists
-  const { data: existingPost, error: fetchError } = await supabase
-    .from("posts")
-    .select("id, title, slug")
-    .eq("id", id)
-    .maybeSingle();
-
-  console.log("Existing post check:", existingPost);
-  console.log("Fetch error:", fetchError);
-
-  if (fetchError) {
-    console.error("Error fetching post for update:", fetchError);
-    return { success: false, error: fetchError.message };
-  }
-
-  if (!existingPost) {
-    console.error("Post not found with id:", id);
-    return { success: false, error: `Post with ID ${id} not found in database` };
-  }
-
-  const updateData: Record<string, unknown> = {
-    title: data.title,
-    content: data.content,
-    excerpt: data.excerpt,
-    status: data.status,
-    updated_at: new Date().toISOString(),
-  };
-
-  // Only update slug if provided
-  if (data.slug) {
-    updateData.slug = data.slug;
-  }
-
-  // Only update featured_image if provided
-  if (data.featured_image) {
-    updateData.featured_image = data.featured_image;
-  }
-
-  // Only update language if provided
-  if (data.language) {
-    updateData.language = data.language;
-  }
-
-  // Update published_at based on status
-  if (data.status === "published") {
-    updateData.published_at = new Date().toISOString();
-  } else if (data.status === "draft") {
-    updateData.published_at = null;
-  }
-
-  console.log("Updating post with data:", JSON.stringify(updateData, null, 2));
-
-  const { data: result, error } = await supabase
-    .from("posts")
-    .update(updateData)
-    .eq("id", id)
-    .select();
-
-  console.log("Update result:", result);
-  console.log("Update error:", error);
-
-  if (error) {
-    console.error("Error updating post:", error);
-    return { success: false, error: error.message };
-  }
-
-  if (!result || result.length === 0) {
-    // Post exists but update returned no rows - likely RLS policy blocking update
-    console.error("No rows updated - RLS policy may be blocking the update for post id:", id);
-    return { 
-      success: false, 
-      error: "Update failed. You may not have permission to update this post. Please check RLS policies." 
+export async function getArticlesAction(options: ArticleQueryOptions = {}) {
+  try {
+    const result = await getArticles(options);
+    return {
+      success: true,
+      data: result.articles,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+    };
+  } catch (error) {
+    console.error("Error fetching articles:", error);
+    return {
+      success: false,
+      data: [],
+      total: 0,
+      error: error instanceof Error ? error.message : "Failed to fetch articles",
     };
   }
-
-  revalidatePath("/admin/articles");
-  revalidatePath(`/admin/articles/${data.slug || ""}`);
-  return { success: true, error: null, slug: data.slug };
 }
 
-export type CreatePostData = {
+export interface PostWithCategory {
+  id: string;
+  title: string | null;
+  slug: string;
+  status: string | null;
+  published_at: string | null;
+  updated_at: string | null;
+  excerpt: string | null;
+  category?: { name: string } | null;
+  type: string | null;
+  authorName: string | null;
+  featuredImage: string | null;
+}
+
+export async function getPosts(options: GetPostsOptions = {}) {
+  const {
+    search,
+    status,
+    type,
+    language = "en",
+    page = 1,
+    limit = 50,
+  } = options;
+
+  try {
+    const offset = (page - 1) * limit;
+
+    // Build conditions based on filters
+    const conditions = [];
+    
+    if (status) {
+      conditions.push(eq(language === 'fi' ? posts.status : postTranslations.status, status));
+    }
+    
+    if (type) {
+      conditions.push(eq(language === 'fi' ? posts.type : postTranslations.type, type));
+    }
+    
+    if (search) {
+      const searchCondition = or(
+        like(language === 'fi' ? posts.title : postTranslations.title, `%${search}%`),
+        like(language === 'fi' ? posts.excerpt : postTranslations.excerpt, `%${search}%`)
+      );
+      if (searchCondition) conditions.push(searchCondition);
+    }
+
+    // Execute query based on language
+    let results;
+    
+    if (language === 'fi') {
+      // For Finnish: Query posts table directly
+      // Add language filter for Finnish posts
+      conditions.push(eq(posts.language, 'fi'));
+      
+      const query = db
+        .select()
+        .from(posts)
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(posts.publishedAt), desc(posts.createdAt))
+        .limit(limit)
+        .offset(offset);
+        
+      results = await query;
+    } else {
+      // For other languages (en, ar): Query postTranslations table
+      conditions.push(eq(postTranslations.language, language));
+      
+      const query = db
+        .select()
+        .from(postTranslations)
+        .where(and(...conditions))
+        .orderBy(desc(postTranslations.publishedAt), desc(postTranslations.createdAt))
+        .limit(limit)
+        .offset(offset);
+        
+      results = await query;
+    }
+
+    // Transform results to match expected format
+    const transformedPosts: PostWithCategory[] = results.map((post) => {
+      // Parse categories - it could be a JSON array or object
+      let categoryName = "Uncategorized";
+      if (post.categories) {
+        const cats = post.categories as string[] | { name: string }[];
+        if (Array.isArray(cats) && cats.length > 0) {
+          categoryName = typeof cats[0] === "string" ? cats[0] : cats[0]?.name || "Uncategorized";
+        }
+      }
+
+      return {
+        id: post.id,
+        title: post.title,
+        slug: post.slug,
+        status: post.status,
+        published_at: post.publishedAt?.toISOString() ?? null,
+        updated_at: post.updatedAt?.toISOString() ?? null,
+        excerpt: post.excerpt,
+        category: { name: categoryName },
+        type: post.type,
+        authorName: post.authorName,
+        featuredImage: post.featuredImage,
+      };
+    });
+
+    return { 
+      success: true, 
+      posts: transformedPosts,
+      total: transformedPosts.length,
+    };
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    return { 
+      success: false, 
+      posts: [], 
+      error: error instanceof Error ? error.message : "Failed to fetch posts" 
+    };
+  }
+}
+
+export async function getPostBySlug(slug: string, language: string = "en") {
+  try {
+    let result;
+    
+    if (language === 'fi') {
+      // For Finnish: Query posts table directly
+      result = await db
+        .select()
+        .from(posts)
+        .where(eq(posts.slug, slug))
+        .limit(1);
+    } else {
+      // For other languages: Query postTranslations table
+      result = await db
+        .select()
+        .from(postTranslations)
+        .where(
+          and(
+            eq(postTranslations.slug, slug),
+            eq(postTranslations.language, language)
+          )
+        )
+        .limit(1);
+    }
+
+    if (result.length === 0) {
+      return { success: false, post: null, error: "Post not found" };
+    }
+
+    const post = result[0];
+    
+    return {
+      success: true,
+      post: {
+        id: post.id,
+        title: post.title,
+        slug: post.slug,
+        status: post.status,
+        type: post.type,
+        excerpt: post.excerpt,
+        content: post.content,
+        featuredImage: post.featuredImage,
+        categories: post.categories,
+        authorId: post.authorId,
+        authorName: post.authorName,
+        viewCount: post.viewCount,
+        published_at: post.publishedAt?.toISOString() ?? null,
+        updated_at: post.updatedAt?.toISOString() ?? null,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching post by slug:", error);
+    return { 
+      success: false, 
+      post: null, 
+      error: error instanceof Error ? error.message : "Failed to fetch post" 
+    };
+  }
+}
+
+export async function getPostStats(language: string = "en") {
+  try {
+    let allPosts;
+    
+    if (language === 'fi') {
+      // For Finnish: Query posts table
+      allPosts = await db
+        .select({
+          status: posts.status,
+        })
+        .from(posts)
+        .where(eq(posts.language, 'fi'));
+    } else {
+      // For other languages: Query postTranslations table
+      allPosts = await db
+        .select({
+          status: postTranslations.status,
+        })
+        .from(postTranslations)
+        .where(eq(postTranslations.language, language));
+    }
+
+    const stats = {
+      total: allPosts.length,
+      published: allPosts.filter((p) => p.status === "published").length,
+      drafts: allPosts.filter((p) => p.status === "draft").length,
+      archived: allPosts.filter((p) => p.status === "archived").length,
+    };
+
+    return { success: true, stats };
+  } catch (error) {
+    console.error("Error fetching post stats:", error);
+    return { 
+      success: false, 
+      stats: { total: 0, published: 0, drafts: 0, archived: 0 },
+      error: error instanceof Error ? error.message : "Failed to fetch stats" 
+    };
+  }
+}
+
+export async function deletePost(slug: string) {
+  try {
+    // Delete from posts table (Finnish posts)
+    await db.delete(posts).where(eq(posts.slug, slug));
+    
+    // Delete from postTranslations table (other language translations)
+    await db.delete(postTranslations).where(eq(postTranslations.slug, slug));
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Failed to delete post" 
+    };
+  }
+}
+
+export async function updatePost(
+  slug: string, 
+  data: {
+    title?: string;
+    excerpt?: string;
+    content?: string;
+    status?: "draft" | "published" | "archived";
+    featured_image?: string | null;
+    meta_description?: string | null;
+  },
+  language: string = "en"
+) {
+  try {
+    const updateData: any = {
+      updatedAt: new Date(),
+    };
+
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.excerpt !== undefined) updateData.excerpt = data.excerpt;
+    if (data.content !== undefined) updateData.content = data.content;
+    if (data.status !== undefined) updateData.status = data.status;
+    if (data.featured_image !== undefined) updateData.featuredImage = data.featured_image;
+
+    // Update in the appropriate table based on language
+    if (language === "fi") {
+      await db
+        .update(posts)
+        .set(updateData)
+        .where(eq(posts.slug, slug));
+    } else {
+      await db
+        .update(postTranslations)
+        .set(updateData)
+        .where(
+          and(
+            eq(postTranslations.slug, slug),
+            eq(postTranslations.language, language)
+          )
+        );
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating post:", error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Failed to update post" 
+    };
+  }
+}
+
+export interface CreatePostData {
   title: string;
   slug: string;
   content: string;
   excerpt: string;
   status: "draft" | "published" | "archived";
-  featured_image?: string;
-  language: Locale;
+  language: string;
+  featured_image?: string | null;
   categories?: string[];
-  author_name?: string;
-};
-
-/**
- * Create a new post
- */
-export async function createPost(
-  data: CreatePostData
-): Promise<{ success: boolean; error: string | null; id?: number; slug?: string }> {
-  const supabase = createAdminClient();
-
-  // Get the next available ID (workaround for non-auto-increment id column)
-  const { data: maxIdResult } = await supabase
-    .from("posts")
-    .select("id")
-    .order("id", { ascending: false })
-    .limit(1)
-    .single();
-
-  const nextId = (maxIdResult?.id ?? 0) + 1;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const insertData: any = {
-    id: nextId,
-    title: data.title,
-    slug: data.slug,
-    content: data.content,
-    excerpt: data.excerpt,
-    status: data.status,
-    language: data.language,
-    categories: data.categories || [],
-    author_name: data.author_name ?? undefined,
-    featured_image: data.featured_image ?? undefined,
-    published_at: data.status === "published" ? new Date().toISOString() : undefined,
-    updated_at: new Date().toISOString(),
-  };
-
-  const { data: result, error } = await supabase
-    .from("posts")
-    .insert(insertData)
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Error creating post:", error);
-    return { success: false, error: error.message };
-  }
-
-  revalidatePath("/admin/articles");
-  return { success: true, error: null, id: result.id, slug: result.slug ?? undefined };
+  authorId?: string;
+  authorName?: string;
+  autoTranslate?: boolean;
 }
 
-/**
- * Create a post with automatic translation to all locales
- * Creates separate posts for each locale with translated content
- */
-export async function createPostWithTranslation(
-  data: CreatePostData,
-  autoTranslate: boolean = true
-): Promise<{
-  success: boolean;
-  error: string | null;
-  createdPosts: { locale: Locale; id: number; slug: string }[];
-}> {
-  const createdPosts: { locale: Locale; id: number; slug: string }[] = [];
+export async function createPost(data: CreatePostData) {
+  try {
+    const now = new Date();
+    const publishedAt = data.status === "published" ? now : null;
+    const sourceLocale = data.language as SupportedLocale;
+    const createdPosts: { language: string; slug: string }[] = [];
 
-  // First create the source post
-  const sourceResult = await createPost(data);
-
-  if (!sourceResult.success || !sourceResult.id) {
-    return {
-      success: false,
-      error: sourceResult.error || "Failed to create source post",
-      createdPosts: [],
-    };
-  }
-
-  createdPosts.push({
-    locale: data.language,
-    id: sourceResult.id,
-    slug: data.slug,
-  });
-
-  if (!autoTranslate) {
-    return { success: true, error: null, createdPosts };
-  }
-
-  // Translate content to other locales
-  const articleContent: ArticleTranslation = {
-    title: data.title,
-    content: data.content,
-    excerpt: data.excerpt,
-  };
-
-  const { translations, error: translationError } = await translateArticleToAllLocales(
-    articleContent,
-    data.language
-  );
-
-  // Log translation error but continue - we'll create posts for locales that succeeded
-  if (translationError) {
-    console.error("Translation warning (continuing with available translations):", translationError);
-  }
-
-  // Create posts for other locales
-  const targetLocales = LOCALES.filter((l) => l !== data.language);
-  const errors: string[] = [];
-
-  // Process translations sequentially to avoid race conditions with ID generation
-  for (const locale of targetLocales) {
-    const translatedArticle = translations[locale];
-    
-    // Skip if translation is empty (failed)
-    if (!translatedArticle.title || !translatedArticle.content || !translatedArticle.excerpt) {
-      errors.push(`${locale}: Translation was empty or failed`);
-      continue;
-    }
-
-    const translatedData: CreatePostData = {
-      ...data,
-      title: translatedArticle.title,
-      content: translatedArticle.content,
-      excerpt: translatedArticle.excerpt,
-      slug: `${data.slug}-${locale}`,
-      language: locale,
+    // Base post data for insertion
+    const basePostData = {
+      slug: data.slug,
+      title: data.title,
+      excerpt: data.excerpt,
+      content: data.content,
+      type: "article" as const,
+      status: data.status,
+      featuredImage: data.featured_image || null,
+      categories: data.categories || [],
+      authorId: data.authorId || null,
+      authorName: data.authorName || null,
+      publishedAt,
+      createdAt: now,
+      updatedAt: now,
     };
 
-    const result = await createPost(translatedData);
-
-    if (result.success && result.id) {
-      createdPosts.push({
-        locale,
-        id: result.id,
-        slug: translatedData.slug,
+    // Insert the source language post
+    if (data.language === "fi") {
+      await db.insert(posts).values({
+        ...basePostData,
+        language: data.language,
       });
     } else {
-      errors.push(`${locale}: ${result.error}`);
+      await db.insert(postTranslations).values({
+        ...basePostData,
+        language: data.language,
+      });
     }
-  }
+    createdPosts.push({ language: data.language, slug: data.slug });
 
-  if (errors.length > 0) {
-    return {
-      success: true,
-      error: `Some translations failed: ${errors.join("; ")}`,
-      createdPosts,
-    };
-  }
-
-  return { success: true, error: null, createdPosts };
-}
-
-/**
- * Update a post and optionally translate to other locales
- */
-export async function updatePostWithTranslation(
-  id: number,
-  data: UpdatePostData,
-  sourceLocale: Locale,
-  translateToOthers: boolean = false
-): Promise<{
-  success: boolean;
-  error: string | null;
-  updatedPosts: { locale: Locale; slug: string }[];
-}> {
-  const updatedPosts: { locale: Locale; slug: string }[] = [];
-
-  // Update the source post
-  const sourceResult = await updatePost(id, data);
-
-  if (!sourceResult.success) {
-    return {
-      success: false,
-      error: sourceResult.error || "Failed to update source post",
-      updatedPosts: [],
-    };
-  }
-
-  updatedPosts.push({
-    locale: sourceLocale,
-    slug: data.slug || "",
-  });
-
-  if (!translateToOthers) {
-    return { success: true, error: null, updatedPosts };
-  }
-
-  // Translate content
-  const articleContent: ArticleTranslation = {
-    title: data.title,
-    content: data.content,
-    excerpt: data.excerpt,
-  };
-
-  const { translations, error: translationError } = await translateArticleToAllLocales(
-    articleContent,
-    sourceLocale
-  );
-
-  if (translationError) {
-    return {
-      success: true,
-      error: `Source updated but translation failed: ${translationError}`,
-      updatedPosts,
-    };
-  }
-
-  // Find and update related posts in other locales
-  const supabase = createAdminClient();
-  const targetLocales = LOCALES.filter((l) => l !== sourceLocale);
-  const errors: string[] = [];
-
-  // Get the base slug (remove locale suffix if present)
-  const baseSlug = data.slug?.replace(/-(?:en|ar|fi)$/, "") || "";
-
-  await Promise.all(
-    targetLocales.map(async (locale) => {
-      const targetSlug = `${baseSlug}-${locale}`;
-
-      // Check if a post with this slug exists
-      const { data: existingPost } = await supabase
-        .from("posts")
-        .select("id")
-        .eq("slug", targetSlug)
-        .maybeSingle();
-
-      const translatedData: UpdatePostData = {
-        title: translations[locale].title,
-        content: translations[locale].content,
-        excerpt: translations[locale].excerpt,
-        status: data.status,
-        featured_image: data.featured_image,
-        language: locale,
-        slug: targetSlug,
-      };
-
-      if (existingPost) {
-        // Update existing post
-        const result = await updatePost(existingPost.id, translatedData);
-        if (result.success) {
-          updatedPosts.push({ locale, slug: targetSlug });
-        } else {
-          errors.push(`${locale}: ${result.error}`);
-        }
-      } else {
-        // Create new post for this locale
-        const createData: CreatePostData = {
-          title: translations[locale].title,
-          slug: targetSlug,
-          content: translations[locale].content,
-          excerpt: translations[locale].excerpt,
-          status: data.status,
-          featured_image: data.featured_image,
-          language: locale,
+    // Auto-translate if enabled
+    if (data.autoTranslate) {
+      try {
+        const contentToTranslate = {
+          title: data.title,
+          content: data.content,
+          excerpt: data.excerpt,
         };
 
-        const result = await createPost(createData);
-        if (result.success) {
-          updatedPosts.push({ locale, slug: targetSlug });
-        } else {
-          errors.push(`${locale}: ${result.error}`);
-        }
-      }
-    })
-  );
+        const { translations, error: translationError } = await translateContentToAllLocales(
+          contentToTranslate,
+          sourceLocale,
+          ARTICLE_TRANSLATION_CONFIG
+        );
 
-  if (errors.length > 0) {
-    return {
-      success: true,
-      error: `Some translations failed: ${errors.join("; ")}`,
-      updatedPosts,
+        if (translationError) {
+          console.warn("Translation warning:", translationError);
+        }
+
+        // Insert translated versions for other locales
+        const targetLocales = (["en", "fi", "ar"] as SupportedLocale[]).filter(
+          (locale) => locale !== sourceLocale
+        );
+
+        for (const targetLocale of targetLocales) {
+          const translatedContent = translations[targetLocale];
+          if (!translatedContent || !translatedContent.title) {
+            console.warn(`Skipping ${targetLocale} - no translation available`);
+            continue;
+          }
+
+          const translatedPostData = {
+            ...basePostData,
+            language: targetLocale,
+            title: translatedContent.title as string,
+            content: translatedContent.content as string,
+            excerpt: translatedContent.excerpt as string,
+          };
+
+          if (targetLocale === "fi") {
+            await db.insert(posts).values(translatedPostData);
+          } else {
+            await db.insert(postTranslations).values(translatedPostData);
+          }
+          createdPosts.push({ language: targetLocale, slug: data.slug });
+        }
+      } catch (translationError) {
+        console.error("Auto-translation failed:", translationError);
+        // Continue without translation - don't fail the entire operation
+      }
+    }
+
+    // Revalidate paths
+    revalidatePath("/[locale]/articles", "page");
+    revalidatePath("/[locale]/admin/articles", "page");
+
+    return { 
+      success: true, 
+      slug: data.slug,
+      createdPosts,
+      message: createdPosts.length > 1 
+        ? `Article created with ${createdPosts.length} language versions`
+        : "Article created successfully",
+    };
+  } catch (error) {
+    console.error("Error creating post:", error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : "Failed to create post" 
     };
   }
-
-  return { success: true, error: null, updatedPosts };
 }

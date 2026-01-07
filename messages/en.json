@@ -139,6 +139,73 @@
       "petitionsButton": "Sign Petitions"
     }
   },
+  "eventsDetail": {
+    "backToEvents": "Back to Events",
+    "eventNotFound": {
+      "title": "Event Not Found",
+      "description": "The event you're looking for doesn't exist or has been removed."
+    },
+    "status": {
+      "upcoming": "Upcoming",
+      "happeningNow": "Happening Now",
+      "pastEvent": "Past Event"
+    },
+    "badges": {
+      "featured": "Featured"
+    },
+    "quickInfo": {
+      "date": "Date",
+      "time": "Time",
+      "location": "Location",
+      "onlineEvent": "Online Event",
+      "hybrid": "Hybrid",
+      "locationTbd": "Location TBD"
+    },
+    "buttons": {
+      "registerNow": "Register Now",
+      "shareEvent": "Share Event",
+      "copied": "Copied!",
+      "copyLink": "Copy Link",
+      "linkCopied": "Link Copied!"
+    },
+    "sections": {
+      "aboutThisEvent": "About This Event",
+      "eventDetailsComingSoon": "Event details coming soon...",
+      "dateTime": "Date & Time",
+      "location": "Location",
+      "until": "Until",
+      "joinOnline": "Join Online",
+      "contactInformation": "Contact Information"
+    },
+    "registration": {
+      "title": "Registration",
+      "spotsAvailable": "Spots Available",
+      "fillingUpFast": "⚡ Filling up fast!",
+      "registrationClosed": "Registration Closed",
+      "eventHasEnded": "Event Has Ended",
+      "registrationClosedOn": "Registration closed on",
+      "registerBy": "Register by"
+    },
+    "share": {
+      "title": "Share This Event"
+    },
+    "categories": {
+      "title": "Categories"
+    },
+    "registrationModal": {
+      "title": "Register for Event",
+      "description": "Fill out the form below to register for \"{eventTitle}\"",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "numberOfAttendees": "Number of Attendees",
+      "specialRequirements": "Special Requirements or Questions",
+      "specialRequirementsPlaceholder": "Any dietary restrictions, accessibility needs, or questions?",
+      "completeRegistration": "Complete Registration",
+      "cancel": "Cancel"
+    }
+  },
   "impact": {
     "meta": {
       "title": "Our Impact - Supporting Palestinian Artisans | Sumud",
@@ -518,6 +585,7 @@
       "priority": "Priority",
       "featured": "Featured",
       "active": "Active",
+      "general": "General",
       "learnMore": "Learn More"
     },
     "cta": {
@@ -701,10 +769,62 @@
       "categories": "Categories",
       "users": "Users",
       "content": "Content",
+      "pageBuilder": "Page Builder",
       "settings": "Settings",
       "logout": "Logout",
       "loggingOut": "Logging out...",
       "toggleSidebar": "Toggle sidebar"
+    },
+    "content": {
+      "pageTitle": "Content Management",
+      "pageDescription": "Edit translatable content across all pages and locales",
+      "tabs": {
+        "translations": "Translations",
+        "headerMenu": "Header Menu",
+        "footer": "Footer"
+      },
+      "selectLanguage": "Select Language",
+      "headerMenu": {
+        "siteBranding": "Site Branding",
+        "siteBrandingDescription": "Configure the site name displayed in the header",
+        "siteName": "Site Name",
+        "navigationLinks": "Navigation Links",
+        "navigationLinksDescription": "Manage the navigation menu items. These items appear in the main header.",
+        "translationKey": "Translation key (e.g., about)",
+        "linkLabel": "Label",
+        "linkPath": "Path",
+        "addNavigationLink": "Add Navigation Link",
+        "unsavedChanges": "Unsaved changes",
+        "saveHeaderMenu": "Save Header Menu",
+        "saveSuccess": "Header menu saved",
+        "saveError": "Failed to save header menu"
+      },
+      "footer": {
+        "description": "Footer Description",
+        "descriptionHint": "Main description text shown in the footer",
+        "quickLinks": "Quick Links",
+        "quickLinksDescription": "Main navigation links",
+        "getInvolved": "Get Involved",
+        "getInvolvedDescription": "Engagement links",
+        "resources": "Resources",
+        "resourcesDescription": "Help and resource links",
+        "legal": "Legal",
+        "legalDescription": "Legal and policy links",
+        "socialLinks": "Social Links",
+        "socialLinksDescription": "Social media links displayed in the footer",
+        "platform": "Platform",
+        "url": "URL",
+        "addSocialLink": "Add Social Link",
+        "newsletter": "Newsletter Section",
+        "newsletterDescription": "Newsletter subscription text",
+        "newsletterTitle": "Title",
+        "newsletterSubtitle": "Subtitle",
+        "copyright": "Copyright Text",
+        "copyrightDescription": "Copyright notice displayed at the bottom",
+        "saveFooter": "Save Footer",
+        "saveSuccess": "Footer saved",
+        "saveError": "Failed to save footer"
+      }
     }
   }
 }

@@ -1,28 +1,25 @@
-import { redirect } from "@/src/i18n/navigation";
-import { createClient } from "@/src/lib/supabase/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/src/components/admin/AdminSidebar";
+import LanguageSwitcher from "@/src/components/ui/language-switcher";
 
 export default async function AdminLayout({
   children,
-  params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ locale: string }>;
 }) {
-  const { locale } = await params;
-  const supabase = await createClient();
-
-  // Get claims to verify user is authenticated
-  const { data, error } = await supabase.auth.getClaims();
-
-  // If no claims or error, redirect to login
-  if (error || !data?.claims) {
-    redirect({ href: "/auth/login?redirectTo=/admin", locale });
+  // Verify user is authenticated
+  const authObj = await auth();
+  if (!authObj.userId) {
+    redirect(`/sign-in?redirect_url=/admin`);
   }
 
   // Get user info for display
-  const userEmail = data?.claims.email;
-  const userInitial = userEmail ? userEmail[0].toUpperCase() : "A";
+  const user = await currentUser();
+  const userEmail = user?.emailAddresses[0]?.emailAddress || "";
+  const firstName = user?.firstName || "";
+  const lastName = user?.lastName || "";
+  const userInitial = firstName ? firstName.charAt(0).toUpperCase() : (lastName ? lastName.charAt(0).toUpperCase() : "U");
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,6 +30,7 @@ export default async function AdminLayout({
         {/* Top header */}
         <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 px-6">
           <div className="flex-1" />
+          <LanguageSwitcher variant="compact" />
         </header>
 
         {/* Page content */}

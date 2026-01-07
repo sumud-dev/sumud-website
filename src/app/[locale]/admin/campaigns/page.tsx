@@ -41,18 +41,60 @@ import {
   TableRow,
 } from "@/src/components/ui/table";
 import {
-  Campaign,
-  CampaignStatus,
-  campaignStatusColors,
-  transformCampaignsToUI,
-} from "@/src/types/Campaigns";
-import {
-  getCampaigns,
-  deleteCampaign,
-  updateCampaignStatus,
+  deleteCampaignAction,
+  updateCampaignAction,
+  fetchActiveCampaignsAction,
 } from "@/src/actions/campaigns.actions";
 
+// Type definitions
+type CampaignStatus = 'draft' | 'active' | 'paused' | 'completed' | 'archived';
 
+interface Campaign {
+  id: string;
+  campaignId?: string; // For translations, this is the actual campaign ID
+  slug: string;
+  title: string | null;
+  description?: string | null;
+  status: CampaignStatus;
+  isActive: boolean;
+  isFeatured: boolean;
+  category?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+// Status color mapping
+const campaignStatusColors: Record<CampaignStatus, string> = {
+  draft: 'bg-gray-100 text-gray-800 hover:bg-gray-100',
+  active: 'bg-green-100 text-green-800 hover:bg-green-100',
+  paused: 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100',
+  completed: 'bg-blue-100 text-blue-800 hover:bg-blue-100',
+  archived: 'bg-gray-100 text-gray-600 hover:bg-gray-100',
+};
+
+// Helper function to extract text from JSONB description field
+function extractDescriptionText(description: unknown): string {
+  if (!description) return '';
+  
+  // If it's already a string, return it
+  if (typeof description === 'string') return description;
+  
+  // If it's a JSONB object with data property
+  if (typeof description === 'object' && description !== null && 'data' in description) {
+    const desc = description as { type?: string; data?: unknown };
+    if (typeof desc.data === 'string') {
+      return desc.data;
+    }
+    // For blocks type, try to extract text from blocks
+    if (desc.type === 'blocks' && Array.isArray(desc.data)) {
+      return desc.data.map((block: { text?: string }) => block.text || '').join(' ');
+    }
+  }
+  
+  return '';
+}
 
 const CampaignsPage: React.FC = () => {
   const params = useParams();
@@ -64,26 +106,22 @@ const CampaignsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState("");
 
   // Fetch campaigns from the database
-  const fetchCampaigns = React.useCallback(async (showRefreshToast = false) => {
+  const fetchCampaignsData = React.useCallback(async (showRefreshToast = false) => {
     try {
       if (showRefreshToast) {
         setIsRefreshing(true);
       }
       
-      const { data, error } = await getCampaigns();
+      const result = await fetchActiveCampaignsAction(locale);
       
-      if (error) {
-        toast.error(`Failed to fetch campaigns: ${error}`);
-        return;
-      }
-      
-      if (data) {
-        const transformedCampaigns = transformCampaignsToUI(data, locale);
-        setCampaigns(transformedCampaigns);
+      if (result.success && result.data) {
+        setCampaigns(result.data as Campaign[]);
         
         if (showRefreshToast) {
           toast.success("Campaigns refreshed");
         }
+      } else {
+        toast.error(!result.success ? result.error : "Failed to fetch campaigns");
       }
     } catch (err) {
       console.error("Error fetching campaigns:", err);
@@ -96,8 +134,8 @@ const CampaignsPage: React.FC = () => {
 
   // Initial fetch
   React.useEffect(() => {
-    fetchCampaigns();
-  }, [fetchCampaigns]);
+    fetchCampaignsData();
+  }, [fetchCampaignsData]);
 
   // Sort campaigns by createdAt descending (newest first)
   const sortedCampaigns = React.useMemo(() => {
@@ -110,7 +148,7 @@ const CampaignsPage: React.FC = () => {
   const filteredCampaigns = React.useMemo(() => {
     if (!searchQuery) return sortedCampaigns;
     return sortedCampaigns.filter((campaign) =>
-      campaign.title.toLowerCase().includes(searchQuery.toLowerCase())
+      campaign.title?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [searchQuery, sortedCampaigns]);
 
@@ -123,22 +161,20 @@ const CampaignsPage: React.FC = () => {
     return { total, active, drafts, completed };
   }, [campaigns]);
 
-  const handleDelete = async (id: string, title: string) => {
+  const handleDelete = async (slug: string, title: string) => {
     if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
     
     try {
-      const { success, error } = await deleteCampaign(id);
+      const result = await deleteCampaignAction(slug, locale);
       
-      if (error) {
-        toast.error(`Failed to delete campaign: ${error}`);
+      if (!result.success) {
+        toast.error(`Failed to delete campaign: ${result.error}`);
         return;
       }
       
-      if (success) {
-        toast.success(`"${title}" has been deleted`);
-        // Remove from local state
-        setCampaigns(prev => prev.filter(c => c.id !== id));
-      }
+      toast.success(`"${title}" has been deleted`);
+      // Remove from local state
+      setCampaigns(prev => prev.filter(c => c.slug !== slug));
     } catch (err) {
       console.error("Error deleting campaign:", err);
       toast.error("An unexpected error occurred while deleting the campaign");
@@ -146,25 +182,25 @@ const CampaignsPage: React.FC = () => {
   };
 
   const handleStatusUpdate = async (
-    id: string,
-    newStatus: CampaignStatus,
-    title: string
+    campaign: Campaign,
+    newStatus: CampaignStatus
   ) => {
+    // Use campaignId for translations, otherwise use id
+    const actualCampaignId = campaign.campaignId || campaign.id;
+    
     try {
-      const { success, error } = await updateCampaignStatus(id, newStatus);
+      const result = await updateCampaignAction(actualCampaignId, campaign.slug, { status: newStatus }, locale);
       
-      if (error) {
-        toast.error(`Failed to update status: ${error}`);
+      if (!result.success) {
+        toast.error(`Failed to update status: ${result.error}`);
         return;
       }
       
-      if (success) {
-        toast.success(`"${title}" status updated to ${newStatus}`);
-        // Update local state
-        setCampaigns(prev => 
-          prev.map(c => c.id === id ? { ...c, status: newStatus } : c)
-        );
-      }
+      toast.success(`"${campaign.title ?? 'Campaign'}" status updated to ${newStatus}`);
+      // Update local state
+      setCampaigns(prev => 
+        prev.map(c => c.id === campaign.id ? { ...c, status: newStatus } : c)
+      );
     } catch (err) {
       console.error("Error updating campaign status:", err);
       toast.error("An unexpected error occurred while updating the status");
@@ -193,7 +229,7 @@ const CampaignsPage: React.FC = () => {
         <div className="flex gap-2">
           <Button 
             variant="outline" 
-            onClick={() => fetchCampaigns(true)}
+            onClick={() => fetchCampaignsData(true)}
             disabled={isRefreshing}
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
@@ -260,10 +296,8 @@ const CampaignsPage: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[300px]">Campaign</TableHead>
+                  <TableHead className="w-auto">Campaign</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Start Date</TableHead>
-                  <TableHead>End Date</TableHead>
                   <TableHead className="w-[70px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -283,14 +317,18 @@ const CampaignsPage: React.FC = () => {
                         <TableCell>
                           <div className="max-w-[300px]">
                             <Link
-                              href={`/admin/campaigns/${campaign.id}`}
+                              href={`/admin/campaigns/${campaign.slug}`}
                               className="font-medium hover:text-[#781D32] hover:underline transition-colors"
                             >
-                              {campaign.title}
+                              {campaign.title || <span className="text-gray-400">No campaign title</span>}
                             </Link>
-                            {campaign.description && (
+                            {campaign.description ? (
                               <div className="text-sm text-gray-500 mt-1 line-clamp-2">
-                                {campaign.description}
+                                {extractDescriptionText(campaign.description)}
+                              </div>
+                            ) : (
+                              <div className="text-sm text-gray-400 mt-1 italic">
+                                No description added
                               </div>
                             )}
                           </div>
@@ -302,16 +340,6 @@ const CampaignsPage: React.FC = () => {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {campaign.startDate
-                            ? new Date(campaign.startDate).toLocaleDateString()
-                            : "—"}
-                        </TableCell>
-                        <TableCell>
-                          {campaign.endDate
-                            ? new Date(campaign.endDate).toLocaleDateString()
-                            : "—"}
-                        </TableCell>
-                        <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" className="h-8 w-8 p-0">
@@ -321,7 +349,7 @@ const CampaignsPage: React.FC = () => {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem asChild>
                                 <Link
-                                  href={`/admin/campaigns/${campaign.id}`}
+                                  href={`/admin/campaigns/${campaign.slug}`}
                                   target="_blank"
                                 >
                                   <Eye className="mr-2 h-4 w-4" />
@@ -329,20 +357,14 @@ const CampaignsPage: React.FC = () => {
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem asChild>
-                                <Link href={`/admin/campaigns/${campaign.id}/edit`}>
+                                <Link href={`/admin/campaigns/${campaign.slug}/edit`}>
                                   <Edit className="mr-2 h-4 w-4" />
                                   Edit
                                 </Link>
                               </DropdownMenuItem>
                               {campaign.status === "draft" && (
                                 <DropdownMenuItem
-                                  onClick={() =>
-                                    handleStatusUpdate(
-                                      campaign.id,
-                                      "active",
-                                      campaign.title
-                                    )
-                                  }
+                                  onClick={() => handleStatusUpdate(campaign, "active")}
                                 >
                                   <Play className="mr-2 h-4 w-4" />
                                   Activate
@@ -350,13 +372,7 @@ const CampaignsPage: React.FC = () => {
                               )}
                               {campaign.status === "active" && (
                                 <DropdownMenuItem
-                                  onClick={() =>
-                                    handleStatusUpdate(
-                                      campaign.id,
-                                      "paused",
-                                      campaign.title
-                                    )
-                                  }
+                                  onClick={() => handleStatusUpdate(campaign, "paused")}
                                 >
                                   <Pause className="mr-2 h-4 w-4" />
                                   Pause
@@ -364,13 +380,7 @@ const CampaignsPage: React.FC = () => {
                               )}
                               {campaign.status === "paused" && (
                                 <DropdownMenuItem
-                                  onClick={() =>
-                                    handleStatusUpdate(
-                                      campaign.id,
-                                      "active",
-                                      campaign.title
-                                    )
-                                  }
+                                  onClick={() => handleStatusUpdate(campaign, "active")}
                                 >
                                   <Play className="mr-2 h-4 w-4" />
                                   Resume
@@ -378,7 +388,7 @@ const CampaignsPage: React.FC = () => {
                               )}
                               <DropdownMenuItem
                                 onClick={() =>
-                                  handleDelete(campaign.id, campaign.title)
+                                  handleDelete(campaign.slug, campaign.title ?? "No campaign title")
                                 }
                                 className="text-red-600"
                               >

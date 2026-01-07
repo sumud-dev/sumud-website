@@ -2,12 +2,14 @@
 
 import * as React from "react";
 import { Link } from "@/src/i18n/navigation";
-import { toast } from "sonner";
+import { useLocale } from "next-intl";
 import { Plus, MoreHorizontal, Edit, Trash2, Eye, FileText, CheckCircle, Archive, Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { StatsCard } from "@/src/components/cards";
 import { Badge } from "@/src/components/ui/badge";
+import { getPosts, getPostStats, deletePost, type PostWithCategory } from "@/src/actions/article.actions";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,17 +25,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/src/components/ui/table";
-import {
-  getPosts,
-  deletePost,
-  updatePostStatus,
-} from "@/src/actions/article.actions";
-import {
-  calculateStats,
-  getCategoryName,
-  type PostWithCategory,
-} from "@/src/lib/utils/article.utils";
+import { getCategoryName } from "@/src/lib/utils/article.utils";
 
+// Helper data
 const statusColors: Record<string, string> = {
   draft: "bg-yellow-100 text-yellow-800",
   published: "bg-green-100 text-green-800",
@@ -41,23 +35,33 @@ const statusColors: Record<string, string> = {
 };
 
 const ArticlesPage: React.FC = () => {
+  const locale = useLocale() as "en" | "fi" | "ar";
   const [searchQuery, setSearchQuery] = React.useState("");
   const [posts, setPosts] = React.useState<PostWithCategory[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [stats, setStats] = React.useState({ total: 0, published: 0, drafts: 0, archived: 0 });
 
-  // Fetch posts from server action
   const fetchPosts = React.useCallback(async () => {
     setLoading(true);
-    const { data, error } = await getPosts();
-
-    if (error) {
-      toast.error("Failed to fetch articles");
-      console.error(error);
-    } else {
-      setPosts(data || []);
+    try {
+      const [postsResponse, statsResponse] = await Promise.all([
+        getPosts({ language: locale }),
+        getPostStats(locale),
+      ]);
+      
+      if (postsResponse.success && postsResponse.posts) {
+        setPosts(postsResponse.posts);
+      }
+      
+      if (statsResponse.success && statsResponse.stats) {
+        setStats(statsResponse.stats);
+      }
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, []);
+  }, [locale]);
 
   React.useEffect(() => {
     fetchPosts();
@@ -80,33 +84,27 @@ const ArticlesPage: React.FC = () => {
     );
   }, [searchQuery, sortedPosts]);
 
-  // Calculate stats from posts
-  const stats = React.useMemo(() => calculateStats(posts), [posts]);
-
-  const handleDelete = async (id: number, title: string) => {
+  const handleDelete = async (slug: string, title: string) => {
     if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
 
-    const { success, error } = await deletePost(id);
-
-    if (error) {
+    try {
+      const result = await deletePost(slug);
+      if (result.success) {
+        setPosts((prev) => prev.filter((p) => p.slug !== slug));
+        toast.success("Article deleted successfully");
+      } else {
+        toast.error(result.error || "Failed to delete article");
+      }
+    } catch (error) {
+      console.error("Error deleting article:", error);
       toast.error("Failed to delete article");
-      console.error(error);
-    } else if (success) {
-      toast.success(`"${title}" deleted successfully`);
-      fetchPosts();
     }
   };
 
-  const handleStatusUpdate = async (id: number, newStatus: "draft" | "published" | "archived") => {
-    const { success, error } = await updatePostStatus(id, newStatus);
-
-    if (error) {
-      toast.error("Failed to update status");
-      console.error(error);
-    } else if (success) {
-      toast.success(`Status updated to ${newStatus}`);
-      fetchPosts();
-    }
+  const handleStatusUpdate = (id: string, newStatus: "draft" | "published" | "archived") => {
+    setPosts((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, status: newStatus } : p))
+    );
   };
 
   return (
@@ -264,7 +262,7 @@ const ArticlesPage: React.FC = () => {
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem
-                              onClick={() => handleDelete(post.id, post.title ?? "Untitled")}
+                              onClick={() => handleDelete(post.slug, post.title ?? "Untitled")}
                               className="text-red-600"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />

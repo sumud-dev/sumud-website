@@ -21,7 +21,7 @@ import {
   SheetTrigger,
 } from "@/src/components/ui/sheet";
 import type { CampaignType } from "@/src/types/Campaigns";
-import type { CampaignFilters } from "@/src/lib/types";
+import type { CampaignFilters } from "@/src/lib/react-query/query-keys";
 
 interface CampaignFilterProps {
   filters: CampaignFilters;

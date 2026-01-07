@@ -9,6 +9,7 @@ import { ArrowLeft, Save, Eye, Languages, Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { ImageUpload } from "@/src/components/ui/image-upload";
+import { RichTextEditor } from "@/src/components/ui/rich-text-editor";
 import {
   Form,
   FormControl,
@@ -29,6 +30,7 @@ import {
 } from "@/src/components/ui/select";
 import { Switch } from "@/src/components/ui/switch";
 import { toast } from "sonner";
+import { createPost } from "@/src/actions/article.actions";
 
 const articleSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title too long"),
@@ -94,42 +96,20 @@ export default function NewArticlePage() {
         excerpt: data.excerpt,
         status: data.status,
         language: data.language,
-        autoTranslate: data.autoTranslate,
         featured_image: data.featuredImageUrl || null,
-        metaDescription: data.metaDescription,
         categories: data.tags
           ? data.tags
               .split(",")
               .map((tag) => tag.trim())
               .filter(Boolean)
           : [],
+        autoTranslate: data.autoTranslate,
       };
 
-      const response = await fetch("/api/articles", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(articleData),
-      });
+      const result = await createPost(articleData);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        if (response.status === 401) {
-          throw new Error(
-            "Authentication required. Please sign in to create articles.",
-          );
-        }
-        throw new Error(
-          errorData.message || errorData.error || "Failed to create article",
-        );
-      }
-
-      const result = await response.json();
-      console.log("Article created:", result);
-
-      if (result.warning) {
-        toast.warning(result.warning);
+      if (!result.success) {
+        throw new Error(result.error || "Failed to create article");
       }
 
       const createdCount = result.createdPosts?.length || 1;
@@ -238,10 +218,11 @@ export default function NewArticlePage() {
                       <FormItem>
                         <FormLabel>Content</FormLabel>
                         <FormControl>
-                          <Textarea
+                          <RichTextEditor
+                            value={field.value}
+                            onChange={field.onChange}
                             placeholder="Write your article content here..."
                             className="min-h-[300px]"
-                            {...field}
                           />
                         </FormControl>
                         <FormDescription>

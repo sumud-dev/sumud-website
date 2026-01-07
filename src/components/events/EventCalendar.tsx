@@ -49,12 +49,21 @@ export function EventCalendar({
     return `${year}-${month}-${day}`;
   };
 
+  // Helper to get event start date from various possible field names
+  const getEventStartDate = (event: BaseEvent): string | undefined => {
+    // Check all possible date field names (API returns different formats)
+    return event.start_date || event.startDate || event.date || event.startAt;
+  };
+
   // Get events grouped by date (using local date for consistency)
   const eventsByDate = useMemo(() => {
     const grouped: Record<string, BaseEvent[]> = {};
     events.forEach((event) => {
       // Parse the event date and get local date key
-      const eventDate = new Date(event.start_date);
+      const dateStr = getEventStartDate(event);
+      if (!dateStr) return; // Skip events without a date
+      const eventDate = new Date(dateStr);
+      if (isNaN(eventDate.getTime())) return; // Skip invalid dates
       const dateKey = getLocalDateKey(eventDate);
       if (!grouped[dateKey]) {
         grouped[dateKey] = [];
@@ -88,7 +97,7 @@ export function EventCalendar({
     ) {
       const dateKey = getLocalDateKey(d);
       const dayEvents = eventsByDate[dateKey] || [];
-      const upcomingEvents = dayEvents.filter(event => isEventUpcoming(event.start_date));
+      const upcomingEvents = dayEvents.filter(event => isEventUpcoming(getEventStartDate(event)));
 
       days.push({
         date: new Date(d),
@@ -360,7 +369,7 @@ export function EventCalendar({
                               {event.title}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {formatEventDate(event.start_date)}
+                              {formatEventDate(getEventStartDate(event))}
                             </p>
                           </div>
                           <Badge 

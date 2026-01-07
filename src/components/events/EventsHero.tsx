@@ -4,16 +4,40 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Calendar, TrendingUp, MapPin, Users } from "lucide-react";
 
+/** Editable hero content from page builder */
+export interface EventsHeroContent {
+  title: string;
+  subtitle?: string;
+  description: string;
+  eventsLabel: string;
+  globalVirtualLabel: string;
+  communityDrivenLabel: string;
+}
+
 export interface EventsHeroProps {
   totalEvents: number;
   isLoading: boolean;
+  /** Content from page builder for translations/editing */
+  content?: EventsHeroContent;
 }
+
+/** Default content as fallback */
+const defaultContent: EventsHeroContent = {
+  title: "Events Calendar",
+  description: "Join us for cultural events, activism campaigns, educational workshops, and community gatherings that strengthen our solidarity movement.",
+  eventsLabel: "events",
+  globalVirtualLabel: "Global & Virtual",
+  communityDrivenLabel: "Community Driven",
+};
 
 /**
  * Hero section for the events page.
  * Displays the page title, description, and quick stats badges.
+ * Content can be customized via page builder.
  */
-export function EventsHero({ totalEvents, isLoading }: EventsHeroProps) {
+export function EventsHero({ totalEvents, isLoading, content }: EventsHeroProps) {
+  const c = content || defaultContent;
+  
   return (
     <section className="relative overflow-hidden py-20 bg-linear-to-br from-[#1A1D14] via-[#2D3320] to-[#3E442B]">
       <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(120,29,50,0.1)_0%,transparent_50%,rgba(85,97,60,0.1)_100%)]" />
@@ -30,13 +54,11 @@ export function EventsHero({ totalEvents, isLoading }: EventsHeroProps) {
               <Calendar className="h-10 w-10 text-white drop-shadow-lg" />
             </div>
             <h1 className="text-5xl md:text-6xl font-bold text-white drop-shadow-2xl">
-              Events Calendar
+              {c.title}
             </h1>
           </div>
           <p className="text-xl md:text-2xl text-white/95 max-w-3xl mx-auto mb-8 font-medium drop-shadow-lg">
-            Join us for cultural events, activism campaigns, educational
-            workshops, and community gatherings that strengthen our solidarity
-            movement.
+            {c.description}
           </p>
 
           {/* Quick Stats */}
@@ -44,16 +66,16 @@ export function EventsHero({ totalEvents, isLoading }: EventsHeroProps) {
             <div className="flex items-center gap-2 bg-white/15 backdrop-blur-md px-5 py-3 rounded-full border border-white/30 shadow-xl">
               <TrendingUp className="h-5 w-5 text-white" />
               <span className="text-white font-semibold">
-                {!isLoading && `${totalEvents} events`}
+                {!isLoading && `${totalEvents} ${c.eventsLabel}`}
               </span>
             </div>
             <div className="flex items-center gap-2 bg-white/15 backdrop-blur-md px-5 py-3 rounded-full border border-white/30 shadow-xl">
               <MapPin className="h-5 w-5 text-white" />
-              <span className="text-white font-semibold">Global & Virtual</span>
+              <span className="text-white font-semibold">{c.globalVirtualLabel}</span>
             </div>
             <div className="flex items-center gap-2 bg-white/15 backdrop-blur-md px-5 py-3 rounded-full border border-white/30 shadow-xl">
               <Users className="h-5 w-5 text-white" />
-              <span className="text-white font-semibold">Community Driven</span>
+              <span className="text-white font-semibold">{c.communityDrivenLabel}</span>
             </div>
           </div>
         </motion.div>

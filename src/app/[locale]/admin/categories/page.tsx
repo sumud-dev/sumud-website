@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { Link } from "@/src/i18n/navigation";
-import { toast } from "sonner";
 import { Plus, MoreHorizontal, Edit, Trash2, FolderOpen, CheckCircle, XCircle, FileText } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
@@ -156,14 +155,10 @@ const CategoriesPage: React.FC = () => {
 
   const handleDelete = (slug: string, name: string) => {
     if (!confirm(`Are you sure you want to delete the category "${name}"?`)) return;
-    // TODO: Connect to backend
-    toast.info(`Delete "${name}" - connect to backend`);
   };
 
   const handleStatusToggle = (slug: string, currentStatus: string) => {
     const newStatus = currentStatus === "active" ? "inactive" : "active";
-    // TODO: Connect to backend
-    toast.info(`Update "${slug}" status to ${newStatus} - connect to backend`);
   };
 
   return (

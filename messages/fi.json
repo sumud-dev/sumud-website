@@ -138,6 +138,73 @@
       "petitionsButton": "Allekirjoita vetoomuksia"
     }
   },
+  "eventsDetail": {
+    "backToEvents": "Takaisin tapahtumiin",
+    "eventNotFound": {
+      "title": "Tapahtumaa ei löytynyt",
+      "description": "Etsimääsi tapahtumaa ei ole tai se on poistettu."
+    },
+    "status": {
+      "upcoming": "Tulossa",
+      "happeningNow": "Käynnissä nyt",
+      "pastEvent": "Mennyt tapahtuma"
+    },
+    "badges": {
+      "featured": "Suositeltu"
+    },
+    "quickInfo": {
+      "date": "Päivämäärä",
+      "time": "Aika",
+      "location": "Sijainti",
+      "onlineEvent": "Verkkotapahtuma",
+      "hybrid": "Hybridi",
+      "locationTbd": "Sijainti ilmoitetaan myöhemmin"
+    },
+    "buttons": {
+      "registerNow": "Ilmoittaudu nyt",
+      "shareEvent": "Jaa tapahtuma",
+      "copied": "Kopioitu!",
+      "copyLink": "Kopioi linkki",
+      "linkCopied": "Linkki kopioitu!"
+    },
+    "sections": {
+      "aboutThisEvent": "Tietoa tapahtumasta",
+      "eventDetailsComingSoon": "Tapahtuman tiedot tulossa pian...",
+      "dateTime": "Päivämäärä ja aika",
+      "location": "Sijainti",
+      "until": "Asti",
+      "joinOnline": "Liity verkossa",
+      "contactInformation": "Yhteystiedot"
+    },
+    "registration": {
+      "title": "Ilmoittautuminen",
+      "spotsAvailable": "Paikkoja saatavilla",
+      "fillingUpFast": "⚡ Täyttyy nopeasti!",
+      "registrationClosed": "Ilmoittautuminen suljettu",
+      "eventHasEnded": "Tapahtuma on päättynyt",
+      "registrationClosedOn": "Ilmoittautuminen sulkeutui",
+      "registerBy": "Ilmoittaudu viimeistään"
+    },
+    "share": {
+      "title": "Jaa tämä tapahtuma"
+    },
+    "categories": {
+      "title": "Kategoriat"
+    },
+    "registrationModal": {
+      "title": "Ilmoittaudu tapahtumaan",
+      "description": "Täytä alla oleva lomake ilmoittautuaksesi tapahtumaan \"{eventTitle}\"",
+      "firstName": "Etunimi",
+      "lastName": "Sukunimi",
+      "email": "Sähköpostiosoite",
+      "phone": "Puhelinnumero",
+      "numberOfAttendees": "Osallistujien määrä",
+      "specialRequirements": "Erityisvaatimukset tai kysymykset",
+      "specialRequirementsPlaceholder": "Ruokavaliorajoitukset, esteettömyystarpeet tai kysymykset?",
+      "completeRegistration": "Viimeistele ilmoittautuminen",
+      "cancel": "Peruuta"
+    }
+  },
   "membership": {
     "title": "Liity liikkeeseen",
     "subtitle": "Ryhdy osaksi kasvavaa palestiinalaisten oikeuksien puolesta toimivaa yhteisöä",
@@ -475,6 +542,7 @@
       "priority": "Prioriteetti",
       "featured": "Suositeltu",
       "active": "Aktiivinen",
+      "general": "Yleinen",
       "learnMore": "Lue lisää"
     },
     "cta": {
@@ -658,10 +726,62 @@
       "categories": "Kategoriat",
       "users": "Käyttäjät",
       "content": "Sisältö",
+      "pageBuilder": "Sivunrakentaja",
       "settings": "Asetukset",
       "logout": "Kirjaudu ulos",
       "loggingOut": "Kirjaudutaan ulos...",
       "toggleSidebar": "Vaihda sivupalkkia"
+    },
+    "content": {
+      "pageTitle": "Sisällönhallinta",
+      "pageDescription": "Muokkaa käännettävää sisältöä kaikilla sivuilla ja kielillä",
+      "tabs": {
+        "translations": "Käännökset",
+        "headerMenu": "Ylävalikko",
+        "footer": "Alatunniste"
+      },
+      "selectLanguage": "Valitse kieli",
+      "headerMenu": {
+        "siteBranding": "Sivuston brändäys",
+        "siteBrandingDescription": "Määritä yläpalkissa näkyvä sivuston nimi",
+        "siteName": "Sivuston nimi",
+        "navigationLinks": "Navigointilinkit",
+        "navigationLinksDescription": "Hallitse navigointivalikon kohteita. Nämä kohteet näkyvät pääyläpalkissa.",
+        "translationKey": "Käännösavain (esim. about)",
+        "linkLabel": "Otsikko",
+        "linkPath": "Polku",
+        "addNavigationLink": "Lisää navigointilinkki",
+        "unsavedChanges": "Tallentamattomia muutoksia",
+        "saveHeaderMenu": "Tallenna ylävalikko",
+        "saveSuccess": "Ylävalikko tallennettu",
+        "saveError": "Ylävalikon tallentaminen epäonnistui"
+      },
+      "footer": {
+        "description": "Alatunnisteen kuvaus",
+        "descriptionHint": "Alatunnisteessa näkyvä pääkuvausteksti",
+        "quickLinks": "Pikalinkit",
+        "quickLinksDescription": "Päänavigointilinkit",
+        "getInvolved": "Osallistu",
+        "getInvolvedDescription": "Osallistumislinkit",
+        "resources": "Resurssit",
+        "resourcesDescription": "Ohje- ja resurssilinkit",
+        "legal": "Oikeudelliset",
+        "legalDescription": "Oikeudelliset linkit ja tietosuojakäytännöt",
+        "socialLinks": "Sosiaalisen median linkit",
+        "socialLinksDescription": "Alatunnisteessa näkyvät sosiaalisen median linkit",
+        "platform": "Alusta",
+        "url": "URL",
+        "addSocialLink": "Lisää sosiaalisen median linkki",
+        "newsletter": "Uutiskirje-osio",
+        "newsletterDescription": "Uutiskirjeen tilauksen teksti",
+        "newsletterTitle": "Otsikko",
+        "newsletterSubtitle": "Alaotsikko",
+        "copyright": "Tekijänoikeusteksti",
+        "copyrightDescription": "Alaosassa näkyvä tekijänoikeusilmoitus",
+        "saveFooter": "Tallenna alatunniste",
+        "saveSuccess": "Alatunniste tallennettu",
+        "saveError": "Alatunnisteen tallentaminen epäonnistui"
+      }
     }
   }
 }

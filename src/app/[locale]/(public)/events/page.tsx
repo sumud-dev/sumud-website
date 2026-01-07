@@ -1,13 +1,16 @@
 "use client";
 
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useMemo } from "react";
 import { motion } from "framer-motion";
+import { useLocale } from "next-intl";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Button } from "@/src/components/ui/button";
 import { useEvents } from "@/src/lib/hooks/use-events";
 import { useEventFilters } from "@/src/lib/hooks/use-event-filters";
 import { useCelebration } from "@/src/components/ui/celebration";
+import { usePage } from "@/src/lib/hooks/use-pages";
 import { fadeInUp, staggerContainer } from "@/src/lib/utils/animations";
+import type { EventsHeroContent } from "@/src/components/events/EventsHero";
 
 // Lazy load components for better performance
 const EventCard = lazy(() =>
@@ -74,9 +77,50 @@ const EventsResultsSummary = lazy(() =>
 );
 
 export default function EventsPage() {
+  const locale = useLocale();
   // Use the custom hook for all filter state management
   const filterState = useEventFilters();
   const { celebration, completeCelebration } = useCelebration();
+  
+  // Fetch page builder content for events page
+  const { data: pageData } = usePage("events");
+  
+  // Extract localized content from page builder
+  const pageContent = useMemo(() => {
+    if (!pageData) return null;
+    
+    // Get the text block with locale-nested content
+    const textBlock = pageData.translations.en?.blocks?.find(
+      (b) => b.id === "events-page-text"
+    );
+    const heroBlock = pageData.translations.en?.blocks?.find(
+      (b) => b.id === "events-page-hero"
+    );
+    
+    // Extract locale-specific content
+    const textContent = (textBlock?.content as { content?: Record<string, Record<string, string>> })?.content;
+    const heroContent = (heroBlock?.content as { content?: Record<string, { title: string; subtitle?: string; description: string }> })?.content;
+    
+    const localeKey = locale as "en" | "fi" | "ar";
+    
+    return {
+      hero: heroContent?.[localeKey] || heroContent?.en,
+      text: textContent?.[localeKey] || textContent?.en,
+    };
+  }, [pageData, locale]);
+  
+  // Build hero content from page builder
+  const heroContent: EventsHeroContent | undefined = useMemo(() => {
+    if (!pageContent?.hero || !pageContent?.text) return undefined;
+    return {
+      title: pageContent.hero.title,
+      subtitle: pageContent.hero.subtitle,
+      description: pageContent.hero.description,
+      eventsLabel: pageContent.text.eventsLabel || "events",
+      globalVirtualLabel: pageContent.text.globalVirtualLabel || "Global & Virtual",
+      communityDrivenLabel: pageContent.text.communityDrivenLabel || "Community Driven",
+    };
+  }, [pageContent]);
 
   // Helper to format date in local timezone as YYYY-MM-DD
   const formatLocalDate = (date: Date): string => {
@@ -116,19 +160,21 @@ export default function EventsPage() {
 
   // Error state
   if (error) {
+    const failedText = pageContent?.text?.failedToLoad || "Failed to load events";
+    const tryAgainText = pageContent?.text?.tryAgain || "Try Again";
     return (
       <>
         <div className="container mx-auto px-4 py-8">
           <Card className="border-2 border-red-300 bg-red-50">
             <CardContent className="p-8 text-center">
               <p className="text-red-700 font-semibold mb-4 text-lg">
-                Failed to load events
+                {failedText}
               </p>
               <Button
                 onClick={() => window.location.reload()}
                 className="bg-[#781D32] text-white hover:bg-[#5E1727] font-medium"
               >
-                Try Again
+                {tryAgainText}
               </Button>
             </CardContent>
           </Card>
@@ -146,6 +192,7 @@ export default function EventsPage() {
             <EventsHero
               totalEvents={pagination?.total || 0}
               isLoading={isLoading}
+              content={heroContent}
             />
           </Suspense>
 
@@ -304,7 +351,7 @@ export default function EventsPage() {
                           transition={{ duration: 0.6, delay: 0.3 }}
                           className="text-center mt-8 text-sm text-[#3E442B] font-semibold bg-[#F8F6F0] py-3 px-6 rounded-full inline-block border border-[#2D3320]/20"
                         >
-                          Showing{" "}
+                          {pageContent?.text?.showingText || "Showing"}{" "}
                           {((pagination?.page || 1) - 1) *
                             (pagination?.limit || 12) +
                             1}{" "}
@@ -313,7 +360,7 @@ export default function EventsPage() {
                             (pagination?.page || 1) * (pagination?.limit || 12),
                             pagination?.total || 0
                           )}{" "}
-                          of {pagination?.total || 0} events
+                          {pageContent?.text?.ofText || "of"} {pagination?.total || 0} {pageContent?.text?.eventsText || "events"}
                         </motion.div>
                       )}
                     </>
