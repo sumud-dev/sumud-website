@@ -196,15 +196,6 @@ export default function ArticleCard({
                   target.src = "/images/placeholder-article.svg";
                 }}
               />
-              {/* Trending Badge - Only on image for featured */}
-              {engagementData.isTrending && (
-                <div className="absolute top-4 left-4">
-                  <Badge className="bg-orange-500/90 backdrop-blur-sm text-white text-xs px-2 py-1 font-medium shadow-lg">
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    Trending
-                  </Badge>
-                </div>
-              )}
             </div>
 
             {/* Content */}
@@ -329,14 +320,6 @@ export default function ArticleCard({
                   target.src = '/images/placeholder-article.svg';
                 }}
               />
-              {engagementData.isTrending && (
-                <div className="absolute top-3 left-3">
-                  <Badge className="bg-orange-500/90 backdrop-blur-sm text-white text-xs px-2 py-1 font-medium">
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    Trending
-                  </Badge>
-                </div>
-              )}
             </div>
 
             {/* Content */}
@@ -498,14 +481,6 @@ export default function ArticleCard({
                 target.src = '/images/placeholder-article.svg';
               }}
             />
-            {engagementData.isTrending && (
-              <div className="absolute top-3 left-3">
-                <Badge className="bg-orange-500/90 backdrop-blur-sm text-white text-xs px-2 py-1 font-medium">
-                  <TrendingUp className="w-3 h-3 mr-1" />
-                  Trending
-                </Badge>
-              </div>
-            )}
           </div>
 
           {/* Content */}

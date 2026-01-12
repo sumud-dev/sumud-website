@@ -267,7 +267,7 @@ function FeaturedSection({ articles }: { articles: Article[] }) {
   const t = useTranslations("articlesPage");
   const featuredArticle = articles?.[0];
 
-  if (!featuredArticle) return null;
+  if (!featuredArticle || !featuredArticle.image) return null;
 
   return (
     <motion.section
