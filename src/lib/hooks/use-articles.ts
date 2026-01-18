@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { useLocale } from 'next-intl';
 import { queryKeys } from '@/src/lib/react-query/query-keys';
 import type { ArticleFilters } from '@/src/lib/react-query/query-keys';
 import type { Article } from '@/src/lib/types/article';
@@ -9,10 +10,13 @@ export type { Article };
 
 /**
  * Hook to fetch articles with filters
+ * Automatically includes the current locale in the request
  */
 export function useArticles(filters?: ArticleFilters) {
+  const locale = useLocale();
+  
   const { data = [], isLoading, error, isError } = useQuery({
-    queryKey: queryKeys.articles.list(filters),
+    queryKey: queryKeys.articles.list({ ...filters, language: filters?.language || locale }),
     queryFn: async () => {
       // Build query parameters
       const params = new URLSearchParams();
@@ -20,7 +24,9 @@ export function useArticles(filters?: ArticleFilters) {
       if (filters?.search) params.append('search', filters.search);
       if (filters?.category) params.append('category', filters.category);
       if (filters?.status) params.append('status', filters.status);
-      if (filters?.language) params.append('language', filters.language);
+      // Use the locale if no language filter is specified
+      const language = filters?.language || locale;
+      params.append('language', language);
       if (filters?.page) params.append('page', String(filters.page));
       if (filters?.limit) params.append('limit', String(filters.limit));
 
@@ -73,12 +79,15 @@ export function useArticle(slug: string) {
  * Hook to fetch related articles
  */
 export function useRelatedArticles(category?: string, currentSlug?: string) {
+  const locale = useLocale();
+  
   const { data = [], isLoading, error, isError } = useQuery({
-    queryKey: ['relatedArticles', category, currentSlug],
+    queryKey: ['relatedArticles', category, currentSlug, locale],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (category) params.append('category', category);
       if (currentSlug) params.append('excludeSlug', currentSlug);
+      params.append('language', locale);
       params.append('limit', '3');
 
       const response = await fetch(`/api/articles?${params.toString()}`);

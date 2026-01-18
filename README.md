@@ -25,7 +25,10 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sumud
 - Prefer these over direct API routes.
 
 ### Content & Static Data
-- Static content (navigation, pages, etc.) is in `content/` as JSON.
+- Static content uses a **locale-first structure** in `content/{locale}/pages/` and `content/{locale}/navigation/`
+- UI translations in `messages/{locale}.json`
+- See [Content Management Guide](./docs/CONTENT_MANAGEMENT.md) for details
+- Content utilities in `src/lib/content/`
 
 ### Media & Cloudinary
 - Image uploads use Cloudinary (see `.env` for config).
@@ -152,6 +155,9 @@ This project uses **Drizzle ORM** with PostgreSQL.
 ## 📚 References
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Drizzle ORM Guide](./DRIZZLE_GUIDE.md)
+- [Content Management Guide](./docs/CONTENT_MANAGEMENT.md)
+- [Content Schema Documentation](./docs/CONTENT_SCHEMA.md)
+- [Localization Migration Plan](./docs/localizing-content.md)
 - [Project Structure & Scripts](#project-structure)
 
 ---

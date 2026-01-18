@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useState, useEffect } from "react";
 import { Calendar, SlidersHorizontal, Search, Sparkles } from "lucide-react";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
@@ -79,49 +79,59 @@ export function EventsMobileFilters({
   onDateSelect,
   onClearFilters,
 }: EventsMobileFiltersProps) {
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent SSR hydration mismatch for Sheet components
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <div className="md:hidden sticky top-16 z-40 bg-white border-b-2 border-[#2D3320]/30 py-4 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             {/* Calendar Sheet */}
-            <Sheet open={showMobileCalendar} onOpenChange={onMobileCalendarChange}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 border-2 border-[#2D3320]/40 text-[#1A1D14] hover:bg-[#781D32] hover:text-white hover:border-[#781D32] font-medium transition-all duration-200"
-                >
-                  <Calendar className="h-4 w-4" />
-                  Calendar
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="h-[90vh]">
-                <SheetHeader>
-                  <SheetTitle className="text-[#1A1D14] text-xl font-bold">
-                    Event Calendar
-                  </SheetTitle>
-                  <SheetDescription className="text-[#3E442B] font-medium">
-                    Select a date to view events
-                  </SheetDescription>
-                </SheetHeader>
-                <div className="mt-4">
-                  <Suspense fallback={<div>Loading calendar...</div>}>
-                    <EventCalendar
-                      events={events}
-                      selectedDate={selectedDate}
-                      onDateSelect={(date) => {
-                        onDateSelect(date);
-                        onMobileCalendarChange(false);
-                      }}
-                    />
-                  </Suspense>
-                </div>
-              </SheetContent>
-            </Sheet>
+            {mounted && (
+              <Sheet open={showMobileCalendar} onOpenChange={onMobileCalendarChange}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-2 border-2 border-[#2D3320]/40 text-[#1A1D14] hover:bg-[#781D32] hover:text-white hover:border-[#781D32] font-medium transition-all duration-200"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Calendar
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[90vh]">
+                  <SheetHeader>
+                    <SheetTitle className="text-[#1A1D14] text-xl font-bold">
+                      Event Calendar
+                    </SheetTitle>
+                    <SheetDescription className="text-[#3E442B] font-medium">
+                      Select a date to view events
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-4">
+                    <Suspense fallback={<div>Loading calendar...</div>}>
+                      <EventCalendar
+                        events={events}
+                        selectedDate={selectedDate}
+                        onDateSelect={(date) => {
+                          onDateSelect(date);
+                          onMobileCalendarChange(false);
+                        }}
+                      />
+                    </Suspense>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
 
             {/* Filters Sheet */}
-            <Sheet open={showMobileFilters} onOpenChange={onMobileFiltersChange}>
+            {mounted && (
+              <Sheet open={showMobileFilters} onOpenChange={onMobileFiltersChange}>
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
@@ -282,6 +292,7 @@ export function EventsMobileFilters({
                 </div>
               </SheetContent>
             </Sheet>
+            )}
           </div>
 
           <div className="text-sm text-[#1A1D14] font-bold bg-[#781D32]/10 px-3 py-1.5 rounded-full border border-[#781D32]/30">

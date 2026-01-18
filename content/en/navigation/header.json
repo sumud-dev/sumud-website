@@ -1,0 +1,34 @@
+{
+  "id": "header",
+  "siteName": "Sumud",
+  "logo": "https://res.cloudinary.com/df370s3je/image/upload/v1768483019/sumud/branding/cz5tbqdwhptq0ovkftvb.svg",
+  "items": [
+    {
+      "label": "Campaigns",
+      "href": "/campaigns"
+    },
+    {
+      "label": "Articles",
+      "href": "/articles"
+    },
+    {
+      "label": "About",
+      "href": "/about",
+      "children": [
+        {
+          "label": "About",
+          "href": "/membership"
+        }
+      ]
+    },
+    {
+      "label": "Events",
+      "href": "/events"
+    },
+    {
+      "label": "Contact",
+      "href": "/contact"
+    }
+  ],
+  "updatedAt": "2026-01-15T13:58:09.196Z"
+}

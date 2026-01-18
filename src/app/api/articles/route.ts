@@ -22,20 +22,22 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform posts to match expected article format
-    const articles = result.posts.map((post) => ({
-      id: post.id,
-      slug: post.slug,
-      title: post.title || '',
-      excerpt: post.excerpt || '',
-      category: post.category?.name || 'uncategorized',
-      status: post.status || 'published',
-      publishedAt: post.published_at,
-      updatedAt: post.updated_at,
-      image: post.featuredImage,
-      author: post.authorName ? { name: post.authorName } : undefined,
-    }));
+    const articles = result.posts
+      .filter(post => post.title && post.slug) // Filter out incomplete articles
+      .map((post) => ({
+        id: post.id,
+        slug: post.slug,
+        title: post.title || '',
+        excerpt: post.excerpt || '',
+        category: post.category?.name || 'uncategorized',
+        status: post.status || 'published',
+        publishedAt: post.published_at,
+        updatedAt: post.updated_at,
+        image: post.featuredImage,
+        author: post.authorName ? { name: post.authorName } : undefined,
+      }));
 
-    return NextResponse.json({ data: articles, total: result.total });
+    return NextResponse.json({ data: articles, total: articles.length });
   } catch (error) {
     console.error('Error in articles API:', error);
     return NextResponse.json(

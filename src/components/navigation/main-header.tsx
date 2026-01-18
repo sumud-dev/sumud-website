@@ -84,11 +84,19 @@ export default function MainHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [navigationItems, setNavigationItems] = useState<NavigationItem[]>(defaultNavigationItems);
+  const [logo, setLogo] = useState("/Logo.svg");
+  const [siteName, setSiteName] = useState("Sumud");
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const t = useTranslations("navigation");
   const locale = useLocale() as Locale;
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
+
+  // Prevent SSR hydration mismatch for Sheet component
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Load navigation config
   useEffect(() => {
@@ -97,11 +105,24 @@ export default function MainHeader() {
         const result = await getHeaderConfig();
         if (result.success) {
           const config = result.data;
+          
+          // Set logo and site name from config
+          if (config.logo) {
+            setLogo(config.logo);
+          }
+          setSiteName(config.siteName[locale] || config.siteName.en || "Sumud");
+          
           const items: NavigationItem[] = config.navigationLinks.map((link) => ({
             labelKey: link.labelKey,
             label: link.labels[locale] || link.labels.en || link.labelKey,
             href: link.href,
             icon: iconMap[link.labelKey],
+            children: link.children?.map((child) => ({
+              labelKey: child.labelKey,
+              label: child.labels[locale] || child.labels.en || child.labelKey,
+              href: child.href,
+              icon: iconMap[child.labelKey],
+            })),
           }));
           setNavigationItems(items);
         }
@@ -224,8 +245,8 @@ export default function MainHeader() {
               whileTap={{ scale: 0.98 }}
             >
               <Image
-                src="/Logo.svg"
-                alt="Sumud - Finnish Palestine Network"
+                src={logo}
+                alt={`${siteName} - Finnish Palestine Network`}
                 width={180}
                 height={80}
                 priority
@@ -316,25 +337,26 @@ export default function MainHeader() {
             )}
 
             {/* Mobile Menu */}
-            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="lg:hidden text-[#3E442B] hover:text-[#781D32]"
-                >
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[350px]">
-                <SheetHeader className="pb-4">
-                  <SheetTitle className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#781D32] to-[#55613C] rounded-lg flex items-center justify-center">
-                      <Heart className="h-4 w-4 text-white" />
-                    </div>
-                    <span className="text-[#781D32] font-bold">Sumud</span>
-                  </SheetTitle>
-                </SheetHeader>
+            {mounted ? (
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="lg:hidden text-[#3E442B] hover:text-[#781D32]"
+                  >
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[350px]">
+                  <SheetHeader className="pb-4">
+                    <SheetTitle className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-[#781D32] to-[#55613C] rounded-lg flex items-center justify-center">
+                        <Heart className="h-4 w-4 text-white" />
+                      </div>
+                      <span className="text-[#781D32] font-bold">Sumud</span>
+                    </SheetTitle>
+                  </SheetHeader>
 
                 <div className="flex flex-col space-y-1">
                   {/* Mobile Navigation */}
@@ -385,6 +407,15 @@ export default function MainHeader() {
                 </div>
               </SheetContent>
             </Sheet>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="lg:hidden text-[#3E442B] hover:text-[#781D32]"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            )}
           </div>
         </div>
       </div>

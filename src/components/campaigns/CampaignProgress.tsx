@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
@@ -38,28 +38,39 @@ export function CampaignProgress({ campaign }: CampaignProgressProps) {
 
   const startDate = campaign.startDate ? new Date(campaign.startDate) : null;
   const endDate = campaign.endDate ? new Date(campaign.endDate) : null;
-  const now = new Date();
+  
+  // Initialize time-dependent values in state to avoid hydration mismatch
+  const [timeProgress, setTimeProgress] = useState(0);
+  const [daysLeft, setDaysLeft] = useState<number | null>(null);
+  const [totalDays, setTotalDays] = useState<number | null>(null);
 
-  // Calculate time progress
-  let timeProgress = 0;
-  let daysLeft = null;
-  let totalDays = null;
+  // Calculate time progress on client-side only
+  useEffect(() => {
+    const now = new Date();
+    let calculatedProgress = 0;
+    let calculatedDaysLeft = null;
+    let calculatedTotalDays = null;
 
-  if (startDate && endDate) {
-    const totalDuration = endDate.getTime() - startDate.getTime();
-    const elapsedTime = now.getTime() - startDate.getTime();
-    timeProgress = Math.max(
-      0,
-      Math.min(100, (elapsedTime / totalDuration) * 100),
-    );
-    totalDays = Math.ceil(totalDuration / (1000 * 60 * 60 * 24));
-
-    if (now < endDate) {
-      daysLeft = Math.ceil(
-        (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+    if (startDate && endDate) {
+      const totalDuration = endDate.getTime() - startDate.getTime();
+      const elapsedTime = now.getTime() - startDate.getTime();
+      calculatedProgress = Math.max(
+        0,
+        Math.min(100, (elapsedTime / totalDuration) * 100),
       );
+      calculatedTotalDays = Math.ceil(totalDuration / (1000 * 60 * 60 * 24));
+
+      if (now < endDate) {
+        calculatedDaysLeft = Math.ceil(
+          (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+        );
+      }
     }
-  }
+
+    setTimeProgress(calculatedProgress);
+    setDaysLeft(calculatedDaysLeft);
+    setTotalDays(calculatedTotalDays);
+  }, [startDate, endDate]);
 
   // Define progress metrics
   const metrics: ProgressMetric[] = [];

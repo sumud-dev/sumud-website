@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Share2, Facebook, Twitter, Mail, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
@@ -17,11 +17,11 @@ interface ShareButtonsProps {
 export default function ShareButtons({ campaign }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
 
-  const shareUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/campaigns/${campaign.slug}`
-      : "";
+  useEffect(() => {
+    setShareUrl(`${window.location.origin}/campaigns/${campaign.slug}`);
+  }, [campaign.slug]);
 
   const handleCopyLink = async () => {
     try {

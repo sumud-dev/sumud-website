@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Calendar, MapPin } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
@@ -38,8 +38,18 @@ export function EventCalendar({
   onDateSelect,
   compact = false,
 }: EventCalendarProps) {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  // Initialize with a fixed date to avoid hydration mismatch
+  const [currentDate, setCurrentDate] = useState(() => {
+    // Use a stable initial date
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
+
+  // Update to actual current date after mount to avoid hydration issues
+  useEffect(() => {
+    setCurrentDate(new Date());
+  }, []);
 
   // Helper to get local date string (YYYY-MM-DD) for consistent comparison
   const getLocalDateKey = (date: Date): string => {

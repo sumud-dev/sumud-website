@@ -2,7 +2,7 @@
 
 import { Link } from "@/src/i18n/navigation";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   Calendar, 
@@ -63,11 +63,32 @@ export function EventCard({
   const [isLiked, setIsLiked] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [eventStatus, setEventStatus] = useState<"upcoming" | "live" | "past">("upcoming");
 
   const isUpcoming = isEventUpcoming(event.start_date);
   const canRegister = canRegisterForEvent(event);
   const eventTypeColor = getEventTypeColor(event.event_type);
   const eventTypeHexColor = getEventTypeHexColor(event.event_type);
+
+  // Calculate event status on client-side only to avoid hydration mismatch
+  useEffect(() => {
+    if (!event.start_date) {
+      setEventStatus("upcoming");
+      return;
+    }
+    
+    const now = new Date();
+    const startDate = new Date(event.start_date);
+    const endDate = event.end_date ? new Date(event.end_date) : startDate;
+    
+    if (now < startDate) {
+      setEventStatus("upcoming");
+    } else if (now >= startDate && now <= endDate) {
+      setEventStatus("live");
+    } else {
+      setEventStatus("past");
+    }
+  }, [event.start_date, event.end_date]);
 
   const formatCapacity = () => {
     const currentRegs = event.current_registrations ?? 0;
@@ -105,15 +126,7 @@ export function EventCard({
   };
 
   const getEventStatus = () => {
-    if (!event.start_date) return "upcoming";
-    
-    const now = new Date();
-    const startDate = new Date(event.start_date);
-    const endDate = event.end_date ? new Date(event.end_date) : startDate;
-    
-    if (now < startDate) return "upcoming";
-    if (now >= startDate && now <= endDate) return "live";
-    return "past";
+    return eventStatus;
   };
 
   const getStatusIcon = () => {
@@ -493,7 +506,7 @@ export function EventCard({
                     </div>
                     <div className="flex items-center gap-1">
                       <TrendingUp className="h-3 w-3" />
-                      <span>{Math.floor(Math.random() * 50) + 10}</span>
+                      <span>35</span>
                     </div>
                   </div>
                 )}

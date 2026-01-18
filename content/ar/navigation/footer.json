@@ -1,0 +1,95 @@
+{
+  "id": "footer",
+  "logo": "https://res.cloudinary.com/df370s3je/image/upload/v1768483019/sumud/branding/cz5tbqdwhptq0ovkftvb.svg",
+  "quickLinks": [
+    {
+      "label": "الرئيسية",
+      "href": "/"
+    },
+    {
+      "label": "العرائض",
+      "href": "/articles"
+    },
+    {
+      "label": "المقالات",
+      "href": "/membership"
+    },
+    {
+      "label": "انضم كعضو",
+      "href": "/about"
+    }
+  ],
+  "getInvolvedLinks": [
+    {
+      "label": "انضم كعضو",
+      "href": "/membership"
+    },
+    {
+      "label": "الفعاليات",
+      "href": "/events"
+    }
+  ],
+  "resourceLinks": [
+    {
+      "label": "الأسئلة الشائعة",
+      "href": "/faq"
+    },
+    {
+      "label": "اتصل بنا",
+      "href": "/contact"
+    }
+  ],
+  "legalLinks": [
+    {
+      "label": "سياسة الخصوصية",
+      "href": "/privacy-policy"
+    },
+    {
+      "label": "شروط الخدمة",
+      "href": "/terms"
+    },
+    {
+      "label": "مدونة السلوك",
+      "href": "/code-of-conduct"
+    },
+    {
+      "label": "الشفافية",
+      "href": "/transparency"
+    }
+  ],
+  "socialLinks": [
+    {
+      "platform": "",
+      "url": ""
+    }
+  ],
+  "socialLinks": [
+    {
+      "platform": "Facebook",
+      "url": "https://facebook.com/sumudfinland"
+    },
+    {
+      "platform": "Twitter",
+      "url": "https://twitter.com/sumudfinland"
+    },
+    {
+      "platform": "Instagram",
+      "url": "https://instagram.com/sumudfinland"
+    },
+    {
+      "platform": "LinkedIn",
+      "url": "https://linkedin.com/company/sumudfinland"
+    }
+  ],
+  "newsletter": {
+    "title": "ابق على اطلاع",
+    "subtitle": "احصل على آخر الأخبار وتحديثات الحملات"
+  },
+  "copyright": "© 2025 صمود - شبكة فنلندا فلسطين. جميع الحقوق محفوظة.",
+  "contact": {
+    "email": "info@sumud.fi",
+    "phone": "+358 XX XXX XXXX",
+    "location": "Helsinki, Finland"
+  },
+  "updatedAt": "2026-01-18T11:29:47.561Z"
+}

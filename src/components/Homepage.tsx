@@ -404,7 +404,7 @@ const Homepage = React.memo(function Homepage({ events = [] }: HomepageProps) {
                 : '';
               
               return (
-              <motion.div key={event.id} variants={fadeInUp}>
+              <motion.div key={event.id} variants={fadeInUp} suppressHydrationWarning>
                 <div
                   className="h-full backdrop-blur-xl rounded-3xl overflow-hidden transition-all duration-300 transform hover:scale-105 group"
                   style={{

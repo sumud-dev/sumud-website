@@ -6,19 +6,24 @@
 
 'use server';
 
-import { promises as fs } from 'fs';
-import path from 'path';
 import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
+import {
+  readHeaderConfig as readHeaderConfigFromStorage,
+  readFooterConfig as readFooterConfigFromStorage,
+  writeHeaderConfig as writeHeaderConfigToStorage,
+  writeFooterConfig as writeFooterConfigToStorage,
+  type LegacyHeaderConfig,
+  type LegacyFooterConfig,
+  type SocialLink as StorageSocialLink,
+} from '@/src/lib/navigation/file-storage';
+import { listPages } from '@/src/lib/pages/file-storage';
 
-// Base directory for navigation config files
-const NAVIGATION_CONFIG_DIR = path.join(process.cwd(), 'content', 'navigation');
-
-// ============================================
-// TYPES
-// ============================================
-
+// Re-export types for compatibility
 export type Locale = 'en' | 'ar' | 'fi';
+export type HeaderConfig = LegacyHeaderConfig;
+export type FooterConfig = LegacyFooterConfig;
+export type SocialLink = StorageSocialLink;
 
 export interface TranslatedText {
   en: string;
@@ -31,39 +36,6 @@ export interface NavLink {
   labels: TranslatedText;
   href: string;
   children?: NavLink[];
-}
-
-export interface SocialLink {
-  platform: string;
-  url: string;
-}
-
-export interface HeaderConfig {
-  siteName: TranslatedText;
-  logo?: string;
-  navigationLinks: NavLink[];
-  updatedAt: string;
-}
-
-export interface FooterConfig {
-  description: TranslatedText;
-  logo?: string;
-  quickLinks: NavLink[];
-  getInvolvedLinks: NavLink[];
-  resourceLinks: NavLink[];
-  legalLinks: NavLink[];
-  socialLinks: SocialLink[];
-  newsletter: {
-    title: TranslatedText;
-    subtitle: TranslatedText;
-  };
-  copyright: TranslatedText;
-  contact: {
-    email: string;
-    phone: string;
-    location: string;
-  };
-  updatedAt: string;
 }
 
 // ============================================
@@ -86,24 +58,6 @@ async function requireAuth(): Promise<string> {
   return userId;
 }
 
-/**
- * Ensure the content/navigation directory exists
- */
-async function ensureConfigDir(): Promise<void> {
-  try {
-    await fs.mkdir(NAVIGATION_CONFIG_DIR, { recursive: true });
-  } catch {
-    // Directory may already exist
-  }
-}
-
-/**
- * Get the file path for a config
- */
-function getConfigFilePath(configName: 'header' | 'footer'): string {
-  return path.join(NAVIGATION_CONFIG_DIR, `${configName}.json`);
-}
-
 // ============================================
 // HEADER ACTIONS
 // ============================================
@@ -113,19 +67,9 @@ function getConfigFilePath(configName: 'header' | 'footer'): string {
  */
 export async function getHeaderConfig(): Promise<ActionResult<HeaderConfig>> {
   try {
-    const filePath = getConfigFilePath('header');
-    const content = await fs.readFile(filePath, 'utf-8');
-    return { success: true, data: JSON.parse(content) as HeaderConfig };
+    const config = await readHeaderConfigFromStorage();
+    return { success: true, data: config };
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      // Return default config if file doesn't exist
-      const defaultConfig: HeaderConfig = {
-        siteName: { en: 'Sumud', ar: 'صمود', fi: 'Sumud' },
-        navigationLinks: [],
-        updatedAt: new Date().toISOString(),
-      };
-      return { success: true, data: defaultConfig };
-    }
     console.error('Error reading header config:', error);
     return {
       success: false,
@@ -142,18 +86,16 @@ export async function updateHeaderConfig(
 ): Promise<ActionResult<HeaderConfig>> {
   try {
     await requireAuth();
-    await ensureConfigDir();
+
+    await writeHeaderConfigToStorage(config);
+
+    // Revalidate all pages that use the header
+    revalidatePath('/', 'layout');
 
     const updatedConfig: HeaderConfig = {
       ...config,
       updatedAt: new Date().toISOString(),
     };
-
-    const filePath = getConfigFilePath('header');
-    await fs.writeFile(filePath, JSON.stringify(updatedConfig, null, 2), 'utf-8');
-
-    // Revalidate all pages that use the header
-    revalidatePath('/', 'layout');
 
     return {
       success: true,
@@ -178,44 +120,9 @@ export async function updateHeaderConfig(
  */
 export async function getFooterConfig(): Promise<ActionResult<FooterConfig>> {
   try {
-    const filePath = getConfigFilePath('footer');
-    const content = await fs.readFile(filePath, 'utf-8');
-    const config = JSON.parse(content) as Partial<FooterConfig>;
-    
-    // Migrate old config files that don't have the contact property
-    if (!config.contact) {
-      config.contact = {
-        email: 'info@sumud.fi',
-        phone: '+358 XX XXX XXXX',
-        location: 'Helsinki, Finland',
-      };
-    }
-    
-    return { success: true, data: config as FooterConfig };
+    const config = await readFooterConfigFromStorage();
+    return { success: true, data: config };
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      // Return default config if file doesn't exist
-      const defaultConfig: FooterConfig = {
-        description: { en: '', ar: '', fi: '' },
-        quickLinks: [],
-        getInvolvedLinks: [],
-        resourceLinks: [],
-        legalLinks: [],
-        socialLinks: [],
-        newsletter: {
-          title: { en: 'Stay Updated', ar: 'ابق على اطلاع', fi: 'Pysy ajan tasalla' },
-          subtitle: { en: '', ar: '', fi: '' },
-        },
-        copyright: { en: '', ar: '', fi: '' },
-        contact: {
-          email: 'info@sumud.fi',
-          phone: '+358 XX XXX XXXX',
-          location: 'Helsinki, Finland',
-        },
-        updatedAt: new Date().toISOString(),
-      };
-      return { success: true, data: defaultConfig };
-    }
     console.error('Error reading footer config:', error);
     return {
       success: false,
@@ -232,18 +139,16 @@ export async function updateFooterConfig(
 ): Promise<ActionResult<FooterConfig>> {
   try {
     await requireAuth();
-    await ensureConfigDir();
+
+    await writeFooterConfigToStorage(config);
+
+    // Revalidate all pages that use the footer
+    revalidatePath('/', 'layout');
 
     const updatedConfig: FooterConfig = {
       ...config,
       updatedAt: new Date().toISOString(),
     };
-
-    const filePath = getConfigFilePath('footer');
-    await fs.writeFile(filePath, JSON.stringify(updatedConfig, null, 2), 'utf-8');
-
-    // Revalidate all pages that use the footer
-    revalidatePath('/', 'layout');
 
     return {
       success: true,
@@ -275,35 +180,17 @@ export interface AvailablePage {
  */
 export async function getAvailablePages(): Promise<ActionResult<AvailablePage[]>> {
   try {
-    const pagesDir = path.join(process.cwd(), 'content', 'pages');
-    const files = await fs.readdir(pagesDir);
-    const jsonFiles = files.filter(f => f.endsWith('.json'));
+    const allPages = await listPages();
     
-    const pages: AvailablePage[] = [];
+    // Only include published pages
+    const publishedPages = allPages.filter(page => page.status === 'published');
     
-    for (const file of jsonFiles) {
-      try {
-        const filePath = path.join(pagesDir, file);
-        const content = await fs.readFile(filePath, 'utf-8');
-        const page = JSON.parse(content);
-        
-        // Only include published pages
-        if (page.status !== 'published') continue;
-        
-        // Extract title from English translation or first available
-        const translation = page.translations?.en 
-          || page.translations?.ar 
-          || page.translations?.fi;
-        
-        pages.push({
-          slug: page.slug,
-          path: page.path,
-          title: translation?.title || page.slug,
-        });
-      } catch (error) {
-        console.error(`Error reading page file ${file}:`, error);
-      }
-    }
+    // Map to AvailablePage format
+    const pages: AvailablePage[] = publishedPages.map(page => ({
+      slug: page.slug,
+      path: page.path,
+      title: page.title,
+    }));
     
     // Sort alphabetically by title
     return { 

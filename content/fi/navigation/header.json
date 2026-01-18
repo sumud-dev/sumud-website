@@ -1,0 +1,28 @@
+{
+  "id": "header",
+  "siteName": "Sumud",
+  "logo": "https://res.cloudinary.com/df370s3je/image/upload/v1768483019/sumud/branding/cz5tbqdwhptq0ovkftvb.svg",
+  "items": [
+    {
+      "label": "Kampanjat",
+      "href": "/campaigns"
+    },
+    {
+      "label": "Artikkelit",
+      "href": "/articles"
+    },
+    {
+      "label": "Tietoa",
+      "href": "/about"
+    },
+    {
+      "label": "Tapahtumat",
+      "href": "/events"
+    },
+    {
+      "label": "Ota yhteyttä",
+      "href": "/contact"
+    }
+  ],
+  "updatedAt": "2026-01-17T00:00:00.000Z"
+}

@@ -1,0 +1,127 @@
+{
+  "slug": "articles",
+  "title": "Articles - Sumud",
+  "description": "Read our latest articles on Palestinian culture, history, and current events",
+  "status": "published",
+  "createdAt": "2026-01-07T12:00:00.000Z",
+  "updatedAt": "2026-01-07T12:00:00.000Z",
+  "blocks": [
+    {
+      "id": "articles-page-hero",
+      "type": "page-hero",
+      "content": {
+        "icon": "BookOpen",
+        "content": {
+          "en": {
+            "title": "Articles & Stories",
+            "subtitle": "Read & Learn",
+            "description": "Explore articles about Palestinian culture, history, current events, and personal stories that shape our movement."
+          },
+          "fi": {
+            "title": "Artikkelit ja tarinat",
+            "subtitle": "Lue ja opi",
+            "description": "Tutustu artikkeleihin palestiinalaisesta kulttuurista, historiasta, ajankohtaisista tapahtumista ja henkilökohtaisista tarinoista, jotka muokkaavat liikettämme."
+          },
+          "ar": {
+            "title": "المقالات والقصص",
+            "subtitle": "اقرأ وتعلم",
+            "description": "استكشف المقالات حول الثقافة الفلسطينية والتاريخ والأحداث الجارية والقصص الشخصية التي تشكل حركتنا."
+          }
+        }
+      }
+    },
+    {
+      "id": "articles-page-text",
+      "type": "text",
+      "content": {
+        "content": {
+          "en": {
+            "searchPlaceholder": "Search articles...",
+            "filterLabel": "Filter by Category",
+            "allCategories": "All Categories",
+            "featuredLabel": "Featured Article",
+            "readMore": "Read Article",
+            "readTime": "min read",
+            "noArticlesTitle": "No articles found",
+            "noArticlesDescription": "Try adjusting your filters or search terms.",
+            "loadingTitle": "Loading Articles",
+            "loadingMessage": "Please wait while we fetch the latest articles...",
+            "errorTitle": "Failed to Load Articles",
+            "errorMessage": "There was an error loading articles. Please try again.",
+            "tryAgain": "Try Again",
+            "recentArticles": "Recent Articles",
+            "categories": "Categories"
+          },
+          "fi": {
+            "searchPlaceholder": "Etsi artikkeleita...",
+            "filterLabel": "Suodata kategorialla",
+            "allCategories": "Kaikki kategoriat",
+            "readMore": "Lue artikkeli",
+            "readTime": "min lukuaika",
+            "noArticlesTitle": "Artikkeleita ei löytynyt",
+            "noArticlesDescription": "Kokeile säätää suodattimia tai hakutermejä.",
+            "loadingTitle": "Ladataan artikkeleita",
+            "loadingMessage": "Odota, kun haemme uusimmat artikkelit...",
+            "errorTitle": "Artikkelien lataaminen epäonnistui",
+            "errorMessage": "Artikkelien lataamisessa tapahtui virhe. Yritä uudelleen.",
+            "tryAgain": "Yritä uudelleen",
+            "recentArticles": "Viimeisimmät artikkelit",
+            "categories": "Kategoriat"
+          },
+          "ar": {
+            "searchPlaceholder": "البحث في المقالات...",
+            "filterLabel": "تصفية حسب الفئة",
+            "allCategories": "جميع الفئات",
+
+            "readMore": "اقرأ المقال",
+            "readTime": "دقيقة قراءة",
+            "noArticlesTitle": "لم يتم العثور على مقالات",
+            "noArticlesDescription": "حاول ضبط الفلاتر أو مصطلحات البحث.",
+            "loadingTitle": "جارٍ تحميل المقالات",
+            "loadingMessage": "يرجى الانتظار بينما نجلب أحدث المقالات...",
+            "errorTitle": "فشل تحميل المقالات",
+            "errorMessage": "حدث خطأ أثناء تحميل المقالات. يرجى المحاولة مرة أخرى.",
+            "tryAgain": "حاول مرة أخرى",
+            "recentArticles": "المقالات الأخيرة",
+            "categories": "الفئات"
+          }
+        }
+      }
+    },
+    {
+      "id": "articles-page-categories",
+      "type": "text",
+      "content": {
+        "content": {
+          "en": {
+            "all": "All",
+            "news": "News",
+            "analysis": "Analysis",
+            "culture": "Culture",
+            "history": "History",
+            "activism": "Activism",
+            "personal": "Personal Stories"
+          },
+          "fi": {
+            "all": "Kaikki",
+            "news": "Uutiset",
+            "analysis": "Analyysi",
+            "culture": "Kulttuuri",
+            "history": "Historia",
+            "activism": "Aktivismi",
+            "personal": "Henkilökohtaiset tarinat"
+          },
+          "ar": {
+            "all": "الكل",
+            "news": "أخبار",
+            "analysis": "تحليل",
+            "culture": "ثقافة",
+            "history": "تاريخ",
+            "activism": "نشاط",
+            "personal": "قصص شخصية"
+          }
+        }
+      }
+    }
+  ]
+}

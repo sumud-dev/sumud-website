@@ -7,7 +7,6 @@ import { motion } from "framer-motion";
 import {
   Share2,
   Bookmark,
-  TrendingUp,
   Sparkles,
   Heart,
   MoreHorizontal,
@@ -145,14 +144,15 @@ export default function ArticleCard({
   const readTime = Math.max(1, Math.round(wordCount / 200));
 
   // Mock engagement data (in real app, this would come from API)
+  // Use deterministic values based on article ID to avoid hydration errors
+  const articleIdHash = article.id ? article.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0;
   const engagementData = {
-    views: Math.floor(Math.random() * 1000) + 100,
-    likes: Math.floor(Math.random() * 100) + 10,
-    shares: Math.floor(Math.random() * 50) + 5,
+    views: (articleIdHash % 900) + 100,
+    likes: (articleIdHash % 90) + 10,
+    shares: (articleIdHash % 45) + 5,
     isNew: article.publishedAt
       ? new Date(article.publishedAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
       : false,
-    isTrending: Math.random() > 0.8,
   };
 
   const handleShare = () => {
@@ -239,7 +239,7 @@ export default function ArticleCard({
                   <span>·</span>
                   <div className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    <span>{formatArticleDate(article.publishedAt)}</span>
+                    <span suppressHydrationWarning>{formatArticleDate(article.publishedAt)}</span>
                   </div>
                 </div>
 
@@ -361,7 +361,7 @@ export default function ArticleCard({
                 <span>·</span>
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  <span>{formatArticleDate(article.publishedAt)}</span>
+                  <span suppressHydrationWarning>{formatArticleDate(article.publishedAt)}</span>
                 </div>
               </div>
             </div>
@@ -424,7 +424,7 @@ export default function ArticleCard({
                   <span>{readTime} min</span>
                 </div>
                 <span>·</span>
-                <span>{formatArticleDate(article.publishedAt)}</span>
+                <span suppressHydrationWarning>{formatArticleDate(article.publishedAt)}</span>
               </div>
             </div>
 
@@ -521,7 +521,7 @@ export default function ArticleCard({
                   <span>{readTime} min</span>
                 </div>
                 <span>·</span>
-                <span>{formatArticleDate(article.publishedAt)}</span>
+                <span suppressHydrationWarning>{formatArticleDate(article.publishedAt)}</span>
               </div>
 
               {showSocialActions && (

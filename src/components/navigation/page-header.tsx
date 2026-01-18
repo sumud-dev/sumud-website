@@ -235,7 +235,7 @@ export function PetitionPageHeader({
         <div className="flex items-center space-x-6 text-sm text-gray-600">
           {signatures !== undefined && (
             <div className="flex items-center space-x-2">
-              <span className="font-semibold text-[#781D32] text-lg">
+              <span className="font-semibold text-[#781D32] text-lg" suppressHydrationWarning>
                 {signatures.toLocaleString()}
               </span>
               <span>signatures</span>
@@ -244,7 +244,7 @@ export function PetitionPageHeader({
           {target !== undefined && (
             <div className="flex items-center space-x-2">
               <span>Target:</span>
-              <span className="font-medium">{target.toLocaleString()}</span>
+              <span className="font-medium" suppressHydrationWarning>{target.toLocaleString()}</span>
             </div>
           )}
           {signatures !== undefined && target !== undefined && (
@@ -304,7 +304,7 @@ export function ArticlePageHeader({
             </div>
           )}
           {publishedDate && (
-            <div>
+            <div suppressHydrationWarning>
               {new Date(publishedDate).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",

@@ -68,7 +68,7 @@ export function EventsQuickActions({
               Selected Date:
             </p>
             <div className="flex items-center justify-between p-3 bg-[#781D32]/10 rounded-md border border-[#781D32]/30 shadow-sm">
-              <span className="text-sm text-[#781D32] font-semibold">
+              <span className="text-sm text-[#781D32] font-semibold" suppressHydrationWarning>
                 {selectedDate.toLocaleDateString()}
               </span>
               <Button
