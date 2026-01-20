@@ -42,7 +42,7 @@ import FooterEditor from "@/src/components/admin/content/FooterEditor";
 import ButtonsEditor from "@/src/components/admin/content/ButtonsEditor";
 
 // Mock types
-type Locale = "en" | "ar" | "fi";
+type Locale = "en" | "fi";
 type ContentNamespace = string;
 
 // Mock namespace info
@@ -75,7 +75,6 @@ const iconMap: Record<string, React.ElementType> = {
 
 const localeNames: Record<Locale, string> = {
   en: "English",
-  ar: "العربية",
   fi: "Suomi",
 };
 
@@ -117,7 +116,6 @@ function NamespaceCard({ namespace, locale, itemCount }: NamespaceCardProps) {
 const mockNamespaces = ["common", "navigation", "homepage", "about", "team", "articles"];
 const mockStats = [
   { locale: "en", count: 145, namespaces: 6 },
-  { locale: "ar", count: 132, namespaces: 6 },
   { locale: "fi", count: 138, namespaces: 6 },
 ];
 
@@ -172,7 +170,7 @@ export default function AdminContentPage() {
         <TabsContent value="translations" className="mt-6 space-y-6">
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {(["en", "ar", "fi"] as Locale[]).map((locale) => {
+            {(["en", "fi"] as Locale[]).map((locale) => {
               const localeStats = stats.find((s) => s.locale === locale);
               return (
                 <Card
@@ -266,7 +264,7 @@ export default function AdminContentPage() {
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium">{t("selectLanguage")}:</span>
             <div className="flex gap-2">
-              {(["en", "ar", "fi"] as Locale[]).map((locale) => (
+              {(["en", "fi"] as Locale[]).map((locale) => (
                 <Button
                   key={locale}
                   variant={activeLocale === locale ? "default" : "outline"}
@@ -289,7 +287,7 @@ export default function AdminContentPage() {
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium">{t("selectLanguage")}:</span>
             <div className="flex gap-2">
-              {(["en", "ar", "fi"] as Locale[]).map((locale) => (
+              {(["en", "fi"] as Locale[]).map((locale) => (
                 <Button
                   key={locale}
                   variant={activeLocale === locale ? "default" : "outline"}
@@ -312,7 +310,7 @@ export default function AdminContentPage() {
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium">{t("selectLanguage")}:</span>
             <div className="flex gap-2">
-              {(["en", "ar", "fi"] as Locale[]).map((locale) => (
+              {(["en", "fi"] as Locale[]).map((locale) => (
                 <Button
                   key={locale}
                   variant={activeLocale === locale ? "default" : "outline"}

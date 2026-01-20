@@ -154,7 +154,7 @@ export default function ContentSearchPage() {
           >
             All Languages
           </Button>
-          {(["en", "ar", "fi"] as Locale[]).map((locale) => (
+          {(["en", "fi"] as Locale[]).map((locale) => (
             <Button
               key={locale}
               variant={activeLocale === locale ? "default" : "outline"}

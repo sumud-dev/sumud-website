@@ -40,7 +40,7 @@ export default function NewEventPage() {
         title: data.title,
         content: data.content,
         status: data.status,
-        language: (data.language || "en") as "en" | "fi" | "ar",
+        language: (data.language || "en") as "en" | "fi",
         featuredImage: data.featuredImageUrl || undefined,
         authorName: data.authorName || undefined,
         altTexts: parseJsonField(data.altTexts),

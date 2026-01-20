@@ -38,6 +38,7 @@ const DONATION_AMOUNTS = [15, 25, 50, 100, 250];
 
 export default function JoinPage() {
   const locale = useLocale();
+  const isRtl = false; // No RTL support currently
 
   const [selectedAmount, setSelectedAmount] = useState<number | null>(50);
   const [customAmount, setCustomAmount] = useState("");

@@ -18,6 +18,7 @@ export const PAGE_BLOCK_TYPES = [
   'form',
   'video',
   'divider',
+  'contact-info',
   // Section layouts
   'heritage-hero',
   'news-section',
@@ -123,6 +124,15 @@ export interface VideoBlockContent {
 
 export interface DividerBlockContent {
   style: 'line' | 'dashed' | 'space';
+}
+
+export interface ContactInfoBlockContent {
+  items: Array<{
+    icon: string;
+    label: string;
+    value: string;
+    href?: string;
+  }>;
 }
 
 // Section Layout Block Content
@@ -289,6 +299,7 @@ export type PageBlockContent =
   | FormBlockContent
   | VideoBlockContent
   | DividerBlockContent
+  | ContactInfoBlockContent
   | HeritageHeroBlockContent
   | NewsSectionBlockContent
   | EventsSectionBlockContent
@@ -360,6 +371,13 @@ export const DEFAULT_BLOCK_CONTENT: Record<PageBlockType, PageBlockContent> = {
   divider: {
     style: 'line',
   } as DividerBlockContent,
+  'contact-info': {
+    items: [
+      { icon: 'mail', label: 'Email', value: 'info@example.com', href: 'mailto:info@example.com' },
+      { icon: 'phone', label: 'Phone', value: '+358 123 456 789', href: 'tel:+358123456789' },
+      { icon: 'message', label: 'Message', value: 'Send us a message' },
+    ],
+  } as ContactInfoBlockContent,
   'heritage-hero': {
     title: 'Preserving Our Heritage',
     subtitle: 'Building Our Future',

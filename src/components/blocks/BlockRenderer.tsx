@@ -145,26 +145,42 @@ export function HeroBlock({ content }: { content: HeroBlockContent }) {
 }
 
 // Stats Block
-export function StatsBlock({ content }: { content: StatsBlockContent }) {
+export function StatsBlock({ content, locale = 'en' }: { content: StatsBlockContent; locale?: string }) {
+  // Ensure content and items exist
+  if (!content || !content.items || !Array.isArray(content.items)) {
+    return null;
+  }
+  
   return (
     <section className="py-16 bg-muted/50">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          {content.items.map((item, idx) => (
-            <motion.div
-              key={idx}
-              className="text-center"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              viewport={{ once: true }}
-            >
-              <div className="text-4xl md:text-5xl font-bold text-primary mb-2">
-                {item.value}
-              </div>
-              <div className="text-muted-foreground">{item.label}</div>
-            </motion.div>
-          ))}
+          {content.items.map((item, idx) => {
+            // Handle both localized and non-localized items
+            const itemData = ((item && typeof item === 'object' && ('en' in item || 'fi' in item))
+              ? getLocalizedContent(item as any, locale)
+              : item) as { value: string; label: string };
+            
+            if (!itemData || typeof itemData !== 'object' || !('value' in itemData) || !('label' in itemData)) {
+              return null;
+            }
+            
+            return (
+              <motion.div
+                key={idx}
+                className="text-center"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <div className="text-4xl md:text-5xl font-bold text-primary mb-2">
+                  {itemData.value}
+                </div>
+                <div className="text-muted-foreground">{itemData.label}</div>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -404,6 +420,11 @@ export function CtaBlock({ content }: { content: CtaBlockContent }) {
 
 // Form Block (placeholder)
 export function FormBlock({ content }: { content: FormBlockContent }) {
+  // Return early if fields is not available
+  if (!content || !content.fields || !Array.isArray(content.fields)) {
+    return null;
+  }
+  
   return (
     <div className="container mx-auto px-4 py-8 max-w-xl">
       <form className="space-y-4">
@@ -1260,9 +1281,9 @@ function getLocalizedContent<T>(content: { en: T; fi?: T }, locale: string): T {
 // Page Hero Block - Editable hero section
 export function PageHeroBlock({ content, locale = 'en' }: { content: PageHeroBlockContent; locale?: string }) {
   // Handle both nested locale structure and flat content
-  const localizedContent = 'en' in content || 'fi' in content
+  const localizedContent = ('en' in content || 'fi' in content
     ? getLocalizedContent(content as any, locale)
-    : content;
+    : content) as { title: string; subtitle?: string; description?: string };
   const Icon = content.icon ? iconMap[content.icon] : Globe;
 
   return (
@@ -1347,9 +1368,9 @@ export function PageHeroBlock({ content, locale = 'en' }: { content: PageHeroBlo
 // Mission Section Block - Editable mission statement
 export function MissionSectionBlock({ content, locale = 'en' }: { content: MissionSectionBlockContent; locale?: string }) {
   // Handle both nested locale structure and flat content
-  const localizedContent = 'content' in content && (content.content && typeof content.content === 'object' && ('en' in content.content || 'fi' in content.content))
+  const localizedContent = ('content' in content && (content.content && typeof content.content === 'object' && ('en' in content.content || 'fi' in content.content))
     ? getLocalizedContent(content.content as any, locale)
-    : content;
+    : content) as { title?: string; description?: string };
 
   return (
     <motion.section
@@ -1383,9 +1404,9 @@ export function MissionSectionBlock({ content, locale = 'en' }: { content: Missi
 
 // Features Section Block - Editable features grid
 export function FeaturesSectionBlock({ content, locale = 'en' }: { content: FeaturesSectionBlockContent; locale?: string }) {
-  const headerContent = (content.header && typeof content.header === 'object' && ('en' in content.header || 'fi' in content.header || 'fi' in content.header))
+  const headerContent = ((content.header && typeof content.header === 'object' && ('en' in content.header || 'fi' in content.header))
     ? getLocalizedContent(content.header as any, locale)
-    : content.header;
+    : content.header) as { title?: string; subtitle?: string } | undefined;
   const columns = content.columns || 4;
 
   const gridCols = {
@@ -1393,6 +1414,30 @@ export function FeaturesSectionBlock({ content, locale = 'en' }: { content: Feat
     3: "md:grid-cols-3",
     4: "md:grid-cols-2 lg:grid-cols-4",
   };
+
+  // Return early if items is not available
+  if (!content.items || !Array.isArray(content.items) || content.items.length === 0) {
+    return (
+      <motion.section
+        className="py-16"
+        variants={staggerContainer}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div className="text-center mb-12" variants={fadeInUp}>
+            <h2 className="text-3xl lg:text-4xl font-bold text-[#3E442B] mb-4">
+              {headerContent?.title}
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              {headerContent?.subtitle}
+            </p>
+          </motion.div>
+        </div>
+      </motion.section>
+    );
+  }
 
   return (
     <motion.section
@@ -1405,19 +1450,19 @@ export function FeaturesSectionBlock({ content, locale = 'en' }: { content: Feat
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div className="text-center mb-12" variants={fadeInUp}>
           <h2 className="text-3xl lg:text-4xl font-bold text-[#3E442B] mb-4">
-            {headerContent.title}
+            {headerContent?.title}
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            {headerContent.subtitle}
+            {headerContent?.subtitle}
           </p>
         </motion.div>
 
         <div className={cn("grid gap-6", gridCols[columns])}>
           {content.items.map((item, index) => {
             const ItemIcon = iconMap[item.icon] || Globe;
-            const itemContent = (item.content && typeof item.content === 'object' && ('en' in item.content || 'fi' in item.content || 'fi' in item.content))
+            const itemContent = ((item.content && typeof item.content === 'object' && ('en' in item.content || 'fi' in item.content))
               ? getLocalizedContent(item.content as any, locale)
-              : item.content;
+              : item.content) as { title: string; description: string };
             return (
               <motion.div
                 key={item.key}
@@ -1453,9 +1498,33 @@ export function FeaturesSectionBlock({ content, locale = 'en' }: { content: Feat
 
 // Values Section Block - Editable values display
 export function ValuesSectionBlock({ content, locale = 'en' }: { content: ValuesSectionBlockContent; locale?: string }) {
-  const headerContent = (content.header && typeof content.header === 'object' && ('en' in content.header || 'fi' in content.header || 'fi' in content.header))
+  const headerContent = ((content.header && typeof content.header === 'object' && ('en' in content.header || 'fi' in content.header))
     ? getLocalizedContent(content.header as any, locale)
-    : content.header;
+    : content.header) as { title?: string; subtitle?: string } | undefined;
+
+  // Return early if items is not available
+  if (!content.items || !Array.isArray(content.items) || content.items.length === 0) {
+    return (
+      <motion.section
+        className="py-16"
+        variants={staggerContainer}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div className="text-center mb-12" variants={fadeInUp}>
+            <h2 className="text-3xl lg:text-4xl font-bold text-[#3E442B] mb-4">
+              {headerContent?.title}
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              {headerContent?.subtitle}
+            </p>
+          </motion.div>
+        </div>
+      </motion.section>
+    );
+  }
 
   return (
     <motion.section
@@ -1468,19 +1537,19 @@ export function ValuesSectionBlock({ content, locale = 'en' }: { content: Values
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div className="text-center mb-12" variants={fadeInUp}>
           <h2 className="text-3xl lg:text-4xl font-bold text-[#3E442B] mb-4">
-            {headerContent.title}
+            {headerContent?.title}
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            {headerContent.subtitle}
+            {headerContent?.subtitle}
           </p>
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-8">
           {content.items.map((item, index) => {
             const ItemIcon = iconMap[item.icon] || Heart;
-            const itemContent = (item.content && typeof item.content === 'object' && ('en' in item.content || 'fi' in item.content || 'fi' in item.content))
+            const itemContent = ((item.content && typeof item.content === 'object' && ('en' in item.content || 'fi' in item.content || 'fi' in item.content))
               ? getLocalizedContent(item.content as any, locale)
-              : item.content;
+              : item.content) as { title: string; description: string };
             return (
               <motion.div
                 key={item.key}
@@ -1515,16 +1584,40 @@ export function ValuesSectionBlock({ content, locale = 'en' }: { content: Values
           })}
         </div>
       </div>
-  // Handle both nested locale structure and flat content
     </motion.section>
   );
 }
 
 // Engagement Section Block - Editable engagement cards
 export function EngagementSectionBlock({ content, locale = 'en' }: { content: EngagementSectionBlockContent; locale?: string }) {
-  const headerContent = (content.header && typeof content.header === 'object' && ('en' in content.header || 'fi' in content.header || 'fi' in content.header))
+  const headerContent = ((content.header && typeof content.header === 'object' && ('en' in content.header || 'fi' in content.header))
     ? getLocalizedContent(content.header as any, locale)
-    : content.header
+    : content.header) as { title?: string; subtitle?: string } | undefined;
+    
+  // Return early if items is not available
+  if (!content.items || !Array.isArray(content.items) || content.items.length === 0) {
+    return (
+      <motion.section
+        className="py-16"
+        variants={staggerContainer}
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div className="text-center mb-12" variants={fadeInUp}>
+            <h2 className="text-3xl lg:text-4xl font-bold text-[#3E442B] mb-4">
+              {headerContent?.title}
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              {headerContent?.subtitle}
+            </p>
+          </motion.div>
+        </div>
+      </motion.section>
+    );
+  }
+    
   return (
     <motion.section
       className="py-16"
@@ -1536,19 +1629,19 @@ export function EngagementSectionBlock({ content, locale = 'en' }: { content: En
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div className="text-center mb-12" variants={fadeInUp}>
           <h2 className="text-3xl lg:text-4xl font-bold text-[#3E442B] mb-4">
-            {headerContent.title}
+            {headerContent?.title}
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            {headerContent.subtitle}
+            {headerContent?.subtitle}
           </p>
         </motion.div>
 
         <div className="grid md:grid-cols-2 gap-8">
           {content.items.map((item, index) => {
             const ItemIcon = iconMap[item.icon] || FileText;
-            const itemContent = (item.content && typeof item.content === 'object' && ('en' in item.content || 'fi' in item.content || 'fi' in item.content))
+            const itemContent = ((item.content && typeof item.content === 'object' && ('en' in item.content || 'fi' in item.content || 'fi' in item.content))
               ? getLocalizedContent(item.content as any, locale)
-              : item.content;
+              : item.content) as { title: string; description: string; action: string };
             return (
               <motion.div
                 key={item.key}
@@ -1599,9 +1692,9 @@ export function EngagementSectionBlock({ content, locale = 'en' }: { content: En
 
 // CTA Section Block - Editable call-to-action
 export function CtaSectionBlock({ content, locale = 'en' }: { content: CtaSectionBlockContent; locale?: string }) {
-  const localizedContent = (content.content && typeof content.content === 'object' && ('en' in content.content || 'fi' in content.content || 'fi' in content.content))
+  const localizedContent = ((content.content && typeof content.content === 'object' && ('en' in content.content || 'fi' in content.content))
     ? getLocalizedContent(content.content as any, locale)
-    : content;
+    : content) as { title?: string; description?: string; primaryButtonText?: string; secondaryButtonText?: string };
 
   return (
     <motion.section
@@ -1691,7 +1784,7 @@ export function BlockRenderer({ block, locale = 'en' }: { block: PageBlock; loca
     case "hero":
       return <HeroBlock content={block.content as HeroBlockContent} />;
     case "stats":
-      return <StatsBlock content={block.content as StatsBlockContent} />;
+      return <StatsBlock content={block.content as StatsBlockContent} locale={locale} />;
     case "campaigns-grid":
       return <CampaignsGridBlock content={block.content as CampaignsGridBlockContent} />;
     case "quote":

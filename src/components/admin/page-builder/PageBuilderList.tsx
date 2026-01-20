@@ -172,7 +172,7 @@ export function PageBuilderList() {
           <AlertDialogHeader>
             <AlertDialogTitle>{t("deleteDialog.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("deleteDialog.message", { slug: deleteConfirmSlug })}
+              {t("deleteDialog.message", { slug: deleteConfirmSlug || '' })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

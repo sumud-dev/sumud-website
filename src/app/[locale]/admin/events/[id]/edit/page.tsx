@@ -100,7 +100,7 @@ export default function EditEventPage({ params }: EditEventPageProps) {
         categories: parseJsonbField(data.categories),
         locations: parseJsonbField(data.locations),
         organizers: parseJsonbField(data.organizers),
-        language: (data.language as "en" | "fi" | "ar") || "en",
+        language: (data.language as "en" | "fi") || "en",
         authorName: cleanValue(data.authorName),
       });
 

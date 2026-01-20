@@ -329,9 +329,6 @@ export async function duplicatePageAction(slug: string): Promise<ActionResult<Pa
     if (newPage.translations.en) {
       newPage.translations.en.title = `${newPage.translations.en.title} (Copy)`;
     }
-    if (newPage.translations.ar) {
-      newPage.translations.ar.title = `${newPage.translations.ar.title} (نسخة)`;
-    }
     if (newPage.translations.fi) {
       newPage.translations.fi.title = `${newPage.translations.fi.title} (Kopio)`;
     }

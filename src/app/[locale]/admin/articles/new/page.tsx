@@ -40,7 +40,7 @@ const articleSchema = z.object({
     .max(500, "Excerpt too long"),
   content: z.string().min(1, "Content is required"),
   status: z.enum(["draft", "published", "archived"]),
-  language: z.enum(["en", "ar", "fi"]),
+  language: z.enum(["en", "fi"]),
   featuredImageUrl: z.string().optional(),
   tags: z.string().optional(),
   metaDescription: z.string().max(160, "Meta description too long").optional(),
@@ -51,7 +51,6 @@ type ArticleFormData = z.infer<typeof articleSchema>;
 
 const LANGUAGE_LABELS: Record<string, string> = {
   en: "English",
-  ar: "العربية (Arabic)",
   fi: "Suomi (Finnish)",
 };
 
@@ -262,7 +261,6 @@ export default function NewArticlePage() {
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="en">{LANGUAGE_LABELS.en}</SelectItem>
-                            <SelectItem value="ar">{LANGUAGE_LABELS.ar}</SelectItem>
                             <SelectItem value="fi">{LANGUAGE_LABELS.fi}</SelectItem>
                           </SelectContent>
                         </Select>

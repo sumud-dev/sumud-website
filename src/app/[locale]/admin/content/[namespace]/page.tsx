@@ -17,7 +17,7 @@ import ContentEditor from "@/src/components/admin/content/ContentEditor";
 
 // Mock types
 type ContentNamespace = string;
-type Locale = "en" | "ar" | "fi";
+type Locale = "en" | "fi";
 
 interface SiteContent {
   id: string;
@@ -44,21 +44,21 @@ const createMockContent = (namespace: string, locale: Locale): SiteContent[] => 
       id: `${namespace}-${locale}-1`,
       namespace,
       key: "title",
-      value: locale === "ar" ? "عنوان تجريبي" : locale === "fi" ? "Otsikko" : "Sample Title",
+      value: locale === "fi" ? "Otsikko" : "Sample Title",
       locale,
     },
     {
       id: `${namespace}-${locale}-2`,
       namespace,
       key: "description",
-      value: locale === "ar" ? "وصف تجريبي للمحتوى" : locale === "fi" ? "Kuvaus sisällöstä" : "Sample description content",
+      value: locale === "fi" ? "Kuvaus sisällöstä" : "Sample description content",
       locale,
     },
     {
       id: `${namespace}-${locale}-3`,
       namespace,
       key: "cta",
-      value: locale === "ar" ? "انقر هنا" : locale === "fi" ? "Klikkaa tästä" : "Click here",
+      value: locale === "fi" ? "Klikkaa tästä" : "Click here",
       locale,
     },
   ];
@@ -70,7 +70,6 @@ interface NamespacePageProps {
 
 const localeNames: Record<Locale, string> = {
   en: "English",
-  ar: "العربية",
   fi: "Suomi",
 };
 
@@ -83,7 +82,6 @@ export default function NamespaceEditorPage({ params }: NamespacePageProps) {
   const [activeLocale, setActiveLocale] = React.useState<Locale>(initialLocale);
   const [content, setContent] = React.useState<Record<Locale, SiteContent[]>>({
     en: [],
-    ar: [],
     fi: [],
   });
   const [isLoading, setIsLoading] = React.useState(false);
@@ -103,7 +101,6 @@ export default function NamespaceEditorPage({ params }: NamespacePageProps) {
     // Set mock data
     setContent({
       en: createMockContent(namespace, "en"),
-      ar: createMockContent(namespace, "ar"),
       fi: createMockContent(namespace, "fi"),
     });
   }, [namespace]);
@@ -165,7 +162,7 @@ export default function NamespaceEditorPage({ params }: NamespacePageProps) {
       {/* Locale Tabs */}
       <Tabs value={activeLocale} onValueChange={handleLocaleChange}>
         <TabsList className="grid w-full grid-cols-3 max-w-md">
-          {(["en", "ar", "fi"] as Locale[]).map((locale) => (
+          {(["en", "fi"] as Locale[]).map((locale) => (
             <TabsTrigger key={locale} value={locale} className="gap-2">
               <Globe className="h-4 w-4" />
               {localeNames[locale]}
@@ -182,7 +179,7 @@ export default function NamespaceEditorPage({ params }: NamespacePageProps) {
           </div>
         ) : (
           <>
-            {(["en", "ar", "fi"] as Locale[]).map((locale) => (
+            {(["en", "fi"] as Locale[]).map((locale) => (
               <TabsContent key={locale} value={locale} className="mt-6">
                 {content[locale].length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">

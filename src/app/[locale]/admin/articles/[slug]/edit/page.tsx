@@ -84,9 +84,9 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
         setCurrentSlug(resolvedParams.slug);
         
         // Try fetching in different languages (en, fi, ar)
-        const languages = ["en", "fi", "ar"];
+        const languages = ["en", "fi"];
         let foundPost = null;
-        let foundLanguage = "en";
+        const foundLanguage = "en";
         
         for (const lang of languages) {
           const result = await getPostBySlug(resolvedParams.slug, lang);

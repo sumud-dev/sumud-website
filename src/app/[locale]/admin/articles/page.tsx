@@ -36,7 +36,7 @@ const statusColors: Record<string, string> = {
 
 const ArticlesPage: React.FC = () => {
   const t = useTranslations("admin.articles");
-  const locale = useLocale() as "en" | "fi" | "ar";
+  const locale = useLocale() as "en" | "fi";
   const [searchQuery, setSearchQuery] = React.useState("");
   const [posts, setPosts] = React.useState<PostWithCategory[]>([]);
   const [loading, setLoading] = React.useState(true);

@@ -590,6 +590,10 @@ export async function updateEvent(id: string, data: Partial<{
     }
 
     const currentSlug = currentEvent.slug;
+    
+    if (!currentSlug) {
+      throw new Error('Event slug is required');
+    }
 
     // Separate language-specific fields from common fields
     const languageSpecificFields = ['title', 'description', 'content', 'location'];
@@ -598,9 +602,9 @@ export async function updateEvent(id: string, data: Partial<{
 
     Object.entries(data).forEach(([key, value]) => {
       if (languageSpecificFields.includes(key)) {
-        specificFields[key as keyof typeof data] = value;
+        (specificFields as any)[key] = value;
       } else {
-        commonFields[key as keyof typeof data] = value;
+        (commonFields as any)[key] = value;
       }
     });
 
