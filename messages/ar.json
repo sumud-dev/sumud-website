@@ -21,6 +21,14 @@
     "recommendedForSupport": "موصى به للدعم المستمر",
     "contactSupport": "تواصل مع الدعم",
     "siteName": "صمود",
+    "buttons": {
+      "takeAction": "اتخذ إجراء",
+      "readMore": "اقرأ المزيد",
+      "learnMore": "تعرف على المزيد",
+      "joinCampaign": "انضم إلى الحملة",
+      "shareCampaign": "شارك الحملة",
+      "readyToTakeAction": "هل أنت مستعد لاتخاذ إجراء؟"
+    },
     "upload": {
       "dragDrop": "اسحب وأفلت صورة هنا، أو انقر للتحديد",
       "dropHere": "أفلت الصورة هنا",
@@ -65,12 +73,22 @@
       "title": "الأحداث القادمة",
       "subtitle": "تواصل مع مجتمعنا من خلال أحداث هادفة تعزز الوعي والتضامن والتبادل الثقافي.",
       "viewAll": "عرض جميع الأحداث",
-      "registerNow": "سجل الآن"
+      "registerNow": "سجل الآن",
+      "buttons": {
+        "viewDetails": "عرض التفاصيل"
+      }
     },
     "campaigns": {
       "title": "الحملات",
       "subtitle": "انضم إلى حملاتنا للمقاطعة والمناصرة والعمل المجتمعي. اجعل صوتك مسموعاً وأحدث تغييراً حقيقياً.",
-      "viewAll": "عرض جميع الحملات"
+      "viewAll": "عرض جميع الحملات",
+      "buttons": {
+        "takeAction": "اتخذ إجراء",
+        "learnMore": "اعرف المزيد",
+        "declareYourZone": "أعلن منطقتك",
+        "joinMovement": "انضم إلى الحركة",
+        "signPetition": "وقع على العريضة"
+      }
     },
     "news": {
       "title": "آخر الأخبار",
@@ -95,9 +113,22 @@
       "getInvolved": "شارك معنا",
       "learnMore": "اعرف المزيد"
     },
-    "title": "مرحباً بك في صمود",
-    "subtitle": "وصف المنصة هنا",
-    "cta": "ابدأ الآن"
+    "cta": {
+      "title": "مستعد لإحداث فرق؟",
+      "subtitle": "انضم إلى آلاف المؤيدين الواقفين مع فلسطين",
+      "description": "صوتك مهم. سواء من خلال العضوية أو توقيع العرائض أو حضور الفعاليات، فإن كل إجراء يساهم في بناء عالم أكثر عدلاً.",
+      "joinButton": "صبح عضواً",
+      "petitionsButton": "وقع على العرائض"
+    },
+    "newsletter": {
+      "title": "ابق على اتصال",
+      "subtitle": "اشترك في نشرتنا الإخبارية للحصول على آخر التحديثات حول الأحداث والحملات وطرق دعم الحقوق الفلسطينية.",
+      "placeholder": "أدخل عنوان بريدك الإلكتروني",
+      "button": "اشترك",
+      "subscribing": "جارٍ الاشتراك...",
+      "success": "شكراً لاشتراكك! سنبقيك على اطلاع.",
+      "error": "حدث خطأ ما. يرجى المحاولة مرة أخرى."
+    }
   },
   "eventsDetail": {
     "backToEvents": "العودة إلى الفعاليات",
@@ -167,7 +198,146 @@
     }
   },
   "admin": {
-    "dashboard": "لوحة التحكم",
+    "dashboard": {
+      "title": "لوحة التحكم",
+      "pageTitle": "لوحة تحكم الإدارة",
+      "welcome": "مرحبًا بعودتك! إليك نظرة عامة على محتواك وتحليلاتك.",
+      "description": "إدارة المقالات والأعضاء والعرائض ومراقبة نشاط الموقع.",
+      "stats": {
+        "totalMembers": "إجمالي الأعضاء",
+        "publishedArticles": "المقالات المنشورة",
+        "activePetitions": "العرائض النشطة",
+        "totalSignatures": "إجمالي التوقيعات",
+        "totalArticles": "إجمالي المقالات",
+        "totalArticlesDesc": "مقارنة بالشهر الماضي",
+        "activeCampaigns": "الحملات النشطة",
+        "activeCampaignsDesc": "قيد التشغيل حاليًا",
+        "upcomingEvents": "الفعاليات القادمة",
+        "upcomingEventsDesc": "مجدولة",
+        "totalViews": "إجمالي المشاهدات",
+        "totalViewsDesc": "هذا الشهر"
+      },
+      "quickActions": "إجراءات سريعة",
+      "recentActivity": "النشاط الأخير",
+      "viewAnalytics": "عرض التحليلات",
+      "newArticle": "مقال جديد",
+      "monthlyOverview": "نظرة عامة شهرية",
+      "monthlyOverviewDesc": "مشاهدات المحتوى ومنشورات المقالات",
+      "weeklyActivity": "النشاط الأسبوعي",
+      "weeklyActivityDesc": "إنشاء المحتوى حسب النوع",
+      "contentDistribution": "توزيع المحتوى",
+      "contentDistributionDesc": "التفصيل حسب نوع المحتوى",
+      "visitorEngagement": "تفاعل الزوار",
+      "visitorEngagementDesc": "حركة الزوار بالساعة اليوم",
+      "recentArticles": "المقالات الأخيرة",
+      "recentArticlesDesc": "أحدث محتوى منشور",
+      "viewAll": "عرض الكل",
+      "topCategories": "أهم الفئات",
+      "topCategoriesDesc": "فئات المحتوى الأكثر شعبية",
+      "upcomingEventsCard": "الفعاليات القادمة",
+      "upcomingEventsCardDesc": "الفعاليات والتجمعات المجدولة",
+      "quickActionsDesc": "المهام والاختصارات الشائعة",
+      "createTab": "إنشاء",
+      "manageTab": "إدارة",
+      "createNewArticle": "إنشاء مقال جديد",
+      "startACampaign": "بدء حملة",
+      "scheduleAnEvent": "جدولة فعالية",
+      "addNewPage": "إضافة صفحة جديدة",
+      "manageArticles": "إدارة المقالات",
+      "viewCampaigns": "عرض الحملات",
+      "manageEvents": "إدارة الفعاليات",
+      "managePages": "إدارة الصفحات",
+      "published": "منشور",
+      "draft": "مسودة",
+      "articles": "مقالات"
+    },
+    "articles": {
+      "title": "المقالات",
+      "description": "إدارة مقالاتك ومنشورات المدونة",
+      "newButton": "مقال جديد",
+      "createTitle": "إنشاء مقال جديد",
+      "editTitle": "تحرير المقال",
+      "allArticles": "جميع المقالات",
+      "searchPlaceholder": "البحث في المقالات...",
+      "noArticlesFound": "لم يتم العثور على مقالات.",
+      "totalArticles": "إجمالي المقالات",
+      "published": "منشور",
+      "drafts": "المسودات",
+      "archived": "مؤرشف",
+      "viewDetails": "عرض التفاصيل",
+      "edit": "تحرير",
+      "publish": "نشر",
+      "unpublish": "إلغاء النشر",
+      "delete": "حذف",
+      "deleteConfirm": "هل أنت متأكد أنك تريد حذف \"{title}\"؟",
+      "deleteSuccess": "تم حذف المقال بنجاح",
+      "deleteFailed": "فشل حذف المقال",
+      "form": {
+        "title": "عنوان المقال",
+        "content": "محتوى المقال",
+        "category": "الفئة",
+        "status": "الحالة",
+        "featuredImage": "الصورة المميزة",
+        "metaDescription": "الوصف التعريفي"
+      }
+    },
+    "events": {
+      "title": "الفعاليات",
+      "description": "إدارة فعالياتك وتجمعاتك",
+      "newButton": "فعالية جديدة",
+      "allEvents": "جميع الفعاليات",
+      "searchPlaceholder": "البحث في الفعاليات...",
+      "noEventsFound": "لم يتم العثور على فعاليات.",
+      "totalEvents": "إجمالي الفعاليات",
+      "published": "منشور",
+      "drafts": "المسودات",
+      "archived": "مؤرشف",
+      "viewDetails": "عرض التفاصيل",
+      "edit": "تحرير",
+      "publish": "نشر",
+      "unpublish": "إلغاء النشر",
+      "archive": "أرشفة",
+      "delete": "حذف",
+      "deleteConfirm": "هل أنت متأكد؟",
+      "deleteMessage": "لا يمكن التراجع عن هذا الإجراء. سيتم حذف الفعالية \"{title}\" نهائيًا.",
+      "cancel": "إلغاء",
+      "showing": "عرض {from} إلى {to} من {total} فعالية",
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "campaigns": {
+      "title": "الحملات",
+      "description": "إدارة حملاتك",
+      "newButton": "حملة جديدة",
+      "allCampaigns": "جميع الحملات",
+      "searchPlaceholder": "البحث في الحملات...",
+      "noCampaignsFound": "لم يتم العثور على حملات.",
+      "totalCampaigns": "إجمالي الحملات",
+      "active": "نشط",
+      "drafts": "المسودات",
+      "completed": "مكتمل",
+      "paused": "متوقف",
+      "refresh": "تحديث",
+      "refreshed": "تم تحديث الحملات",
+      "statusUpdated": "تم تحديث حالة \"{title}\" إلى {status}",
+      "deleted": "تم حذف \"{title}\"",
+      "actions": {
+        "view": "عرض التفاصيل",
+        "edit": "تحرير",
+        "activate": "تفعيل",
+        "pause": "إيقاف مؤقت",
+        "resume": "استئناف",
+        "complete": "إكمال",
+        "archive": "أرشفة",
+        "delete": "حذف"
+      },
+      "table": {
+        "campaign": "الحملة",
+        "status": "الحالة",
+        "actions": "الإجراءات"
+      },
+      "deleteConfirm": "هل أنت متأكد أنك تريد حذف \"{title}\"؟"
+    },
     "users": "المستخدمون",
     "settings": "الإعدادات",
     "analytics": "التحليلات"
@@ -575,9 +745,18 @@
       "tabs": {
         "translations": "الترجمات",
         "headerMenu": "قائمة الرأس",
-        "footer": "التذييل"
+        "footer": "التذييل",
+        "buttons": "الأزرار"
       },
       "selectLanguage": "اختر اللغة",
+      "searchSections": "البحث في الأقسام...",
+      "searchAllContent": "البحث في جميع المحتويات",
+      "noContentFound": "لم يتم العثور على محتوى",
+      "noContentMessage": "لم يتم إدخال المحتوى بعد. قم بتشغيل نص الإدخال لملء قاعدة البيانات.",
+      "noSearchResults": "لا توجد أقسام تطابق \"{query}\"",
+      "keys": "مفاتيح",
+      "sections": "أقسام",
+      "backToContent": "العودة إلى المحتوى",
       "headerMenu": {
         "siteBranding": "العلامة التجارية للموقع",
         "siteBrandingDescription": "تكوين اسم الموقع المعروض في الرأس",
@@ -618,6 +797,39 @@
         "saveFooter": "حفظ التذييل",
         "saveSuccess": "تم حفظ التذييل",
         "saveError": "فشل حفظ التذييل"
+      }
+    },
+    "pageBuilder": {
+      "title": "منشئ الصفحات",
+      "description": "إنشاء وإدارة الصفحات باستخدام منشئ الصفحات المرئي.",
+      "newButton": "إنشاء صفحة جديدة",
+      "allPages": "جميع الصفحات",
+      "managePages": "إدارة صفحاتك المخصصة",
+      "noPagesYet": "لم يتم إنشاء صفحات بعد.",
+      "createFirstPage": "إنشاء صفحتك الأولى",
+      "table": {
+        "title": "العنوان",
+        "path": "المسار",
+        "status": "الحالة",
+        "actions": "الإجراءات"
+      },
+      "actions": {
+        "edit": "تحرير",
+        "duplicate": "نسخ",
+        "preview": "معاينة",
+        "delete": "حذف"
+      },
+      "deleteDialog": {
+        "title": "هل أنت متأكد؟",
+        "message": "لا يمكن التراجع عن هذا الإجراء. سيتم حذف الصفحة \"{slug}\" بشكل دائم.",
+        "cancel": "إلغاء",
+        "confirm": "حذف",
+        "success": "تم حذف الصفحة بنجاح",
+        "error": "فشل حذف الصفحة"
+      },
+      "duplicate": {
+        "success": "تم نسخ الصفحة بنجاح",
+        "error": "فشل نسخ الصفحة"
       }
     }
   }

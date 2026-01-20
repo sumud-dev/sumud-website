@@ -1,0 +1,152 @@
+{
+  "slug": "membership",
+  "title": "العضوية",
+  "description": "كن عضواً في صمود",
+  "status": "published",
+  "createdAt": "2026-01-18T12:00:00.000Z",
+  "updatedAt": "2026-01-18T12:00:00.000Z",
+  "blocks": [
+    {
+      "id": "membership-hero-1",
+      "type": "page-hero",
+      "content": {
+        "en": {
+          "title": "Join Our Community",
+          "subtitle": "Become a Member Today"
+        },
+        "ar": {
+          "title": "انضم إلى مجتمعنا",
+          "subtitle": "كن عضواً اليوم"
+        },
+        "fi": {
+          "title": "Liity yhteisöömme",
+          "subtitle": "Tule jäseneksi tänään"
+        }
+      }
+    },
+    {
+      "id": "membership-features-1",
+      "type": "features-section",
+      "content": {
+        "en": {
+          "title": "Member Benefits",
+          "description": "Get exclusive access and exclusive opportunities"
+        },
+        "ar": {
+          "title": "مزايا الأعضاء",
+          "description": "احصل على وصول حصري وفرص مستثنائية"
+        },
+        "fi": {
+          "title": "Jäsenhyödyt",
+          "description": "Saada pääsy ja eksklusiivia mahdollisuuksia"
+        }
+      }
+    },
+    {
+      "id": "membership-stats-1",
+      "type": "stats",
+      "content": {
+        "items": [
+          {
+            "en": {
+              "label": "Active Members",
+              "value": "500+"
+            },
+            "ar": {
+              "label": "أعضاء نشطون",
+              "value": "500+"
+            },
+            "fi": {
+              "label": "Aktiivisia jäseniä",
+              "value": "500+"
+            }
+          },
+          {
+            "en": {
+              "label": "Events per Year",
+              "value": "30+"
+            },
+            "ar": {
+              "label": "أحداث سنويا",
+              "value": "30+"
+            },
+            "fi": {
+              "label": "Tapahtumia vuodessa",
+              "value": "30+"
+            }
+          },
+          {
+            "en": {
+              "label": "Member Perks",
+              "value": "15+"
+            },
+            "ar": {
+              "label": "امتيازات الأعضاء",
+              "value": "15+"
+            },
+            "fi": {
+              "label": "Jäseniedut",
+              "value": "15+"
+            }
+          },
+          {
+            "en": {
+              "label": "Satisfaction Rate",
+              "value": "98%"
+            },
+            "ar": {
+              "label": "معدل الرضا",
+              "value": "98%"
+            },
+            "fi": {
+              "label": "Tyytyväisyysaste",
+              "value": "98%"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "membership-engagement-1",
+      "type": "engagement-section",
+      "content": {
+        "en": {
+          "title": "Start Your Journey",
+          "description": "Join thousands of members already supporting Palestinian cultural heritage"
+        },
+        "ar": {
+          "title": "ابدأ رحلتك",
+          "description": "انضم إلى آلاف الأعضاء الذين يدعمون التراث الثقافي الفلسطيني"
+        },
+        "fi": {
+          "title": "Aloita matkas",
+          "description": "Liity tuhansiin jäseniin, jotka jo tukevat palestiinan kulttuuriperintöä"
+        }
+      }
+    },
+    {
+      "id": "membership-cta-1",
+      "type": "cta-section",
+      "content": {
+        "en": {
+          "title": "Ready to Join?",
+          "description": "Become a member and support Palestinian cultural preservation and solidarity",
+          "buttonText": "Become a Member",
+          "buttonUrl": "/join"
+        },
+        "ar": {
+          "title": "هل أنت مستعد للانضمام؟",
+          "description": "كن عضواً ودعم الحفاظ على الثقافة الفلسطينية والتضامن",
+          "buttonText": "كن عضواً",
+          "buttonUrl": "/join"
+        },
+        "fi": {
+          "title": "Valmis liittymään?",
+          "description": "Tule jäseneksi ja tue palestiinan kulttuurin säilyttämistä ja solidaarisuutta",
+          "buttonText": "Tule jäseneksi",
+          "buttonUrl": "/join"
+        }
+      }
+    }
+  ]
+}

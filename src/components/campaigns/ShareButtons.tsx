@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Share2, Facebook, Twitter, Mail, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/src/components/ui/button";
@@ -18,6 +19,7 @@ export default function ShareButtons({ campaign }: ShareButtonsProps) {
   const [copied, setCopied] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
+  const tCommon = useTranslations("common");
 
   useEffect(() => {
     setShareUrl(`${window.location.origin}/campaigns/${campaign.slug}`);
@@ -61,7 +63,7 @@ export default function ShareButtons({ campaign }: ShareButtonsProps) {
         className="bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm border border-white/40 rounded-full px-6 h-12 text-base font-medium shadow-lg hover:shadow-xl transition-all duration-200"
       >
         <Share2 className="w-5 h-5 mr-2" />
-        Share Campaign
+        {tCommon("buttons.shareCampaign")}
       </Button>
 
       {/* Share Menu */}

@@ -50,7 +50,7 @@ export function hasEmbeddedLocales(content: unknown): boolean {
   }
   
   const keys = Object.keys(content);
-  const locales = ['en', 'fi', 'ar'];
+  const locales = ['en', 'fi'];
   
   // Check if all keys are locale codes
   return keys.length > 0 && keys.every(key => locales.includes(key));
@@ -113,7 +113,7 @@ export function normalizeBlockContent(
  * Validate locale code
  */
 export function isValidLocale(locale: string): locale is Locale {
-  return ['en', 'fi', 'ar'].includes(locale);
+  return ['en', 'fi'].includes(locale);
 }
 
 /**
@@ -123,7 +123,6 @@ export function getLocaleDisplayName(locale: Locale): string {
   const names: Record<Locale, string> = {
     en: 'English',
     fi: 'Suomi',
-    ar: 'العربية',
   };
   return names[locale] || locale;
 }
@@ -135,7 +134,6 @@ export function getLocaleFlagEmoji(locale: Locale): string {
   const flags: Record<Locale, string> = {
     en: '🇬🇧',
     fi: '🇫🇮',
-    ar: '🇵🇸',
   };
   return flags[locale] || '🌐';
 }
@@ -144,7 +142,7 @@ export function getLocaleFlagEmoji(locale: Locale): string {
  * Check if locale uses RTL text direction
  */
 export function isRTL(locale: Locale): boolean {
-  return locale === 'ar';
+  return false;
 }
 
 /**
@@ -156,7 +154,7 @@ export function formatTimestamp(
 ): string {
   try {
     const date = new Date(timestamp);
-    return date.toLocaleDateString(locale === 'fi' ? 'fi-FI' : locale === 'ar' ? 'ar' : 'en-US', {
+    return date.toLocaleDateString(locale === 'fi' ? 'fi-FI' : 'en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -214,14 +212,12 @@ export function getRelativeTime(timestamp: string, locale: Locale): string {
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     
     if (diffDays === 0) {
-      return locale === 'fi' ? 'Tänään' : locale === 'ar' ? 'اليوم' : 'Today';
+      return locale === 'fi' ? 'Tänään' : 'Today';
     } else if (diffDays === 1) {
-      return locale === 'fi' ? 'Eilen' : locale === 'ar' ? 'أمس' : 'Yesterday';
+      return locale === 'fi' ? 'Eilen' : 'Yesterday';
     } else if (diffDays < 7) {
       return locale === 'fi' 
         ? `${diffDays} päivää sitten`
-        : locale === 'ar'
-        ? `منذ ${diffDays} أيام`
         : `${diffDays} days ago`;
     } else {
       return formatTimestamp(timestamp, locale);

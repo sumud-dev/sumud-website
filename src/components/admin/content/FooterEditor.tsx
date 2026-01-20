@@ -26,7 +26,6 @@ interface FooterEditorProps {
 
 const localeNames: Record<Locale, string> = {
   en: "English",
-  ar: "العربية",
   fi: "Suomi",
 };
 
@@ -54,7 +53,6 @@ function editorLinkToConfigLink(
     labelKey: editorLink.labelKey,
     labels: {
       en: locale === "en" ? editorLink.label : existingLink?.labels.en || "",
-      ar: locale === "ar" ? editorLink.label : existingLink?.labels.ar || "",
       fi: locale === "fi" ? editorLink.label : existingLink?.labels.fi || "",
     },
     href: editorLink.href,

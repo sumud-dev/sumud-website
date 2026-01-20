@@ -1,4 +1,4 @@
-export type Locale = "en" | "ar" | "fi";
+export type Locale = "en" | "fi";
 
 export interface SiteContent {
   id: string;

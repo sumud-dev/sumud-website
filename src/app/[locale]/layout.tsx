@@ -38,7 +38,7 @@ export default async function LocaleLayout({
 
   return (
     <ClerkProvider>
-      <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} data-scroll-behavior="smooth">
+      <html lang={locale} dir="ltr" data-scroll-behavior="smooth">
         <body suppressHydrationWarning>
           <NextIntlClientProvider locale={locale} messages={messages}>
             <ReactQueryProvider>

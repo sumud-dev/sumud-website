@@ -1,0 +1,67 @@
+{
+  "slug": "privacy-policy",
+  "title": "سياسة الخصوصية",
+  "description": "سياسة الخصوصية لصمود",
+  "status": "published",
+  "createdAt": "2026-01-18T12:00:00.000Z",
+  "updatedAt": "2026-01-18T12:00:00.000Z",
+  "blocks": [
+    {
+      "id": "privacy-hero-1",
+      "type": "page-hero",
+      "content": {
+        "en": {
+          "title": "Privacy Policy",
+          "subtitle": "Your Privacy Matters to Us"
+        },
+        "ar": {
+          "title": "سياسة الخصوصية",
+          "subtitle": "خصوصيتك مهمة لنا"
+        },
+        "fi": {
+          "title": "Tietosuojakäytäntö",
+          "subtitle": "Yksityisyytesi on meille tärkeä"
+        }
+      }
+    },
+    {
+      "id": "privacy-content-1",
+      "type": "text",
+      "content": {
+        "en": {
+          "text": "<h3>Introduction</h3><p>At Sumud, we are committed to protecting your privacy and ensuring you have a positive experience on our website. This Privacy Policy explains how we collect, use, and safeguard your information.</p><h3>Information We Collect</h3><p>We collect information that you provide directly to us, such as when you fill out forms, subscribe to our newsletter, or contact us. This may include your name, email address, phone number, and other information you choose to share.</p><h3>How We Use Your Information</h3><p>Your information is used to communicate with you, provide our services, improve our website, and send you updates about our organization and events.</p><h3>Your Rights</h3><p>You have the right to access, modify, or delete your personal information at any time. Please contact us if you wish to exercise these rights.</p><h3>Contact Us</h3><p>If you have any questions about this Privacy Policy, please contact us at privacy@sumud.fi</p>"
+        },
+        "ar": {
+          "text": "<h3>المقدمة</h3><p>في صمود، نحن ملتزمون بحماية خصوصيتك وضمان حصولك على تجربة إيجابية على موقعنا. تشرح سياسة الخصوصية هذه كيفية جمعنا واستخدامنا وحماية معلوماتك.</p><h3>المعلومات التي نجمعها</h3><p>نجمع المعلومات التي تقدمها لنا مباشرة، مثل ملء النماذج أو الاشتراك في نشرتنا الإخبارية أو التواصل معنا. قد يشمل ذلك اسمك وعنوان بريدك الإلكتروني ورقم هاتفك والمعلومات الأخرى التي تختار مشاركتها.</p><h3>كيفية استخدامنا لمعلوماتك</h3><p>يتم استخدام معلوماتك للتواصل معك، وتوفير خدماتنا، وتحسين موقعنا، وإرسال تحديثات حول منظمتنا وأحداثنا.</p><h3>حقوقك</h3><p>لديك الحق في الوصول إلى معلوماتك الشخصية أو تعديلها أو حذفها في أي وقت. يرجى التواصل معنا إذا كنت ترغب في ممارسة هذه الحقوق.</p><h3>تواصل معنا</h3><p>إذا كانت لديك أي أسئلة حول سياسة الخصوصية هذه، يرجى التواصل معنا على privacy@sumud.fi</p>"
+        },
+        "fi": {
+          "text": "<h3>Johdanto</h3><p>Sumadussa olemme sitoutuneet suojelemaan yksityisyyttäsi ja varmistamaan, että sinulla on myönteinen kokemus verkkosivullamme. Tämä tietosuojakäytäntö selittää, kuinka keräämme, käytämme ja suojaamme tietojasi.</p><h3>Keräämämme tiedot</h3><p>Keräämme tietoja, jotka toimitat meille suoraan, kuten kun täytät lomakkeita, liityt uutiskirjeeseemme tai otat meihin yhteyttä. Tämä voi sisältää nimesi, sähköpostiosoitteesi, puhelinnumerosi ja muita tietoja, jotka päätät jakaa.</p><h3>Kuinka käytämme tietojasi</h3><p>Tietojasi käytetään kommunikoimaan sinulle, palveluidemme toimittamiseen, verkkosivujemme parantamiseen ja organisaatiomme ja tapahtumien päivitysten lähettämiseen.</p><h3>Oikeutesi</h3><p>Sinulla on oikeus päästä käsiksi henkilötietoihisi, muokata niitä tai poistaa ne milloin tahansa. Ota meihin yhteyttä, jos haluat käyttää näitä oikeuksia.</p><h3>Ota meihin yhteyttä</h3><p>Jos sinulla on kysymyksiä tämän tietosuojakäytännön osalta, ota meihin yhteyttä osoitteeseen privacy@sumud.fi</p>"
+        }
+      }
+    },
+    {
+      "id": "privacy-cta-1",
+      "type": "cta-section",
+      "content": {
+        "en": {
+          "title": "Questions?",
+          "description": "If you have any concerns about your privacy, please don't hesitate to contact us.",
+          "buttonText": "Contact Us",
+          "buttonUrl": "/contact"
+        },
+        "ar": {
+          "title": "أسئلة؟",
+          "description": "إذا كان لديك أي مخاوف بشأن خصوصيتك، فلا تتردد في التواصل معنا.",
+          "buttonText": "تواصل معنا",
+          "buttonUrl": "/contact"
+        },
+        "fi": {
+          "title": "Kysymyksiä?",
+          "description": "Jos sinulla on huolenaiheita yksityisyyteesi liittyen, älä epäröi ottaa meihin yhteyttä.",
+          "buttonText": "Ota yhteyttä",
+          "buttonUrl": "/contact"
+        }
+      }
+    }
+  ]
+}

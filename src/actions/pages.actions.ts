@@ -28,9 +28,9 @@ import {
 // ============================================
 
 const blockMetaSchema = z.object({
-  defaultLang: z.enum(['en', 'fi', 'ar']),
-  autoTranslated: z.array(z.enum(['en', 'fi', 'ar'])).optional(),
-  manuallyReviewed: z.array(z.enum(['en', 'fi', 'ar'])).optional(),
+  defaultLang: z.enum(['en', 'fi']),
+  autoTranslated: z.array(z.enum(['en', 'fi'])).optional(),
+  manuallyReviewed: z.array(z.enum(['en', 'fi'])).optional(),
   lastTranslated: z.string().optional(),
   lastModified: z.string().optional(),
 }).optional();
@@ -57,7 +57,6 @@ const createPageSchema = z.object({
   status: z.enum(['draft', 'published']).default('draft'),
   translations: z.object({
     en: translationSchema.optional(),
-    ar: translationSchema.optional(),
     fi: translationSchema.optional(),
   }),
 });
@@ -553,8 +552,8 @@ async function translateBlockItems(
 export async function triggerBlockTranslationAction(
   slug: string,
   blockId: string,
-  targetLocales: ('en' | 'fi' | 'ar')[],
-  sourceLang: 'en' | 'fi' | 'ar' = 'en'
+  targetLocales: ('en' | 'fi')[],
+  sourceLang: 'en' | 'fi' = 'en'
 ): Promise<ActionResult<PageData>> {
   try {
     await requireAuth();
@@ -663,7 +662,7 @@ export async function triggerBlockTranslationAction(
 export async function markBlockAsReviewedAction(
   slug: string,
   blockId: string,
-  locale: 'en' | 'fi' | 'ar'
+  locale: 'en' | 'fi'
 ): Promise<ActionResult<PageData>> {
   try {
     await requireAuth();
@@ -674,7 +673,7 @@ export async function markBlockAsReviewedAction(
     }
 
     // Find the block in any translation that has it
-    for (const lang of ['en', 'fi', 'ar'] as const) {
+    for (const lang of ['en', 'fi'] as const) {
       const translation = page.translations[lang];
       if (!translation) continue;
 

@@ -19,18 +19,17 @@ import {
 } from "lucide-react";
 import type { BlockTranslationMeta } from "@/src/lib/types/page";
 
-const SUPPORTED_LOCALES = ["en", "fi", "ar"] as const;
+const SUPPORTED_LOCALES = ["en", "fi"] as const;
 
 const localeLabels: Record<string, string> = {
   en: "EN",
   fi: "FI",
-  ar: "AR",
 };
 
 interface TranslationStatusIndicatorProps {
   meta?: BlockTranslationMeta;
-  availableLocales?: ("en" | "fi" | "ar")[];
-  onTriggerTranslation?: (targetLocales: ("en" | "fi" | "ar")[]) => void;
+  availableLocales?: ("en" | "fi")[];
+  onTriggerTranslation?: (targetLocales: ("en" | "fi")[]) => void;
   isTranslating?: boolean;
   compact?: boolean;
 }
@@ -52,9 +51,9 @@ export function TranslationStatusIndicator({
 
   const getLocaleStatus = (locale: string) => {
     if (locale === defaultLang) return "source";
-    if (manuallyReviewed.includes(locale as "en" | "fi" | "ar")) return "reviewed";
-    if (autoTranslated.includes(locale as "en" | "fi" | "ar")) return "auto";
-    if (availableLocales.includes(locale as "en" | "fi" | "ar")) return "available";
+    if (manuallyReviewed.includes(locale as "en" | "fi")) return "reviewed";
+    if (autoTranslated.includes(locale as "en" | "fi")) return "auto";
+    if (availableLocales.includes(locale as "en" | "fi")) return "available";
     return "missing";
   };
 

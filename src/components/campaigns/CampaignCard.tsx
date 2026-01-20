@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Image from "next/image";
 import { Link } from "@/src/i18n/navigation";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import {
   Calendar,
   Clock,
@@ -29,6 +30,7 @@ export default function CampaignCard({
   campaign,
   size = "default",
 }: CampaignCardProps) {
+  const tCommon = useTranslations("common");
   const getCampaignTypeColor = (type: string) => {
     const colors = {
       awareness: "#3E442B",
@@ -109,25 +111,12 @@ export default function CampaignCard({
 
   const getDaysLeft = () => {
     if (!campaign.endDate) return null;
-    // Return a placeholder value that will be updated by useEffect
-    return daysLeft;
-  };
-
-  const [daysLeft, setDaysLeft] = React.useState<number | null>(null);
-
-  // Calculate days left on client-side only to avoid hydration mismatch
-  useEffect(() => {
-    if (!campaign.endDate) return;
     const now = new Date();
     const end = new Date(campaign.endDate);
     const diffTime = end.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    setDaysLeft(diffDays > 0 ? diffDays : null);
-  }, [campaign.endDate]);
-    setDaysLeft(diffDays > 0 ? diffDays : null);
-  }, [campaign.endDate]);
-
-  const daysLeftValue = getDaysLeft();
+    return diffDays > 0 ? diffDays : 0;
+  };
 
   const typeColor = getCampaignTypeColor(campaign.campaignType || 'awareness');
   const progress = calculateProgress();
@@ -316,12 +305,12 @@ export default function CampaignCard({
                 {campaign.campaignType === "fundraising" ? (
                   <>
                     <Heart className="mr-2 h-4 w-4" />
-                    Support Campaign
+                    {tCommon("buttons.supportCampaign")}
                   </>
                 ) : (
                   <>
                     <Users className="mr-2 h-4 w-4" />
-                    Join Campaign
+                    {tCommon("buttons.joinCampaign")}
                   </>
                 )}
               </span>

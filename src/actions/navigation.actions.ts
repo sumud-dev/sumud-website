@@ -20,14 +20,13 @@ import {
 import { listPages } from '@/src/lib/pages/file-storage';
 
 // Re-export types for compatibility
-export type Locale = 'en' | 'ar' | 'fi';
+export type Locale = 'en' | 'fi';
 export type HeaderConfig = LegacyHeaderConfig;
 export type FooterConfig = LegacyFooterConfig;
 export type SocialLink = StorageSocialLink;
 
 export interface TranslatedText {
   en: string;
-  ar: string;
   fi: string;
 }
 

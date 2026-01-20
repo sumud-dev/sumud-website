@@ -30,6 +30,14 @@
     "recommendedForSupport": "Recommended for ongoing support",
     "contactSupport": "Contact Support",
     "siteName": "Sumud",
+    "buttons": {
+      "takeAction": "Take Action",
+      "readMore": "Read More",
+      "learnMore": "Learn More",
+      "joinCampaign": "Join Campaign",
+      "shareCampaign": "Share Campaign",
+      "readyToTakeAction": "Ready to Take Action?"
+    },
     "upload": {
       "dragDrop": "Drag and drop an image here, or click to select",
       "dropHere": "Drop the image here",
@@ -120,12 +128,22 @@
       "title": "Upcoming Events",
       "subtitle": "Connect with our community through meaningful events that promote awareness, solidarity, and cultural exchange.",
       "viewAll": "View All Events",
-      "registerNow": "Register Now"
+      "registerNow": "Register Now",
+      "buttons": {
+        "viewDetails": "View Details"
+      }
     },
     "campaigns": {
       "title": "Campaigns",
       "subtitle": "Join our campaigns for boycott, advocacy, and community action. Make your voice heard and create real change.",
-      "viewAll": "View All Campaigns"
+      "viewAll": "View All Campaigns",
+      "buttons": {
+        "takeAction": "Take Action",
+        "learnMore": "Learn More",
+        "declareYourZone": "Declare Your Zone",
+        "joinMovement": "Join Movement",
+        "signPetition": "Sign Petition"
+      }
     },
     "testimonials": {
       "title": "Community Voices",
@@ -137,6 +155,15 @@
       "description": "Your voice matters. Whether through membership, signing petitions, or attending events, every action counts towards building a more just world.",
       "joinButton": "Become a Member",
       "petitionsButton": "Sign Petitions"
+    },
+    "newsletter": {
+      "title": "Stay Connected",
+      "subtitle": "Subscribe to our newsletter for the latest updates on events, campaigns, and ways to support Palestinian rights.",
+      "placeholder": "Enter your email address",
+      "button": "Subscribe",
+      "subscribing": "Subscribing...",
+      "success": "Thank you for subscribing! We'll keep you updated.",
+      "error": "Something went wrong. Please try again."
     }
   },
   "eventsDetail": {
@@ -428,17 +455,57 @@
   },
   "admin": {
     "dashboard": {
-      "title": "Admin Dashboard",
-      "welcome": "Welcome to Sumud Admin Dashboard",
+      "title": "Dashboard",
+      "pageTitle": "Admin Dashboard",
+      "welcome": "Welcome back! Here's an overview of your content and analytics.",
       "description": "Manage articles, members, petitions, and monitor site activity.",
       "stats": {
         "totalMembers": "Total Members",
         "publishedArticles": "Published Articles",
         "activePetitions": "Active Petitions",
-        "totalSignatures": "Total Signatures"
+        "totalSignatures": "Total Signatures",
+        "totalArticles": "Total Articles",
+        "totalArticlesDesc": "vs last month",
+        "activeCampaigns": "Active Campaigns",
+        "activeCampaignsDesc": "currently running",
+        "upcomingEvents": "Upcoming Events",
+        "upcomingEventsDesc": "scheduled",
+        "totalViews": "Total Views",
+        "totalViewsDesc": "this month"
       },
       "quickActions": "Quick Actions",
-      "recentActivity": "Recent Activity"
+      "recentActivity": "Recent Activity",
+      "viewAnalytics": "View Analytics",
+      "newArticle": "New Article",
+      "monthlyOverview": "Monthly Overview",
+      "monthlyOverviewDesc": "Content views and article publications",
+      "weeklyActivity": "Weekly Activity",
+      "weeklyActivityDesc": "Content creation by type",
+      "contentDistribution": "Content Distribution",
+      "contentDistributionDesc": "Breakdown by content type",
+      "visitorEngagement": "Visitor Engagement",
+      "visitorEngagementDesc": "Hourly visitor traffic today",
+      "recentArticles": "Recent Articles",
+      "recentArticlesDesc": "Your latest published content",
+      "viewAll": "View all",
+      "topCategories": "Top Categories",
+      "topCategoriesDesc": "Most popular content categories",
+      "upcomingEventsCard": "Upcoming Events",
+      "upcomingEventsCardDesc": "Scheduled events and gatherings",
+      "quickActionsDesc": "Common tasks and shortcuts",
+      "createTab": "Create",
+      "manageTab": "Manage",
+      "createNewArticle": "Create new article",
+      "startACampaign": "Start a campaign",
+      "scheduleAnEvent": "Schedule an event",
+      "addNewPage": "Add new page",
+      "manageArticles": "Manage articles",
+      "viewCampaigns": "View campaigns",
+      "manageEvents": "Manage events",
+      "managePages": "Manage pages",
+      "published": "published",
+      "draft": "draft",
+      "articles": "articles"
     },
     "members": {
       "title": "Members",
@@ -455,10 +522,25 @@
     },
     "articles": {
       "title": "Articles",
-      "description": "Manage published articles and announcements",
+      "description": "Manage your articles and blog posts",
       "newButton": "New Article",
       "createTitle": "Create New Article",
       "editTitle": "Edit Article",
+      "allArticles": "All Articles",
+      "searchPlaceholder": "Search articles...",
+      "noArticlesFound": "No articles found.",
+      "totalArticles": "Total Articles",
+      "published": "Published",
+      "drafts": "Drafts",
+      "archived": "Archived",
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "delete": "Delete",
+      "deleteConfirm": "Are you sure you want to delete \"{title}\"?",
+      "deleteSuccess": "Article deleted successfully",
+      "deleteFailed": "Failed to delete article",
       "form": {
         "title": "Article Title",
         "content": "Article Content",
@@ -481,6 +563,63 @@
         "targetSignatures": "Target Signatures",
         "endDate": "End Date"
       }
+    },
+    "events": {
+      "title": "Events",
+      "description": "Manage your events and gatherings",
+      "newButton": "New Event",
+      "allEvents": "All Events",
+      "searchPlaceholder": "Search events...",
+      "noEventsFound": "No events found.",
+      "totalEvents": "Total Events",
+      "published": "Published",
+      "drafts": "Drafts",
+      "archived": "Archived",
+      "viewDetails": "View Details",
+      "edit": "Edit",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "archive": "Archive",
+      "delete": "Delete",
+      "deleteConfirm": "Are you sure?",
+      "deleteMessage": "This action cannot be undone. This will permanently delete the event \"{title}\".",
+      "cancel": "Cancel",
+      "showing": "Showing {from} to {to} of {total} events",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "campaigns": {
+      "title": "Campaigns",
+      "description": "Manage your campaigns",
+      "newButton": "New Campaign",
+      "allCampaigns": "All Campaigns",
+      "searchPlaceholder": "Search campaigns...",
+      "noCampaignsFound": "No campaigns found.",
+      "totalCampaigns": "Total Campaigns",
+      "active": "Active",
+      "drafts": "Drafts",
+      "completed": "Completed",
+      "paused": "Paused",
+      "refresh": "Refresh",
+      "refreshed": "Campaigns refreshed",
+      "statusUpdated": "\"{title}\" status updated to {status}",
+      "deleted": "\"{title}\" has been deleted",
+      "actions": {
+        "view": "View Details",
+        "edit": "Edit",
+        "activate": "Activate",
+        "pause": "Pause",
+        "resume": "Resume",
+        "complete": "Complete",
+        "archive": "Archive",
+        "delete": "Delete"
+      },
+      "table": {
+        "campaign": "Campaign",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "deleteConfirm": "Are you sure you want to delete \"{title}\"?"
     }
   },
   "articlesPage": {
@@ -781,9 +920,18 @@
       "tabs": {
         "translations": "Translations",
         "headerMenu": "Header Menu",
-        "footer": "Footer"
+        "footer": "Footer",
+        "buttons": "Buttons"
       },
       "selectLanguage": "Select Language",
+      "searchSections": "Search sections...",
+      "searchAllContent": "Search All Content",
+      "noContentFound": "No content found",
+      "noContentMessage": "No content has been seeded yet. Run the seed script to populate the database.",
+      "noSearchResults": "No sections matching \"{query}\"",
+      "keys": "keys",
+      "sections": "sections",
+      "backToContent": "Back to Content",
       "headerMenu": {
         "siteBranding": "Site Branding",
         "siteBrandingDescription": "Configure the site name displayed in the header",
@@ -824,6 +972,39 @@
         "saveFooter": "Save Footer",
         "saveSuccess": "Footer saved",
         "saveError": "Failed to save footer"
+      }
+    },
+    "pageBuilder": {
+      "title": "Page Builder",
+      "description": "Create and manage pages with the visual page builder.",
+      "newButton": "Create New Page",
+      "allPages": "All Pages",
+      "managePages": "Manage your custom pages",
+      "noPagesYet": "No pages created yet.",
+      "createFirstPage": "Create Your First Page",
+      "table": {
+        "title": "Title",
+        "path": "Path",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "actions": {
+        "edit": "Edit",
+        "duplicate": "Duplicate",
+        "preview": "Preview",
+        "delete": "Delete"
+      },
+      "deleteDialog": {
+        "title": "Are you sure?",
+        "message": "This action cannot be undone. This will permanently delete the page \"{slug}\".",
+        "cancel": "Cancel",
+        "confirm": "Delete",
+        "success": "Page deleted successfully",
+        "error": "Failed to delete page"
+      },
+      "duplicate": {
+        "success": "Page duplicated successfully",
+        "error": "Failed to duplicate page"
       }
     }
   }

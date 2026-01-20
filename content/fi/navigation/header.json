@@ -13,7 +13,17 @@
     },
     {
       "label": "Tietoa",
-      "href": "/about"
+      "href": "/about",
+      "children": [
+        {
+          "label": "About",
+          "href": "/membership"
+        },
+        {
+          "label": "test",
+          "href": "test"
+        }
+      ]
     },
     {
       "label": "Tapahtumat",
@@ -24,5 +34,5 @@
       "href": "/contact"
     }
   ],
-  "updatedAt": "2026-01-17T00:00:00.000Z"
+  "updatedAt": "2026-01-19T11:58:43.148Z"
 }

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { ArrowLeft, Globe, Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
@@ -74,6 +75,7 @@ const localeNames: Record<Locale, string> = {
 };
 
 export default function NamespaceEditorPage({ params }: NamespacePageProps) {
+  const t = useTranslations("adminSettings.content");
   const searchParams = useSearchParams();
   const [resolvedParams, setResolvedParams] = React.useState<{ namespace: string } | null>(null);
   
@@ -141,7 +143,7 @@ export default function NamespaceEditorPage({ params }: NamespacePageProps) {
         <Button variant="ghost" size="sm" className="w-fit" asChild>
           <Link href="/admin/content">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Content
+            {t("backToContent")}
           </Link>
         </Button>
 

@@ -1,0 +1,157 @@
+{
+  "slug": "about",
+  "title": "Tietoa meistä",
+  "description": "Lue lisää Sumudista ja tehtävästämme",
+  "status": "published",
+  "createdAt": "2026-01-18T12:00:00.000Z",
+  "updatedAt": "2026-01-18T12:00:00.000Z",
+  "blocks": [
+    {
+      "id": "about-hero-1",
+      "type": "page-hero",
+      "content": {
+        "en": {
+          "title": "About Sumud",
+          "subtitle": "Palestinian Solidarity & Cultural Preservation"
+        },
+        "ar": {
+          "title": "حول صمود",
+          "subtitle": "التضامن الفلسطيني والحفاظ على الثقافة"
+        },
+        "fi": {
+          "title": "Tietoa Sumudista",
+          "subtitle": "Palestiinan solidaarisuus ja kulttuurin säilyttäminen"
+        }
+      }
+    },
+    {
+      "id": "mission-section-1",
+      "type": "mission-section",
+      "content": {
+        "en": {
+          "title": "Our Mission",
+          "description": "Sumud is dedicated to preserving Palestinian heritage, promoting cultural awareness, and building solidarity through art, education, and community engagement."
+        },
+        "ar": {
+          "title": "مهمتنا",
+          "description": "صمود ملتزمة بالحفاظ على التراث الفلسطيني، وتعزيز الوعي الثقافي، وبناء التضامن من خلال الفن والتعليم والمشاركة المجتمعية."
+        },
+        "fi": {
+          "title": "Tehtävämme",
+          "description": "Sumud on sitoutunut palestiinan kulttuuriperinnön säilyttämiseen, kulttuurisen tietoisuuden edistämiseen ja solidaarisuuden rakentamiseen taiteen, koulutuksen ja yhteisöllisen osallistumisen kautta."
+        }
+      }
+    },
+    {
+      "id": "values-section-1",
+      "type": "values-section",
+      "content": {
+        "en": {
+          "title": "Our Values",
+          "items": [
+            {
+              "title": "Cultural Heritage",
+              "description": "Preserving and celebrating Palestinian traditions and history"
+            },
+            {
+              "title": "Community",
+              "description": "Building strong connections through shared experiences"
+            },
+            {
+              "title": "Solidarity",
+              "description": "Standing together for justice and human rights"
+            },
+            {
+              "title": "Education",
+              "description": "Empowering people through knowledge and awareness"
+            }
+          ]
+        },
+        "ar": {
+          "title": "قيمنا",
+          "items": [
+            {
+              "title": "التراث الثقافي",
+              "description": "الحفاظ على التقاليد والتاريخ الفلسطيني والاحتفاء بها"
+            },
+            {
+              "title": "المجتمع",
+              "description": "بناء اتصالات قوية من خلال التجارب المشتركة"
+            },
+            {
+              "title": "التضامن",
+              "description": "الوقوف معاً من أجل العدالة وحقوق الإنسان"
+            },
+            {
+              "title": "التعليم",
+              "description": "تمكين الناس من خلال المعرفة والوعي"
+            }
+          ]
+        },
+        "fi": {
+          "title": "Arvomme",
+          "items": [
+            {
+              "title": "Kulttuuriperintö",
+              "description": "Palestiinan perinteen ja historian säilyttäminen ja juhlistaminen"
+            },
+            {
+              "title": "Yhteisö",
+              "description": "Vahvojen yhteyksien rakentaminen jaettujen kokemusten kautta"
+            },
+            {
+              "title": "Solidaarisuus",
+              "description": "Seisominen yhdessä oikeudenmukaisuuden ja ihmisoikeuksien puolesta"
+            },
+            {
+              "title": "Koulutus",
+              "description": "Ihmisten voimaannuttaminen tiedon ja tietoisuuden kautta"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "engagement-section-1",
+      "type": "engagement-section",
+      "content": {
+        "en": {
+          "title": "Get Involved",
+          "description": "Join our community and make a difference"
+        },
+        "ar": {
+          "title": "شارك معنا",
+          "description": "انضم إلى مجتمعنا وأحدث فرقاً"
+        },
+        "fi": {
+          "title": "Osallistu",
+          "description": "Liity yhteisöömme ja tee ero"
+        }
+      }
+    },
+    {
+      "id": "cta-section-1",
+      "type": "cta-section",
+      "content": {
+        "en": {
+          "title": "Ready to Support?",
+          "description": "Join us in preserving Palestinian heritage and promoting cultural solidarity",
+          "buttonText": "Join Our Movement",
+          "buttonUrl": "/join"
+        },
+        "ar": {
+          "title": "هل أنت مستعد للدعم؟",
+          "description": "انضم إلينا في الحفاظ على التراث الفلسطيني وتعزيز التضامن الثقافي",
+          "buttonText": "انضم إلى حركتنا",
+          "buttonUrl": "/join"
+        },
+        "fi": {
+          "title": "Valmis tukemaan?",
+          "description": "Liity meihin palestiinan kulttuuriperinnön säilyttämiseen ja kulttuurisen solidaarisuuden edistämiseen",
+          "buttonText": "Liity liikkeeseen",
+          "buttonUrl": "/join"
+        }
+      }
+    }
+  ]
+}

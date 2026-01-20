@@ -2,7 +2,7 @@ import { getRequestConfig } from "next-intl/server";
 import { hasLocale } from "next-intl";
 import { routing } from "@/src/i18n/routing";
 
-type Locale = "en" | "ar" | "fi";
+type Locale = "en" | "fi";
 type Messages = Record<string, Record<string, unknown>>;
 
 /**

@@ -16,7 +16,6 @@ import { cn } from "@/src/lib/utils/utils";
 const languages = [
   { code: "en", label: "English", flag: "🇬🇧" },
   { code: "fi", label: "Suomi", flag: "🇫🇮" },
-  { code: "ar", label: "العربية", flag: "🇵🇸" },
 ] as const;
 
 interface LanguageSwitcherProps {
@@ -33,7 +32,7 @@ export default function LanguageSwitcher({ variant = "default" }: LanguageSwitch
 
   const handleLanguageChange = (newLocale: string) => {
     startTransition(() => {
-      router.replace(pathname, { locale: newLocale as "en" | "fi" | "ar" });
+      router.replace(pathname, { locale: newLocale as "en" | "fi" });
     });
   };
 

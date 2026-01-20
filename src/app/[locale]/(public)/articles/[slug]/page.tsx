@@ -141,6 +141,75 @@ export default function ArticlePage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Format article content for better display
+  const formatArticleContent = (content: string | undefined) => {
+    if (!content) return "";
+    
+    // Convert markdown to HTML (handles both markdown and mixed markdown+HTML)
+    let html = content
+      // Headers (must be done before other replacements)
+      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+      // Code blocks (must be before inline code)
+      .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+      // Bold
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      // Italic
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      // Strikethrough
+      .replace(/~~(.*?)~~/g, '<del>$1</del>')
+      // Highlight
+      .replace(/==(.*?)==/g, '<mark>$1</mark>')
+      // Images
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />')
+      // Links
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+      // Inline code
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      // Horizontal rule
+      .replace(/^---$/gim, '<hr />')
+      // Blockquote
+      .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
+      // Task lists
+      .replace(/^- \[ \] (.*$)/gim, '<li class="task-list-item"><input type="checkbox" disabled /> $1</li>')
+      .replace(/^- \[x\] (.*$)/gim, '<li class="task-list-item"><input type="checkbox" checked disabled /> $1</li>')
+      // Bullet lists
+      .replace(/^- (.*$)/gim, '<li>$1</li>')
+      // Numbered lists
+      .replace(/^\d+\. (.*$)/gim, '<li>$1</li>')
+      // Line breaks (convert double newlines to paragraph breaks)
+      .split('\n\n')
+      .map(block => {
+        block = block.trim();
+        // Don't wrap if already a block element
+        if (block.match(/^<(h[1-6]|p|div|blockquote|pre|ul|ol|li|hr|table)/i)) {
+          return block;
+        }
+        // Don't wrap empty blocks
+        if (!block) {
+          return '';
+        }
+        // Wrap text in paragraph
+        return `<p>${block.replace(/\n/g, '<br />')}</p>`;
+      })
+      .join('\n');
+
+    // Wrap consecutive list items in ul/ol tags
+    html = html.replace(/(<li>.*?<\/li>\s*)+/gs, (match) => {
+      if (match.includes('class="task-list-item"')) {
+        return `<ul class="task-list">${match}</ul>`;
+      }
+      return `<ul>${match}</ul>`;
+    });
+    
+    html = html.replace(/(<li class="task-list-item">.*?<\/li>\s*)+/gs, (match) => {
+      return `<ul class="task-list">${match}</ul>`;
+    });
+
+    return html;
+  };
+
   if (articleLoading) {
     return (
       <div className="min-h-screen bg-[#F4F3F0]">
@@ -387,47 +456,6 @@ export default function ArticlePage() {
             {/* Sidebar */}
             <div className="lg:col-span-1">
               <div className="sticky top-24 space-y-6">
-                {/* Table of Contents (placeholder) */}
-                <Card className="border border-[#55613C]/20">
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-[#3E442B] mb-3">
-                      In This Article
-                    </h3>
-                    <div className="space-y-2 text-sm">
-                      <a
-                        href="#history"
-                        className="block text-gray-600 hover:text-[#781D32] transition-colors"
-                      >
-                        A History of Principled Engagement
-                      </a>
-                      <a
-                        href="#contemporary"
-                        className="block text-gray-600 hover:text-[#781D32] transition-colors"
-                      >
-                        Contemporary Solidarity Movements
-                      </a>
-                      <a
-                        href="#cultural"
-                        className="block text-gray-600 hover:text-[#781D32] transition-colors"
-                      >
-                        Cultural Exchange and Understanding
-                      </a>
-                      <a
-                        href="#challenges"
-                        className="block text-gray-600 hover:text-[#781D32] transition-colors"
-                      >
-                        Challenges and Opportunities
-                      </a>
-                      <a
-                        href="#future"
-                        className="block text-gray-600 hover:text-[#781D32] transition-colors"
-                      >
-                        Looking Forward
-                      </a>
-                    </div>
-                  </CardContent>
-                </Card>
-
                 {/* Tags - Currently not implemented in Article interface */}
                 {/* 
                 {article.tags && article.tags.length > 0 && (
@@ -461,8 +489,19 @@ export default function ArticlePage() {
                 variants={fadeInUp}
                 initial="initial"
                 animate="animate"
-                className="prose prose-lg max-w-none prose-headings:text-[#3E442B] prose-headings:font-bold prose-p:text-gray-700 prose-p:leading-relaxed prose-a:text-[#781D32] prose-a:no-underline hover:prose-a:underline prose-strong:text-[#3E442B]"
-                dangerouslySetInnerHTML={{ __html: article.content || "" }}
+                className="prose prose-lg max-w-none 
+                  prose-headings:text-[#3E442B] prose-headings:font-bold prose-headings:mb-4 prose-headings:mt-8 first:prose-headings:mt-0
+                  prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-h4:text-xl
+                  prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-6
+                  prose-a:text-[#781D32] prose-a:no-underline hover:prose-a:underline
+                  prose-strong:text-[#3E442B] prose-strong:font-semibold
+                  prose-ul:my-6 prose-ol:my-6 prose-li:my-2 prose-li:text-gray-700
+                  prose-blockquote:border-l-4 prose-blockquote:border-[#781D32] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600
+                  prose-img:rounded-lg prose-img:shadow-md prose-img:my-8
+                  prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+                  prose-pre:bg-gray-900 prose-pre:text-gray-100
+                  whitespace-pre-wrap break-words"
+                dangerouslySetInnerHTML={{ __html: formatArticleContent(article.content) }}
               />
 
               {/* Article Footer */}

@@ -16,7 +16,21 @@ export async function GET(
       );
     }
 
-    const article = await getArticleBySlug(slug, language);
+    // Try to find article in the requested language first
+    let article = await getArticleBySlug(slug, language);
+
+    // If not found, try other languages
+    if (!article) {
+      const languages = ['fi', 'en', 'ar'];
+      for (const lang of languages) {
+        if (lang !== language) {
+          article = await getArticleBySlug(slug, lang);
+          if (article) {
+            break;
+          }
+        }
+      }
+    }
 
     if (!article) {
       return NextResponse.json(

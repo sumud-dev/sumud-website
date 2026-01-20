@@ -17,7 +17,7 @@ import { Label } from "@/src/components/ui/label";
 import { Switch } from "@/src/components/ui/switch";
 
 type ContentType = "text" | "textarea";
-type Locale = "en" | "ar" | "fi";
+type Locale = "en" | "fi";
 
 interface SiteContent {
   id: string;

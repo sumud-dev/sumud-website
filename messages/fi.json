@@ -30,6 +30,14 @@
     "recommendedForSupport": "Suositeltu jatkuvaan tukeen",
     "contactSupport": "Ota yhteyttä tukeen",
     "siteName": "Sumud",
+    "buttons": {
+      "takeAction": "Ryhdy toimeen",
+      "readMore": "Lue lisää",
+      "learnMore": "Lue lisää",
+      "joinCampaign": "Liity kampanjaan",
+      "shareCampaign": "Jaa kampanja",
+      "readyToTakeAction": "Valmis toimimaan?"
+    },
     "upload": {
       "dragDrop": "Vedä ja pudota kuva tähän tai napsauta valitaksesi",
       "dropHere": "Pudota kuva tähän",
@@ -119,12 +127,22 @@
       "title": "Tulevat tapahtumat",
       "subtitle": "Liity yhteisöömme merkityksellisten tapahtumien kautta, jotka edistävät tietoisuutta, solidaarisuutta ja kulttuurivaihtoa.",
       "viewAll": "Näytä kaikki tapahtumat",
-      "registerNow": "Ilmoittaudu nyt"
+      "registerNow": "Ilmoittaudu nyt",
+      "buttons": {
+        "viewDetails": "Näytä tiedot"
+      }
     },
     "campaigns": {
       "title": "Kampanjat",
       "subtitle": "Liity boikotti-, edunvalvonta- ja yhteisötoimintakampanjoihimme. Anna äänesi kuulua ja luo todellista muutosta.",
-      "viewAll": "Näytä kaikki kampanjat"
+      "viewAll": "Näytä kaikki kampanjat",
+      "buttons": {
+        "takeAction": "Ryhdy toimeen",
+        "learnMore": "Lue lisää",
+        "declareYourZone": "Ilmoita alueesi",
+        "joinMovement": "Liity liikkeeseen",
+        "signPetition": "Allekirjoita vetoomus"
+      }
     },
     "testimonials": {
       "title": "Yhteisön ääniä",
@@ -136,6 +154,15 @@
       "description": "Äänesi on tärkeä. Oli kyse jäsenyydestä, vetoomusten allekirjoittamisesta tai tapahtumiin osallistumisesta, jokainen teko merkitsee oikeudenmukaisemman maailman rakentamisessa.",
       "joinButton": "Ryhdy jäseneksi",
       "petitionsButton": "Allekirjoita vetoomuksia"
+    },
+    "newsletter": {
+      "title": "Pysy yhteydessä",
+      "subtitle": "Tilaa uutiskirjeemme saadaksesi viimeisimmät päivitykset tapahtumista, kampanjoista ja tavoista tukea palestiinalaisten oikeuksia.",
+      "placeholder": "Syötä sähköpostiosoitteesi",
+      "button": "Tilaa",
+      "subscribing": "Tilataan...",
+      "success": "Kiitos tilauksestasi! Pidämme sinut ajan tasalla.",
+      "error": "Jokin meni pieleen. Ole hyvä ja yritä uudelleen."
     }
   },
   "eventsDetail": {
@@ -386,16 +413,143 @@
   "admin": {
     "dashboard": {
       "title": "Hallintapaneeli",
-      "welcome": "Tervetuloa Sumudin hallintapaneeliin",
+      "pageTitle": "Hallintapaneeli",
+      "welcome": "Tervetuloa takaisin! Tässä on yleiskatsaus sisällöstäsi ja analytiikastasi.",
       "description": "Hallinnoi artikkeleita, jäseniä, vetoomuksia ja valvo sivuston toimintaa.",
       "stats": {
         "totalMembers": "Jäseniä yhteensä",
         "publishedArticles": "Julkaistuja artikkeleita",
         "activePetitions": "Aktiivisia vetoomuksia",
-        "totalSignatures": "Allekirjoituksia yhteensä"
+        "totalSignatures": "Allekirjoituksia yhteensä",
+        "totalArticles": "Artikkeleita yhteensä",
+        "totalArticlesDesc": "vs. viime kuukausi",
+        "activeCampaigns": "Aktiiviset kampanjat",
+        "activeCampaignsDesc": "käynnissä nyt",
+        "upcomingEvents": "Tulevat tapahtumat",
+        "upcomingEventsDesc": "aikataulutettu",
+        "totalViews": "Katselukerrat yhteensä",
+        "totalViewsDesc": "tässä kuussa"
       },
       "quickActions": "Pikatoiminnot",
-      "recentActivity": "Viimeaikainen toiminta"
+      "recentActivity": "Viimeaikainen toiminta",
+      "viewAnalytics": "Näytä analytiikka",
+      "newArticle": "Uusi artikkeli",
+      "monthlyOverview": "Kuukausikatsaus",
+      "monthlyOverviewDesc": "Sisällön katselukerrat ja artikkelien julkaisut",
+      "weeklyActivity": "Viikkoaktiivisuus",
+      "weeklyActivityDesc": "Sisällön luominen tyypeittäin",
+      "contentDistribution": "Sisällön jakautuminen",
+      "contentDistributionDesc": "Erittely sisältötyypin mukaan",
+      "visitorEngagement": "Kävijöiden sitoutuminen",
+      "visitorEngagementDesc": "Tuntiliikenne tänään",
+      "recentArticles": "Viimeisimmät artikkelit",
+      "recentArticlesDesc": "Uusimmat julkaistut sisällöt",
+      "viewAll": "Näytä kaikki",
+      "topCategories": "Suosituimmat kategoriat",
+      "topCategoriesDesc": "Suosituimmat sisältökategoriat",
+      "upcomingEventsCard": "Tulevat tapahtumat",
+      "upcomingEventsCardDesc": "Aikataulutetut tapahtumat ja kokoukset",
+      "quickActionsDesc": "Yleiset tehtävät ja pikanäppäimet",
+      "createTab": "Luo",
+      "manageTab": "Hallinnoi",
+      "createNewArticle": "Luo uusi artikkeli",
+      "startACampaign": "Aloita kampanja",
+      "scheduleAnEvent": "Aikatauluta tapahtuma",
+      "addNewPage": "Lisää uusi sivu",
+      "manageArticles": "Hallinnoi artikkeleita",
+      "viewCampaigns": "Näytä kampanjat",
+      "manageEvents": "Hallinnoi tapahtumia",
+      "managePages": "Hallinnoi sivuja",
+      "published": "julkaistu",
+      "draft": "luonnos",
+      "articles": "artikkeleita"
+    },
+    "articles": {
+      "title": "Artikkelit",
+      "description": "Hallinnoi artikkeleita ja blogikirjoituksia",
+      "newButton": "Uusi artikkeli",
+      "createTitle": "Luo uusi artikkeli",
+      "editTitle": "Muokkaa artikkelia",
+      "allArticles": "Kaikki artikkelit",
+      "searchPlaceholder": "Hae artikkeleita...",
+      "noArticlesFound": "Artikkeleita ei löytynyt.",
+      "totalArticles": "Artikkeleita yhteensä",
+      "published": "Julkaistu",
+      "drafts": "Luonnokset",
+      "archived": "Arkistoitu",
+      "viewDetails": "Näytä tiedot",
+      "edit": "Muokkaa",
+      "publish": "Julkaise",
+      "unpublish": "Poista julkaisu",
+      "delete": "Poista",
+      "deleteConfirm": "Haluatko varmasti poistaa artikkelin \"{title}\"?",
+      "deleteSuccess": "Artikkeli poistettu onnistuneesti",
+      "deleteFailed": "Artikkelin poistaminen epäonnistui",
+      "form": {
+        "title": "Artikkelin otsikko",
+        "content": "Artikkelin sisältö",
+        "category": "Kategoria",
+        "status": "Tila",
+        "featuredImage": "Esikatselukuva",
+        "metaDescription": "Metakuvaus"
+      }
+    },
+    "events": {
+      "title": "Tapahtumat",
+      "description": "Hallinnoi tapahtumia ja kokoontumisia",
+      "newButton": "Uusi tapahtuma",
+      "allEvents": "Kaikki tapahtumat",
+      "searchPlaceholder": "Hae tapahtumia...",
+      "noEventsFound": "Tapahtumia ei löytynyt.",
+      "totalEvents": "Tapahtumia yhteensä",
+      "published": "Julkaistu",
+      "drafts": "Luonnokset",
+      "archived": "Arkistoitu",
+      "viewDetails": "Näytä tiedot",
+      "edit": "Muokkaa",
+      "publish": "Julkaise",
+      "unpublish": "Poista julkaisu",
+      "archive": "Arkistoi",
+      "delete": "Poista",
+      "deleteConfirm": "Oletko varma?",
+      "deleteMessage": "Tätä toimintoa ei voi perua. Tapahtuma \"{title}\" poistetaan pysyvästi.",
+      "cancel": "Peruuta",
+      "showing": "Näytetään {from}-{to} / {total} tapahtumaa",
+      "previous": "Edellinen",
+      "next": "Seuraava"
+    },
+    "campaigns": {
+      "title": "Kampanjat",
+      "description": "Hallinnoi kampanjoita",
+      "newButton": "Uusi kampanja",
+      "allCampaigns": "Kaikki kampanjat",
+      "searchPlaceholder": "Hae kampanjoita...",
+      "noCampaignsFound": "Kampanjoita ei löytynyt.",
+      "totalCampaigns": "Kampanjoita yhteensä",
+      "active": "Aktiivinen",
+      "drafts": "Luonnokset",
+      "completed": "Valmis",
+      "paused": "Keskeytetty",
+      "refresh": "Päivitä",
+      "refreshed": "Kampanjat päivitetty",
+      "statusUpdated": "Kampanjan \"{title}\" tila päivitetty: {status}",
+      "deleted": "Kampanja \"{title}\" poistettu",
+      "actions": {
+        "view": "Näytä tiedot",
+        "edit": "Muokkaa",
+        "activate": "Aktivoi",
+        "pause": "Keskeytä",
+        "resume": "Jatka",
+        "complete": "Merkitse valmiiksi",
+        "archive": "Arkistoi",
+        "delete": "Poista"
+      },
+      "table": {
+        "campaign": "Kampanja",
+        "status": "Tila",
+        "actions": "Toiminnot"
+      },
+      "deleteConfirm": "Haluatko varmasti poistaa kampanjan \"{title}\"?"
     },
     "members": {
       "title": "Jäsenet",
@@ -416,6 +570,21 @@
       "newButton": "Uusi artikkeli",
       "createTitle": "Luo uusi artikkeli",
       "editTitle": "Muokkaa artikkelia",
+      "allArticles": "Kaikki artikkelit",
+      "searchPlaceholder": "Hae artikkeleita...",
+      "noArticlesFound": "Artikkeleita ei löytynyt.",
+      "totalArticles": "Artikkeleita yhteensä",
+      "published": "Julkaistu",
+      "drafts": "Luonnokset",
+      "archived": "Arkistoitu",
+      "viewDetails": "Näytä tiedot",
+      "edit": "Muokkaa",
+      "publish": "Julkaise",
+      "unpublish": "Poista julkaisu",
+      "delete": "Poista",
+      "deleteConfirm": "Haluatko varmasti poistaa artikkelin \"{title}\"?",
+      "deleteSuccess": "Artikkeli poistettu onnistuneesti",
+      "deleteFailed": "Artikkelin poistaminen epäonnistui",
       "form": {
         "title": "Artikkelin otsikko",
         "content": "Artikkelin sisältö",
@@ -738,9 +907,18 @@
       "tabs": {
         "translations": "Käännökset",
         "headerMenu": "Ylävalikko",
-        "footer": "Alatunniste"
+        "footer": "Alatunniste",
+        "buttons": "Painikkeet"
       },
       "selectLanguage": "Valitse kieli",
+      "searchSections": "Hae osioita...",
+      "searchAllContent": "Hae kaikesta sisällöstä",
+      "noContentFound": "Sisältöä ei löytynyt",
+      "noContentMessage": "Sisältöä ei ole vielä lisätty. Suorita seed-skripti tietokannan täyttämiseksi.",
+      "noSearchResults": "Ei osioita, jotka vastaavat hakua \"{query}\"",
+      "keys": "avaimet",
+      "sections": "osiot",
+      "backToContent": "Takaisin sisältöön",
       "headerMenu": {
         "siteBranding": "Sivuston brändäys",
         "siteBrandingDescription": "Määritä yläpalkissa näkyvä sivuston nimi",
@@ -781,6 +959,39 @@
         "saveFooter": "Tallenna alatunniste",
         "saveSuccess": "Alatunniste tallennettu",
         "saveError": "Alatunnisteen tallentaminen epäonnistui"
+      }
+    },
+    "pageBuilder": {
+      "title": "Sivurakentaja",
+      "description": "Luo ja hallitse sivuja visuaalisella sivurakentajalla.",
+      "newButton": "Luo uusi sivu",
+      "allPages": "Kaikki sivut",
+      "managePages": "Hallinnoi mukautettuja sivujasi",
+      "noPagesYet": "Sivuja ei vielä luotu.",
+      "createFirstPage": "Luo ensimmäinen sivusi",
+      "table": {
+        "title": "Otsikko",
+        "path": "Polku",
+        "status": "Tila",
+        "actions": "Toiminnot"
+      },
+      "actions": {
+        "edit": "Muokkaa",
+        "duplicate": "Monista",
+        "preview": "Esikatselu",
+        "delete": "Poista"
+      },
+      "deleteDialog": {
+        "title": "Oletko varma?",
+        "message": "Tätä toimintoa ei voi peruuttaa. Tämä poistaa sivun \"{slug}\" pysyvästi.",
+        "cancel": "Peruuta",
+        "confirm": "Poista",
+        "success": "Sivu poistettu onnistuneesti",
+        "error": "Sivun poistaminen epäonnistui"
+      },
+      "duplicate": {
+        "success": "Sivu monistettu onnistuneesti",
+        "error": "Sivun monistaminen epäonnistui"
       }
     }
   }

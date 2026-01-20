@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import {
   Globe,
   Home,
@@ -38,6 +39,7 @@ import {
 } from "@/src/components/ui/tabs";
 import HeaderMenuEditor from "@/src/components/admin/content/HeaderMenuEditor";
 import FooterEditor from "@/src/components/admin/content/FooterEditor";
+import ButtonsEditor from "@/src/components/admin/content/ButtonsEditor";
 
 // Mock types
 type Locale = "en" | "ar" | "fi";
@@ -120,8 +122,9 @@ const mockStats = [
 ];
 
 export default function AdminContentPage() {
+  const t = useTranslations("adminSettings.content");
   const [activeLocale, setActiveLocale] = React.useState<Locale>("en");
-  const [activeSection, setActiveSection] = React.useState<"translations" | "header" | "footer">("header");
+  const [activeSection, setActiveSection] = React.useState<"translations" | "header" | "footer" | "buttons">("header");
   const [namespaces] = React.useState<string[]>(mockNamespaces);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [stats] = React.useState<
@@ -140,24 +143,28 @@ export default function AdminContentPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Languages className="h-8 w-8" />
-            Content Management
+            {t("pageTitle")}
           </h1>
           <p className="text-muted-foreground mt-1">
-            Edit translatable content across all pages and locales
+            {t("pageDescription")}
           </p>
         </div>
       </div>
 
       {/* Main Section Tabs */}
       <Tabs value={activeSection} onValueChange={(v) => setActiveSection(v as typeof activeSection)}>
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
+        <TabsList className="grid w-full grid-cols-3 max-w-2xl">
           <TabsTrigger value="header" className="gap-2">
             <Menu className="h-4 w-4" />
-            Header Menu
+            {t("tabs.headerMenu")}
           </TabsTrigger>
           <TabsTrigger value="footer" className="gap-2">
             <LayoutTemplate className="h-4 w-4" />
-            Footer
+            {t("tabs.footer")}
+          </TabsTrigger>
+          <TabsTrigger value="buttons" className="gap-2">
+            <FileSignature className="h-4 w-4" />
+            {t("tabs.buttons")}
           </TabsTrigger>
         </TabsList>
 
@@ -187,8 +194,8 @@ export default function AdminContentPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>{localeStats?.count || 0} keys</span>
-                      <span>{localeStats?.namespaces || 0} sections</span>
+                      <span>{localeStats?.count || 0} {t("keys")}</span>
+                      <span>{localeStats?.namespaces || 0} {t("sections")}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -201,7 +208,7 @@ export default function AdminContentPage() {
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search sections..."
+                placeholder={t("searchSections")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -210,7 +217,7 @@ export default function AdminContentPage() {
             <Button variant="outline" asChild>
               <Link href={`/admin/content/search?locale=${activeLocale}`}>
                 <Search className="h-4 w-4 mr-2" />
-                Search All Content
+                {t("searchAllContent")}
               </Link>
             </Button>
           </div>
@@ -232,11 +239,11 @@ export default function AdminContentPage() {
             <Card className="p-12 text-center">
               <div className="text-muted-foreground">
                 <Globe className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <h3 className="text-lg font-medium mb-2">No content found</h3>
+                <h3 className="text-lg font-medium mb-2">{t("noContentFound")}</h3>
                 <p className="text-sm">
                   {searchQuery
-                    ? `No sections matching "${searchQuery}"`
-                    : "No content has been seeded yet. Run the seed script to populate the database."}
+                    ? t("noSearchResults", { query: searchQuery })
+                    : t("noContentMessage")}
                 </p>
               </div>
             </Card>
@@ -257,7 +264,7 @@ export default function AdminContentPage() {
         <TabsContent value="header" className="mt-6 space-y-6">
           {/* Locale Selector for Header */}
           <div className="flex items-center gap-4">
-            <span className="text-sm font-medium">Select Language:</span>
+            <span className="text-sm font-medium">{t("selectLanguage")}:</span>
             <div className="flex gap-2">
               {(["en", "ar", "fi"] as Locale[]).map((locale) => (
                 <Button
@@ -280,7 +287,7 @@ export default function AdminContentPage() {
         <TabsContent value="footer" className="mt-6 space-y-6">
           {/* Locale Selector for Footer */}
           <div className="flex items-center gap-4">
-            <span className="text-sm font-medium">Select Language:</span>
+            <span className="text-sm font-medium">{t("selectLanguage")}:</span>
             <div className="flex gap-2">
               {(["en", "ar", "fi"] as Locale[]).map((locale) => (
                 <Button
@@ -297,6 +304,29 @@ export default function AdminContentPage() {
             </div>
           </div>
           <FooterEditor locale={activeLocale} />
+        </TabsContent>
+
+        {/* Buttons Tab Content */}
+        <TabsContent value="buttons" className="mt-6 space-y-6">
+          {/* Locale Selector for Buttons */}
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium">{t("selectLanguage")}:</span>
+            <div className="flex gap-2">
+              {(["en", "ar", "fi"] as Locale[]).map((locale) => (
+                <Button
+                  key={locale}
+                  variant={activeLocale === locale ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveLocale(locale)}
+                  className="gap-2"
+                >
+                  <Globe className="h-3 w-3" />
+                  {localeNames[locale]}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <ButtonsEditor locale={activeLocale} />
         </TabsContent>
       </Tabs>
     </div>

@@ -101,7 +101,7 @@ export default function EventsPage() {
     const textContent = (textBlock?.content as { content?: Record<string, Record<string, string>> })?.content;
     const heroContent = (heroBlock?.content as { content?: Record<string, { title: string; subtitle?: string; description: string }> })?.content;
     
-    const localeKey = locale as "en" | "fi" | "ar";
+    const localeKey = locale as "en" | "fi";
     
     return {
       hero: heroContent?.[localeKey] || heroContent?.en,

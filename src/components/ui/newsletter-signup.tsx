@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { cn } from "@/src/lib/utils/utils";
@@ -14,6 +15,7 @@ export default function NewsletterSignup({
   variant = "default",
   className,
 }: NewsletterSignupProps) {
+  const t = useTranslations("homepage.newsletter");
   const [email, setEmail] = React.useState("");
   const [status, setStatus] = React.useState<"idle" | "loading" | "success" | "error">("idle");
 
@@ -38,14 +40,14 @@ export default function NewsletterSignup({
       <form onSubmit={handleSubmit} className={cn("flex gap-2", className)}>
         <Input
           type="email"
-          placeholder="Enter your email"
+          placeholder={t("placeholder")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="flex-1"
           disabled={status === "loading"}
         />
         <Button type="submit" disabled={status === "loading"}>
-          {status === "loading" ? "..." : "Subscribe"}
+          {status === "loading" ? "..." : t("button")}
         </Button>
       </form>
     );
@@ -54,17 +56,16 @@ export default function NewsletterSignup({
   return (
     <div className={cn("text-center py-12", className)}>
       <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-        Stay Connected
+        {t("title")}
       </h2>
       <p className="text-white/80 mb-8 max-w-2xl mx-auto">
-        Subscribe to our newsletter for the latest updates on events, campaigns,
-        and ways to support Palestinian rights.
+        {t("subtitle")}
       </p>
 
       {status === "success" ? (
         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 max-w-md mx-auto">
           <p className="text-white font-medium">
-            Thank you for subscribing! We&apos;ll keep you updated.
+            {t("success")}
           </p>
         </div>
       ) : (
@@ -74,7 +75,7 @@ export default function NewsletterSignup({
         >
           <Input
             type="email"
-            placeholder="Enter your email address"
+            placeholder={t("placeholder")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:border-white focus:ring-white"
@@ -86,14 +87,14 @@ export default function NewsletterSignup({
             disabled={status === "loading"}
             className="bg-white text-[#55613C] hover:bg-white/90 font-semibold px-8"
           >
-            {status === "loading" ? "Subscribing..." : "Subscribe"}
+            {status === "loading" ? t("subscribing") : t("button")}
           </Button>
         </form>
       )}
 
       {status === "error" && (
         <p className="text-red-300 mt-4">
-          Something went wrong. Please try again.
+          {t("error")}
         </p>
       )}
     </div>

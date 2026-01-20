@@ -77,7 +77,7 @@ function ArticleNavigation({
     const heroContent = (heroBlock?.content as { content?: Record<string, { title: string; subtitle?: string; description: string }> })?.content;
     const categoriesContent = (categoriesBlock?.content as { content?: Record<string, Record<string, string>> })?.content;
     
-    const localeKey = locale as "en" | "fi" | "ar";
+    const localeKey = locale as "en" | "fi";
     
     return {
       hero: heroContent?.[localeKey] || heroContent?.en,
@@ -86,16 +86,19 @@ function ArticleNavigation({
     };
   }, [pageData, locale]);
 
-  // Debounced search
+  // Debounced search - ensure language is always preserved
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchQuery !== filters.search) {
-        onFiltersChange({ ...filters, search: searchQuery || undefined });
+        onFiltersChange({ 
+          ...filters, 
+          search: searchQuery || undefined,
+          language: locale, // Explicitly set language to current locale
+        });
       }
     }, 300);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery]);
+  }, [searchQuery, locale, filters, onFiltersChange]);
 
   return (
     <>
@@ -233,6 +236,7 @@ function ArticleNavigation({
                     onFiltersChange({
                       ...filters,
                       category: value === "all" ? undefined : value,
+                      language: locale, // Ensure language is always set to current locale
                     })
                   }
                 >
@@ -317,7 +321,7 @@ function ArticlesGrid({
   isLoading: boolean;
 }) {
   const t = useTranslations("articlesPage");
-  const mainArticles = useMemo(() => articles?.slice(1) || [], [articles]);
+  const mainArticles = useMemo(() => articles || [], [articles]);
 
   return (
     <motion.section
@@ -500,12 +504,21 @@ export default function ArticlesPage() {
     language: locale,
   });
 
+  // Ensure language filter always matches current locale
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      language: locale,
+    }));
+  }, [locale]);
+
   const { data: articles = [], isLoading, error } = useArticles(filters);
 
   // Memoize the filter change handler to prevent infinite loops
+  // Ensure language is always preserved and set to current locale
   const handleFiltersChange = useCallback((newFilters: ArticleFilters) => {
-    setFilters(newFilters);
-  }, []);
+    setFilters({ ...newFilters, language: locale });
+  }, [locale]);
 
   return (
       <div className="min-h-screen bg-linear-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4]">
@@ -515,11 +528,6 @@ export default function ArticlesPage() {
           onFiltersChange={handleFiltersChange}
         />
 
-        {/* Featured Article Hero */}
-        {articles.length > 0 && !error && (
-          <FeaturedSection articles={articles} />
-        )}
-
         {/* Main Articles Grid */}
         <ArticlesGrid articles={articles} isLoading={isLoading} />
 
@@ -528,7 +536,7 @@ export default function ArticlesPage() {
           <LoadMoreSection
             currentCount={articles.length}
             onLoadMore={() =>
-              setFilters((prev) => ({ ...prev, limit: (prev.limit || 12) + 9 }))
+              setFilters((prev) => ({ ...prev, language: locale, limit: (prev.limit || 12) + 9 }))
             }
             isLoading={isLoading}
           />

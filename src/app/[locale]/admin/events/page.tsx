@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Link } from "@/src/i18n/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
   Plus,
@@ -32,6 +32,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/src/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/src/components/ui/alert-dialog";
 import { Input } from "@/src/components/ui/input";
 import {
   Table,
@@ -72,12 +82,14 @@ const truncateText = (text: string, wordLimit: number): string => {
 };
 
 const EventsPage: React.FC = () => {
-  const locale = useLocale() as "en" | "fi" | "ar";
+  const t = useTranslations("admin.events");
+  const locale = useLocale() as "en" | "fi";
   const [searchQuery, setSearchQuery] = React.useState("");
   const [events, setEvents] = React.useState<Event[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [currentPage, setCurrentPage] = React.useState(1);
   const [pagination, setPagination] = React.useState<PaginationData | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = React.useState<{ id: string; title: string } | null>(null);
 
   // Fetch events with pagination
   const fetchEvents = React.useCallback(async (page: number = 1) => {
@@ -126,12 +138,13 @@ const EventsPage: React.FC = () => {
     archived: events.filter((e) => e.status === "archived").length,
   }), [events, pagination]);
 
-  const handleDelete = async (id: string, title: string) => {
-    if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
     
-    const result = await deleteEventAction(id);
+    const result = await deleteEventAction(deleteConfirm.id);
     if (result.success) {
-      toast.success(`"${title}" deleted successfully`);
+      toast.success(`"${deleteConfirm.title}" deleted successfully`);
+      setDeleteConfirm(null);
       // Refetch to update pagination
       fetchEvents(currentPage);
     } else {
@@ -171,14 +184,14 @@ const EventsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            Events
+            {t("title")}
           </h1>
-          <p className="text-gray-600 mt-1">Manage your events and gatherings</p>
+          <p className="text-gray-600 mt-1">{t("description")}</p>
         </div>
         <Button asChild className="bg-[#781D32] hover:bg-[#781D32]/90">
           <Link href="/admin/events/new">
             <Plus className="mr-2 h-4 w-4" />
-            New Event
+            {t("newButton")}
           </Link>
         </Button>
       </div>
@@ -186,27 +199,27 @@ const EventsPage: React.FC = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 md:gap-6">
         <StatsCard
-          title="Total Events"
+          title={t("totalEvents")}
           value={stats.total}
           icon={Calendar}
           iconClassName="text-muted-foreground"
         />
         <StatsCard
-          title="Published"
+          title={t("published")}
           value={stats.published}
           icon={Play}
           iconClassName="text-green-500"
           valueClassName="text-green-600"
         />
         <StatsCard
-          title="Drafts"
+          title={t("drafts")}
           value={stats.drafts}
           icon={FileText}
           iconClassName="text-yellow-500"
           valueClassName="text-yellow-600"
         />
         <StatsCard
-          title="Archived"
+          title={t("archived")}
           value={stats.archived}
           icon={Archive}
           iconClassName="text-gray-500"
@@ -217,13 +230,13 @@ const EventsPage: React.FC = () => {
       {/* Events Table */}
       <Card className="border-gray-200 shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold">All Events</CardTitle>
+          <CardTitle className="text-lg font-semibold">{t("allEvents")}</CardTitle>
         </CardHeader>
         <CardContent>
           {/* Search */}
           <div className="mb-4">
             <Input
-              placeholder="Search events..."
+              placeholder={t("searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="max-w-sm"
@@ -279,7 +292,7 @@ const EventsPage: React.FC = () => {
                         </TableCell>
                         <TableCell className="py-3 whitespace-nowrap">
                           <span className="text-sm text-gray-600">
-                            {formatDate(event.publishedAt)}
+                            {formatDate(event.createdAt)}
                           </span>
                         </TableCell>
                         <TableCell className="py-3">
@@ -352,7 +365,7 @@ const EventsPage: React.FC = () => {
                               )}
                               <DropdownMenuItem
                                 onClick={() =>
-                                  handleDelete(event.id, event.title || "Untitled")
+                                  setDeleteConfirm({ id: event.id, title: event.title || "Untitled" })
                                 }
                                 className="text-red-600"
                               >
@@ -374,9 +387,11 @@ const EventsPage: React.FC = () => {
           {pagination && pagination.pages > 1 && (
             <div className="flex items-center justify-between mt-4 pt-4 border-t">
               <div className="text-sm text-gray-500">
-                Showing {((pagination.page - 1) * pagination.limit) + 1} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
-                {pagination.total} events
+                {t("showing", {
+                  from: ((pagination.page - 1) * pagination.limit) + 1,
+                  to: Math.min(pagination.page * pagination.limit, pagination.total),
+                  total: pagination.total
+                })}
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -386,7 +401,7 @@ const EventsPage: React.FC = () => {
                   disabled={currentPage <= 1}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Previous
+                  {t("previous")}
                 </Button>
                 
                 {/* Page numbers */}
@@ -422,7 +437,7 @@ const EventsPage: React.FC = () => {
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage >= pagination.pages}
                 >
-                  Next
+                  {t("next")}
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -430,6 +445,30 @@ const EventsPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={!!deleteConfirm}
+        onOpenChange={() => setDeleteConfirm(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("deleteConfirm")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("deleteMessage", { title: deleteConfirm?.title ?? "" })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t("delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

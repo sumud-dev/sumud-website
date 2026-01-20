@@ -1,0 +1,88 @@
+{
+  "slug": "join",
+  "title": "انضم إلينا",
+  "description": "انضم إلى حركة صمود",
+  "status": "published",
+  "createdAt": "2026-01-18T12:00:00.000Z",
+  "updatedAt": "2026-01-18T12:00:00.000Z",
+  "blocks": [
+    {
+      "id": "join-hero-1",
+      "type": "page-hero",
+      "content": {
+        "en": {
+          "title": "Join Our Movement",
+          "subtitle": "Support Palestinian Culture & Solidarity"
+        },
+        "ar": {
+          "title": "انضم إلى حركتنا",
+          "subtitle": "دعم الثقافة والتضامن الفلسطيني"
+        },
+        "fi": {
+          "title": "Liity liikkeeseen",
+          "subtitle": "Tue palestiinan kulttuuria ja solidaarisuutta"
+        }
+      }
+    },
+    {
+      "id": "join-engagement-1",
+      "type": "engagement-section",
+      "content": {
+        "en": {
+          "title": "Ways to Participate",
+          "description": "Choose the way that works best for you"
+        },
+        "ar": {
+          "title": "طرق المشاركة",
+          "description": "اختر الطريقة التي تناسبك"
+        },
+        "fi": {
+          "title": "Tapoja osallistua",
+          "description": "Valitse sinulle parhaiten sopiva tapa"
+        }
+      }
+    },
+    {
+      "id": "join-form-1",
+      "type": "form",
+      "content": {
+        "en": {
+          "title": "Sign Up to Join",
+          "description": "Fill out the form below to become a member of our community."
+        },
+        "ar": {
+          "title": "اشترك للانضمام",
+          "description": "املأ النموذج أدناه لتصبح عضواً في مجتمعنا."
+        },
+        "fi": {
+          "title": "Rekisteröidy liittyäksesi",
+          "description": "Täytä alla oleva lomake liittyäksesi yhteisöömme."
+        }
+      }
+    },
+    {
+      "id": "join-cta-1",
+      "type": "cta-section",
+      "content": {
+        "en": {
+          "title": "Welcome Aboard!",
+          "description": "Thank you for joining us. We'll be in touch soon with more information about upcoming events and opportunities.",
+          "buttonText": "Back to Home",
+          "buttonUrl": "/"
+        },
+        "ar": {
+          "title": "أهلا وسهلا!",
+          "description": "شكراً لانضمامك إلينا. سنتواصل معك قريباً بمزيد من المعلومات حول الأحداث والفرص المستقبلية.",
+          "buttonText": "العودة إلى الصفحة الرئيسية",
+          "buttonUrl": "/"
+        },
+        "fi": {
+          "title": "Tervetuloa mukaan!",
+          "description": "Kiitos liittymisestä. Olemme sinuun yhteydessä pian ja annamme lisätietoja tulevista tapahtumista ja mahdollisuuksista.",
+          "buttonText": "Takaisin kotisivuille",
+          "buttonUrl": "/"
+        }
+      }
+    }
+  ]
+}

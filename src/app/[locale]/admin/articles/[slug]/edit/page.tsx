@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Image from "next/image";
-import { ArrowLeft, Save, Eye, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Eye, Loader2, Languages } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { ImageUpload } from "@/src/components/ui/image-upload";
 import { RichTextEditor } from "@/src/components/ui/rich-text-editor";
@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/src/components/ui/select";
+import { Switch } from "@/src/components/ui/switch";
 import { toast } from "sonner";
 import { getPostBySlug, updatePost } from "@/src/actions/article.actions";
 import type { PostWithCategory } from "@/src/lib/utils/article.utils";
@@ -43,6 +44,7 @@ const articleSchema = z.object({
   status: z.enum(["draft", "published", "archived"]),
   featuredImageUrl: z.string().optional(),
   metaDescription: z.string().max(160, "Meta description too long").optional(),
+  autoTranslate: z.boolean(),
 });
 
 type ArticleFormData = z.infer<typeof articleSchema>;
@@ -70,6 +72,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
       status: "draft",
       featuredImageUrl: "",
       metaDescription: "",
+      autoTranslate: false,
     },
   });
 
@@ -105,6 +108,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
             status: (foundPost.status as "draft" | "published" | "archived") || "draft",
             featuredImageUrl: foundPost.featuredImage || "",
             metaDescription: "",
+            autoTranslate: false,
           });
         } else {
           toast.error("Failed to load article");
@@ -138,6 +142,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
           status: data.status,
           featured_image: data.featuredImageUrl || null,
           meta_description: data.metaDescription || null,
+          autoTranslate: data.autoTranslate,
         },
         articleLanguage
       );
@@ -305,6 +310,30 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                   <CardTitle>Publishing</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="autoTranslate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                        <div className="space-y-0.5">
+                          <FormLabel className="flex items-center gap-2">
+                            <Languages className="h-4 w-4" />
+                            Auto-translate
+                          </FormLabel>
+                          <FormDescription className="text-xs">
+                            Automatically translate to all languages (EN, AR, FI)
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
                   <FormField
                     control={form.control}
                     name="status"

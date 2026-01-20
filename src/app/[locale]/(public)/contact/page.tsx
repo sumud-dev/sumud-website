@@ -48,9 +48,8 @@ export default async function ContactPage({ params }: ContactPageProps) {
     return <main />;
   }
 
-  // Use English blocks as they contain multilingual content
-  // PageRenderer will extract the correct locale from each block
-  const blocks = page.translations.en?.blocks || [];
+  // Get blocks for the current locale, fallback to English if not available
+  const blocks = page.translations[locale as PageLocale]?.blocks || page.translations.en?.blocks || [];
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4]">

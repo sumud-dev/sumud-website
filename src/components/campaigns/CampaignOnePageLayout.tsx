@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import type { Variants } from "framer-motion";
 import {
   ChevronUp,
@@ -59,6 +60,7 @@ export function CampaignOnePageLayout({
   onTakeAction,
 }: CampaignOnePageLayoutProps) {
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const tCommon = useTranslations("common");
 
   // Handle scroll for back-to-top button
   useEffect(() => {
@@ -160,7 +162,7 @@ export function CampaignOnePageLayout({
               className="bg-white text-[#781D32] hover:bg-white/90 font-semibold px-8"
               onClick={onTakeAction}
             >
-              Take Action
+              {tCommon("buttons.takeAction")}
             </Button>
             <Button
               size="lg"
@@ -169,7 +171,7 @@ export function CampaignOnePageLayout({
               onClick={onShare}
             >
               <Share2 className="w-5 h-5 mr-2" />
-              Share Campaign
+              {tCommon("buttons.shareCampaign")}
             </Button>
           </motion.div>
         </motion.div>
@@ -267,7 +269,7 @@ export function CampaignOnePageLayout({
               className="border-white/50 text-white hover:bg-white/10"
             >
               <ExternalLink className="w-5 h-5 mr-2" />
-              Learn More
+              {tCommon("buttons.learnMore")}
             </Button>
           </motion.div>
         </motion.div>

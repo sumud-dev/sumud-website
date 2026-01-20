@@ -37,9 +37,9 @@ export type PageBlockType = (typeof PAGE_BLOCK_TYPES)[number];
 
 // Block translation meta - tracks translation status for editable blocks
 export interface BlockTranslationMeta {
-  defaultLang: 'en' | 'fi' | 'ar';
-  autoTranslated?: ('en' | 'fi' | 'ar')[]; // Languages auto-translated (e.g., DeepL)
-  manuallyReviewed?: ('en' | 'fi' | 'ar')[]; // Languages reviewed by human
+  defaultLang: 'en' | 'fi';
+  autoTranslated?: ('en' | 'fi')[]; // Languages auto-translated (e.g., DeepL)
+  manuallyReviewed?: ('en' | 'fi')[]; // Languages reviewed by human
   lastTranslated?: string; // ISO date string
   lastModified?: string; // ISO date string when content was last changed
 }
@@ -167,7 +167,6 @@ export interface NewsletterSectionBlockContent {
 export type LocaleContent<T> = {
   en: T;
   fi?: T;
-  ar?: T;
 };
 
 // Page Hero Block - editable hero section
@@ -469,7 +468,6 @@ export interface PageData {
   updatedAt: string;
   translations: {
     en?: PageTranslation;
-    ar?: PageTranslation;
     fi?: PageTranslation;
   };
 }
@@ -478,15 +476,15 @@ export interface PageData {
 export interface PageSummary {
   slug: string;
   path: string;
-  status: 'draft' | 'published';
+  status: 'draft' | 'published' | 'archived';
   createdAt: string;
   updatedAt: string;
   title: string; // From default locale
 }
 
 // Supported locales
-export type PageLocale = 'en' | 'ar' | 'fi';
+export type PageLocale = 'en' | 'fi';
 
-export const SUPPORTED_LOCALES: PageLocale[] = ['en', 'ar', 'fi'];
+export const SUPPORTED_LOCALES: PageLocale[] = ['en', 'fi'];
 
 export const DEFAULT_LOCALE: PageLocale = 'en';

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Link } from "@/src/i18n/navigation";
 import { toast } from "sonner";
 import {
@@ -97,6 +98,7 @@ function extractDescriptionText(description: unknown): string {
 }
 
 const CampaignsPage: React.FC = () => {
+  const t = useTranslations("admin.campaigns");
   const params = useParams();
   const locale = (params?.locale as string) || "en";
   
@@ -118,7 +120,7 @@ const CampaignsPage: React.FC = () => {
         setCampaigns(result.data as Campaign[]);
         
         if (showRefreshToast) {
-          toast.success("Campaigns refreshed");
+          toast.success(t("refreshed"));
         }
       } else {
         toast.error(!result.success ? result.error : "Failed to fetch campaigns");
@@ -177,7 +179,7 @@ const CampaignsPage: React.FC = () => {
       setCampaigns(prev => prev.filter(c => c.slug !== slug));
     } catch (err) {
       console.error("Error deleting campaign:", err);
-      toast.error("An unexpected error occurred while deleting the campaign");
+      toast.error(t("deleteDialog.error"));
     }
   };
 
@@ -192,18 +194,18 @@ const CampaignsPage: React.FC = () => {
       const result = await updateCampaignAction(actualCampaignId, campaign.slug, { status: newStatus }, locale);
       
       if (!result.success) {
-        toast.error(`Failed to update status: ${result.error}`);
+        toast.error(`${t("statusUpdate.failed")}: ${result.error}`);
         return;
       }
       
-      toast.success(`"${campaign.title ?? 'Campaign'}" status updated to ${newStatus}`);
+      toast.success(t("statusUpdate.success", { name: campaign.title ?? t("noCampaignTitle"), status: newStatus }));
       // Update local state
       setCampaigns(prev => 
         prev.map(c => c.id === campaign.id ? { ...c, status: newStatus } : c)
       );
     } catch (err) {
       console.error("Error updating campaign status:", err);
-      toast.error("An unexpected error occurred while updating the status");
+      toast.error(t("statusUpdate.error"));
     }
   };
 
@@ -220,10 +222,10 @@ const CampaignsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            Campaigns
+            {t("title")}
           </h1>
           <p className="text-gray-600 mt-1">
-            Manage your campaigns
+            {t("description")}
           </p>
         </div>
         <div className="flex gap-2">
@@ -233,12 +235,12 @@ const CampaignsPage: React.FC = () => {
             disabled={isRefreshing}
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-            Refresh
+            {t("refresh")}
           </Button>
           <Button asChild className="bg-[#781D32] hover:bg-[#781D32]/90">
             <Link href="/admin/campaigns/new">
               <Plus className="mr-2 h-4 w-4" />
-              New Campaign
+              {t("newButton")}
             </Link>
           </Button>
         </div>
@@ -247,27 +249,27 @@ const CampaignsPage: React.FC = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 md:gap-6">
         <StatsCard
-          title="Total Campaigns"
+          title={t("totalCampaigns")}
           value={stats.total}
           icon={Target}
           iconClassName="text-muted-foreground"
         />
         <StatsCard
-          title="Active"
+          title={t("active")}
           value={stats.active}
           icon={Play}
           iconClassName="text-green-500"
           valueClassName="text-green-600"
         />
         <StatsCard
-          title="Drafts"
+          title={t("drafts")}
           value={stats.drafts}
           icon={Edit}
           iconClassName="text-yellow-500"
           valueClassName="text-yellow-600"
         />
         <StatsCard
-          title="Completed"
+          title={t("completed")}
           value={stats.completed}
           icon={Target}
           iconClassName="text-blue-500"
@@ -278,13 +280,13 @@ const CampaignsPage: React.FC = () => {
       {/* Campaigns Table */}
       <Card className="border-gray-200 shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold">All Campaigns</CardTitle>
+          <CardTitle className="text-lg font-semibold">{t("allCampaigns")}</CardTitle>
         </CardHeader>
         <CardContent>
           {/* Search */}
           <div className="mb-4">
             <Input
-              placeholder="Search campaigns..."
+              placeholder={t("searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="max-w-sm"
@@ -296,9 +298,9 @@ const CampaignsPage: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-auto">Campaign</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-[70px]">Actions</TableHead>
+                  <TableHead className="w-auto">{t("table.campaign")}</TableHead>
+                  <TableHead>{t("table.status")}</TableHead>
+                  <TableHead className="w-[70px]">{t("table.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -308,7 +310,7 @@ const CampaignsPage: React.FC = () => {
                       colSpan={5}
                       className="text-center py-8 text-gray-500"
                     >
-                      No campaigns found.
+                      {t("noCampaignsFound")}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -320,7 +322,7 @@ const CampaignsPage: React.FC = () => {
                               href={`/admin/campaigns/${campaign.slug}`}
                               className="font-medium hover:text-[#781D32] hover:underline transition-colors"
                             >
-                              {campaign.title || <span className="text-gray-400">No campaign title</span>}
+                              {campaign.title || <span className="text-gray-400">{t("noCampaignTitle")}</span>}
                             </Link>
                             {campaign.description ? (
                               <div className="text-sm text-gray-500 mt-1 line-clamp-2">
@@ -353,13 +355,13 @@ const CampaignsPage: React.FC = () => {
                                   target="_blank"
                                 >
                                   <Eye className="mr-2 h-4 w-4" />
-                                  View
+                                  {t("actions.view")}
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem asChild>
                                 <Link href={`/admin/campaigns/${campaign.slug}/edit`}>
                                   <Edit className="mr-2 h-4 w-4" />
-                                  Edit
+                                  {t("actions.edit")}
                                 </Link>
                               </DropdownMenuItem>
                               {campaign.status === "draft" && (
@@ -367,7 +369,7 @@ const CampaignsPage: React.FC = () => {
                                   onClick={() => handleStatusUpdate(campaign, "active")}
                                 >
                                   <Play className="mr-2 h-4 w-4" />
-                                  Activate
+                                  {t("actions.activate")}
                                 </DropdownMenuItem>
                               )}
                               {campaign.status === "active" && (
@@ -375,7 +377,7 @@ const CampaignsPage: React.FC = () => {
                                   onClick={() => handleStatusUpdate(campaign, "paused")}
                                 >
                                   <Pause className="mr-2 h-4 w-4" />
-                                  Pause
+                                  {t("actions.pause")}
                                 </DropdownMenuItem>
                               )}
                               {campaign.status === "paused" && (
@@ -383,7 +385,7 @@ const CampaignsPage: React.FC = () => {
                                   onClick={() => handleStatusUpdate(campaign, "active")}
                                 >
                                   <Play className="mr-2 h-4 w-4" />
-                                  Resume
+                                  {t("actions.resume")}
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuItem
@@ -393,7 +395,7 @@ const CampaignsPage: React.FC = () => {
                                 className="text-red-600"
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
+                                {t("actions.delete")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>

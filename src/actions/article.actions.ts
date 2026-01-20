@@ -10,8 +10,6 @@ import {
   ARTICLE_TRANSLATION_CONFIG,
   type SupportedLocale,
 } from "@/src/lib/services/translation.service";
-import { getArticles, type ArticleQueryOptions } from "@/src/lib/db/queries/articles";
-
 /**
  * Generate a URL-friendly slug from text
  */
@@ -54,7 +52,7 @@ async function slugExistsForLanguage(slug: string, language: string): Promise<bo
     return false;
   }
   
-  // For EN/AR: Check postTranslations table
+  // For EN: Check postTranslations table
   const existingTranslation = await db
     .select({ id: postTranslations.id })
     .from(postTranslations)
@@ -76,30 +74,6 @@ export interface GetPostsOptions {
   language?: string;
   page?: number;
   limit?: number;
-}
-
-/**
- * Get articles with filters - wrapper around query function
- */
-export async function getArticlesAction(options: ArticleQueryOptions = {}) {
-  try {
-    const result = await getArticles(options);
-    return {
-      success: true,
-      data: result,
-      total: result.length,
-      page: options.page || 1,
-      limit: options.limit || 10,
-    };
-  } catch (error) {
-    console.error("Error fetching articles:", error);
-    return {
-      success: false,
-      data: [],
-      total: 0,
-      error: error instanceof Error ? error.message : "Failed to fetch articles",
-    };
-  }
 }
 
 export interface PostWithCategory {
@@ -129,46 +103,34 @@ export async function getPosts(options: GetPostsOptions = {}) {
   try {
     const offset = (page - 1) * limit;
 
-    // Build conditions based on filters
-    const conditions = [];
-    
-    if (status) {
-      conditions.push(eq(language === 'fi' ? posts.status : postTranslations.status, status));
-    }
-    
-    if (type) {
-      conditions.push(eq(language === 'fi' ? posts.type : postTranslations.type, type));
-    }
-    
-    if (search) {
-      const searchCondition = or(
-        like(language === 'fi' ? posts.title : postTranslations.title, `%${search}%`),
-        like(language === 'fi' ? posts.excerpt : postTranslations.excerpt, `%${search}%`)
-      );
-      if (searchCondition) conditions.push(searchCondition);
-    }
-
     // Execute query based on language
     let results;
     
     if (language === 'fi') {
       // For Finnish: Query both posts table and postTranslations table
-      // First, get from posts table
-      const postsConditions = [...conditions, eq(posts.language, 'fi')];
+      
+      // Build conditions for posts table
+      const postsConditions = [eq(posts.language, 'fi')];
+      if (status) postsConditions.push(eq(posts.status, status));
+      if (type) postsConditions.push(eq(posts.type, type));
+      if (search) {
+        const searchCondition = or(
+          like(posts.title, `%${search}%`),
+          like(posts.excerpt, `%${search}%`)
+        );
+        if (searchCondition) postsConditions.push(searchCondition);
+      }
+      
       const postsResults = await db
         .select()
         .from(posts)
-        .where(postsConditions.length > 0 ? and(...postsConditions) : undefined)
+        .where(and(...postsConditions))
         .orderBy(desc(posts.publishedAt), desc(posts.createdAt));
       
-      // Also get from postTranslations table (for Finnish articles created there)
-      const translationsConditions = [];
-      if (status) {
-        translationsConditions.push(eq(postTranslations.status, status));
-      }
-      if (type) {
-        translationsConditions.push(eq(postTranslations.type, type));
-      }
+      // Build conditions for postTranslations table
+      const translationsConditions = [eq(postTranslations.language, 'fi')];
+      if (status) translationsConditions.push(eq(postTranslations.status, status));
+      if (type) translationsConditions.push(eq(postTranslations.type, type));
       if (search) {
         const searchCondition = or(
           like(postTranslations.title, `%${search}%`),
@@ -176,7 +138,6 @@ export async function getPosts(options: GetPostsOptions = {}) {
         );
         if (searchCondition) translationsConditions.push(searchCondition);
       }
-      translationsConditions.push(eq(postTranslations.language, 'fi'));
       
       const translationsResults = await db
         .select()
@@ -211,18 +172,26 @@ export async function getPosts(options: GetPostsOptions = {}) {
       // Apply pagination after combining and sorting
       results = combined.slice(offset, offset + limit);
     } else {
-      // For other languages (en, ar): Query postTranslations table
-      conditions.push(eq(postTranslations.language, language));
+      // For other languages (en): Query postTranslations table ONLY
+      const conditions = [eq(postTranslations.language, language)];
       
-      const query = db
+      if (status) conditions.push(eq(postTranslations.status, status));
+      if (type) conditions.push(eq(postTranslations.type, type));
+      if (search) {
+        const searchCondition = or(
+          like(postTranslations.title, `%${search}%`),
+          like(postTranslations.excerpt, `%${search}%`)
+        );
+        if (searchCondition) conditions.push(searchCondition);
+      }
+      
+      results = await db
         .select()
         .from(postTranslations)
         .where(and(...conditions))
         .orderBy(desc(postTranslations.publishedAt), desc(postTranslations.createdAt))
         .limit(limit)
         .offset(offset);
-        
-      results = await query;
     }
 
     // Transform results to match expected format
@@ -270,19 +239,27 @@ export async function getPosts(options: GetPostsOptions = {}) {
 
 export async function getPostBySlug(slug: string, language: string = "en") {
   try {
-    let result;
+    let post;
     
     if (language === 'fi') {
-      // For Finnish: Check posts table first, then postTranslations
-      result = await db
+      // For Finnish: Check both posts table and postTranslations table
+      // First check posts table
+      const postsResult = await db
         .select()
         .from(posts)
-        .where(eq(posts.slug, slug))
+        .where(
+          and(
+            eq(posts.slug, slug),
+            eq(posts.language, 'fi')
+          )
+        )
         .limit(1);
       
-      // If not found in posts table, check postTranslations
-      if (result.length === 0) {
-        result = await db
+      if (postsResult.length > 0) {
+        post = postsResult[0];
+      } else {
+        // If not found in posts table, check postTranslations
+        const translationsResult = await db
           .select()
           .from(postTranslations)
           .where(
@@ -292,10 +269,16 @@ export async function getPostBySlug(slug: string, language: string = "en") {
             )
           )
           .limit(1);
+        
+        if (translationsResult.length === 0) {
+          return { success: false, post: null, error: "Post not found" };
+        }
+        
+        post = translationsResult[0];
       }
     } else {
       // For other languages: Query postTranslations table
-      result = await db
+      const result = await db
         .select()
         .from(postTranslations)
         .where(
@@ -305,13 +288,13 @@ export async function getPostBySlug(slug: string, language: string = "en") {
           )
         )
         .limit(1);
+      
+      if (result.length === 0) {
+        return { success: false, post: null, error: "Post not found" };
+      }
+      
+      post = result[0];
     }
-
-    if (result.length === 0) {
-      return { success: false, post: null, error: "Post not found" };
-    }
-
-    const post = result[0];
     
     return {
       success: true,
@@ -462,7 +445,7 @@ export async function updatePost(
     const targetLanguage = data.language || language;
 
     // For Finnish: Update posts table
-    // For English/Arabic: Update postTranslations table
+    // For English: Update postTranslations table
     if (targetLanguage === "fi") {
       // Check if Finnish post exists in posts table
       const [existingPost] = await db
@@ -504,7 +487,7 @@ export async function updatePost(
         }
       }
     } else {
-      // For English/Arabic: Update postTranslations table
+      // For English: Update postTranslations table
       const [existingTranslation] = await db
         .select()
         .from(postTranslations)
@@ -527,126 +510,7 @@ export async function updatePost(
             )
           );
       } else {
-        // Create new translation - need to find base post or any existing translation for metadata
-        const [basePost] = await db
-          .select()
-          .from(posts)
-          .where(eq(posts.slug, slug))
-          .limit(1);
-
-        // If no base post, look for any existing translation
-        let metadata = basePost;
-        if (!metadata) {
-          const [anyTranslation] = await db
-            .select()
-            .from(postTranslations)
-            .where(eq(postTranslations.slug, slug))
-            .limit(1);
-          metadata = anyTranslation as any;
-        }
-
-        if (!metadata) {
-          return { success: false, error: "No existing article found to update" };
-        }
-
-        await db.insert(postTranslations).values({
-          postId: basePost?.id || null,
-          slug,
-          language: targetLanguage,
-          title: data.title || metadata.title || "",
-          excerpt: data.excerpt || metadata.excerpt || "",
-          content: data.content || metadata.content || "",
-          type: "article",
-          status: data.status || metadata.status || "draft",
-          featuredImage: data.featured_image !== undefined ? data.featured_image : metadata.featuredImage,
-          categories: metadata.categories || [],
-          authorId: metadata.authorId,
-          authorName: metadata.authorName,
-          publishedAt: data.status === "published" ? now : metadata.publishedAt,
-          createdAt: now,
-          updatedAt: now,
-        });
-      }
-
-      // Ensure Finnish version exists - check both tables
-      const [finnishPost] = await db
-        .select()
-        .from(posts)
-        .where(eq(posts.slug, slug))
-        .limit(1);
-
-      const [finnishTranslation] = await db
-        .select()
-        .from(postTranslations)
-        .where(eq(postTranslations.language, "fi"))
-        .limit(1);
-
-      // Also check by original slug
-      const [finnishBySlug] = await db
-        .select()
-        .from(postTranslations)
-        .where(
-          and(
-            eq(postTranslations.slug, slug),
-            eq(postTranslations.language, "fi")
-          )
-        )
-        .limit(1);
-
-      // If no Finnish version exists anywhere, create it in postTranslations
-      if (!finnishPost && !finnishBySlug) {
-        const sourceData = {
-          title: data.title || "",
-          excerpt: data.excerpt || "",
-          content: data.content || "",
-        };
-
-        // Try to get Finnish translation
-        let finnishContent = sourceData;
-        let finnishSlug = slug; // Default to same slug
-        
-        if (data.autoTranslate && data.title && data.content && data.excerpt) {
-          try {
-            const { translations } = await translateContentToAllLocales(
-              { title: data.title, content: data.content, excerpt: data.excerpt },
-              targetLanguage as SupportedLocale,
-              ARTICLE_TRANSLATION_CONFIG
-            );
-            if (translations.fi?.title) {
-              finnishContent = {
-                title: translations.fi.title as string,
-                excerpt: translations.fi.excerpt as string,
-                content: translations.fi.content as string,
-              };
-              // Generate Finnish slug from translated title
-              finnishSlug = generateSlug(translations.fi.title as string);
-            }
-          } catch (e) {
-            console.warn("Failed to translate to Finnish:", e);
-          }
-        }
-
-        // Check if Finnish translation with new slug already exists
-        const finnishExists = await slugExistsForLanguage(finnishSlug, "fi");
-        if (!finnishExists) {
-          await db.insert(postTranslations).values({
-            postId: null,
-            slug: finnishSlug,
-            language: "fi",
-            title: finnishContent.title || `[FI] ${data.title}`,
-            excerpt: finnishContent.excerpt || data.excerpt || "",
-            content: finnishContent.content || data.content || "",
-            type: "article",
-            status: data.status || "draft",
-            featuredImage: data.featured_image || null,
-            categories: [],
-            authorId: null,
-            authorName: null,
-            publishedAt: data.status === "published" ? now : null,
-            createdAt: now,
-            updatedAt: now,
-          });
-        }
+        return { success: false, error: `Translation for ${targetLanguage} not found. Please create it first.` };
       }
     }
 
@@ -671,7 +535,7 @@ export async function updatePost(
         }
 
         // Update translations for other locales
-        const targetLocales = (["en", "fi", "ar"] as SupportedLocale[]).filter(
+        const targetLocales = (["en", "fi"] as SupportedLocale[]).filter(
           (locale) => locale !== sourceLocale
         );
 
@@ -757,7 +621,7 @@ export async function updatePost(
               }
             }
           } else {
-            // Update English/Arabic in postTranslations
+            // Update English in postTranslations
             const [existing] = await db
               .select()
               .from(postTranslations)
@@ -863,7 +727,7 @@ export async function createPost(data: CreatePostData) {
     };
 
     // Finnish articles go to posts table
-    // English/Arabic articles go to postTranslations table
+    // English articles go to postTranslations table
     if (data.language === "fi") {
       // Check if Finnish article already exists
       const exists = await slugExistsForLanguage(data.slug, "fi");
@@ -891,51 +755,6 @@ export async function createPost(data: CreatePostData) {
         language: data.language,
       });
       createdPosts.push({ language: data.language, slug: data.slug });
-
-      // Also create Finnish version in postTranslations (placeholder or translated)
-      let finnishContent = {
-        title: `[FI] ${data.title}`,
-        excerpt: data.excerpt,
-        content: data.content,
-      };
-      let finnishSlug = data.slug; // Default to same slug
-
-      // If auto-translate is enabled, get Finnish translation and generate Finnish slug
-      if (data.autoTranslate) {
-        try {
-          const { translations } = await translateContentToAllLocales(
-            { title: data.title, content: data.content, excerpt: data.excerpt },
-            sourceLocale,
-            ARTICLE_TRANSLATION_CONFIG
-          );
-          if (translations.fi?.title) {
-            finnishContent = {
-              title: translations.fi.title as string,
-              excerpt: translations.fi.excerpt as string,
-              content: translations.fi.content as string,
-            };
-            // Generate Finnish slug from translated title
-            finnishSlug = generateSlug(translations.fi.title as string);
-          }
-        } catch (e) {
-          console.warn("Failed to translate to Finnish:", e);
-        }
-      }
-
-      // Check if Finnish version already exists before creating
-      const finnishExists = await slugExistsForLanguage(finnishSlug, "fi");
-      if (!finnishExists) {
-        await db.insert(postTranslations).values({
-          ...basePostData,
-          slug: finnishSlug,
-          postId: null,
-          language: "fi",
-          title: finnishContent.title,
-          excerpt: finnishContent.excerpt,
-          content: finnishContent.content,
-        });
-        createdPosts.push({ language: "fi", slug: finnishSlug });
-      }
     }
 
     // Auto-translate to remaining languages if enabled
@@ -958,14 +777,10 @@ export async function createPost(data: CreatePostData) {
         }
 
         // Insert translated versions for other locales
-        // Skip source locale and Finnish if already created above
-        const allLocales: SupportedLocale[] = ["en", "fi", "ar"];
+        const allLocales: SupportedLocale[] = ["en", "fi"];
         const targetLocales = allLocales.filter((locale) => {
           // Skip source locale
-          if (locale === sourceLocale) return false;
-          // Skip Finnish if already created (when source is EN or AR)
-          if (locale === "fi" && sourceLocale !== "fi") return false;
-          return true;
+          return locale !== sourceLocale;
         });
 
         for (const targetLocale of targetLocales) {

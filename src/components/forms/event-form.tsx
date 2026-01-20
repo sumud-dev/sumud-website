@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Image from "next/image";
-import { Save, Loader2 } from "lucide-react";
+import { Save, Loader2, Languages } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import {
@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/src/components/ui/select";
+import { Switch } from "@/src/components/ui/switch";
 import { ImageUpload } from "@/src/components/ui/image-upload";
 import type { Event } from "@/src/lib/db/schema";
 
@@ -42,6 +43,7 @@ const eventSchema = z.object({
   organizers: z.string().optional(),
   language: z.string().optional(),
   authorName: z.string().optional(),
+  autoTranslate: z.boolean().optional(),
 });
 
 export type EventFormData = z.infer<typeof eventSchema>;
@@ -81,6 +83,7 @@ export function EventForm({
       organizers: jsonbToString(event?.organizers),
       language: event?.language || "en",
       authorName: event?.authorName || "",
+      autoTranslate: false,
     },
   });
 
@@ -281,11 +284,39 @@ export function EventForm({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="ar">Arabic</SelectItem>
+
                           <SelectItem value="fi">Finnish</SelectItem>
                         </SelectContent>
                       </Select>
+                      <FormDescription>
+                        The primary language of this event
+                      </FormDescription>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="autoTranslate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                      <div className="space-y-0.5">
+                        <FormLabel className="flex items-center gap-2">
+                          <Languages className="h-4 w-4" />
+                          Auto-translate
+                        </FormLabel>
+                        <FormDescription className="text-xs">
+                          Automatically translate to all languages (EN, AR, FI)
+                        </FormDescription>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={isSubmitting}
+                        />
+                      </FormControl>
                     </FormItem>
                   )}
                 />

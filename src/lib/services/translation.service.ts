@@ -2,34 +2,32 @@
  * Translation Service using DeepL API
  * 
  * A reusable translation service for translating content between
- * supported locales (en, fi, ar) using DeepL.
+ * supported locales (en, fi) using DeepL.
  */
 
 import * as deepl from "deepl-node";
 
 // Supported locales in the application
-export type SupportedLocale = "en" | "fi" | "ar";
+export type SupportedLocale = "en" | "fi";
 
 // Map our locale codes to DeepL target language codes
 const DEEPL_TARGET_MAP: Record<SupportedLocale, deepl.TargetLanguageCode> = {
   en: "en-US",
   fi: "fi",
-  ar: "ar",
 };
 
 // Map our locale codes to DeepL source language codes
 const DEEPL_SOURCE_MAP: Record<SupportedLocale, deepl.SourceLanguageCode> = {
   en: "en",
   fi: "fi",
-  ar: "ar",
 };
 
 // Languages that support formality option in DeepL
 // Finnish (fi) does NOT support formality
-const FORMALITY_SUPPORTED_LOCALES: SupportedLocale[] = ["ar"];
+const FORMALITY_SUPPORTED_LOCALES: SupportedLocale[] = [];
 
 // All supported locales
-export const SUPPORTED_LOCALES: SupportedLocale[] = ["en", "fi", "ar"];
+export const SUPPORTED_LOCALES: SupportedLocale[] = ["en", "fi"];
 
 /**
  * Get DeepL client instance
@@ -167,7 +165,6 @@ export async function translateToAllLocales(
   const translations: Record<SupportedLocale, string> = {
     en: sourceLocale === "en" ? text : "",
     fi: sourceLocale === "fi" ? text : "",
-    ar: sourceLocale === "ar" ? text : "",
   };
 
   const targetLocales = getTargetLocales(sourceLocale);
@@ -247,7 +244,7 @@ export const CAMPAIGN_TRANSLATION_CONFIG: TranslationConfig = {
  * Default configuration for event translations
  */
 export const EVENT_TRANSLATION_CONFIG: TranslationConfig = {
-  textFields: ["title", "description", "location", "seoTitle", "seoDescription"],
+  textFields: ["title", "description", "content", "location", "seoTitle", "seoDescription"],
   arrayFields: [],
   objectFields: [],
 };
@@ -407,7 +404,6 @@ export async function translateContentToAllLocales<T extends Record<string, unkn
   const translations: Record<SupportedLocale, T> = {
     en: sourceLocale === "en" ? content : ({} as T),
     fi: sourceLocale === "fi" ? content : ({} as T),
-    ar: sourceLocale === "ar" ? content : ({} as T),
   };
 
   const targetLocales = getTargetLocales(sourceLocale);

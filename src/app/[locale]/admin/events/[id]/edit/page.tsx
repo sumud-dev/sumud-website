@@ -7,6 +7,7 @@ import { Button } from "@/src/components/ui/button";
 import { EventForm, type EventFormData } from "@/src/components/forms/event-form";
 import { fetchEventByIdAction, updateEventAction } from "@/src/actions/events.actions";
 import { type Event } from "@/src/lib/db/schema";
+import { toast } from "sonner";
 
 interface EditEventPageProps {
   params: Promise<{
@@ -36,10 +37,12 @@ export default function EditEventPage({ params }: EditEventPageProps) {
           setEvent(result.data as Event);
         } else {
           setError(result.error);
+          toast.error(result.error);
         }
       } catch (err) {
-        console.error("Error fetching event:", err);
-        setError(err instanceof Error ? err.message : "Failed to fetch event");
+        const errorMsg = err instanceof Error ? err.message : "Failed to fetch event";
+        setError(errorMsg);
+        toast.error(errorMsg);
       } finally {
         setIsLoading(false);
       }
@@ -50,7 +53,7 @@ export default function EditEventPage({ params }: EditEventPageProps) {
 
   const handleSubmit = async (data: EventFormData) => {
     if (!event || !currentId) {
-      console.error("No event loaded");
+      toast.error("No event loaded");
       return;
     }
 
@@ -68,27 +71,47 @@ export default function EditEventPage({ params }: EditEventPageProps) {
       // Helper to convert empty strings to undefined
       const cleanValue = (val: string | undefined) => val && val.trim() ? val.trim() : undefined;
 
+      // Helper to parse JSONB fields - keep as strings or parse if JSON array format
+      const parseJsonbField = (val: string | undefined) => {
+        if (!val || !val.trim()) return undefined;
+        const trimmed = val.trim();
+        // If it looks like JSON array/object, keep as is for JSONB
+        if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+          try {
+            return JSON.parse(trimmed);
+          } catch {
+            return trimmed; // Return as string if parse fails
+          }
+        }
+        // For comma-separated values, convert to array
+        if (trimmed.includes(',')) {
+          return trimmed.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        return trimmed; // Single value as string
+      };
+
       const result = await updateEventAction(currentId, {
         title: data.title,
         slug: shouldUpdateSlug ? newSlug : undefined,
         content: cleanValue(data.content),
         status: data.status,
         featuredImage: cleanValue(data.featuredImageUrl),
-        altTexts: cleanValue(data.altTexts),
-        categories: cleanValue(data.categories),
-        locations: cleanValue(data.locations),
-        organizers: cleanValue(data.organizers),
+        altTexts: parseJsonbField(data.altTexts),
+        categories: parseJsonbField(data.categories),
+        locations: parseJsonbField(data.locations),
+        organizers: parseJsonbField(data.organizers),
         language: (data.language as "en" | "fi" | "ar") || "en",
         authorName: cleanValue(data.authorName),
       });
 
       if (result.success) {
+        toast.success("Event updated successfully");
         router.push("/admin/events");
       } else {
-        console.error(`Error updating event: ${result.error}`);
+        toast.error(result.error || "Failed to update event");
       }
     } catch (error) {
-      console.error("Error updating event:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to update event");
     } finally {
       setIsSubmitting(false);
     }

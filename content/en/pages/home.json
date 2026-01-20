@@ -4,7 +4,7 @@
   "description": "Official website of Sumud - Palestinian solidarity and activism",
   "status": "published",
   "createdAt": "2026-01-06T12:00:00.000Z",
-  "updatedAt": "2026-01-18T12:00:00.000Z",
+  "updatedAt": "2026-01-19T12:00:04.247Z",
   "blocks": [
     {
       "id": "heritage-hero-1",
@@ -51,6 +51,22 @@
       "type": "newsletter-section",
       "content": {
         "variant": "default"
+      }
+    },
+    {
+      "id": "0ssw2s0mp",
+      "type": "cta-section",
+      "content": {
+        "primaryButtonHref": "/test",
+        "secondaryButtonHref": "/about",
+        "content": {
+          "en": {
+            "title": "Test!",
+            "description": "Join our community...",
+            "primaryButtonText": "Join Now",
+            "secondaryButtonText": "Learn More"
+          }
+        }
       }
     }
   ]

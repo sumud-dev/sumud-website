@@ -11,7 +11,9 @@ import React from "react";
 import Image from "next/image";
 import { Link } from "@/src/i18n/navigation";
 import { motion } from "framer-motion";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/src/components/ui/button";
+import { Card, CardContent } from "@/src/components/ui/card";
 import { cn } from "@/src/lib/utils/utils";
 import { 
   Heart, 
@@ -32,10 +34,12 @@ import {
   ShieldOff,
   ShoppingCart,
   Church,
+  Mail,
+  Phone,
+  MessageCircle,
   LucideIcon 
 } from "lucide-react";
 import NewsletterSignup from "@/src/components/ui/newsletter-signup";
-import { useTranslations } from "next-intl";
 import { useEvents } from "@/src/lib/hooks/use-events";
 import { useArticles } from "@/src/lib/hooks/use-articles";
 import { useCampaigns } from "@/src/lib/hooks/use-campaigns";
@@ -244,10 +248,71 @@ export function HeadingBlock({ content }: { content: HeadingBlockContent }) {
 export function TextBlock({ content }: { content: TextBlockContent }) {
   return (
     <div className="container mx-auto px-4 py-4">
-      <div className="prose prose-lg max-w-none">
-        <p className="text-muted-foreground leading-relaxed">{content.text}</p>
-      </div>
+      <div 
+        className="prose prose-lg max-w-none text-muted-foreground leading-relaxed"
+        dangerouslySetInnerHTML={{ __html: content.text }}
+      />
     </div>
+  );
+}
+
+// Contact Info Block - Professional contact information display
+export function ContactInfoBlock({ content }: { content: { items: Array<{ icon: string; label: string; value: string; href?: string }> } }) {
+  const getIcon = (iconName: string) => {
+    const icons: Record<string, React.ReactNode> = {
+      mail: <Mail className="w-6 h-6" />,
+      phone: <Phone className="w-6 h-6" />,
+      message: <MessageCircle className="w-6 h-6" />,
+    };
+    return icons[iconName] || <Mail className="w-6 h-6" />;
+  };
+
+  return (
+    <section className="py-16">
+      <div className="container mx-auto px-4 max-w-4xl">
+        <div className="grid gap-6 md:grid-cols-3">
+          {content.items.map((item, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              viewport={{ once: true }}
+            >
+              <Card className="h-full transition-all duration-300 hover:shadow-lg border-muted">
+                <CardContent className="p-6 text-center">
+                  <div 
+                    className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(135deg, #781D32, #55613C)",
+                    }}
+                  >
+                    <div className="text-white">
+                      {getIcon(item.icon)}
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-semibold text-[#3E442B] mb-2">
+                    {item.label}
+                  </h3>
+                  {item.href ? (
+                    <a 
+                      href={item.href}
+                      className="text-[#781D32] hover:text-[#781D32]/80 transition-colors font-medium"
+                    >
+                      {item.value}
+                    </a>
+                  ) : (
+                    <p className="text-gray-600">
+                      {item.value}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -576,10 +641,14 @@ export function HeritageHeroSectionBlock({ content }: { content: HeritageHeroBlo
 
 // News Section Block - Fetches articles from database using TanStack Query
 export function NewsSectionBlock({ content }: { content: NewsSectionBlockContent }) {
+  const locale = useLocale();
   const { data: articles = [], isLoading } = useArticles({
     status: "published",
     limit: content.showCount || 3,
+    language: locale,
   });
+  const t = useTranslations("homepage");
+  const tCommon = useTranslations("common");
 
   return (
     <section className="py-20 relative overflow-hidden">
@@ -707,7 +776,7 @@ export function NewsSectionBlock({ content }: { content: NewsSectionBlockContent
                                 background: "rgba(255, 255, 255, 0.3)",
                               }}
                             >
-                              Read More
+                              {tCommon("buttons.readMore")}
                               <ChevronRight className="ml-2 h-4 w-4" />
                             </Button>
                           </Link>
@@ -738,7 +807,7 @@ export function NewsSectionBlock({ content }: { content: NewsSectionBlockContent
                 boxShadow: "0 4px 6px -1px rgba(107, 142, 35, 0.1)",
               }}
             >
-              View All Articles
+              {tCommon("buttons.learnMore")}
               <ChevronRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
@@ -750,10 +819,14 @@ export function NewsSectionBlock({ content }: { content: NewsSectionBlockContent
 
 // Events Section Block - Fetches events from database using TanStack Query
 export function EventsSectionBlock({ content }: { content: EventsSectionBlockContent }) {
+  const locale = useLocale();
   const { data: eventsResponse, isLoading } = useEvents({
     status: "published",
     limit: content.showCount || 3,
+    language: locale,
   });
+  const t = useTranslations("homepage");
+  const tCommon = useTranslations("common");
 
   const events = eventsResponse?.data || [];
 
@@ -896,7 +969,7 @@ export function EventsSectionBlock({ content }: { content: EventsSectionBlockCon
                                 boxShadow: "0 4px 12px -2px rgba(120, 29, 50, 0.4)",
                               }}
                             >
-                              Learn More
+                              {tCommon("buttons.learnMore")}
                             </Button>
                           </Link>
                         </div>
@@ -926,7 +999,7 @@ export function EventsSectionBlock({ content }: { content: EventsSectionBlockCon
                 boxShadow: "0 4px 6px -1px rgba(120, 29, 50, 0.1)",
               }}
             >
-              View All Events
+              {t("events.viewAll")}
               <ChevronRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
@@ -992,9 +1065,13 @@ const getCampaignIcon = (iconName: string) => {
 
 // Campaigns Section Block - Fetches campaigns from database using TanStack Query
 export function CampaignsSectionBlock({ content }: { content: CampaignsSectionBlockContent }) {
+  const locale = useLocale();
   // Fetch campaigns without isFeatured filter (same as campaigns page)
   // Then sort by featured status on frontend
-  const { data: campaignsResponse, isLoading } = useCampaigns({});
+  const { data: campaignsResponse, isLoading } = useCampaigns({ language: locale });
+  const t = useTranslations("homepage");
+  const tCommon = useTranslations("common");
+
 
   // Get campaigns from API response and sort by featured status
   const allCampaigns = campaignsResponse?.data || [];
@@ -1092,27 +1169,6 @@ export function CampaignsSectionBlock({ content }: { content: CampaignsSectionBl
                           "0 10px 15px -3px rgba(120, 29, 50, 0.08), 0 4px 6px -2px rgba(120, 29, 50, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 0.6)",
                       }}
                     >
-                      {/* Campaign Featured Image with Icon Overlay */}
-                      <div className="relative h-56 overflow-hidden">
-                        {(campaign.featuredImage || campaign.image) && (
-                          <Image
-                            src={campaign.featuredImage || campaign.image || "/images/hero-embroidery.jpg"}
-                            alt={campaign.title || "Campaign"}
-                            fill
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                            className="object-cover group-hover:scale-110 transition-transform duration-500"
-                          />
-                        )}
-                        {/* Gradient overlay for better text/icon visibility */}
-                        <div
-                          className="absolute inset-0"
-                          style={{
-                            background: `linear-gradient(135deg, ${campaignColor}40 0%, ${campaignColor}20 50%, transparent 100%)`,
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
-                      </div>
-
                       {/* Campaign Content */}
                       <div className="p-6 space-y-4">
                         <div>
@@ -1136,7 +1192,7 @@ export function CampaignsSectionBlock({ content }: { content: CampaignsSectionBl
                               boxShadow: `0 4px 12px -2px ${campaignColor}40`,
                             }}
                           >
-                            Take Action
+                            {tCommon("buttons.takeAction")}
                             <ArrowRight className="ml-2 h-4 w-4" />
                           </Button>
                         </Link>
@@ -1165,7 +1221,7 @@ export function CampaignsSectionBlock({ content }: { content: CampaignsSectionBl
                 boxShadow: "0 10px 15px -3px rgba(120, 29, 50, 0.3)",
               }}
             >
-              View All Campaigns
+              {t("campaigns.viewAll")}
               <ChevronRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
@@ -1196,14 +1252,17 @@ export function NewsletterSectionBlock({ content }: { content: NewsletterSection
 // ========================================
 
 // Helper to get content for current locale with fallback
-function getLocalizedContent<T>(content: { en: T; fi?: T; ar?: T }, locale: string): T {
-  const localeKey = locale as 'en' | 'fi' | 'ar';
+function getLocalizedContent<T>(content: { en: T; fi?: T }, locale: string): T {
+  const localeKey = locale as 'en' | 'fi';
   return content[localeKey] || content.en;
 }
 
 // Page Hero Block - Editable hero section
 export function PageHeroBlock({ content, locale = 'en' }: { content: PageHeroBlockContent; locale?: string }) {
-  const localizedContent = getLocalizedContent(content.content, locale);
+  // Handle both nested locale structure and flat content
+  const localizedContent = 'en' in content || 'fi' in content
+    ? getLocalizedContent(content as any, locale)
+    : content;
   const Icon = content.icon ? iconMap[content.icon] : Globe;
 
   return (
@@ -1287,7 +1346,10 @@ export function PageHeroBlock({ content, locale = 'en' }: { content: PageHeroBlo
 
 // Mission Section Block - Editable mission statement
 export function MissionSectionBlock({ content, locale = 'en' }: { content: MissionSectionBlockContent; locale?: string }) {
-  const localizedContent = getLocalizedContent(content.content, locale);
+  // Handle both nested locale structure and flat content
+  const localizedContent = 'content' in content && (content.content && typeof content.content === 'object' && ('en' in content.content || 'fi' in content.content))
+    ? getLocalizedContent(content.content as any, locale)
+    : content;
 
   return (
     <motion.section
@@ -1321,7 +1383,9 @@ export function MissionSectionBlock({ content, locale = 'en' }: { content: Missi
 
 // Features Section Block - Editable features grid
 export function FeaturesSectionBlock({ content, locale = 'en' }: { content: FeaturesSectionBlockContent; locale?: string }) {
-  const headerContent = getLocalizedContent(content.header, locale);
+  const headerContent = (content.header && typeof content.header === 'object' && ('en' in content.header || 'fi' in content.header || 'fi' in content.header))
+    ? getLocalizedContent(content.header as any, locale)
+    : content.header;
   const columns = content.columns || 4;
 
   const gridCols = {
@@ -1351,7 +1415,9 @@ export function FeaturesSectionBlock({ content, locale = 'en' }: { content: Feat
         <div className={cn("grid gap-6", gridCols[columns])}>
           {content.items.map((item, index) => {
             const ItemIcon = iconMap[item.icon] || Globe;
-            const itemContent = getLocalizedContent(item.content, locale);
+            const itemContent = (item.content && typeof item.content === 'object' && ('en' in item.content || 'fi' in item.content || 'fi' in item.content))
+              ? getLocalizedContent(item.content as any, locale)
+              : item.content;
             return (
               <motion.div
                 key={item.key}
@@ -1387,7 +1453,9 @@ export function FeaturesSectionBlock({ content, locale = 'en' }: { content: Feat
 
 // Values Section Block - Editable values display
 export function ValuesSectionBlock({ content, locale = 'en' }: { content: ValuesSectionBlockContent; locale?: string }) {
-  const headerContent = getLocalizedContent(content.header, locale);
+  const headerContent = (content.header && typeof content.header === 'object' && ('en' in content.header || 'fi' in content.header || 'fi' in content.header))
+    ? getLocalizedContent(content.header as any, locale)
+    : content.header;
 
   return (
     <motion.section
@@ -1410,7 +1478,9 @@ export function ValuesSectionBlock({ content, locale = 'en' }: { content: Values
         <div className="grid md:grid-cols-3 gap-8">
           {content.items.map((item, index) => {
             const ItemIcon = iconMap[item.icon] || Heart;
-            const itemContent = getLocalizedContent(item.content, locale);
+            const itemContent = (item.content && typeof item.content === 'object' && ('en' in item.content || 'fi' in item.content || 'fi' in item.content))
+              ? getLocalizedContent(item.content as any, locale)
+              : item.content;
             return (
               <motion.div
                 key={item.key}
@@ -1445,14 +1515,16 @@ export function ValuesSectionBlock({ content, locale = 'en' }: { content: Values
           })}
         </div>
       </div>
+  // Handle both nested locale structure and flat content
     </motion.section>
   );
 }
 
 // Engagement Section Block - Editable engagement cards
 export function EngagementSectionBlock({ content, locale = 'en' }: { content: EngagementSectionBlockContent; locale?: string }) {
-  const headerContent = getLocalizedContent(content.header, locale);
-
+  const headerContent = (content.header && typeof content.header === 'object' && ('en' in content.header || 'fi' in content.header || 'fi' in content.header))
+    ? getLocalizedContent(content.header as any, locale)
+    : content.header
   return (
     <motion.section
       className="py-16"
@@ -1474,7 +1546,9 @@ export function EngagementSectionBlock({ content, locale = 'en' }: { content: En
         <div className="grid md:grid-cols-2 gap-8">
           {content.items.map((item, index) => {
             const ItemIcon = iconMap[item.icon] || FileText;
-            const itemContent = getLocalizedContent(item.content, locale);
+            const itemContent = (item.content && typeof item.content === 'object' && ('en' in item.content || 'fi' in item.content || 'fi' in item.content))
+              ? getLocalizedContent(item.content as any, locale)
+              : item.content;
             return (
               <motion.div
                 key={item.key}
@@ -1525,7 +1599,9 @@ export function EngagementSectionBlock({ content, locale = 'en' }: { content: En
 
 // CTA Section Block - Editable call-to-action
 export function CtaSectionBlock({ content, locale = 'en' }: { content: CtaSectionBlockContent; locale?: string }) {
-  const localizedContent = getLocalizedContent(content.content, locale);
+  const localizedContent = (content.content && typeof content.content === 'object' && ('en' in content.content || 'fi' in content.content || 'fi' in content.content))
+    ? getLocalizedContent(content.content as any, locale)
+    : content;
 
   return (
     <motion.section
@@ -1624,6 +1700,8 @@ export function BlockRenderer({ block, locale = 'en' }: { block: PageBlock; loca
       return <HeadingBlock content={block.content as HeadingBlockContent} />;
     case "text":
       return <TextBlock content={block.content as TextBlockContent} />;
+    case "contact-info":
+      return <ContactInfoBlock content={block.content as any} />;
     case "image":
       return <ImageBlock content={block.content as ImageBlockContent} />;
     case "carousel":

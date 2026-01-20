@@ -322,14 +322,14 @@ function isValidUrl(url: string): boolean {
  * Validate locale code
  */
 export function validateLocale(locale: string): locale is Locale {
-  return ['en', 'fi', 'ar'].includes(locale);
+  return ['en', 'fi'].includes(locale);
 }
 
 /**
  * Check for embedded locale keys (legacy format detection)
  */
 export function detectEmbeddedLocales(content: unknown): string[] {
-  const locales = ['en', 'fi', 'ar'];
+  const locales = ['en', 'fi'];
   const found: string[] = [];
   
   function traverse(obj: unknown, path: string = ''): void {

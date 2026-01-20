@@ -260,10 +260,9 @@ export class ContentService {
     const status = {
       en: false,
       fi: false,
-      ar: false,
     };
     
-    for (const locale of ['en', 'fi', 'ar'] as Locale[]) {
+    for (const locale of ['en', 'fi'] as Locale[]) {
       const page = await readLocalizedPage(locale, slug);
       status[locale] = page !== null;
     }
@@ -278,7 +277,7 @@ export class ContentService {
     slug: string,
     updates: Partial<Pick<LocalizedPageData, 'status'>>
   ): Promise<{ success: boolean; error?: string }> {
-    const locales: Locale[] = ['en', 'fi', 'ar'];
+    const locales: Locale[] = ['en', 'fi'];
     const updatedAt = createTimestamp();
     
     for (const locale of locales) {

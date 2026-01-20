@@ -95,7 +95,7 @@ export default function CampaignsPage() {
     const heroContent = (heroBlock?.content as { content?: Record<string, { title: string; subtitle?: string; description: string }> })?.content;
     const typesContent = (typesBlock?.content as { content?: Record<string, Record<string, string>> })?.content;
     
-    const localeKey = locale as "en" | "fi" | "ar";
+    const localeKey = locale as "en" | "fi";
     
     return {
       hero: heroContent?.[localeKey] || heroContent?.en,
@@ -492,31 +492,9 @@ function CampaignCard({ campaign, index, t }: CampaignCardProps) {
           </h3>
 
           {/* Description - Fixed Height with 2-line clamp */}
-          <p className="text-sm text-gray-600 mb-4 line-clamp-2 h-10 leading-5">
+          <p className="text-sm text-gray-600 mb-6 line-clamp-2 h-10 leading-5">
             {getDescriptionText(campaign.description)}
           </p>
-
-          {/* Stats Grid - Fixed Height */}
-          <div className="grid grid-cols-2 gap-3 mb-4 pb-4 border-b border-gray-200/60 h-16">
-            <div className="flex items-center gap-2">
-              <CampaignIcon className="w-4 h-4 text-gray-500 shrink-0" />
-              <div className="min-w-0">
-                <div className="text-sm font-semibold text-gray-900 capitalize truncate">
-                  {campaign.campaignType ? t(`types.${campaign.campaignType}`) : t("card.general")}
-                </div>
-                <div className="text-xs text-gray-600">{t("card.campaignType")}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-gray-500 shrink-0" />
-              <div className="min-w-0">
-                <div className="text-sm font-semibold text-gray-900 truncate">
-                  {campaign.isFeatured ? t("card.featured") : t("card.active")}
-                </div>
-                <div className="text-xs text-gray-600">{t("card.priority")}</div>
-              </div>
-            </div>
-          </div>
 
           {/* CTA Button - Fixed Height */}
           <Link href={`/campaigns/${campaign.slug}`} className="block mt-auto">

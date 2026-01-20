@@ -11,7 +11,7 @@ import type { PageData, PageSummary } from '@/src/lib/types/page';
 
 // Base directory for content files
 const CONTENT_BASE_DIR = path.join(process.cwd(), 'content');
-const SUPPORTED_LOCALES = ['en', 'ar', 'fi'] as const;
+const SUPPORTED_LOCALES = ['en', 'fi'] as const;
 export type Locale = typeof SUPPORTED_LOCALES[number];
 
 // New locale-first structure

@@ -1,6 +1,7 @@
 "use client";
 
 import { Link } from "@/src/i18n/navigation";
+import { useTranslations } from "next-intl";
 import {
   FileText,
   Calendar,
@@ -88,39 +89,39 @@ const engagementData = [
   { hour: "21:00", visitors: 380 },
 ];
 
-// Stats data
-const stats = [
+// Stats data - translation keys
+const getStats = (t: (key: string) => string) => [
   {
-    name: "Total Articles",
+    name: t("stats.totalArticles"),
     value: "124",
     change: "+12%",
     changeType: "positive",
     icon: FileText,
-    description: "vs last month",
+    description: t("stats.totalArticlesDesc"),
   },
   {
-    name: "Active Campaigns",
+    name: t("stats.activeCampaigns"),
     value: "8",
     change: "+2",
     changeType: "positive",
     icon: Megaphone,
-    description: "currently running",
+    description: t("stats.activeCampaignsDesc"),
   },
   {
-    name: "Upcoming Events",
+    name: t("stats.upcomingEvents"),
     value: "15",
     change: "3 this week",
     changeType: "neutral",
     icon: Calendar,
-    description: "scheduled",
+    description: t("stats.upcomingEventsDesc"),
   },
   {
-    name: "Total Views",
+    name: t("stats.totalViews"),
     value: "48.2K",
     change: "+23%",
     changeType: "positive",
     icon: Eye,
-    description: "this month",
+    description: t("stats.totalViewsDesc"),
   },
 ];
 
@@ -248,27 +249,29 @@ const engagementChartConfig = {
 } satisfies ChartConfig;
 
 export default function DashboardPage() {
+  const t = useTranslations("admin.dashboard");
+  
   return (
     <div className="space-y-8">
       {/* Page header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
           <p className="text-muted-foreground">
-            Welcome back! Here&apos;s an overview of your content and analytics.
+            {t("welcome")}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
             <Link href="/articles">
               <BarChart3 className="h-4 w-4 mr-2" />
-              View Analytics
+              {t("viewAnalytics")}
             </Link>
           </Button>
           <Button asChild>
             <Link href="/articles/new">
               <Plus className="h-4 w-4 mr-2" />
-              New Article
+              {t("newArticle")}
             </Link>
           </Button>
         </div>
@@ -276,7 +279,7 @@ export default function DashboardPage() {
 
       {/* Stats cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
+        {getStats(t).map((stat) => (
           <Card key={stat.name}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -308,9 +311,9 @@ export default function DashboardPage() {
         {/* Views & Articles Trend */}
         <Card className="lg:col-span-4">
           <CardHeader>
-            <CardTitle>Content Performance</CardTitle>
+            <CardTitle>{t("monthlyOverview")}</CardTitle>
             <CardDescription>
-              Monthly views and published articles over the year
+              {t("monthlyOverviewDesc")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -341,8 +344,8 @@ export default function DashboardPage() {
         {/* Content Distribution */}
         <Card className="lg:col-span-3">
           <CardHeader>
-            <CardTitle>Content Distribution</CardTitle>
-            <CardDescription>Breakdown by content type</CardDescription>
+            <CardTitle>{t("contentDistribution")}</CardTitle>
+            <CardDescription>{t("contentDistributionDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={pieChartConfig} className="h-[300px]">
@@ -423,8 +426,8 @@ export default function DashboardPage() {
         {/* Visitor Engagement */}
         <Card>
           <CardHeader>
-            <CardTitle>Visitor Engagement</CardTitle>
-            <CardDescription>Hourly visitor traffic today</CardDescription>
+            <CardTitle>{t("visitorEngagement")}</CardTitle>
+            <CardDescription>{t("visitorEngagementDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={engagementChartConfig} className="h-[250px]">
@@ -458,12 +461,12 @@ export default function DashboardPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Recent Articles</CardTitle>
-                <CardDescription>Your latest published content</CardDescription>
+                <CardTitle>{t("recentArticles")}</CardTitle>
+                <CardDescription>{t("recentArticlesDesc")}</CardDescription>
               </div>
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/articles">
-                  View all
+                  {t("viewAll")}
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
               </Button>
@@ -491,7 +494,7 @@ export default function DashboardPage() {
                             : "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
                         }`}
                       >
-                        {article.status}
+                        {t(article.status)}
                       </span>
                       <span className="text-xs bg-muted px-2 py-0.5 rounded">
                         {article.category}
@@ -512,8 +515,8 @@ export default function DashboardPage() {
         {/* Top Categories */}
         <Card>
           <CardHeader>
-            <CardTitle>Top Categories</CardTitle>
-            <CardDescription>Most popular content categories</CardDescription>
+            <CardTitle>{t("topCategories")}</CardTitle>
+            <CardDescription>{t("topCategoriesDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -522,7 +525,7 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium">{category.name}</span>
                     <span className="text-muted-foreground">
-                      {category.articles} articles
+                      {category.articles} {t("articles")}
                     </span>
                   </div>
                   <Progress value={category.percentage} className="h-2" />
@@ -540,12 +543,12 @@ export default function DashboardPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Upcoming Events</CardTitle>
-                <CardDescription>Scheduled events and gatherings</CardDescription>
+                <CardTitle>{t("upcomingEventsCard")}</CardTitle>
+                <CardDescription>{t("upcomingEventsCardDesc")}</CardDescription>
               </div>
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/admin/events">
-                  View all
+                  {t("viewAll")}
                   <ArrowRight className="h-4 w-4 ml-1" />
                 </Link>
               </Button>
@@ -591,38 +594,38 @@ export default function DashboardPage() {
         {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks and shortcuts</CardDescription>
+            <CardTitle>{t("quickActions")}</CardTitle>
+            <CardDescription>{t("quickActionsDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="create" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="create">Create</TabsTrigger>
-                <TabsTrigger value="manage">Manage</TabsTrigger>
+                <TabsTrigger value="create">{t("createTab")}</TabsTrigger>
+                <TabsTrigger value="manage">{t("manageTab")}</TabsTrigger>
               </TabsList>
               <TabsContent value="create" className="mt-4 space-y-2">
                 <Button variant="outline" className="w-full justify-start" asChild>
                   <Link href="/admin/articles/new">
                     <FileText className="h-4 w-4 mr-2" />
-                    Create new article
+                    {t("createNewArticle")}
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
                   <Link href="/admin/campaigns/new">
                     <Megaphone className="h-4 w-4 mr-2" />
-                    Start a campaign
+                    {t("startACampaign")}
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
                   <Link href="/admin/events/new">
                     <Calendar className="h-4 w-4 mr-2" />
-                    Schedule an event
+                    {t("scheduleAnEvent")}
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
                   <Link href="/admin/page-builder/new">
                     <TrendingUp className="h-4 w-4 mr-2" />
-                    Add new page
+                    {t("addNewPage")}
                   </Link>
                 </Button>
               </TabsContent>
@@ -630,25 +633,25 @@ export default function DashboardPage() {
                 <Button variant="outline" className="w-full justify-start" asChild>
                   <Link href="/admin/articles">
                     <FileText className="h-4 w-4 mr-2" />
-                    Manage articles
+                    {t("manageArticles")}
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
                   <Link href="/admin/campaigns">
                     <Megaphone className="h-4 w-4 mr-2" />
-                    View campaigns
+                    {t("viewCampaigns")}
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
                   <Link href="/admin/events">
                     <Calendar className="h-4 w-4 mr-2" />
-                    Manage events
+                    {t("manageEvents")}
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
                   <Link href="/admin/page-builder">
                     <Users className="h-4 w-4 mr-2" />
-                    Manage pages
+                    {t("managePages")}
                   </Link>
                 </Button>
               </TabsContent>

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Link } from "@/src/i18n/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Plus, MoreHorizontal, Edit, Trash2, Eye, FileText, CheckCircle, Archive, Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
@@ -35,6 +35,7 @@ const statusColors: Record<string, string> = {
 };
 
 const ArticlesPage: React.FC = () => {
+  const t = useTranslations("admin.articles");
   const locale = useLocale() as "en" | "fi" | "ar";
   const [searchQuery, setSearchQuery] = React.useState("");
   const [posts, setPosts] = React.useState<PostWithCategory[]>([]);
@@ -85,19 +86,19 @@ const ArticlesPage: React.FC = () => {
   }, [searchQuery, sortedPosts]);
 
   const handleDelete = async (slug: string, title: string) => {
-    if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
+    if (!confirm(t("deleteConfirm", { title }))) return;
 
     try {
       const result = await deletePost(slug);
       if (result.success) {
         setPosts((prev) => prev.filter((p) => p.slug !== slug));
-        toast.success("Article deleted successfully");
+        toast.success(t("deleteSuccess"));
       } else {
-        toast.error(result.error || "Failed to delete article");
+        toast.error(result.error || t("deleteFailed"));
       }
     } catch (error) {
       console.error("Error deleting article:", error);
-      toast.error("Failed to delete article");
+      toast.error(t("deleteFailed"));
     }
   };
 
@@ -111,13 +112,13 @@ const ArticlesPage: React.FC = () => {
     <div className="space-y-6 md:space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Articles</h1>
-          <p className="text-gray-600 mt-1">Manage your articles and blog posts</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{t("title")}</h1>
+          <p className="text-gray-600 mt-1">{t("description")}</p>
         </div>
         <Button asChild className="bg-[#781D32] hover:bg-[#781D32]/90">
           <Link href="/admin/articles/new">
             <Plus className="mr-2 h-4 w-4" />
-            New Article
+            {t("newButton")}
           </Link>
         </Button>
       </div>
@@ -125,27 +126,27 @@ const ArticlesPage: React.FC = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 md:gap-6">
         <StatsCard
-          title="Total Articles"
+          title={t("totalArticles")}
           value={stats.total}
           icon={FileText}
           iconClassName="text-muted-foreground"
         />
         <StatsCard
-          title="Published"
+          title={t("published")}
           value={stats.published}
           icon={CheckCircle}
           iconClassName="text-green-500"
           valueClassName="text-green-600"
         />
         <StatsCard
-          title="Drafts"
+          title={t("drafts")}
           value={stats.drafts}
           icon={Edit}
           iconClassName="text-yellow-500"
           valueClassName="text-yellow-600"
         />
         <StatsCard
-          title="Archived"
+          title={t("archived")}
           value={stats.archived}
           icon={Archive}
           iconClassName="text-gray-500"
@@ -156,13 +157,13 @@ const ArticlesPage: React.FC = () => {
       {/* Articles Table */}
       <Card className="border-gray-200 shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold">All Articles</CardTitle>
+          <CardTitle className="text-lg font-semibold">{t("allArticles")}</CardTitle>
         </CardHeader>
         <CardContent>
           {/* Search */}
           <div className="mb-4">
             <Input
-              placeholder="Search articles..."
+              placeholder={t("searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="max-w-sm"
@@ -189,7 +190,7 @@ const ArticlesPage: React.FC = () => {
                 ) : filteredPosts.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center py-8 text-gray-500">
-                      No articles found.
+                      {t("noArticlesFound")}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -236,13 +237,13 @@ const ArticlesPage: React.FC = () => {
                             <DropdownMenuItem asChild>
                               <Link href={`/admin/articles/${post.slug}`}>
                                 <Eye className="mr-2 h-4 w-4" />
-                                View Details
+                                {t("viewDetails")}
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
                               <Link href={`/admin/articles/${post.slug}/edit`}>
                                 <Edit className="mr-2 h-4 w-4" />
-                                Edit
+                                {t("edit")}
                               </Link>
                             </DropdownMenuItem>
                             {post.status === "draft" && (
@@ -250,7 +251,7 @@ const ArticlesPage: React.FC = () => {
                                 onClick={() => handleStatusUpdate(post.id, "published")}
                               >
                                 <CheckCircle className="mr-2 h-4 w-4" />
-                                Publish
+                                {t("publish")}
                               </DropdownMenuItem>
                             )}
                             {post.status === "published" && (
@@ -258,7 +259,7 @@ const ArticlesPage: React.FC = () => {
                                 onClick={() => handleStatusUpdate(post.id, "draft")}
                               >
                                 <Archive className="mr-2 h-4 w-4" />
-                                Unpublish
+                                {t("unpublish")}
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuItem
@@ -266,7 +267,7 @@ const ArticlesPage: React.FC = () => {
                               className="text-red-600"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
+                              {t("delete")}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

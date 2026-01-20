@@ -10,7 +10,7 @@ import path from 'path';
 
 // Base directory for content files
 const CONTENT_BASE_DIR = path.join(process.cwd(), 'content');
-const SUPPORTED_LOCALES = ['en', 'ar', 'fi'] as const;
+const SUPPORTED_LOCALES = ['en', 'fi'] as const;
 export type Locale = typeof SUPPORTED_LOCALES[number];
 
 // New locale-first navigation structure
@@ -185,7 +185,7 @@ export async function readHeaderConfig(): Promise<LegacyHeaderConfig> {
   if (!enConfig) {
     // Return default if no config exists
     return {
-      siteName: { en: 'Sumud', ar: 'صمود', fi: 'Sumud' },
+      siteName: { en: 'Sumud', fi: 'Sumud' },
       navigationLinks: [],
       updatedAt: new Date().toISOString(),
     };
@@ -223,17 +223,17 @@ export async function readFooterConfig(): Promise<LegacyFooterConfig> {
   if (!enConfig) {
     // Return default if no config exists
     return {
-      description: { en: '', ar: '', fi: '' },
+      description: { en: '', fi: '' },
       quickLinks: [],
       getInvolvedLinks: [],
       resourceLinks: [],
       legalLinks: [],
       socialLinks: [],
       newsletter: {
-        title: { en: '', ar: '', fi: '' },
-        subtitle: { en: '', ar: '', fi: '' },
+        title: { en: '', fi: '' },
+        subtitle: { en: '', fi: '' },
       },
-      copyright: { en: '', ar: '', fi: '' },
+      copyright: { en: '', fi: '' },
       contact: {
         email: 'info@sumud.fi',
         phone: '+358 XX XXX XXXX',

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardContent,
@@ -38,6 +39,7 @@ import {
 } from "@/src/components/ui/alert-dialog";
 
 export function PageBuilderList() {
+  const t = useTranslations("adminSettings.pageBuilder");
   const router = useRouter();
   const { data: pages = [], isLoading } = usePages();
   const deletePage = useDeletePage();
@@ -47,19 +49,19 @@ export function PageBuilderList() {
   const handleDelete = async (slug: string) => {
     try {
       await deletePage.mutateAsync(slug);
-      toast.success("Page deleted successfully");
+      toast.success(t("deleteDialog.success"));
       setDeleteConfirmSlug(null);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete page");
+      toast.error(err instanceof Error ? err.message : t("deleteDialog.error"));
     }
   };
 
   const handleDuplicate = async (slug: string) => {
     try {
       await duplicatePage.mutateAsync(slug);
-      toast.success("Page duplicated successfully");
+      toast.success(t("duplicate.success"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to duplicate page");
+      toast.error(err instanceof Error ? err.message : t("duplicate.error"));
     }
   };
 
@@ -67,20 +69,20 @@ export function PageBuilderList() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-display font-bold">Page Builder</h1>
+          <h1 className="text-3xl font-display font-bold">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">
-            Create and manage pages with the visual page builder.
+            {t("description")}
           </p>
         </div>
         <Button onClick={() => router.push("/en/admin/page-builder/new")}>
-          <Plus className="h-4 w-4 mr-2" /> Create New Page
+          <Plus className="h-4 w-4 mr-2" /> {t("newButton")}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>All Pages</CardTitle>
-          <CardDescription>Manage your custom pages</CardDescription>
+          <CardTitle>{t("allPages")}</CardTitle>
+          <CardDescription>{t("managePages")}</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -89,18 +91,18 @@ export function PageBuilderList() {
             </div>
           ) : pages.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground mb-4">No pages created yet.</p>
+              <p className="text-muted-foreground mb-4">{t("noPagesYet")}</p>
               <Button onClick={() => router.push("/en/admin/page-builder/new")}>
-                Create Your First Page
+                {t("createFirstPage")}
               </Button>
             </div>
           ) : (
             <div className="space-y-4">
               <div className="grid grid-cols-12 gap-4 font-medium text-sm px-2">
-                <div className="col-span-4">Title</div>
-                <div className="col-span-3">Path</div>
-                <div className="col-span-2">Status</div>
-                <div className="col-span-3 text-right">Actions</div>
+                <div className="col-span-4">{t("table.title")}</div>
+                <div className="col-span-3">{t("table.path")}</div>
+                <div className="col-span-2">{t("table.status")}</div>
+                <div className="col-span-3 text-right">{t("table.actions")}</div>
               </div>
               {pages.map((page) => (
                 <div
@@ -127,13 +129,13 @@ export function PageBuilderList() {
                       size="sm"
                       onClick={() => router.push(`/en/admin/page-builder/${page.slug}`)}
                     >
-                      <Edit className="h-4 w-4 mr-1" /> Edit
+                      <Edit className="h-4 w-4 mr-1" /> {t("actions.edit")}
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDuplicate(page.slug)}
-                      title="Duplicate"
+                      title={t("actions.duplicate")}
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -141,7 +143,7 @@ export function PageBuilderList() {
                       variant="ghost"
                       size="icon"
                       onClick={() => window.open(page.path, "_blank")}
-                      title="Preview"
+                      title={t("actions.preview")}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -149,7 +151,7 @@ export function PageBuilderList() {
                       variant="ghost"
                       size="icon"
                       onClick={() => setDeleteConfirmSlug(page.slug)}
-                      title="Delete"
+                      title={t("actions.delete")}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -168,19 +170,18 @@ export function PageBuilderList() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteDialog.title")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the page
-              &quot;{deleteConfirmSlug}&quot;.
+              {t("deleteDialog.message", { slug: deleteConfirmSlug })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("deleteDialog.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteConfirmSlug && handleDelete(deleteConfirmSlug)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {t("deleteDialog.confirm")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

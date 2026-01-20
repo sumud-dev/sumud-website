@@ -112,7 +112,7 @@ export default function EventDetailPage() {
     };
     
     const textContent = (textBlock?.content as EventDetailContent)?.content;
-    const localeKey = locale as "en" | "fi" | "ar";
+    const localeKey = locale as "en" | "fi";
     
     return textContent?.[localeKey] || textContent?.en || null;
   }, [pageData, locale]);

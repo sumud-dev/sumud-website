@@ -78,7 +78,7 @@ import type {
 import { DEFAULT_BLOCK_CONTENT } from "@/src/lib/types/page";
 
 // Supported locales for editing
-const LOCALES = ['en', 'fi', 'ar'] as const;
+const LOCALES = ['en', 'fi'] as const;
 type Locale = typeof LOCALES[number];
 
 // Available icons for visual picker
@@ -474,7 +474,6 @@ export function PageBuilderEditor({ initialData, isNew = false }: PageBuilderEdi
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="ar">العربية</SelectItem>
                       <SelectItem value="fi">Suomi</SelectItem>
                     </SelectContent>
                   </Select>
@@ -607,7 +606,7 @@ interface LocaleNestedEditorProps {
 
 /**
  * Editor for blocks with simple locale-nested content structure:
- * { content: { en: { title, description }, fi: {...}, ar: {...} } }
+ * { content: { en: { title, description }, fi: {...} } }
  */
 function LocaleNestedEditor({ content, onUpdate, fields, extraFields }: LocaleNestedEditorProps) {
   const [activeLocale, setActiveLocale] = useState<Locale>('en');

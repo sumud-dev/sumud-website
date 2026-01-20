@@ -53,7 +53,6 @@ export const THEME_OPTIONS: SelectOption[] = [
 
 export const LANGUAGE_OPTIONS: SelectOption[] = [
   { value: "en", label: "English" },
-  { value: "ar", label: "Arabic (العربية)" },
   { value: "fi", label: "Suomi (Finnish)" },
 ];
 

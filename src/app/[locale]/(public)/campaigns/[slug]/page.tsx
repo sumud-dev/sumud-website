@@ -72,6 +72,7 @@ interface CampaignDetailPageProps {
 
 export default function CampaignDetailPage({ params }: CampaignDetailPageProps) {
   const t = useTranslations("campaignsPage");
+  const tCommon = useTranslations("common");
 
   const resolvedParams = React.use(params);
   if (!resolvedParams || !resolvedParams.slug) {
@@ -185,7 +186,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                   color: "white",
                 }}
               >
-                Join Campaign
+                {tCommon("buttons.joinCampaign")}
                 <ChevronRight className="ml-2 h-5 w-5" />
               </Button>
               <Button
@@ -193,7 +194,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                 className="rounded-full px-6 h-12 text-base font-medium border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
               >
                 <Share2 className="mr-2 h-4 w-4" />
-                Share Campaign
+                {tCommon("buttons.shareCampaign")}
               </Button>
             </div>
           </motion.div>
@@ -400,7 +401,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                 <Heart style={{ color: typeColor }} className="w-8 h-8" />
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                Ready to Take Action?
+                {tCommon("buttons.readyToTakeAction")}
               </h2>
               <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
                 Join thousands of supporters working for Palestinian freedom and justice. Every action counts.
@@ -409,14 +410,14 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                 <Button
                   className="rounded-full px-8 h-12 text-base font-semibold bg-white text-gray-900 hover:bg-gray-100 shadow-lg hover:shadow-xl transition-all duration-200"
                 >
-                  Join Campaign
+                  {tCommon("buttons.joinCampaign")}
                   <ChevronRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button
                   variant="outline"
                   className="rounded-full px-8 h-12 text-base font-medium border-2 border-gray-600 text-white hover:bg-white/10 transition-all duration-200"
                 >
-                  Learn More
+                  {tCommon("buttons.learnMore")}
                 </Button>
               </div>
 

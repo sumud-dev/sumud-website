@@ -54,7 +54,7 @@ const SiteSettingsTab = ({
     onSave();
     // Only navigate to new locale after save if language changed
     if (selectedLanguage !== currentLocale) {
-      router.replace(pathname, { locale: selectedLanguage as "en" | "ar" | "fi" });
+      router.replace(pathname, { locale: selectedLanguage as "en" | "fi" });
     }
   };
 

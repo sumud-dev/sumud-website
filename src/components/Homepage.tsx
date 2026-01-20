@@ -88,75 +88,75 @@ const campaignIconMap: Record<string, string> = {
 const featuredCampaigns = [
   {
     id: "1",
-    title: { en: "Justice Not Arms", fi: "Oikeutta, ei aseita", ar: "العدالة وليس الأسلحة" },
-    shortDescription: { en: "Demand Finland to end all arms trade and military cooperation with Israel.", fi: "Vaadi Suomelta kaiken asekeiskaupan ja sotilaallisen yhteistyön lopettamista Israelin kanssa.", ar: "اطلب من فنلندا إنهاء جميع تجارة الأسلحة والتعاون العسكري مع إسرائيل." },
+    title: { en: "Justice Not Arms", fi: "Oikeutta, ei aseita" },
+    shortDescription: { en: "Demand Finland to end all arms trade and military cooperation with Israel.", fi: "Vaadi Suomelta kaiken asekeiskaupan ja sotilaallisen yhteistyön lopettamista Israelin kanssa." },
     slug: "justice-not-arms",
     type: "advocacy",
     status: "active",
     icon: "shield-off",
     image: "/images/hero-embroidery.jpg",
     color: "#722F37",
-    callToAction: { primary: "Take Action" },
+    callToAction: { primary: "campaigns.buttons.takeAction" },
   },
   {
     id: "2",
-    title: { en: "BDS Movement", fi: "BDS-liike", ar: "حركة BDS" },
-    shortDescription: { en: "Join the global movement for Palestinian rights through economic pressure on companies profiting from occupation.", fi: "Liity globaaliin liikkeeseen palestiinalaisten oikeuksien puolesta taloudellisen painostuksen kautta yrityksiä vastaan, jotka hyötyvät miehityksestä.", ar: "انضم إلى الحركة العالمية لحقوق الفلسطينيين من خلال الضغط الاقتصادي على الشركات التي تستفيد من الاحتلال." },
+    title: { en: "BDS Movement", fi: "BDS-liike" },
+    shortDescription: { en: "Join the global movement for Palestinian rights through economic pressure on companies profiting from occupation.", fi: "Liity globaaliin liikkeeseen palestiinalaisten oikeuksien puolesta taloudellisen painostuksen kautta yrityksiä vastaan, jotka hyötyvät miehityksestä." },
     slug: "bds-movement",
     type: "advocacy",
     status: "active",
     icon: "shield-off",
     image: "/images/hero-embroidery.jpg",
     color: "#6B8E23",
-    callToAction: { primary: "Join Movement" },
+    callToAction: { primary: "campaigns.buttons.joinMovement" },
   },
   {
     id: "3",
-    title: { en: "Apartheid Free Zone", fi: "Apartheid-vapaa alue", ar: "منطقة خالية من الفصل العنصري" },
-    shortDescription: { en: "Join us in declaring your community, institution, or organization as an Apartheid Free Zone - committed to opposing Israeli apartheid.", fi: "Liity meihin ilmoittamalla yhteisösi, instituutiosi tai organisaatiosi apartheid-vapaa alueeksi - sitoutunut vastustamaan Israelin apartheid-politiikkaa.", ar: "انضم إلينا في إعلان مجتمعك أو مؤسستك أو منظمتك كمنطقة خالية من الفصل العنصري - ملتزمة بمعارضة الفصل العنصري الإسرائيلي." },
+    title: { en: "Apartheid Free Zone", fi: "Apartheid-vapaa alue" },
+    shortDescription: { en: "Join us in declaring your community, institution, or organization as an Apartheid Free Zone - committed to opposing Israeli apartheid.", fi: "Liity meihin ilmoittamalla yhteisösi, instituutiosi tai organisaatiosi apartheid-vapaa alueeksi - sitoutunut vastustamaan Israelin apartheid-politiikkaa." },
     slug: "apartheid-free-zone",
     type: "advocacy",
     status: "active",
     icon: "shield-check",
     image: "/images/hero-embroidery.jpg",
     color: "#722F37",
-    callToAction: { primary: "Declare Your Zone" },
+    callToAction: { primary: "campaigns.buttons.declareYourZone" },
   },
   {
     id: "4",
-    title: { en: "Cultural & Academic Boycott", fi: "Kulttuurinen ja akateeminen boikotti", ar: "المقاطعة الثقافية والأكاديمية" },
-    shortDescription: { en: "Join the Palestinian-led campaign for cultural and academic boycott of Israeli institutions.", fi: "Liity palestiinalaisten johtamaan kampanjaan Israelin kulttuurilaitosten ja akateemisten instituutioiden boikotille.", ar: "انضم إلى الحملة التي يقودها الفلسطينيون لمقاطعة المؤسسات الثقافية والأكاديمية الإسرائيلية." },
+    title: { en: "Cultural & Academic Boycott", fi: "Kulttuurinen ja akateeminen boikotti" },
+    shortDescription: { en: "Join the Palestinian-led campaign for cultural and academic boycott of Israeli institutions.", fi: "Liity palestiinalaisten johtamaan kampanjaan Israelin kulttuurilaitosten ja akateemisten instituutioiden boikotille." },
     slug: "cultural-academic-boycott",
     type: "advocacy",
     status: "active",
     icon: "flag",
     image: "/images/hero-embroidery.jpg",
     color: "#6B8E23",
-    callToAction: { primary: "Learn More" },
+    callToAction: { primary: "campaigns.buttons.learnMore" },
   },
   {
     id: "5",
-    title: { en: "Israeli Products Out of Shops", fi: "Israelin tuotteet pois myymälöistä", ar: "المنتجات الإسرائيلية خارج المتاجر" },
-    shortDescription: { en: "Campaign to remove Israeli products from Finnish stores through consumer boycotts and advocacy.", fi: "Kampanja Israelin tuotteiden poistamiseksi suomalaisista myymälöistä kuluttajaboikottien ja vaikuttamisen kautta.", ar: "حملة لإزالة المنتجات الإسرائيلية من المتاجر الفنلندية من خلال المقاطعات الاستهلاكية والدعوة." },
+    title: { en: "Israeli Products Out of Shops", fi: "Israelin tuotteet pois myymälöistä" },
+    shortDescription: { en: "Campaign to remove Israeli products from Finnish stores through consumer boycotts and advocacy.", fi: "Kampanja Israelin tuotteiden poistamiseksi suomalaisista myymälöistä kuluttajaboikottien ja vaikuttamisen kautta." },
     slug: "israeli-products-out-of-shops",
     type: "advocacy",
     status: "active",
     icon: "shopping-cart",
     image: "/images/hero-embroidery.jpg",
     color: "#722F37",
-    callToAction: { primary: "Take Action" },
+    callToAction: { primary: "campaigns.buttons.takeAction" },
   },
   {
     id: "6",
-    title: { en: "Boycott Israel in Eurovision", fi: "Boikotoi Israelia Euroviisueissa", ar: "مقاطعة إسرائيل في يوروفيجن" },
-    shortDescription: { en: "Join the campaign to boycott Israel's participation in Eurovision due to its violations of international law.", fi: "Liity kampanjaan Israelin osallistumisen boikotille Euroviisueissa sen kansainvälisen oikeuden rikkomusten vuoksi.", ar: "انضم إلى الحملة لمقاطعة مشاركة إسرائيل في يوروفيجن بسبب انتهاكاتها للقانون الدولي." },
+    title: { en: "Boycott Israel in Eurovision", fi: "Boikotoi Israelia Euroviisueissa" },
+    shortDescription: { en: "Join the campaign to boycott Israel's participation in Eurovision due to its violations of international law.", fi: "Liity kampanjaan Israelin osallistumisen boikotille Euroviisueissa sen kansainvälisen oikeuden rikkomusten vuoksi." },
     slug: "israel-boikottiin-euroviisuissa",
     type: "advocacy",
     status: "urgent",
     icon: "megaphone",
     image: "/images/hero-embroidery.jpg",
     color: "#dc2626",
-    callToAction: { primary: "Sign Petition" },
+    callToAction: { primary: "campaigns.buttons.signPetition" },
   },
 ];
 
@@ -180,7 +180,7 @@ interface HomepageProps {
 const Homepage = React.memo(function Homepage({ events = [] }: HomepageProps) {
   const t = useTranslations("homepage");
   const tCommon = useTranslations("common");
-  const locale = useLocale() as "en" | "fi" | "ar";
+  const locale = useLocale() as "en" | "fi";
   
   return (
     <>
@@ -651,7 +651,7 @@ const Homepage = React.memo(function Homepage({ events = [] }: HomepageProps) {
                             boxShadow: `0 4px 12px -2px ${campaign.color}40`,
                           }}
                         >
-                          {campaign.callToAction.primary}
+                          {t(campaign.callToAction.primary as any)}
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
                       </Link>
@@ -723,7 +723,7 @@ const Homepage = React.memo(function Homepage({ events = [] }: HomepageProps) {
                     boxShadow: "0 10px 15px -3px rgba(120, 29, 50, 0.3)",
                   }}
                 >
-                  Shop
+                  {tCommon("buttons.shop")}
                 </Button>
               </Link>
             </motion.div>

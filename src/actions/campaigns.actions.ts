@@ -44,7 +44,7 @@ const campaignBaseSchema = z.object({
 });
 
 const translationSchema = z.object({
-  locale: z.enum(['en', 'fi', 'ar']),
+  locale: z.enum(['en', 'fi']),
   title: z.string().min(1).max(200),
   description: z.any().optional(),
   demands: z.any().optional(),
