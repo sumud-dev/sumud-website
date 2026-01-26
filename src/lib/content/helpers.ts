@@ -3,8 +3,7 @@
  * 
  * Utility functions for working with localized content
  */
-
-import type { Locale } from '@/src/lib/navigation/file-storage';
+type Locale = 'en' | 'fi';
 
 /**
  * Get the appropriate locale content with fallback
@@ -136,13 +135,6 @@ export function getLocaleFlagEmoji(locale: Locale): string {
     fi: '🇫🇮',
   };
   return flags[locale] || '🌐';
-}
-
-/**
- * Check if locale uses RTL text direction
- */
-export function isRTL(locale: Locale): boolean {
-  return false;
 }
 
 /**

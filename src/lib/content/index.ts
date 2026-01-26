@@ -13,7 +13,6 @@ export {
   isValidLocale,
   getLocaleDisplayName,
   getLocaleFlagEmoji,
-  isRTL,
   formatTimestamp,
   generateSlug,
   isValidSlug,

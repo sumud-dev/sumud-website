@@ -3,16 +3,6 @@
  * 
  * Centralized service for content operations with support for locale-first structure
  */
-
-import { 
-  readLocalizedPage, 
-  writeLocalizedPage, 
-import {
-  readLocalizedNavigation,
-  writeLocalizedNavigation,
-  type LocalizedNavigationConfig,
-  type Locale,
-} from '@/src/lib/navigation/file-storage';
 import { 
   normalizeBlockContent,
   extractLocalizedValue,
@@ -22,6 +12,154 @@ import {
   validatePageFile,
   validateNavigationFile,
 } from '@/src/lib/content/validator';
+import {
+  findPageBySlugAndLanguage,
+  createPage as dbCreatePage,
+  updatePage as dbUpdatePage,
+  deletePage as dbDeletePage,
+  listPagesPaginated,
+} from '@/src/lib/db/queries/pages.queries';
+import type { PageRecord } from '@/src/lib/db/queries/pages.queries';
+
+type Locale = 'en' | 'fi';
+
+// Type definitions for page data
+export interface LocalizedPageData {
+  slug: string;
+  title: string;
+  description?: string;
+  status: 'draft' | 'published' | 'archived';
+  createdAt: string;
+  updatedAt: string;
+  blocks: PageBlock[];
+}
+
+export interface PageBlock {
+  id: string;
+  type: string;
+  content: Record<string, any>;
+}
+
+export interface LocalizedNavigationConfig {
+  id: string;
+  siteName?: string;
+  logo?: string;
+  items?: LocalizedNavItem[];
+  quickLinks?: LocalizedNavItem[];
+  getInvolvedLinks?: LocalizedNavItem[];
+  resourceLinks?: LocalizedNavItem[];
+  legalLinks?: LocalizedNavItem[];
+  newsletter?: {
+    title?: string;
+    subtitle?: string;
+  };
+  copyright?: string;
+  contact?: {
+    email: string;
+    phone: string;
+    location: string;
+  };
+  updatedAt: string;
+}
+
+export interface LocalizedNavItem {
+  label: string;
+  href: string;
+  children?: LocalizedNavItem[];
+}
+
+// Helper functions for database integration
+async function readLocalizedPage(locale: Locale, slug: string): Promise<LocalizedPageData | null> {
+  const page = await findPageBySlugAndLanguage(slug, locale);
+  if (!page) return null;
+  
+  return {
+    slug: page.slug,
+    title: page.title,
+    description: page.metadata?.description,
+    status: page.status as 'draft' | 'published' | 'archived',
+    createdAt: page.createdAt.toISOString(),
+    updatedAt: page.updatedAt.toISOString(),
+    blocks: (page.content?.type === 'blocks' ? page.content.data : []) as PageBlock[],
+  };
+}
+
+async function writeLocalizedPage(locale: Locale, page: LocalizedPageData): Promise<void> {
+  const existingPage = await findPageBySlugAndLanguage(page.slug, locale);
+  
+  const pageData = {
+    slug: page.slug,
+    title: page.title,
+    status: page.status,
+    language: locale,
+    content: {
+      type: 'blocks' as const,
+      data: page.blocks,
+    },
+    metadata: page.description ? { description: page.description } : null,
+  };
+  
+  if (existingPage) {
+    await dbUpdatePage(existingPage.id, pageData);
+  } else {
+    await dbCreatePage({
+      ...pageData,
+      path: `/${page.slug}`,
+      isActive: page.status === 'published',
+    });
+  }
+}
+
+async function readPage(slug: string): Promise<any> {
+  // Legacy compatibility - returns first found page
+  const enPage = await findPageBySlugAndLanguage(slug, 'en');
+  const fiPage = await findPageBySlugAndLanguage(slug, 'fi');
+  
+  return {
+    slug,
+    translations: {
+      en: enPage,
+      fi: fiPage,
+    },
+  };
+}
+
+async function pageExists(slug: string): Promise<boolean> {
+  const enPage = await findPageBySlugAndLanguage(slug, 'en');
+  const fiPage = await findPageBySlugAndLanguage(slug, 'fi');
+  return !!(enPage || fiPage);
+}
+
+async function deletePageFile(slug: string): Promise<boolean> {
+  const enPage = await findPageBySlugAndLanguage(slug, 'en');
+  const fiPage = await findPageBySlugAndLanguage(slug, 'fi');
+  
+  let deleted = false;
+  if (enPage) {
+    await dbDeletePage(enPage.id);
+    deleted = true;
+  }
+  if (fiPage) {
+    await dbDeletePage(fiPage.id);
+    deleted = true;
+  }
+  
+  return deleted;
+}
+
+async function listPages(): Promise<any[]> {
+  const result = await listPagesPaginated();
+  return result.pages;
+}
+
+async function readLocalizedNavigation(locale: Locale, navId: string): Promise<LocalizedNavigationConfig | null> {
+  // TODO: Implement navigation reading from database
+  return null;
+}
+
+async function writeLocalizedNavigation(locale: Locale, config: LocalizedNavigationConfig): Promise<void> {
+  // TODO: Implement navigation writing to database
+}
 
 export class ContentService {
   /**
@@ -35,7 +173,7 @@ export class ContentService {
     }
     
     // Normalize blocks to ensure fully localized content
-    page.blocks = normalizeBlockContent(page.blocks, locale);
+    page.blocks = normalizeBlockContent(page.blocks as unknown as Record<string, unknown>[], locale) as unknown as PageBlock[];
     
     return page;
   }
