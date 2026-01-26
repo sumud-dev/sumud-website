@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCampaignBySlug } from '@/src/lib/db/queries/campaigns';
+import { getCampaignBySlug } from '@/src/lib/db/queries/campaigns.queries';
 
 export async function GET(
   request: NextRequest,

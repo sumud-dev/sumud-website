@@ -4,7 +4,7 @@ import {
   searchCampaigns, 
   getCampaignsByCategory,
   getFeaturedCampaigns 
-} from '@/src/lib/db/queries/campaigns';
+} from '@/src/lib/db/queries/campaigns.queries';
 
 export async function GET(request: NextRequest) {
   try {

@@ -18,10 +18,10 @@ import {
   updateCampaignTranslation,
   deleteCampaign,
   getCampaignBySlug,
-  getCompleteCampaign,
+  deleteCampaignTranslation,
   toggleCampaignActive,
   getActiveCampaigns,
-} from '@/src/lib/db/queries/campaigns';
+} from '@/src/lib/db/queries/campaigns.queries';
 import {
   translateContent,
   CAMPAIGN_TRANSLATION_CONFIG,
@@ -101,12 +101,13 @@ export async function fetchActiveCampaignsAction(
 /**
  * Fetch campaign by slug and locale
  */
+// Lines 117-131
 export async function fetchCampaigns(
   slug: string,
   locale: string = 'fi'
 ): Promise<ActionResult> {
   try {
-    const campaign = await getCompleteCampaign(slug, locale);
+    const campaign = await getCampaignBySlug(slug, locale);
         
     if (!campaign) {
       return {
@@ -159,7 +160,7 @@ export async function createCampaignAction(
     const sourceTranslation = validatedData.translations[0];
     const sourceLocale = sourceTranslation.locale as SupportedLocale;
     
-    // Prepare all translations (starting with source)
+    // Prepare all translations (starting with source as primary)
     const allTranslations = [...validatedData.translations];
     
     // Auto-translate if enabled (default: true for en/fi pair)
@@ -359,12 +360,13 @@ export async function updateCampaignTranslationAction(
 /**
  * Delete campaign
  */
+// Lines 283-309
 export async function deleteCampaignAction(
   slug: string,
-  locale: string = 'en'
+  locale: string = 'fi'
 ): Promise<ActionResult> {
   try {
-    // Get campaign first to get ID
+    // Get campaign
     const campaign = await getCampaignBySlug(slug, locale);
     
     if (!campaign) {
@@ -374,13 +376,14 @@ export async function deleteCampaignAction(
       };
     }
 
-    // For non-Finnish locales, getCampaignBySlug returns translation data
-    // where 'id' is the translation ID and 'campaignId' is the actual campaign ID
-    const campaignIdToDelete = 'campaignId' in campaign && campaign.campaignId 
-      ? campaign.campaignId 
-      : campaign.id;
-
-    await deleteCampaign(campaignIdToDelete);
+    // If it's a translation, delete only the translation
+    // If it's primary, deleteCampaign will CASCADE delete translations
+    // Check if campaign has campaignId (meaning it's a translation)
+    if ('campaignId' in campaign && campaign.campaignId) {
+      await deleteCampaignTranslation(campaign.id);
+    } else {
+      await deleteCampaign(campaign.id);
+    }
 
     // Revalidate
     revalidatePath(`/${locale}/campaigns`);

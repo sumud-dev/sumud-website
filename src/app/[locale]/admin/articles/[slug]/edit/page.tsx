@@ -2,10 +2,12 @@
 
 import * as React from "react";
 import { useRouter, Link } from "@/src/i18n/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
+import { useQueryClient } from "@tanstack/react-query";
+import { postQueryKeys } from "@/src/lib/hooks/use-posts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import Image from "next/image";
 import { ArrowLeft, Save, Eye, Loader2, Languages } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { ImageUpload } from "@/src/components/ui/image-upload";
@@ -31,8 +33,7 @@ import {
 } from "@/src/components/ui/select";
 import { Switch } from "@/src/components/ui/switch";
 import { toast } from "sonner";
-import { getPostBySlug, updatePost } from "@/src/actions/article.actions";
-import type { PostWithCategory } from "@/src/lib/utils/article.utils";
+import { getPostBySlug, updatePost } from "@/src/actions/posts.actions";
 
 const articleSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title too long"),
@@ -42,6 +43,7 @@ const articleSchema = z.object({
     .max(500, "Excerpt too long"),
   content: z.string().min(1, "Content is required"),
   status: z.enum(["draft", "published", "archived"]),
+  language: z.enum(["en", "fi"]),  // ADD THIS LINE
   featuredImageUrl: z.string().optional(),
   metaDescription: z.string().max(160, "Meta description too long").optional(),
   autoTranslate: z.boolean(),
@@ -57,11 +59,9 @@ interface EditArticlePageProps {
 
 export default function EditArticlePage({ params }: EditArticlePageProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [article, setArticle] = React.useState<PostWithCategory | null>(null);
-  const [currentSlug, setCurrentSlug] = React.useState<string>("");
-  const [articleLanguage, setArticleLanguage] = React.useState<string>("en");
+  const [resolvedSlug, setResolvedSlug] = React.useState<string>("");
 
   const form = useForm<ArticleFormData>({
     resolver: zodResolver(articleSchema),
@@ -70,6 +70,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
       excerpt: "",
       content: "",
       status: "draft",
+      language: "en",  // ADD THIS LINE
       featuredImageUrl: "",
       metaDescription: "",
       autoTranslate: false,
@@ -77,52 +78,43 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
   });
 
   React.useEffect(() => {
-    const fetchArticle = async () => {
-      try {
-        setIsLoading(true);
-        const resolvedParams = await params;
-        setCurrentSlug(resolvedParams.slug);
-        
-        // Try fetching in different languages (en, fi, ar)
-        const languages = ["en", "fi"];
-        let foundPost = null;
-        const foundLanguage = "en";
-        
-        for (const lang of languages) {
-          const result = await getPostBySlug(resolvedParams.slug, lang);
-          if (result.success && result.post) {
-          foundPost = result.post as any;
-            break;
-          }
-        }
-        
-        if (foundPost) {
-          setArticle(foundPost);
-          setArticleLanguage(foundLanguage);
-          
-          // Update form with fetched data
-          form.reset({
-            title: foundPost.title || "",
-            excerpt: foundPost.excerpt || "",
-            content: foundPost.content || "",
-            status: (foundPost.status as "draft" | "published" | "archived") || "draft",
-            featuredImageUrl: foundPost.featuredImage || "",
-            metaDescription: "",
-            autoTranslate: false,
-          });
-        } else {
-          toast.error("Failed to load article");
-        }
-      } catch (error) {
-        console.error("Error fetching article:", error);
-        toast.error("Failed to load article");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    params.then((p) => setResolvedSlug(p.slug));
+  }, [params]);
 
-    fetchArticle();
-  }, [params, form]);
+  const { data: articleData, isLoading } = useQuery({
+    queryKey: ["article", resolvedSlug],
+    queryFn: async () => {
+      if (!resolvedSlug) return null;
+      
+      const languages = ["en", "fi"];
+      for (const lang of languages) {
+        const result = await getPostBySlug(resolvedSlug, lang);
+        if (result.success && result.post) {
+          return { post: result.post, language: lang };
+        }
+      }
+      return null;
+    },
+    enabled: !!resolvedSlug,
+  });
+
+  const article = articleData?.post ?? null;
+  const articleLanguage = articleData?.language ?? "en";
+
+  React.useEffect(() => {
+    if (article) {
+      form.reset({
+        title: article.title || "",
+        excerpt: article.excerpt || "",
+        content: article.content || "",
+        status: (article.status as "draft" | "published" | "archived") || "draft",
+        language: articleLanguage as "en" | "fi",
+        featuredImageUrl: article.featuredImage || "",
+        metaDescription: "",
+        autoTranslate: false,
+      });
+    }
+  }, [article, form, articleLanguage]);
 
   const onSubmit = async (data: ArticleFormData) => {
     if (!article) {
@@ -134,7 +126,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
     setIsSubmitting(true);
     try {
       const result = await updatePost(
-        currentSlug,
+        resolvedSlug,
         {
           title: data.title,
           excerpt: data.excerpt,
@@ -144,7 +136,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
           meta_description: data.metaDescription || null,
           autoTranslate: data.autoTranslate,
         },
-        articleLanguage
+        data.language
       );
 
       if (result.success) {
@@ -157,12 +149,14 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
           .replace(/\s+/g, "-") // Replace spaces with hyphens
           .trim();
 
-        const shouldUpdateSlug = newSlug !== currentSlug;
+        const shouldUpdateSlug = newSlug !== resolvedSlug;
 
         // Redirect to the updated slug if it changed
         if (shouldUpdateSlug) {
+          queryClient.invalidateQueries({ queryKey: postQueryKeys.allPosts });
           router.push(`/admin/articles/${newSlug}/edit`);
         } else {
+          queryClient.invalidateQueries({ queryKey: postQueryKeys.allPosts });
           router.push("/admin/articles");
         }
       } else {
@@ -177,10 +171,10 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
   };
 
   const handlePreview = () => {
-    if (!article || !currentSlug) return;
+    if (!article || !resolvedSlug) return;
 
     // Open admin article detail page in new tab
-    window.open(`/admin/articles/${currentSlug}`, "_blank");
+    window.open(`/admin/articles/${resolvedSlug}`, "_blank");
   };
 
   if (isLoading) {
@@ -330,6 +324,31 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="language"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Language</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select language" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="en">English</SelectItem>
+                            <SelectItem value="fi">Finnish</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />

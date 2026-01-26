@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Link } from "@/src/i18n/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import {
   Heart,
@@ -38,6 +38,7 @@ const DONATION_AMOUNTS = [15, 25, 50, 100, 250];
 
 export default function JoinPage() {
   const locale = useLocale();
+  const t = useTranslations("join");
   const isRtl = false; // No RTL support currently
 
   const [selectedAmount, setSelectedAmount] = useState<number | null>(50);
@@ -81,20 +82,18 @@ export default function JoinPage() {
               </div>
 
               <h1 className="text-3xl lg:text-4xl font-bold text-[#3E442B] mb-4">
-                Thank You for Your Support!
+                {t("successTitle")}
               </h1>
 
               <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto">
-                Your contribution makes a real difference in our mission to
-                support Palestinian rights and build bridges between
-                communities.
+                {t("successMessage")}
               </p>
 
               <Card className="glass-strong blur-transition border-glass-glow shadow-glass-lg gpu-accelerated rounded-2xl mb-8">
                 <CardContent className="p-6">
                   <div className="text-center">
                     <h3 className="font-semibold text-[#3E442B] mb-4">
-                      What happens next?
+                      {t("next.title")}
                     </h3>
                     <ul className="space-y-3 text-sm text-gray-600">
                       <li className="flex items-center justify-center">

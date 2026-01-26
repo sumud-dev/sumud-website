@@ -7,6 +7,7 @@ import { Button } from "@/src/components/ui/button";
 import { Label } from "@/src/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { toast } from "sonner";
+import { getTranslationsByNamespaceAction, upsertTranslationAction } from "@/src/actions/translations";
 
 type Locale = "en" | "fi";
 
@@ -32,43 +33,17 @@ const localeNames: Record<Locale, string> = {
   fi: "Suomi",
 };
 
-// Define button sections based on the messages JSON structure
-const BUTTON_SECTIONS: Record<string, { namespace: string; path: string; label: string; description: string }> = {
-  "common.buttons": {
+// Define button sections based on namespaces in the database
+const BUTTON_SECTIONS: Record<string, { namespace: string; label: string; description: string }> = {
+  "common": {
     namespace: "common",
-    path: "buttons",
     label: "Common Buttons",
-    description: "Shared buttons used across the site"
+    description: "Shared buttons used across the site (button keys in common namespace)"
   },
-  "homepage.hero.buttons": {
-    namespace: "homepage",
-    path: "hero.buttons",
-    label: "Homepage Hero Buttons",
-    description: "Buttons in the hero section"
-  },
-  "homepage.events.buttons": {
-    namespace: "homepage",
-    path: "events.buttons",
-    label: "Homepage Events Buttons",
-    description: "Buttons in the events section"
-  },
-  "homepage.campaigns.buttons": {
-    namespace: "homepage",
-    path: "campaigns.buttons",
-    label: "Homepage Campaign Buttons",
-    description: "Buttons in the campaigns section"
-  },
-  "campaigns.buttons": {
-    namespace: "campaigns",
-    path: "buttons",
-    label: "Campaigns Page Buttons",
-    description: "Buttons on the campaigns page"
-  },
-  "eventsDetail.buttons": {
-    namespace: "eventsDetail",
-    path: "buttons",
-    label: "Event Details Buttons",
-    description: "Buttons on event detail pages"
+  "footer": {
+    namespace: "footer",
+    label: "Footer Buttons",
+    description: "Buttons in the footer section"
   },
 };
 
@@ -79,49 +54,36 @@ export default function ButtonsEditor({ locale, onSaveSuccess }: ButtonsEditorPr
   const [buttonSections, setButtonSections] = React.useState<ButtonSection[]>([]);
   const [expandedSections, setExpandedSections] = React.useState<Set<string>>(new Set());
 
-  // Load buttons from messages JSON
+  // Load buttons from database
   React.useEffect(() => {
     async function loadButtons() {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/admin/content/messages/${locale}`);
-        if (!response.ok) throw new Error("Failed to load messages");
-        
-        const data = await response.json();
-        const messages = data.messages;
-        
-        // Extract buttons from each section
         const sections: ButtonSection[] = [];
         
-        Object.entries(BUTTON_SECTIONS).forEach(([key, config]) => {
-          const pathParts = config.path.split(".");
-          let currentObj = messages[config.namespace];
+        // Load translations for each button section
+        for (const [key, config] of Object.entries(BUTTON_SECTIONS)) {
+          const result = await getTranslationsByNamespaceAction(config.namespace, locale);
           
-          // Navigate to the buttons object
-          for (const part of pathParts) {
-            if (currentObj && typeof currentObj === "object") {
-              currentObj = currentObj[part];
-            } else {
-              currentObj = null;
-              break;
-            }
-          }
-          
-          // Extract button items
-          if (currentObj && typeof currentObj === "object") {
-            const buttons: ButtonItem[] = Object.entries(currentObj).map(([k, v]) => ({
-              key: k,
-              label: String(v),
+          if (result.success && result.data) {
+            // Filter only button-related keys
+            const buttonKeys = result.data.filter(
+              t => t.key.includes('button') || t.key.includes('btn') || t.key.includes('cta')
+            );
+            
+            const buttons: ButtonItem[] = buttonKeys.map(t => ({
+              key: t.key,
+              label: t.value,
             }));
             
             sections.push({
               namespace: config.namespace,
-              path: config.path,
+              path: 'buttons',
               buttons,
               expanded: false,
             });
           }
-        });
+        }
         
         setButtonSections(sections);
         setHasChanges(false);
@@ -136,7 +98,7 @@ export default function ButtonsEditor({ locale, onSaveSuccess }: ButtonsEditorPr
   }, [locale]);
 
   const toggleSection = (index: number) => {
-    const sectionKey = `${buttonSections[index].namespace}.${buttonSections[index].path}`;
+    const sectionKey = buttonSections[index].namespace;
     setExpandedSections((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(sectionKey)) {
@@ -211,42 +173,21 @@ export default function ButtonsEditor({ locale, onSaveSuccess }: ButtonsEditorPr
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      // Load current messages
-      const response = await fetch(`/api/admin/content/messages/${locale}`);
-      if (!response.ok) throw new Error("Failed to load messages");
-      
-      const data = await response.json();
-      const messages = data.messages;
-      
-      // Update button sections in messages
-      buttonSections.forEach((section) => {
-        const pathParts = section.path.split(".");
-        let currentObj = messages[section.namespace];
-        
-        // Navigate to parent object
-        for (let i = 0; i < pathParts.length - 1; i++) {
-          if (!currentObj[pathParts[i]]) {
-            currentObj[pathParts[i]] = {};
+      // Save each button translation to the database
+      for (const section of buttonSections) {
+        for (const button of section.buttons) {
+          const result = await upsertTranslationAction({
+            key: button.key,
+            value: button.label,
+            language: locale,
+            namespace: section.namespace,
+          });
+          
+          if (!result.success) {
+            throw new Error(`Failed to save button: ${button.key}`);
           }
-          currentObj = currentObj[pathParts[i]];
         }
-        
-        // Update buttons
-        const lastPart = pathParts[pathParts.length - 1];
-        currentObj[lastPart] = section.buttons.reduce((acc, btn) => {
-          acc[btn.key] = btn.label;
-          return acc;
-        }, {} as Record<string, string>);
-      });
-      
-      // Save to server
-      const saveResponse = await fetch(`/api/admin/content/buttons`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ locale, messages }),
-      });
-      
-      if (!saveResponse.ok) throw new Error("Failed to save buttons");
+      }
       
       toast.success(`Buttons updated successfully for ${localeNames[locale]}`);
       setHasChanges(false);
@@ -301,7 +242,7 @@ export default function ButtonsEditor({ locale, onSaveSuccess }: ButtonsEditorPr
       {/* Button Sections */}
       <div className="space-y-4">
         {buttonSections.map((section, sectionIndex) => {
-          const sectionKey = `${section.namespace}.${section.path}`;
+          const sectionKey = section.namespace;
           const sectionConfig = BUTTON_SECTIONS[sectionKey];
           const isExpanded = expandedSections.has(sectionKey);
           

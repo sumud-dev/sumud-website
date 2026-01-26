@@ -1,7 +1,7 @@
 /**
  * Server Actions for Pages
  * 
- * Server actions for CRUD operations on file-based pages.
+ * Server actions for CRUD operations on database-backed pages.
  */
 
 'use server';
@@ -10,18 +10,24 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { auth } from '@clerk/nextjs/server';
 import {
-  readPage,
-  writePage,
-  deletePage as deletePageFile,
-  listPages as listPagesFromFiles,
-  pageExists,
-} from '@/src/lib/pages/file-storage';
+  listPagesPaginated,
+  findPageBySlugAndLanguage,
+  findTranslationsForPage,
+  createPage,
+  createPageTranslation,
+  updatePage,
+  deletePage,
+  pageSlugExists,
+  pagePathExists,
+  type PageRecord,
+} from '@/src/lib/db/queries/pages.queries';
 import type { PageData } from '@/src/lib/types/page';
-import { PAGE_BLOCK_TYPES, type PageBlockType, type PageBlock } from '@/src/lib/types/page';
+import { PAGE_BLOCK_TYPES, type PageBlock } from '@/src/lib/types/page';
 import {
   translateBatch,
   type SupportedLocale,
 } from '@/src/lib/services/translation.service';
+import { ensureTranslationKeysAction } from '@/src/actions/translations';
 
 // ============================================
 // VALIDATION SCHEMAS
@@ -87,17 +93,248 @@ async function requireAuth(): Promise<string> {
 }
 
 // ============================================
+// CONVERSION HELPERS: DB <-> PageData
+// ============================================
+
+/**
+ * Convert database PageRecord to a single translation object
+ */
+function pageRecordToTranslation(record: PageRecord) {
+  return {
+    title: record.title,
+    description: record.metadata?.description || '',
+    blocks: (record.content?.type === 'blocks' && Array.isArray(record.content.data))
+      ? record.content.data as PageBlock[]
+      : [],
+  };
+}
+
+/**
+ * Convert database PageRecord to PageData format with a single locale
+ */
+function pageRecordToPageData(record: PageRecord, locale: 'en' | 'fi'): PageData {
+  return {
+    slug: record.slug,
+    path: record.path,
+    status: record.status as 'draft' | 'published',
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+    translations: {
+      [locale]: pageRecordToTranslation(record),
+    },
+  };
+}
+
+/**
+ * Convert primary page and its translations to full PageData
+ */
+function pageRecordsToPageData(
+  primaryPage: PageRecord,
+  translations: PageRecord[]
+): PageData {
+  const pageData: PageData = {
+    slug: primaryPage.slug,
+    path: primaryPage.path,
+    status: primaryPage.status as 'draft' | 'published',
+    createdAt: primaryPage.createdAt.toISOString(),
+    updatedAt: primaryPage.updatedAt.toISOString(),
+    translations: {},
+  };
+
+  // Add primary page translation (should be Finnish)
+  const primaryLocale = (primaryPage.language as 'en' | 'fi') || 'fi'; // Default to 'fi' not 'en'
+  pageData.translations[primaryLocale] = pageRecordToTranslation(primaryPage);
+
+  // Add other translations
+  translations.forEach(translation => {
+    const locale = (translation.language as 'en' | 'fi') || 'en';
+    if (locale !== primaryLocale) {
+      pageData.translations[locale] = pageRecordToTranslation(translation);
+    }
+  });
+
+  return pageData;
+}
+
+/**
+ * Convert database PageRecord to PageSummary format (for listings)
+ */
+function pageRecordToPageSummary(record: PageRecord): import('@/src/lib/types/page').PageSummary {
+  return {
+    slug: record.slug,
+    path: record.path,
+    status: record.status as 'draft' | 'published' | 'archived',
+    createdAt: record.createdAt.toISOString(),
+    updatedAt: record.updatedAt.toISOString(),
+    title: record.title,
+  };
+}
+
+/**
+ * Extract blocks from PageData content
+ */
+function extractBlocks(content: PageRecord['content']): PageBlock[] {
+  if (!content || content.type !== 'blocks') return [];
+  if (Array.isArray(content.data)) {
+    return content.data as PageBlock[];
+  }
+  return [];
+}
+
+/**
+ * Extract translation keys from page blocks and ensure they exist in UI translations.
+ * Called after creating/updating a page to sync button text, navigation labels, etc.
+ */
+async function syncBlockTranslations(
+  pageSlug: string,
+  translations: PageData['translations']
+): Promise<void> {
+  const keys: Array<{
+    key: string;
+    namespace: string;
+    defaultValues: { en: string; fi: string };
+  }> = [];
+
+  // Extract from each locale's blocks
+  const enBlocks = translations.en?.blocks || [];
+  const fiBlocks = translations.fi?.blocks || [];
+
+  // Process button-group blocks
+  for (const block of enBlocks) {
+    if (block.type === 'button-group') {
+      const buttons = (block.content as { buttons?: Array<{ text: string }> })?.buttons || [];
+      const fiBlock = fiBlocks.find(b => b.id === block.id);
+      const fiButtons = fiBlock 
+        ? (fiBlock.content as { buttons?: Array<{ text: string }> })?.buttons || []
+        : [];
+      
+      buttons.forEach((btn, idx) => {
+        if (btn.text) {
+          const key = `pageBuilder.${pageSlug}.button.${block.id}.${idx}`;
+          keys.push({
+            key,
+            namespace: 'pageBuilder',
+            defaultValues: {
+              en: btn.text,
+              fi: fiButtons[idx]?.text || btn.text,
+            },
+          });
+        }
+      });
+    }
+
+    // Process CTA blocks
+    if (block.type === 'cta') {
+      const content = block.content as { text?: string };
+      const fiBlock = fiBlocks.find(b => b.id === block.id);
+      const fiContent = fiBlock?.content as { text?: string } | undefined;
+      
+      if (content.text) {
+        keys.push({
+          key: `pageBuilder.${pageSlug}.cta.${block.id}`,
+          namespace: 'pageBuilder',
+          defaultValues: {
+            en: content.text,
+            fi: fiContent?.text || content.text,
+          },
+        });
+      }
+    }
+
+    // Process hero blocks with button text
+    if (block.type === 'hero') {
+      const content = block.content as { buttonText?: string };
+      const fiBlock = fiBlocks.find(b => b.id === block.id);
+      const fiContent = fiBlock?.content as { buttonText?: string } | undefined;
+      
+      if (content.buttonText) {
+        keys.push({
+          key: `pageBuilder.${pageSlug}.heroButton.${block.id}`,
+          namespace: 'pageBuilder',
+          defaultValues: {
+            en: content.buttonText,
+            fi: fiContent?.buttonText || content.buttonText,
+          },
+        });
+      }
+    }
+  }
+
+  // Sync to UI translations table if there are keys
+  if (keys.length > 0) {
+    await ensureTranslationKeysAction(keys);
+  }
+}
+
+// Lines 177-205 (Add helper to sync block structures)
+/**
+ * Sync block structure between languages (keeps same blocks/IDs but different content)
+ */
+function syncBlockStructure(
+  sourceBlocks: PageBlock[],
+  targetBlocks: PageBlock[]
+): PageBlock[] {
+  // Create a map of target blocks by ID for quick lookup
+  const targetMap = new Map(targetBlocks.map(b => [b.id, b]));
+  
+  // Use source structure but preserve target content where it exists
+  return sourceBlocks.map(sourceBlock => {
+    const targetBlock = targetMap.get(sourceBlock.id);
+    
+    if (targetBlock) {
+      // Block exists in target, keep its content but sync metadata
+      return {
+        ...sourceBlock,
+        content: targetBlock.content, // Keep target's content
+        meta: sourceBlock.meta, // Sync metadata from source
+      };
+    } else {
+      // New block in source, add to target (will need translation)
+      return sourceBlock;
+    }
+  });
+}
+
+/**
+ * Revalidate all language versions of a page path
+ */
+function revalidatePagePaths(path: string, additionalPath?: string) {
+  revalidatePath('/admin/page-builder');
+  revalidatePath(`/fi${path}`);
+  revalidatePath(`/en${path}`);
+  revalidatePath(path);
+  
+  if (additionalPath && additionalPath !== path) {
+    revalidatePath(`/fi${additionalPath}`);
+    revalidatePath(`/en${additionalPath}`);
+    revalidatePath(additionalPath);
+  }
+}
+
+// ============================================
 // PAGE ACTIONS
 // ============================================
 
 /**
  * List all pages
  */
-export async function listPagesAction(): Promise<ActionResult> {
+export async function listPagesAction(locale?: string): Promise<ActionResult> {
   try {
     await requireAuth();
-    const pages = await listPagesFromFiles();
-    return { success: true, data: pages };
+    
+    // If no locale specified, default to Finnish (primary pages)
+    const language = locale || 'fi';
+    
+    // Get all pages from database, filtered by language
+    const { pages } = await listPagesPaginated(
+      { isActive: true, language },
+      { limit: 1000, sortBy: 'createdAt', sortOrder: 'desc' }
+    );
+    
+    // Convert to PageSummary format for listings
+    const pagesSummary = pages.map(pageRecordToPageSummary);
+    
+    return { success: true, data: pagesSummary };
   } catch (error) {
     console.error('Error listing pages:', error);
     return {
@@ -108,15 +345,102 @@ export async function listPagesAction(): Promise<ActionResult> {
 }
 
 /**
- * Get a single page by slug
+ * List all published pages (public - no auth required)
+ * Used for generating static paths
  */
-export async function getPageAction(slug: string): Promise<ActionResult<PageData | null>> {
+export async function listPublishedPagesAction(): Promise<ActionResult> {
+  try {
+    // Get published Finnish pages
+    const { pages: fiPages } = await listPagesPaginated(
+      { isActive: true, status: 'published', language: 'fi' },
+      { limit: 1000, sortBy: 'createdAt', sortOrder: 'desc' }
+    );
+    
+    // Get published English pages (translations)
+    const { pages: enPages } = await listPagesPaginated(
+      { isActive: true, status: 'published', language: 'en' },
+      { limit: 1000, sortBy: 'createdAt', sortOrder: 'desc' }
+    );
+    
+    // Combine and convert to PageSummary format
+    const pagesSummary = [...fiPages, ...enPages].map(pageRecordToPageSummary);
+    
+    return { success: true, data: pagesSummary };
+  } catch (error) {
+    console.error('Error listing published pages:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to list published pages',
+    };
+  }
+}
+
+/**
+ * Get a single page by slug with all translations
+ */
+export async function getPageAction(
+  slug: string,
+  locale?: 'en' | 'fi'
+): Promise<ActionResult<PageData | null>> {
   try {
     await requireAuth();
-    const page = await readPage(slug);
-    return { success: true, data: page };
+    
+    // Default to Finnish if no locale specified
+    const language = locale || 'fi';
+    
+    // Find primary page (always Finnish)
+    const primaryPage = await findPageBySlugAndLanguage(slug, language);
+    
+    if (!primaryPage) {
+      return { success: true, data: null };
+    }
+    
+    // Get all translations for this page
+    const translations = await findTranslationsForPage(primaryPage.id);
+    
+    // Convert to PageData format with all translations
+    const pageData = pageRecordsToPageData(primaryPage, translations);
+
+    // Temporary debug - remove after verifying
+    console.log('PageData structure:', {
+      slug: pageData.slug,
+      availableLanguages: Object.keys(pageData.translations),
+      fiTitle: pageData.translations.fi?.title,
+      enTitle: pageData.translations.en?.title,
+    });
+    
+    return { success: true, data: pageData };
   } catch (error) {
     console.error('Error getting page:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to get page',
+    };
+  }
+}
+
+/**
+ * Get a page by slug and language (public - no auth required)
+ * Used for public page rendering
+ */
+export async function getPublicPageAction(
+  slug: string,
+  language: 'en' | 'fi'
+): Promise<ActionResult<PageData | null>> {
+  try {
+    // Only return published pages for public access
+    const page = await findPageBySlugAndLanguage(slug, language);
+    
+    if (!page || page.status !== 'published') {
+      return { success: true, data: null };
+    }
+    
+    // Convert to PageData format
+    const pageData = pageRecordToPageData(page, language);
+    
+    return { success: true, data: pageData };
+  } catch (error) {
+    console.error('Error getting public page:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to get page',
@@ -131,36 +455,95 @@ export async function createPageAction(
   data: z.infer<typeof createPageSchema>
 ): Promise<ActionResult<PageData>> {
   try {
-    await requireAuth();
+    const userId = await requireAuth();
 
     // Validate input
     const validated = createPageSchema.parse(data);
 
     // Check if slug already exists
-    if (await pageExists(validated.slug)) {
+    if (await pageSlugExists(validated.slug)) {
       return {
         success: false,
         error: `Page with slug "${validated.slug}" already exists`,
       };
     }
 
-    const now = new Date().toISOString();
-    const page: PageData = {
+    // Check if path already exists
+    if (await pagePathExists(validated.path)) {
+      return {
+        success: false,
+        error: `Page with path "${validated.path}" already exists`,
+      };
+    }
+
+    const now = new Date();
+    
+    // Determine primary locale (prefer fi, fallback to en if fi not provided)
+    const primaryLocale: 'en' | 'fi' = validated.translations.fi ? 'fi' : 'en';
+    const primaryTranslation = validated.translations[primaryLocale];
+    
+    if (!primaryTranslation) {
+      return {
+        success: false,
+        error: 'At least one translation (en or fi) is required',
+      };
+    }
+
+    // Create primary page record
+    const newPage = await createPage({
       slug: validated.slug,
       path: validated.path,
+      language: primaryLocale,
+      title: primaryTranslation.title,
+      content: {
+        type: 'blocks',
+        data: primaryTranslation.blocks,
+      },
+      metadata: {
+        description: primaryTranslation.description,
+      },
       status: validated.status,
-      createdAt: now,
-      updatedAt: now,
-      translations: validated.translations,
-    };
+      publishedAt: validated.status === 'published' ? now : null,
+      isActive: true,
+      isFeatured: false,
+      showInMenu: false,
+    });
 
-    await writePage(page);
+    // Create translation for the other locale if provided
+    const otherLocale: 'en' | 'fi' = primaryLocale === 'fi' ? 'en' : 'fi';
+    const otherTranslation = validated.translations[otherLocale];
+    
+    if (otherTranslation) {
+      await createPageTranslation({
+        parentId: newPage.id,
+        language: otherLocale,
+        slug: validated.slug,
+        path: validated.path,
+        title: otherTranslation.title,
+        content: {
+          type: 'blocks',
+          data: otherTranslation.blocks,
+        },
+        metadata: {
+          description: otherTranslation.description,
+        },
+        status: validated.status,
+        publishedAt: validated.status === 'published' ? now : null,
+      });
+    }
+
+    // Sync block translations to UI translations table
+    await syncBlockTranslations(validated.slug, validated.translations);
+
+    // Convert to PageData format
+    const pageData = pageRecordToPageData(newPage, primaryLocale);
+
     revalidatePath('/admin/page-builder');
     revalidatePath(validated.path);
 
     return {
       success: true,
-      data: page,
+      data: pageData,
       message: 'Page created successfully',
     };
   } catch (error) {
@@ -181,47 +564,112 @@ export async function createPageAction(
 
 /**
  * Update an existing page
+ * Updates both primary page and translations if provided
  */
 export async function updatePageAction(
   slug: string,
-  data: Partial<z.infer<typeof updatePageSchema>>
+  data: Partial<z.infer<typeof updatePageSchema>>,
+  language: 'en' | 'fi' = 'fi'
 ): Promise<ActionResult<PageData>> {
   try {
     await requireAuth();
 
-    // Get existing page
-    const existingPage = await readPage(slug);
-    if (!existingPage) {
-      return {
-        success: false,
-        error: `Page with slug "${slug}" not found`,
-      };
+    // Find the page being edited in the current language
+    const editingPage = await findPageBySlugAndLanguage(slug, language);
+    if (!editingPage) {
+      return { success: false, error: `Page with slug "${slug}" not found` };
     }
 
-    // Merge updates
-    const updatedPage: PageData = {
-      ...existingPage,
-      ...data,
-      slug: existingPage.slug, // Don't allow slug change through update
-      updatedAt: new Date().toISOString(),
-      translations: {
-        ...existingPage.translations,
-        ...data.translations,
-      },
-    };
+    // Find primary page (Finnish) - needed for translations lookup
+    const primaryPage = editingPage.isTranslation && editingPage.parentId
+      ? await findPageBySlugAndLanguage(slug, 'fi')
+      : editingPage;
+    
+    if (!primaryPage) {
+      return { success: false, error: 'Primary page not found' };
+    }
 
-    await writePage(updatedPage);
+    const translations = await findTranslationsForPage(primaryPage.id);
+
+    // Build common update fields
+    const commonFields: Record<string, unknown> = {};
+    if (data.path) commonFields.path = data.path;
+    if (data.status) {
+      commonFields.status = data.status;
+      if (data.status === 'published') commonFields.publishedAt = new Date();
+    }
+
+    // Update the page being edited
+    const translationData = data.translations?.[language];
+    if (translationData) {
+      const updateData = {
+        ...commonFields,
+        ...(translationData.title && { title: translationData.title }),
+        ...(translationData.description && { 
+          metadata: { ...editingPage.metadata, description: translationData.description }
+        }),
+        ...(translationData.blocks && { 
+          content: { type: 'blocks' as const, data: translationData.blocks }
+        }),
+      };
+      await updatePage(editingPage.id, updateData);
+    } else if (Object.keys(commonFields).length > 0) {
+      await updatePage(editingPage.id, commonFields);
+    }
+
+    // If editing Finnish and English translation data provided, update English too
+    if (language === 'fi' && data.translations?.en) {
+      const enPage = translations.find(t => t.language === 'en');
+      const en = data.translations.en;
+      
+      if (enPage) {
+        await updatePage(enPage.id, {
+          ...commonFields,
+          ...(en.title && { title: en.title }),
+          ...(en.description && { metadata: { description: en.description } }),
+          ...(en.blocks && { content: { type: 'blocks', data: en.blocks } }),
+        });
+      } else if (en.title || en.blocks) {
+        await createPageTranslation({
+          parentId: primaryPage.id,
+          language: 'en',
+          slug: primaryPage.slug,
+          path: data.path || primaryPage.path,
+          title: en.title || primaryPage.title,
+          content: en.blocks ? { type: 'blocks', data: en.blocks } : primaryPage.content,
+          metadata: en.description ? { description: en.description } : primaryPage.metadata,
+          status: data.status || primaryPage.status,
+          publishedAt: data.status === 'published' ? new Date() : null,
+        });
+      }
+    }
+
+    // Fetch updated data
+    const updated = await findPageBySlugAndLanguage(slug, 'fi');
+    if (!updated) {
+      return { success: false, error: 'Failed to retrieve updated page' };
+    }
+
+    const updatedTranslations = await findTranslationsForPage(updated.id);
+    const pageData = pageRecordsToPageData(updated, updatedTranslations);
+
+    // Sync block translations to UI translations table
+    if (data.translations) {
+      await syncBlockTranslations(slug, data.translations as PageData['translations']);
+    }
+
+    // Revalidate paths
     revalidatePath('/admin/page-builder');
-    revalidatePath(existingPage.path);
-    if (data.path && data.path !== existingPage.path) {
+    revalidatePath(`/fi${editingPage.path}`);
+    revalidatePath(`/en${editingPage.path}`);
+    revalidatePath(editingPage.path);
+    if (data.path && data.path !== editingPage.path) {
+      revalidatePath(`/fi${data.path}`);
+      revalidatePath(`/en${data.path}`);
       revalidatePath(data.path);
     }
 
-    return {
-      success: true,
-      data: updatedPage,
-      message: 'Page updated successfully',
-    };
+    return { success: true, data: pageData, message: 'Page updated successfully' };
   } catch (error) {
     console.error('Error updating page:', error);
     if (error instanceof z.ZodError) {
@@ -241,23 +689,36 @@ export async function updatePageAction(
 /**
  * Delete a page
  */
-export async function deletePageAction(slug: string): Promise<ActionResult<boolean>> {
+export async function deletePageAction(
+  slug: string,
+  language: 'en' | 'fi' = 'fi' // Add language parameter
+): Promise<ActionResult<boolean>> {
   try {
     await requireAuth();
 
-    const page = await readPage(slug);
+    const page = await findPageBySlugAndLanguage(slug, language);
     if (!page) {
       return {
         success: false,
-        error: `Page with slug "${slug}" not found`,
+        error: `Page with slug "${slug}" and language "${language}" not found`,
       };
     }
 
-    const deleted = await deletePageFile(slug);
+    let deleted: boolean;
+    
+    if (page.isTranslation && page.parentId) {
+      // Delete only the translation
+      const { deletePageTranslation } = await import('@/src/lib/db/queries/pages.queries');
+      deleted = await deletePageTranslation(page.id);
+    } else {
+      // Delete primary page and all its translations
+      deleted = await deletePage(page.id);
+    }
+
     if (!deleted) {
       return {
         success: false,
-        error: 'Failed to delete page file',
+        error: 'Failed to delete page',
       };
     }
 
@@ -281,15 +742,18 @@ export async function deletePageAction(slug: string): Promise<ActionResult<boole
 /**
  * Publish a page (change status to published)
  */
-export async function publishPageAction(slug: string): Promise<ActionResult<PageData>> {
-  return updatePageAction(slug, { status: 'published' });
+export async function publishPageAction(
+  slug: string,
+  language: 'en' | 'fi' = 'fi'
+): Promise<ActionResult<PageData>> {
+  return updatePageAction(slug, { status: 'published' }, language);
 }
 
-/**
- * Unpublish a page (change status to draft)
- */
-export async function unpublishPageAction(slug: string): Promise<ActionResult<PageData>> {
-  return updatePageAction(slug, { status: 'draft' });
+export async function unpublishPageAction(
+  slug: string,
+  language: 'en' | 'fi' = 'fi'
+): Promise<ActionResult<PageData>> {
+  return updatePageAction(slug, { status: 'draft' }, language);
 }
 
 /**
@@ -297,9 +761,9 @@ export async function unpublishPageAction(slug: string): Promise<ActionResult<Pa
  */
 export async function duplicatePageAction(slug: string): Promise<ActionResult<PageData>> {
   try {
-    await requireAuth();
+    const userId = await requireAuth();
 
-    const originalPage = await readPage(slug);
+    const originalPage = await findPageBySlugAndLanguage(slug, 'fi');
     if (!originalPage) {
       return {
         success: false,
@@ -310,35 +774,47 @@ export async function duplicatePageAction(slug: string): Promise<ActionResult<Pa
     // Generate new slug
     let newSlug = `${slug}-copy`;
     let counter = 1;
-    while (await pageExists(newSlug)) {
+    while (await pageSlugExists(newSlug)) {
       newSlug = `${slug}-copy-${counter}`;
       counter++;
     }
 
-    const now = new Date().toISOString();
-    const newPage: PageData = {
-      ...originalPage,
+    const newPath = `${originalPage.path}-copy`;
+    const now = new Date();
+
+    // Get original blocks
+    const originalBlocks = extractBlocks(originalPage.content);
+    
+    // Update title to indicate it's a copy
+    const copyTitle = originalPage.language === 'fi' 
+      ? `${originalPage.title} (Kopio)`
+      : `${originalPage.title} (Copy)`;
+
+    // Create new page
+    const newPage = await createPage({
       slug: newSlug,
-      path: `${originalPage.path}-copy`,
+      path: newPath,
+      language: originalPage.language,
+      title: copyTitle,
+      content: {
+        type: 'blocks',
+        data: originalBlocks,
+      },
+      metadata: originalPage.metadata,
       status: 'draft',
-      createdAt: now,
-      updatedAt: now,
-    };
+      isActive: true,
+      isFeatured: false,
+      showInMenu: false,
+    });
 
-    // Update titles to indicate it's a copy
-    if (newPage.translations.en) {
-      newPage.translations.en.title = `${newPage.translations.en.title} (Copy)`;
-    }
-    if (newPage.translations.fi) {
-      newPage.translations.fi.title = `${newPage.translations.fi.title} (Kopio)`;
-    }
+    // Convert to PageData format
+    const pageData = pageRecordToPageData(newPage, (newPage.language as 'en' | 'fi') || 'en');
 
-    await writePage(newPage);
     revalidatePath('/admin/page-builder');
 
     return {
       success: true,
-      data: newPage,
+      data: pageData,
       message: 'Page duplicated successfully',
     };
   } catch (error) {
@@ -553,25 +1029,22 @@ export async function triggerBlockTranslationAction(
   sourceLang: 'en' | 'fi' = 'en'
 ): Promise<ActionResult<PageData>> {
   try {
-    await requireAuth();
+    const userId = await requireAuth();
 
-    const page = await readPage(slug);
+    const page = await findPageBySlugAndLanguage(slug, sourceLang);
     if (!page) {
       return { success: false, error: `Page "${slug}" not found` };
     }
 
-    // Find the block in the source language translation
-    const sourceTranslation = page.translations[sourceLang];
-    if (!sourceTranslation) {
-      return { success: false, error: `No ${sourceLang} translation found` };
-    }
-
-    const blockIndex = sourceTranslation.blocks.findIndex(b => b.id === blockId);
+    // Get blocks from content
+    const blocks = extractBlocks(page.content);
+    const blockIndex = blocks.findIndex(b => b.id === blockId);
+    
     if (blockIndex === -1) {
       return { success: false, error: `Block "${blockId}" not found` };
     }
 
-    const block = sourceTranslation.blocks[blockIndex];
+    const block = blocks[blockIndex];
     const blockContent = block.content as unknown as Record<string, unknown>;
 
     // Translate main content (for blocks like page-hero, mission-section, cta-section)
@@ -605,10 +1078,10 @@ export async function triggerBlockTranslationAction(
 
     const now = new Date().toISOString();
     const existingAutoTranslated = block.meta?.autoTranslated || [];
-    const newAutoTranslated = [...new Set([...existingAutoTranslated, ...targetLocales])];
+    const newAutoTranslated = Array.from(new Set([...existingAutoTranslated, ...targetLocales]));
 
     // Update the block with translated content and meta
-    sourceTranslation.blocks[blockIndex] = {
+    blocks[blockIndex] = {
       ...block,
       content: finalContent as unknown as PageBlock['content'],
       meta: {
@@ -620,16 +1093,21 @@ export async function triggerBlockTranslationAction(
       },
     };
 
-    const updatedPage: PageData = {
-      ...page,
-      updatedAt: now,
-      translations: {
-        ...page.translations,
-        [sourceLang]: sourceTranslation,
+    // Update page in database
+    const updatedPage = await updatePage(page.id, {
+      content: {
+        type: 'blocks',
+        data: blocks,
       },
-    };
+    });
 
-    await writePage(updatedPage);
+    if (!updatedPage) {
+      return { success: false, error: 'Failed to update page' };
+    }
+
+    // Convert to PageData format
+    const pageData = pageRecordToPageData(updatedPage, (updatedPage.language as 'en' | 'fi') || 'en');
+
     revalidatePath('/admin/page-builder');
     revalidatePath(page.path);
 
@@ -641,7 +1119,7 @@ export async function triggerBlockTranslationAction(
 
     return {
       success: true,
-      data: updatedPage,
+      data: pageData,
       message,
     };
   } catch (error) {
@@ -662,59 +1140,69 @@ export async function markBlockAsReviewedAction(
   locale: 'en' | 'fi'
 ): Promise<ActionResult<PageData>> {
   try {
-    await requireAuth();
+    const userId = await requireAuth();
 
-    const page = await readPage(slug);
+    const page = await findPageBySlugAndLanguage(slug, locale);
     if (!page) {
       return { success: false, error: `Page "${slug}" not found` };
     }
 
-    // Find the block in any translation that has it
-    for (const lang of ['en', 'fi'] as const) {
-      const translation = page.translations[lang];
-      if (!translation) continue;
-
-      const blockIndex = translation.blocks.findIndex(b => b.id === blockId);
-      if (blockIndex === -1) continue;
-
-      const block = translation.blocks[blockIndex];
-      const existingReviewed = block.meta?.manuallyReviewed || [];
-
-      if (!existingReviewed.includes(locale)) {
-        translation.blocks[blockIndex] = {
-          ...block,
-          meta: {
-            defaultLang: block.meta?.defaultLang || 'en',
-            manuallyReviewed: [...existingReviewed, locale],
-            // Remove from autoTranslated if present (human-reviewed takes precedence)
-            autoTranslated: (block.meta?.autoTranslated || []).filter(l => l !== locale),
-            lastTranslated: block.meta?.lastTranslated,
-            lastModified: block.meta?.lastModified,
-          },
-        };
-
-        const updatedPage: PageData = {
-          ...page,
-          updatedAt: new Date().toISOString(),
-          translations: {
-            ...page.translations,
-            [lang]: translation,
-          },
-        };
-
-        await writePage(updatedPage);
-        revalidatePath('/admin/page-builder');
-        revalidatePath(page.path);
-
-        return {
-          success: true,
-          data: updatedPage,
-          message: `Block marked as reviewed for ${locale}`,
-        };
-      }
+    // Get blocks from content
+    const blocks = extractBlocks(page.content);
+    const blockIndex = blocks.findIndex(b => b.id === blockId);
+    
+    if (blockIndex === -1) {
+      return { success: false, error: `Block "${blockId}" not found` };
     }
 
-    return { success: false, error: `Block "${blockId}" not found` };
+    const block = blocks[blockIndex];
+    const existingReviewed = block.meta?.manuallyReviewed || [];
+
+    if (!existingReviewed.includes(locale)) {
+      blocks[blockIndex] = {
+        ...block,
+        meta: {
+          defaultLang: block.meta?.defaultLang || 'en',
+          manuallyReviewed: [...existingReviewed, locale],
+          // Remove from autoTranslated if present (human-reviewed takes precedence)
+          autoTranslated: (block.meta?.autoTranslated || []).filter(l => l !== locale),
+          lastTranslated: block.meta?.lastTranslated,
+          lastModified: block.meta?.lastModified,
+        },
+      };
+
+      // Update page in database
+      const updatedPage = await updatePage(page.id, {
+        content: {
+          type: 'blocks',
+          data: blocks,
+        },
+      });
+
+      if (!updatedPage) {
+        return { success: false, error: 'Failed to update page' };
+      }
+
+      // Convert to PageData format
+      const pageData = pageRecordToPageData(updatedPage, (updatedPage.language as 'en' | 'fi') || 'en');
+
+      revalidatePath('/admin/page-builder');
+      revalidatePath(page.path);
+
+      return {
+        success: true,
+        data: pageData,
+        message: `Block marked as reviewed for ${locale}`,
+      };
+    }
+
+    // If already reviewed, just return the page
+    const pageData = pageRecordToPageData(page, (page.language as 'en' | 'fi') || 'en');
+    return {
+      success: true,
+      data: pageData,
+      message: `Block already marked as reviewed for ${locale}`,
+    };
   } catch (error) {
     console.error('Error marking block as reviewed:', error);
     return {

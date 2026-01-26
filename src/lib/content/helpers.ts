@@ -4,7 +4,7 @@
  * Utility functions for working with localized content
  */
 
-import type { Locale } from '@/src/lib/pages/file-storage';
+import type { Locale } from '@/src/lib/navigation/file-storage';
 
 /**
  * Get the appropriate locale content with fallback

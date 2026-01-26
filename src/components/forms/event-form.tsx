@@ -307,7 +307,7 @@ export function EventForm({
                           Auto-translate
                         </FormLabel>
                         <FormDescription className="text-xs">
-                          Automatically translate to all languages (EN, AR, FI)
+                          Automatically translate to all languages (EN, FI)
                         </FormDescription>
                       </div>
                       <FormControl>

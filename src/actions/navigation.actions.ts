@@ -1,7 +1,8 @@
 /**
  * Server Actions for Navigation Configuration
  * 
- * Server actions for CRUD operations on header and footer configuration files.
+ * Server actions for CRUD operations on header and footer configurations.
+ * Data is stored in the database via navigation.queries.ts
  */
 
 'use server';
@@ -9,32 +10,32 @@
 import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
 import {
-  readHeaderConfig as readHeaderConfigFromStorage,
-  readFooterConfig as readFooterConfigFromStorage,
-  writeHeaderConfig as writeHeaderConfigToStorage,
-  writeFooterConfig as writeFooterConfigToStorage,
-  type LegacyHeaderConfig,
-  type LegacyFooterConfig,
-  type SocialLink as StorageSocialLink,
-} from '@/src/lib/navigation/file-storage';
-import { listPages } from '@/src/lib/pages/file-storage';
+  getHeaderConfigFromDb,
+  getFooterConfigFromDb,
+  saveHeaderConfigToDb,
+  saveFooterConfigToDb,
+  type Locale as DbLocale,
+} from '@/src/lib/db/queries/navigation.queries';
+import {
+  type HeaderConfigData,
+  type FooterConfigData,
+  type SocialLink as SchemaSocialLink,
+  type LegacyNavLink,
+} from '@/src/lib/db/schema/navigation';
+import { listPublishedPagesAction } from '@/src/actions/pages.actions';
+import type { PageSummary } from '@/src/lib/types/page';
 
 // Re-export types for compatibility
-export type Locale = 'en' | 'fi';
-export type HeaderConfig = LegacyHeaderConfig;
-export type FooterConfig = LegacyFooterConfig;
-export type SocialLink = StorageSocialLink;
+export type Locale = DbLocale;
+export type HeaderConfig = HeaderConfigData;
+export type FooterConfig = FooterConfigData;
+export type SocialLink = SchemaSocialLink;
+export type NavLink = LegacyNavLink;
 
 export interface TranslatedText {
   en: string;
   fi: string;
-}
-
-export interface NavLink {
-  labelKey: string;
-  labels: TranslatedText;
-  href: string;
-  children?: NavLink[];
+  [key: string]: string;
 }
 
 // ============================================
@@ -66,7 +67,7 @@ async function requireAuth(): Promise<string> {
  */
 export async function getHeaderConfig(): Promise<ActionResult<HeaderConfig>> {
   try {
-    const config = await readHeaderConfigFromStorage();
+    const config = await getHeaderConfigFromDb();
     return { success: true, data: config };
   } catch (error) {
     console.error('Error reading header config:', error);
@@ -86,7 +87,7 @@ export async function updateHeaderConfig(
   try {
     await requireAuth();
 
-    await writeHeaderConfigToStorage(config);
+    await saveHeaderConfigToDb(config);
 
     // Revalidate all pages that use the header
     revalidatePath('/', 'layout');
@@ -119,7 +120,7 @@ export async function updateHeaderConfig(
  */
 export async function getFooterConfig(): Promise<ActionResult<FooterConfig>> {
   try {
-    const config = await readFooterConfigFromStorage();
+    const config = await getFooterConfigFromDb();
     return { success: true, data: config };
   } catch (error) {
     console.error('Error reading footer config:', error);
@@ -139,7 +140,7 @@ export async function updateFooterConfig(
   try {
     await requireAuth();
 
-    await writeFooterConfigToStorage(config);
+    await saveFooterConfigToDb(config);
 
     // Revalidate all pages that use the footer
     revalidatePath('/', 'layout');
@@ -175,23 +176,37 @@ export interface AvailablePage {
 
 /**
  * Get available pages for navigation menus
- * Returns published pages from the content/pages directory
+ * Returns published pages from the database
  */
 export async function getAvailablePages(): Promise<ActionResult<AvailablePage[]>> {
   try {
-    const allPages = await listPages();
+    const result = await listPublishedPagesAction();
     
-    // Only include published pages
-    const publishedPages = allPages.filter(page => page.status === 'published');
+    if (!result.success) {
+      return {
+        success: false,
+        error: result.error,
+      };
+    }
     
-    // Map to AvailablePage format
-    const pages: AvailablePage[] = publishedPages.map(page => ({
-      slug: page.slug,
-      path: page.path,
-      title: page.title,
-    }));
+    const publishedPages = result.data as PageSummary[];
     
-    // Sort alphabetically by title
+    // Deduplicate by slug (pages exist in multiple languages)
+    const uniquePagesMap = new Map<string, AvailablePage>();
+    
+    publishedPages.forEach(page => {
+      if (!uniquePagesMap.has(page.slug)) {
+        uniquePagesMap.set(page.slug, {
+          slug: page.slug,
+          path: page.path,
+          title: page.title,
+        });
+      }
+    });
+    
+    // Convert to array and sort alphabetically by title
+    const pages = Array.from(uniquePagesMap.values());
+    
     return { 
       success: true, 
       data: pages.sort((a, b) => a.title.localeCompare(b.title)) 

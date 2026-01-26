@@ -1,11 +1,13 @@
+// Lines 1-220 - Optimized version with TanStack Query
 "use client";
 
 import * as React from "react";
 import { Link, useRouter } from "@/src/i18n/navigation";
 import { ArrowLeft, Eye } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/src/components/ui/button";
 import { CampaignForm, type CampaignFormData } from "@/src/components/forms/campaign-form";
-import { updateCampaignAction, updateCampaignTranslationAction, fetchCampaigns } from "@/src/actions/campaigns.actions";
+import { useCampaign, useUpdateCampaign, useUpdateCampaignTranslation } from "@/src/lib/hooks/use-campaigns";
 import { toast } from "sonner";
 
 interface EditCampaignPageProps {
@@ -16,99 +18,77 @@ interface EditCampaignPageProps {
 
 export default function EditCampaignPage({ params }: EditCampaignPageProps) {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [campaign, setCampaign] = React.useState<any>(null);
-  const [currentSlug, setCurrentSlug] = React.useState<string>("");
-  const [error, setError] = React.useState<string | null>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [successMessage, setSuccessMessage] = React.useState<string | null>(null);
+  const locale = useLocale() as 'en' | 'fi';
+  const t = useTranslations("admin.campaigns.edit");
+  const [slug, setSlug] = React.useState<string>("");
 
+  // Get slug from params
   React.useEffect(() => {
-    params.then(async (resolved) => {
-      setCurrentSlug(resolved.slug);
-      
-      // Fetch the campaign from the database
-      try {
-        const result = await fetchCampaigns(resolved.slug, 'en');
-        if (result.success && result.data) {
-          const dbCampaign = result.data as any;
-          
-          // Map database fields to form-compatible fields
-          const mappedCampaign = {
-            ...dbCampaign,
-            // Map featuredImage to featuredImageUrl
-            featuredImageUrl: dbCampaign.featuredImage || dbCampaign.featuredImageUrl || "",
-            // Extract goal from description if exists (description is now JSONB)
-            goal: dbCampaign.description?.goal || dbCampaign.goal || undefined,
-            // Ensure description is a string for the form (extract from JSONB if needed)
-            description: typeof dbCampaign.description === 'string' 
-              ? dbCampaign.description 
-              : (dbCampaign.description?.data || dbCampaign.description || ""),
-            // Ensure nested fields are properly mapped
-            callToAction: dbCampaign.callToAction || { primary: undefined, secondary: undefined },
-            targets: dbCampaign.targets || [],
-            demands: dbCampaign.demands || [],
-            howToParticipate: dbCampaign.howToParticipate || [],
-            // SEO fields
-            seoTitle: dbCampaign.seoTitle || "",
-            seoDescription: dbCampaign.seoDescription || "",
-            // Campaign base fields (from joined campaigns table)
-            status: dbCampaign.status || "draft",
-            category: dbCampaign.category || "",
-            campaignType: dbCampaign.campaignType || undefined,
-            isFeatured: dbCampaign.isFeatured ?? false,
-          };
-          
-          setCampaign(mappedCampaign);
-        } else {
-          setError((result as any).error || "Failed to load campaign");
-        }
-      } catch (err) {
-        setError("Failed to load campaign");
-      } finally {
-        setIsLoading(false);
-      }
-    });
+    params.then((resolved) => setSlug(resolved.slug));
   }, [params]);
 
+  // Fetch campaign with React Query
+  const { data: campaign, isLoading, error } = useCampaign(slug);
+  
+  // Mutations
+  const updateCampaign = useUpdateCampaign();
+  const updateTranslation = useUpdateCampaignTranslation();
+
+  // Map campaign data for form
+  const mappedCampaign = React.useMemo(() => {
+    if (!campaign) return null;
+
+    const descriptionData = typeof campaign.description === 'string' 
+      ? campaign.description 
+      : (campaign.description && typeof campaign.description === 'object' && 'data' in campaign.description 
+          ? campaign.description.data as string 
+          : "");
+
+    return {
+      id: campaign.id,
+      title: campaign.title,
+      slug: campaign.slug,
+      featuredImageUrl: campaign.featuredImage || "",
+      description: descriptionData || "",
+      callToAction: campaign.callToAction || { primary: undefined, secondary: undefined },
+      targets: campaign.targets || [],
+      demands: campaign.demands || [],
+      howToParticipate: campaign.howToParticipate || [],
+      seoTitle: campaign.seoTitle || "",
+      seoDescription: campaign.seoDescription || "",
+      status: campaign.status || "draft",
+      category: campaign.category || "",
+      campaignType: campaign.campaignType || undefined,
+      isFeatured: campaign.isFeatured ?? false,
+    } as any; // Type assertion for form compatibility
+  }, [campaign]);
+
   const handleSubmit = async (data: CampaignFormData) => {
-    setIsSubmitting(true);
-    setError(null);
+    if (!campaign) return;
 
     try {
-      // Get the actual campaign ID (not translation ID)
-      // For English translations, campaign.campaignId is the real campaign ID
-      // For Finnish campaigns, campaign.id is the campaign ID
-      const campaignId = campaign.campaignId || campaign.id;
-      
-      if (!campaignId) {
-        setError("Campaign ID not found");
-        return;
-      }
+      // Get campaign ID (handle both primary and translation records)
+      const campaignId = campaign.parentId || campaign.id;
 
-      // Update the basic campaign information
-      const updateResult = await updateCampaignAction(
+      // Update base campaign fields
+      await updateCampaign.mutateAsync({
         campaignId,
-        currentSlug,
-        {
-          status: data.status as any,
+        slug,
+        data: {
+          status: data.status,
           category: data.category,
           campaignType: data.campaignType,
           isFeatured: data.isFeatured,
-        }
-      );
+        },
+        language: locale,
+      });
 
-      if (!updateResult.success) {
-        setError(updateResult.error);
-        return;
-      }
-
-      // Update campaign translation (content in the current locale)
-      const translationResult = await updateCampaignTranslationAction(
+      // Update translation content
+      await updateTranslation.mutateAsync({
         campaignId,
-        currentSlug,
-        'en', // You might want to get the current locale from the router
-        {
+        slug,
+        locale,
+        data: {
           title: data.title,
           description: data.description,
           callToAction: data.callToAction,
@@ -117,115 +97,89 @@ export default function EditCampaignPage({ params }: EditCampaignPageProps) {
           targets: data.targets,
           seoTitle: data.seoTitle,
           seoDescription: data.seoDescription,
-        }
-      );
+        },
+      });
 
-      if (!translationResult.success) {
-        setError(translationResult.error);
-        return;
-      }
-
-      // Update local campaign state for UI feedback
-      setCampaign((prev: any) => ({
-        ...prev,
-        title: data.title,
-        description: data.description,
-        campaignType: data.campaignType,
-        category: data.category,
-        status: data.status,
-        featuredImageUrl: data.featuredImageUrl || prev.featuredImageUrl,
-        goal: data.goal || prev.goal,
-        isFeatured: data.isFeatured,
-        callToAction: data.callToAction,
-        targets: data.targets,
-        demands: data.demands,
-        howToParticipate: data.howToParticipate,
-        seoTitle: data.seoTitle,
-        seoDescription: data.seoDescription,
-      }));
-
-      setSuccessMessage("Campaign updated successfully!");
-      toast.success("Campaign updated successfully!");
-      // Redirect to campaigns page after a brief delay
+      toast.success(t("successMessage"));
+      
+      // Redirect after success
       setTimeout(() => {
         router.push('/admin/campaigns');
       }, 1500);
     } catch (err) {
       console.error("Error updating campaign:", err);
-      const message = err instanceof Error ? err.message : "Failed to update campaign. Please try again.";
-      setError(message);
+      const message = err instanceof Error ? err.message : t("errorUpdating");
       toast.error(message);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   const handlePreview = () => {
-    if (!currentSlug) return;
-    window.open(`/admin/campaigns/${currentSlug}`, "_blank");
+    if (!slug) return;
+    window.open(`/admin/campaigns/${slug}`, "_blank");
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600"></div>
+          <p className="mt-2 text-gray-600">{t("loading")}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700">
+        {error.message || t("errorLoading")}
+      </div>
+    );
+  }
+
+  // No campaign found
+  if (!mappedCampaign) {
+    return (
+      <div className="rounded-lg bg-yellow-50 p-4 text-sm text-yellow-700">
+        {t("notFound")}
+      </div>
+    );
+  }
+
+  const isSubmitting = updateCampaign.isPending || updateTranslation.isPending;
 
   return (
     <div className="space-y-6">
-      {isLoading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600"></div>
-            <p className="mt-2 text-gray-600">Loading campaign...</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/admin/campaigns">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t("backToCampaigns")}
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{t("pageTitle")}</h1>
+            <p className="text-gray-600">{t("updateCampaign")} {mappedCampaign.title}</p>
           </div>
         </div>
-      )}
-
-      {!isLoading && error && (
-        <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700">
-          {error}
+        <div className="flex items-center space-x-2">
+          <Button type="button" variant="outline" onClick={handlePreview}>
+            <Eye className="mr-2 h-4 w-4" />
+            {t("preview")}
+          </Button>
         </div>
-      )}
+      </div>
 
-      {!isLoading && !error && campaign && (
-        <>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/admin/campaigns">
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Campaigns
-                </Link>
-              </Button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Edit Campaign</h1>
-                <p className="text-gray-600">Update campaign: {campaign.title}</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button type="button" variant="outline" onClick={handlePreview}>
-                <Eye className="mr-2 h-4 w-4" />
-                Preview
-              </Button>
-            </div>
-          </div>
-
-          {error && (
-            <div className="rounded-lg bg-red-50 p-4 text-sm text-red-700">
-              {error}
-            </div>
-          )}
-
-          {successMessage && (
-            <div className="rounded-lg bg-green-50 p-4 text-sm text-green-700">
-              {successMessage}
-            </div>
-          )}
-
-          <CampaignForm
-            campaign={campaign}
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
-            submitLabel="Update Campaign"
-            submittingLabel="Updating..."
-          />
-        </>
-      )}
+      <CampaignForm
+        campaign={mappedCampaign}
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+        submitLabel={t("submitButton")}
+        submittingLabel={t("submittingButton")}
+      />
     </div>
   );
 }

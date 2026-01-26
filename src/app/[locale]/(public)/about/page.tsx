@@ -1,5 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
-import { readPage } from "@/src/lib/pages/file-storage";
+import { getPublicPageAction } from "@/src/actions/pages.actions";
 import { PageRenderer } from "@/src/components/blocks";
 import type { PageLocale } from "@/src/lib/types/page";
 
@@ -14,13 +14,15 @@ export async function generateMetadata({ params }: AboutPageProps) {
   const { locale } = await params;
 
   try {
-    const page = await readPage("about");
-    if (!page) {
+    const result = await getPublicPageAction("about", locale as 'en' | 'fi');
+    
+    if (!result.success || !result.data) {
       return {
         title: "About Us - Sumud",
       };
     }
 
+    const page = result.data;
     const translation = page.translations[locale as PageLocale] || page.translations.en;
 
     return {
@@ -40,17 +42,18 @@ export default async function AboutPage({ params }: AboutPageProps) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  // Read about page content from JSON file
-  const page = await readPage("about");
+  // Read about page content from database
+  const result = await getPublicPageAction("about", locale as 'en' | 'fi');
+  const page = result.success ? result.data : null;
 
   // If no page, render empty page
   if (!page) {
     return <main />;
   }
 
-  // Use English blocks as they contain multilingual content
-  // PageRenderer will extract the correct locale from each block
-  const blocks = page.translations.en?.blocks || [];
+  // Use current locale blocks or fallback to English
+  const translation = page.translations[locale as PageLocale] || page.translations.en;
+  const blocks = translation?.blocks || [];
 
   return (
     <main className="min-h-screen bg-linear-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4]">

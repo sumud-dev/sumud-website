@@ -146,12 +146,13 @@ export default function ArticleCard({
   // Mock engagement data (in real app, this would come from API)
   // Use deterministic values based on article ID to avoid hydration errors
   const articleIdHash = article.id ? article.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 0;
+  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+  const SEVEN_DAYS_AGO = new Date(Date.now() - SEVEN_DAYS_MS);
+  
   const engagementData = {
-    views: (articleIdHash % 900) + 100,
-    likes: (articleIdHash % 90) + 10,
     shares: (articleIdHash % 45) + 5,
     isNew: article.publishedAt
-      ? new Date(article.publishedAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      ? new Date(article.publishedAt) > SEVEN_DAYS_AGO
       : false,
   };
 

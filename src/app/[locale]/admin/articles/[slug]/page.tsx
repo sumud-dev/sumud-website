@@ -4,6 +4,7 @@ import * as React from "react";
 import { Link, useRouter } from "@/src/i18n/navigation";
 import Image from "next/image";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   Edit,
@@ -26,8 +27,9 @@ import {
 } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import { Separator } from "@/src/components/ui/separator";
-import { getPostBySlug, deletePost } from "@/src/actions/article.actions";
+import { getPostBySlug, deletePost } from "@/src/actions/posts.actions";
 import { getCategoryName, type PostWithCategory } from "@/src/lib/utils/article.utils";
+import { markdownToHtml } from "@/src/lib/utils/markdown";
 
 // Allow flexible article structure for compatibility with different data sources
 type Article = PostWithCategory & Record<string, any>;
@@ -46,6 +48,7 @@ interface ArticleDetailPageProps {
 
 export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
   const router = useRouter();
+  const t = useTranslations("admin.articles.detail");
   const [article, setArticle] = React.useState<Article | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [deleting, setDeleting] = React.useState(false);
@@ -56,15 +59,15 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
         setLoading(true);
         const resolvedParams = await params;
         const result = await getPostBySlug(resolvedParams.slug);
-        
+        console.log(result)
         if (result.success && result.post) {
           setArticle(result.post as any);
-        } else {
-          toast.error(result.error || "Failed to load article");
+        } else if (!result.success) {
+          toast.error(result.error || t("toast.loadError"));
         }
       } catch (error) {
         console.error("Error fetching article:", error);
-        toast.error("Failed to load article");
+        toast.error(t("toast.loadError"));
       } finally {
         setLoading(false);
       }
@@ -75,24 +78,24 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
 
   const handleDelete = async () => {
     if (!article) return;
-    if (!confirm(`Are you sure you want to delete "${article.title}"?`)) return;
+    if (!confirm(t("delete.confirm", { title: article.title }))) return;
 
     setDeleting(true);
     
     try {
       const resolvedParams = await params;
       await deletePost(resolvedParams.slug);
-      toast.success("Article deleted successfully");
+      toast.success(t("toast.deleteSuccess"));
       router.push("/admin/articles");
     } catch (error) {
       console.error("Error deleting article:", error);
-      toast.error("Failed to delete article");
+      toast.error(t("toast.deleteError"));
       setDeleting(false);
     }
   };
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return "Not set";
+    if (!dateString) return t("placeholders.notSet");
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -113,11 +116,11 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
   if (!article) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <p className="text-muted-foreground">Article not found</p>
+        <p className="text-muted-foreground">{t("notFound")}</p>
         <Button asChild variant="outline">
           <Link href="/admin/articles">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Articles
+            {t("backToArticles")}
           </Link>
         </Button>
       </div>
@@ -143,7 +146,7 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
           <Button asChild variant="outline">
             <Link href={`/admin/articles/${article.slug}/edit`}>
               <Edit className="mr-2 h-4 w-4" />
-              Edit
+              {t("actions.edit")}
             </Link>
           </Button>
           <Button
@@ -156,7 +159,7 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
             ) : (
               <Trash2 className="mr-2 h-4 w-4" />
             )}
-            Delete
+            {t("actions.delete")}
           </Button>
         </div>
       </div>
@@ -165,12 +168,12 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Featured Image */}
-          {article.coverImage && (
-            <Card>
+          {article.featuredImage && (
+            <Card className="p-0">
               <CardContent className="p-0">
                 <div className="relative aspect-video w-full overflow-hidden rounded-lg">
                   <Image
-                    src={article.coverImage}
+                    src={article.featuredImage}
                     alt={article.title ?? "Article image"}
                     fill
                     sizes="(max-width: 768px) 100vw, 66vw"
@@ -186,7 +189,7 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
           {article.excerpt && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Excerpt</CardTitle>
+                <CardTitle className="text-lg">{t("sections.excerpt")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">{article.excerpt}</p>
@@ -197,16 +200,16 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
           {/* Content */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Content</CardTitle>
+              <CardTitle className="text-lg">{t("sections.content")}</CardTitle>
             </CardHeader>
             <CardContent>
               {article.content ? (
                 <div
                   className="prose prose-sm max-w-none dark:prose-invert"
-                  dangerouslySetInnerHTML={{ __html: article.content }}
+                  dangerouslySetInnerHTML={{ __html: markdownToHtml(article.content) }}
                 />
               ) : (
-                <p className="text-muted-foreground italic">No content available</p>
+                <p className="text-muted-foreground italic">{t("placeholders.noContent")}</p>
               )}
             </CardContent>
           </Card>
@@ -217,11 +220,11 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
           {/* Status & Metadata */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Status & Details</CardTitle>
+              <CardTitle className="text-lg">{t("sections.statusDetails")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Status</span>
+                <span className="text-sm text-muted-foreground">{t("labels.status")}</span>
                 <Badge className={statusColors[article.status ?? "draft"] || statusColors.draft}>
                   {article.status ?? "draft"}
                 </Badge>
@@ -233,9 +236,9 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
                 <div className="flex items-start gap-3">
                   <User className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium">Author</p>
+                    <p className="text-sm font-medium">{t("labels.author")}</p>
                     <p className="text-sm text-muted-foreground">
-                      {article.author_name || "Unknown"}
+                      {article.author_name || t("placeholders.unknown")}
                     </p>
                   </div>
                 </div>
@@ -243,7 +246,7 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
                 <div className="flex items-start gap-3">
                   <Tag className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium">Category</p>
+                    <p className="text-sm font-medium">{t("labels.category")}</p>
                     <p className="text-sm text-muted-foreground">
                       {getCategoryName(article)}
                     </p>
@@ -253,9 +256,9 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
                 <div className="flex items-start gap-3">
                   <Globe className="h-4 w-4 text-muted-foreground mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium">Language</p>
+                    <p className="text-sm font-medium">{t("labels.language")}</p>
                     <p className="text-sm text-muted-foreground">
-                      {article.language || "Not set"}
+                      {article.language || t("placeholders.notSet")}
                     </p>
                   </div>
                 </div>
@@ -266,13 +269,13 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
           {/* Dates */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Timeline</CardTitle>
+              <CardTitle className="text-lg">{t("sections.timeline")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-start gap-3">
                 <Calendar className="h-4 w-4 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium">Published</p>
+                  <p className="text-sm font-medium">{t("labels.published")}</p>
                   <p className="text-sm text-muted-foreground">
                     {formatDate(article.published_at)}
                   </p>
@@ -282,9 +285,9 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
               <div className="flex items-start gap-3">
                 <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium">Published</p>
+                  <p className="text-sm font-medium">{t("labels.created")}</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatDate(article.published_at)}
+                    {formatDate(article.created_at)}
                   </p>
                 </div>
               </div>
@@ -292,7 +295,7 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
               <div className="flex items-start gap-3">
                 <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium">Last Updated</p>
+                  <p className="text-sm font-medium">{t("labels.lastUpdated")}</p>
                   <p className="text-sm text-muted-foreground">
                     {formatDate(article.updated_at)}
                   </p>
@@ -305,7 +308,7 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
           {article.categories && article.categories.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Categories</CardTitle>
+                <CardTitle className="text-lg">{t("sections.categories")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
@@ -323,7 +326,7 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
           {article.locations && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Locations</CardTitle>
+                <CardTitle className="text-lg">{t("sections.locations")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
@@ -338,7 +341,7 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
           {article.organizers && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Organizers</CardTitle>
+                <CardTitle className="text-lg">{t("sections.organizers")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">

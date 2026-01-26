@@ -1,5 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
-import { readPage } from "@/src/lib/pages/file-storage";
+import { getPublicPageAction } from "@/src/actions/pages.actions";
 import { PageRenderer } from "@/src/components/blocks";
 import type { PageLocale } from "@/src/lib/types/page";
 
@@ -14,13 +14,15 @@ export async function generateMetadata({ params }: HomePageProps) {
   const { locale } = await params;
 
   try {
-    const page = await readPage("home");
-    if (!page) {
+    const result = await getPublicPageAction("home", locale as 'en' | 'fi');
+    
+    if (!result.success || !result.data) {
       return {
         title: "Home - Sumud",
       };
     }
 
+    const page = result.data;
     const translation = page.translations[locale as PageLocale] || page.translations.en;
 
     return {
@@ -40,10 +42,11 @@ export default async function Home({ params }: HomePageProps) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  // Read homepage content from JSON file
-  const page = await readPage("home");
+  // Read homepage content from database
+  const result = await getPublicPageAction("home", locale as 'en' | 'fi');
 
   // Get translation for current locale, fallback to English
+  const page = result.success ? result.data : null;
   const translation = page?.translations[locale as PageLocale] || page?.translations.en;
 
   // If no page or translation, render empty page

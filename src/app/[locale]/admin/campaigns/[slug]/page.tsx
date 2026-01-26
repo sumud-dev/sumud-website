@@ -4,6 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 import { Link } from "@/src/i18n/navigation";
 import { useRouter } from "@/src/i18n/navigation";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   Edit,
@@ -138,19 +139,20 @@ const STATUS_CONFIG: Record<CampaignStatus, { color: string; icon: React.Element
   archived: { color: "bg-gray-100 text-gray-600", icon: XCircle },
 };
 
-const CAMPAIGN_TYPE_LABELS: Record<string, string> = {
-  awareness: "Awareness",
-  fundraising: "Fundraising",
-  advocacy: "Advocacy",
-  event: "Event",
-  community_building: "Community Building",
-  education: "Education",
-  solidarity: "Solidarity",
-  humanitarian: "Humanitarian",
-  political: "Political",
-  cultural: "Cultural",
-  environmental: "Environmental",
-};
+// Campaign type keys - values come from translations
+const CAMPAIGN_TYPE_KEYS = [
+  'awareness',
+  'fundraising',
+  'advocacy',
+  'event',
+  'community_building',
+  'education',
+  'solidarity',
+  'humanitarian',
+  'political',
+  'cultural',
+  'environmental',
+] as const;
 
 // ============================================
 // HELPER FUNCTIONS
@@ -198,19 +200,19 @@ function LoadingState() {
   );
 }
 
-function ErrorState({ error, slug, locale }: { error: string; slug: string; locale: string }) {
+function ErrorState({ error, slug, locale, t }: { error: string; slug: string; locale: string; t: (key: string) => string }) {
   return (
     <div className="space-y-4">
-      <BackLink />
+      <BackLink t={t} />
       <Card className="border-destructive bg-destructive/5">
         <CardContent className="pt-6">
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
             <div>
-              <h3 className="font-semibold text-destructive mb-1">Failed to Load Campaign</h3>
+              <h3 className="font-semibold text-destructive mb-1">{t("error.title")}</h3>
               <p className="text-sm text-muted-foreground mb-3">{error}</p>
               <div className="text-xs text-muted-foreground space-y-1">
-                <p><strong>Debug:</strong> Slug: {slug}, Locale: {locale}</p>
+                <p><strong>{t("error.debug")}:</strong> Slug: {slug}, Locale: {locale}</p>
               </div>
             </div>
           </div>
@@ -220,14 +222,14 @@ function ErrorState({ error, slug, locale }: { error: string; slug: string; loca
   );
 }
 
-function BackLink() {
+function BackLink({ t }: { t: (key: string) => string }) {
   return (
     <Link
       href="/admin/campaigns"
       className="flex items-center text-sm text-muted-foreground hover:text-foreground w-fit"
     >
       <ArrowLeft className="mr-2 h-4 w-4" />
-      Back to Campaigns
+      {t("backToCampaigns")}
     </Link>
   );
 }
@@ -274,6 +276,7 @@ function RichText({ content }: { content: string }) {
 
 export default function CampaignDetailsPage({ params }: PageProps) {
   const router = useRouter();
+  const t = useTranslations("admin.campaigns.detail");
   
   // State
   const [campaign, setCampaign] = React.useState<Campaign | null>(null);
@@ -294,7 +297,11 @@ export default function CampaignDetailsPage({ params }: PageProps) {
         setIsLoading(true);
         setError(null);
         
-        const result = await fetchCampaigns(resolved.slug, resolved.locale);
+        // Try fetching with the requested locale first, then fallback to 'fi'
+        let result = await fetchCampaigns(resolved.slug, resolved.locale);
+        if (!result.success && resolved.locale !== 'fi') {
+          result = await fetchCampaigns(resolved.slug, 'fi');
+        }
         
         if (result.success && result.data) {
           setCampaign(result.data as Campaign);
@@ -311,7 +318,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
 
   // Handlers
   const handleDelete = async () => {
-    if (!campaign || !confirm(`Delete "${campaign.title}"? This cannot be undone.`)) return;
+    if (!campaign || !confirm(t("delete.confirm", { title: campaign.title || t("untitledCampaign") }))) return;
     
     setIsDeleting(true);
     try {
@@ -368,7 +375,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
 
   // Render states
   if (isLoading) return <LoadingState />;
-  if (error) return <ErrorState error={error} slug={slug} locale={locale} />;
+  if (error) return <ErrorState error={error} slug={slug} locale={locale} t={t} />;
   if (!campaign) return null;
 
   const hasStats = campaign.stats && Object.keys(campaign.stats).length > 0;
@@ -381,11 +388,20 @@ export default function CampaignDetailsPage({ params }: PageProps) {
   const hasFeaturedImage = !!campaign.featuredImage;
   const hasMissingSections = !hasTargets || !hasDemands || !hasSteps || !hasResources || !hasCTA || !hasFeaturedImage;
 
+  // Helper to get campaign type label from translations
+  const getCampaignTypeLabel = (type: string | null) => {
+    if (!type) return t("info.typeNotSet");
+    if (CAMPAIGN_TYPE_KEYS.includes(type as typeof CAMPAIGN_TYPE_KEYS[number])) {
+      return t(`types.${type}`);
+    }
+    return type;
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4">
-        <BackLink />
+        <BackLink t={t} />
         
         {/* Hero Section with Featured Image */}
         {campaign.featuredImage && (
@@ -401,7 +417,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
             <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
               <div className="flex items-center gap-2 mb-2">
                 <h1 className="text-2xl md:text-4xl font-bold drop-shadow-lg">
-                  {campaign.title || "Untitled Campaign"}
+                  {campaign.title || t("untitledCampaign")}
                 </h1>
                 {campaign.isFeatured && (
                   <Star className="h-6 w-6 fill-yellow-400 text-yellow-400 drop-shadow-lg" />
@@ -422,7 +438,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-                  {campaign.title || "Untitled Campaign"}
+                  {campaign.title || t("untitledCampaign")}
                 </h1>
                 {campaign.isFeatured && (
                   <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
@@ -439,23 +455,23 @@ export default function CampaignDetailsPage({ params }: PageProps) {
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={handleToggleFeatured}>
             <Star className={`mr-2 h-4 w-4 ${campaign.isFeatured ? "fill-yellow-400 text-yellow-400" : ""}`} />
-            {campaign.isFeatured ? "Unfeature" : "Feature"}
+            {campaign.isFeatured ? t("actions.unfeature") : t("actions.feature")}
           </Button>
           <Button asChild variant="outline" size="sm">
             <Link href={`/admin/campaigns/${campaign.slug}/edit`}>
               <Edit className="mr-2 h-4 w-4" />
-              Edit
+              {t("actions.edit")}
             </Link>
           </Button>
           <Button asChild variant="outline" size="sm">
             <Link href={`/campaigns/${campaign.slug}`} target="_blank">
               <Eye className="mr-2 h-4 w-4" />
-              View Live
+              {t("actions.viewLive")}
             </Link>
           </Button>
           <Button variant="destructive" size="sm" disabled={isDeleting} onClick={handleDelete}>
             {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
-            Delete
+            {t("actions.delete")}
           </Button>
         </div>
       </div>
@@ -463,35 +479,35 @@ export default function CampaignDetailsPage({ params }: PageProps) {
       {/* Quick Info Bar */}
       <div className="flex flex-wrap items-center gap-4 p-4 bg-muted/30 rounded-lg border">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Status:</span>
+          <span className="text-sm text-muted-foreground">{t("info.status")}:</span>
           <StatusBadge status={campaign.status} />
           {campaign.status === "draft" && (
             <Button size="sm" variant="ghost" onClick={() => handleStatusUpdate("active")} disabled={isUpdating} className="h-7 text-green-600 hover:text-green-700 hover:bg-green-50">
               {isUpdating ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Play className="mr-1 h-3 w-3" />}
-              Activate
+              {t("actions.activate")}
             </Button>
           )}
           {campaign.status === "active" && (
             <>
               <Button size="sm" variant="ghost" onClick={() => handleStatusUpdate("paused")} disabled={isUpdating} className="h-7">
                 <Pause className="mr-1 h-3 w-3" />
-                Pause
+                {t("actions.pause")}
               </Button>
               <Button size="sm" variant="ghost" onClick={() => handleStatusUpdate("completed")} disabled={isUpdating} className="h-7 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
                 <CheckCircle className="mr-1 h-3 w-3" />
-                Complete
+                {t("actions.complete")}
               </Button>
             </>
           )}
           {campaign.status === "paused" && (
             <Button size="sm" variant="ghost" onClick={() => handleStatusUpdate("active")} disabled={isUpdating} className="h-7 text-green-600 hover:text-green-700 hover:bg-green-50">
               <Play className="mr-1 h-3 w-3" />
-              Resume
+              {t("actions.resume")}
             </Button>
           )}
           {campaign.status === "completed" && (
             <Button size="sm" variant="ghost" onClick={() => handleStatusUpdate("archived")} disabled={isUpdating} className="h-7">
-              Archive
+              {t("actions.archive")}
             </Button>
           )}
         </div>
@@ -499,26 +515,26 @@ export default function CampaignDetailsPage({ params }: PageProps) {
         <Separator orientation="vertical" className="h-6 hidden sm:block" />
         
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Type:</span>
+          <span className="text-sm text-muted-foreground">{t("info.type")}:</span>
           <Badge variant="outline">
             <Target className="mr-1 h-3 w-3" />
-            {campaign.campaignType ? CAMPAIGN_TYPE_LABELS[campaign.campaignType] || campaign.campaignType : "Not set"}
+            {getCampaignTypeLabel(campaign.campaignType)}
           </Badge>
         </div>
         
         <Separator orientation="vertical" className="h-6 hidden sm:block" />
         
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Active:</span>
+          <span className="text-sm text-muted-foreground">{t("info.active")}:</span>
           <Badge variant={campaign.isActive ? "default" : "secondary"} className="text-xs">
-            {campaign.isActive ? "Yes" : "No"}
+            {campaign.isActive ? t("info.yes") : t("info.no")}
           </Badge>
         </div>
         
         <Separator orientation="vertical" className="h-6 hidden sm:block" />
         
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Slug:</span>
+          <span className="text-sm text-muted-foreground">{t("info.slug")}:</span>
           <code className="font-mono text-xs bg-muted px-2 py-0.5 rounded">{campaign.slug}</code>
         </div>
         
@@ -526,7 +542,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
           <>
             <Separator orientation="vertical" className="h-6 hidden sm:block" />
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Icon:</span>
+              <span className="text-sm text-muted-foreground">{t("info.icon")}:</span>
               <code className="font-mono text-xs bg-muted px-2 py-0.5 rounded">{campaign.iconName}</code>
             </div>
           </>
@@ -539,23 +555,23 @@ export default function CampaignDetailsPage({ params }: PageProps) {
           <Clock className="h-4 w-4 text-muted-foreground" />
           {campaign.startDate && (
             <div className="flex items-center gap-1">
-              <span className="text-muted-foreground">Start:</span>
+              <span className="text-muted-foreground">{t("timeline.start")}:</span>
               <span>{new Date(campaign.startDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
             </div>
           )}
           {campaign.endDate && (
             <div className="flex items-center gap-1">
-              <span className="text-muted-foreground">End:</span>
+              <span className="text-muted-foreground">{t("timeline.end")}:</span>
               <span>{new Date(campaign.endDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
             </div>
           )}
           <div className="flex items-center gap-1 text-muted-foreground">
-            <span>Created:</span>
-            <span>{campaign.createdAt ? new Date(campaign.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "N/A"}</span>
+            <span>{t("timeline.created")}:</span>
+            <span>{campaign.createdAt ? new Date(campaign.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : t("timeline.notAvailable")}</span>
           </div>
           <div className="flex items-center gap-1 text-muted-foreground">
-            <span>Updated:</span>
-            <span>{campaign.updatedAt ? new Date(campaign.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "N/A"}</span>
+            <span>{t("timeline.updated")}:</span>
+            <span>{campaign.updatedAt ? new Date(campaign.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : t("timeline.notAvailable")}</span>
           </div>
         </div>
       )}
@@ -566,7 +582,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Description
+              {t("sections.description")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -582,14 +598,14 @@ export default function CampaignDetailsPage({ params }: PageProps) {
             <div>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Languages className="h-5 w-5" />
-                Translations
+                {t("sections.translations")}
               </CardTitle>
-              <CardDescription>Manage content in different languages</CardDescription>
+              <CardDescription>{t("sections.translationsDescription")}</CardDescription>
             </div>
             <Button asChild size="sm" variant="outline">
               <Link href={`/admin/campaigns/${campaign.slug}/edit?tab=translations`}>
                 <Plus className="mr-2 h-4 w-4" />
-                Add Translation
+                {t("sections.addTranslation")}
               </Link>
             </Button>
           </div>
@@ -597,7 +613,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
         <CardContent>
           <div className="text-center py-6 text-muted-foreground">
             <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p>Add translations to make content available in multiple languages.</p>
+            <p>{t("sections.translationsEmpty")}</p>
           </div>
         </CardContent>
       </Card>
@@ -608,14 +624,14 @@ export default function CampaignDetailsPage({ params }: PageProps) {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              Statistics
+              {t("sections.statistics")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {(campaign.stats?.goalAmount || campaign.stats?.raisedAmount) && (
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="font-medium">Funding Progress</span>
+                  <span className="font-medium">{t("stats.fundingProgress")}</span>
                   <span className="text-muted-foreground">
                     €{(campaign.stats?.raisedAmount || 0).toLocaleString()} / €{(campaign.stats?.goalAmount || 0).toLocaleString()}
                   </span>
@@ -631,21 +647,21 @@ export default function CampaignDetailsPage({ params }: PageProps) {
                 <div className="text-center p-4 bg-muted rounded-lg">
                   <Users className="h-6 w-6 mx-auto mb-2 text-[#781D32]" />
                   <p className="text-2xl font-bold text-[#781D32]">{Number(campaign.stats.totalSupporters).toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground">Supporters</p>
+                  <p className="text-sm text-muted-foreground">{t("stats.supporters")}</p>
                 </div>
               )}
               {campaign.stats?.totalDonations !== undefined && (
                 <div className="text-center p-4 bg-muted rounded-lg">
                   <Heart className="h-6 w-6 mx-auto mb-2 text-[#55613C]" />
                   <p className="text-2xl font-bold text-[#55613C]">{Number(campaign.stats.totalDonations).toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground">Donations</p>
+                  <p className="text-sm text-muted-foreground">{t("stats.donations")}</p>
                 </div>
               )}
               {campaign.stats?.totalViews !== undefined && (
                 <div className="text-center p-4 bg-muted rounded-lg">
                   <Eye className="h-6 w-6 mx-auto mb-2 text-blue-600" />
                   <p className="text-2xl font-bold text-blue-600">{Number(campaign.stats.totalViews).toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground">Views</p>
+                  <p className="text-sm text-muted-foreground">{t("stats.views")}</p>
                 </div>
               )}
             </div>
@@ -655,9 +671,9 @@ export default function CampaignDetailsPage({ params }: PageProps) {
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-8">
             <TrendingUp className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <h3 className="text-lg font-medium text-muted-foreground">No Statistics Yet</h3>
+            <h3 className="text-lg font-medium text-muted-foreground">{t("stats.noStatsTitle")}</h3>
             <p className="text-sm text-muted-foreground text-center max-w-md mt-1">
-              Statistics will appear here once the campaign is active.
+              {t("stats.noStatsMessage")}
             </p>
           </CardContent>
         </Card>
@@ -667,8 +683,8 @@ export default function CampaignDetailsPage({ params }: PageProps) {
       {hasTargets && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Targets</CardTitle>
-            <CardDescription>Organizations or entities targeted by this campaign</CardDescription>
+            <CardTitle className="text-lg">{t("sections.targets")}</CardTitle>
+            <CardDescription>{t("sections.targetsDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -678,7 +694,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
                   {target.description && <p className="text-sm text-muted-foreground mt-1">{target.description}</p>}
                   {target.link && (
                     <a href={target.link} target="_blank" rel="noopener noreferrer" className="text-sm text-[#781D32] hover:underline mt-2 inline-block">
-                      Learn more →
+                      {t("targets.learnMore")} →
                     </a>
                   )}
                 </div>
@@ -692,7 +708,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
       {hasSteps && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">How to Participate</CardTitle>
+            <CardTitle className="text-lg">{t("sections.howToParticipate")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -716,8 +732,8 @@ export default function CampaignDetailsPage({ params }: PageProps) {
       {hasResources && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Resources</CardTitle>
-            <CardDescription>Downloadable materials and useful links</CardDescription>
+            <CardTitle className="text-lg">{t("sections.resources")}</CardTitle>
+            <CardDescription>{t("sections.resourcesDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -745,8 +761,8 @@ export default function CampaignDetailsPage({ params }: PageProps) {
       {hasDemands && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Demands</CardTitle>
-            <CardDescription>Key demands and objectives</CardDescription>
+            <CardTitle className="text-lg">{t("sections.demands")}</CardTitle>
+            <CardDescription>{t("sections.demandsDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -763,7 +779,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
                           demand.status === "achieved" ? "border-green-500 text-green-700" : 
                           demand.status === "in_progress" ? "border-yellow-500 text-yellow-700" : ""
                         }`}>
-                          {demand.status === "in_progress" ? "In Progress" : demand.status.charAt(0).toUpperCase() + demand.status.slice(1)}
+                          {demand.status === "in_progress" ? t("demandStatus.inProgress") : demand.status.charAt(0).toUpperCase() + demand.status.slice(1)}
                         </Badge>
                       )}
                     </div>
@@ -780,8 +796,8 @@ export default function CampaignDetailsPage({ params }: PageProps) {
       {hasStories && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Success Stories</CardTitle>
-            <CardDescription>Impact and achievements</CardDescription>
+            <CardTitle className="text-lg">{t("sections.successStories")}</CardTitle>
+            <CardDescription>{t("sections.successStoriesDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -810,7 +826,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
       {hasCTA && (
         <Card className="bg-gradient-to-r from-[#781D32] to-[#55613C] text-white">
           <CardHeader>
-            <CardTitle className="text-lg text-white">Call to Action</CardTitle>
+            <CardTitle className="text-lg text-white">{t("sections.callToAction")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-3">
@@ -854,38 +870,38 @@ export default function CampaignDetailsPage({ params }: PageProps) {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2 text-amber-800">
               <AlertCircle className="h-5 w-5" />
-              Complete Your Campaign
+              {t("missing.title")}
             </CardTitle>
             <CardDescription className="text-amber-700">
-              Add the following sections to make your campaign more effective
+              {t("missing.description")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {!hasFeaturedImage && (
-                <MissingSectionItem icon={FileText} title="Featured Image" description="Add campaign image" />
+                <MissingSectionItem icon={FileText} title={t("missing.featuredImage")} description={t("missing.featuredImageDesc")} />
               )}
               {!hasTargets && (
-                <MissingSectionItem icon={Target} title="Targets" description="Define campaign targets" />
+                <MissingSectionItem icon={Target} title={t("missing.targets")} description={t("missing.targetsDesc")} />
               )}
               {!hasDemands && (
-                <MissingSectionItem icon={CheckCircle} title="Demands" description="Add campaign demands" />
+                <MissingSectionItem icon={CheckCircle} title={t("missing.demands")} description={t("missing.demandsDesc")} />
               )}
               {!hasSteps && (
-                <MissingSectionItem icon={Users} title="Participation" description="Add participation steps" />
+                <MissingSectionItem icon={Users} title={t("missing.participation")} description={t("missing.participationDesc")} />
               )}
               {!hasResources && (
-                <MissingSectionItem icon={Globe} title="Resources" description="Add useful resources" />
+                <MissingSectionItem icon={Globe} title={t("missing.resources")} description={t("missing.resourcesDesc")} />
               )}
               {!hasCTA && (
-                <MissingSectionItem icon={Heart} title="Call to Action" description="Add CTA buttons" />
+                <MissingSectionItem icon={Heart} title={t("missing.callToAction")} description={t("missing.callToActionDesc")} />
               )}
             </div>
             <div className="mt-4">
               <Button asChild variant="outline" className="border-amber-400 text-amber-800 hover:bg-amber-100">
                 <Link href={`/admin/campaigns/${campaign.slug}/edit`}>
                   <Edit className="mr-2 h-4 w-4" />
-                  Configure Missing Sections
+                  {t("missing.configureButton")}
                 </Link>
               </Button>
             </div>

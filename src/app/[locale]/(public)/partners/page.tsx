@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -33,28 +34,36 @@ const partnershipStats = [
     icon: HandHeart,
     number: "25+",
     label: "Partner Organizations",
+    key: "stats.organizations",
     description: "Collaborative network",
+    descKey: "stats.organizationsDesc",
     color: "bg-[#781D32]",
   },
   {
     icon: Globe,
     number: "12",
     label: "Countries",
+    key: "stats.countries",
     description: "International partners",
+    descKey: "stats.countriesDesc",
     color: "bg-[#55613C]",
   },
   {
     icon: Award,
     number: "50+",
     label: "Joint Initiatives",
+    key: "stats.initiatives",
     description: "Collaborative projects",
+    descKey: "stats.initiativesDesc",
     color: "bg-[#3E442B]",
   },
   {
     icon: Star,
     number: "5",
     label: "Years",
+    key: "stats.years",
     description: "Partnership building",
+    descKey: "stats.yearsDesc",
     color: "bg-[#781D32]",
   },
 ];
@@ -310,6 +319,7 @@ function PartnerCard({ partner }: { partner: Partner }) {
 }
 
 export default function PartnersPage() {
+  const t = useTranslations("partners");
   return (
     <>
       {/* Hero Section */}
@@ -325,12 +335,10 @@ export default function PartnersPage() {
               Our Partners
             </Badge>
             <h1 className="text-4xl lg:text-5xl font-bold text-[#3E442B] mb-6">
-              Building Bridges Together
+              {t("hero.title")}
             </h1>
             <p className="text-xl text-gray-600 leading-relaxed mb-8">
-              Our strength lies in collaboration. We work with diverse organizations across Finland
-              and internationally to amplify Palestinian voices and build solidarity through education,
-              advocacy, and cultural exchange.
+              {t("hero.subtitle")}
             </p>
           </motion.div>
 
@@ -353,10 +361,10 @@ export default function PartnersPage() {
                       {stat.number}
                     </div>
                     <div className="font-medium text-[#781D32] mb-1">
-                      {stat.label}
+                      {stat.key && t(stat.key) || stat.label}
                     </div>
                     <div className="text-sm text-gray-600">
-                      {stat.description}
+                      {stat.descKey && t(stat.descKey) || stat.description}
                     </div>
                   </CardContent>
                 </Card>
@@ -520,11 +528,10 @@ export default function PartnersPage() {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">
-              Become a Partner
+              {t("cta.title")}
             </h2>
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-              Join our network of committed organizations working for Palestinian solidarity.
-              Together, we can amplify our impact and build bridges for justice and peace.
+              {t("cta.desc")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button

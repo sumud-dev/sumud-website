@@ -58,7 +58,7 @@ export function Breadcrumb({
   const breadcrumbItems = useMemo<BreadcrumbItem[]>(() => {
     if (customItems) return customItems;
 
-    // Remove locale prefix (e.g., /en, /fi, /ar)
+    // Remove locale prefix (e.g., /en, /fi)
     const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}\//, "/");
 
     // Don't show breadcrumbs on homepage

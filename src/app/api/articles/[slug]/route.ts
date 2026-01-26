@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getArticleBySlug } from '@/src/lib/db/queries/articles';
+import { getPostBySlug } from '@/src/actions/posts.actions';
 
 export async function GET(
   request: NextRequest,
@@ -17,14 +17,14 @@ export async function GET(
     }
 
     // Try to find article in the requested language first
-    let article = await getArticleBySlug(slug, language);
+    let article = await getPostBySlug(slug, language);
 
     // If not found, try other languages
     if (!article) {
-      const languages = ['fi', 'en', 'ar'];
+      const languages = ['fi', 'en'];
       for (const lang of languages) {
         if (lang !== language) {
-          article = await getArticleBySlug(slug, lang);
+          article = await getPostBySlug(slug, lang);
           if (article) {
             break;
           }

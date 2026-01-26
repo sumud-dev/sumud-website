@@ -7,17 +7,11 @@
 import { 
   readLocalizedPage, 
   writeLocalizedPage, 
-  readPage,
-  listPages,
-  deletePage as deletePageFile,
-  pageExists,
-  type Locale,
-  type LocalizedPageData,
-} from '@/src/lib/pages/file-storage';
 import {
   readLocalizedNavigation,
   writeLocalizedNavigation,
   type LocalizedNavigationConfig,
+  type Locale,
 } from '@/src/lib/navigation/file-storage';
 import { 
   normalizeBlockContent,

@@ -14,17 +14,13 @@ import {
   SelectValue,
 } from "@/src/components/ui/select";
 import ArticleCard from "@/src/components/articles/ArticleCard";
-import { useArticles } from "@/src/lib/hooks/use-articles";
+import { usePosts } from "@/src/lib/hooks/use-posts";
 import { usePage } from "@/src/lib/hooks/use-pages";
 import type { Article } from "@/src/lib/types/article";
+import type { GetPostsOptions } from "@/src/actions/posts.actions";
 
-interface ArticleFilters {
-  status?: string;
-  page?: number;
-  limit?: number;
-  search?: string;
+interface ArticleFilters extends GetPostsOptions {
   category?: string;
-  language?: string;
 }
 
 const fadeInUp = {
@@ -512,7 +508,29 @@ export default function ArticlesPage() {
     }));
   }, [locale]);
 
-  const { data: articles = [], isLoading, error } = useArticles(filters);
+  const { data: postsData, isLoading, error } = usePosts(filters);
+  
+  // Transform posts to articles format
+  const articles = useMemo(() => {
+    if (!postsData?.posts) return [];
+    return postsData.posts.map(post => ({
+      id: post.id,
+      slug: post.slug,
+      title: post.title,
+      excerpt: post.excerpt,
+      content: post.content,
+      category: post.categories?.[0],
+      status: post.status,
+      publishedAt: post.publishedAt?.toISOString(),
+      createdAt: post.createdAt.toISOString(),
+      updatedAt: post.updatedAt.toISOString(),
+      image: post.featuredImage || undefined,
+      author: post.authorId ? {
+        id: post.authorId,
+        name: post.authorName || 'Unknown',
+      } : undefined,
+    }));
+  }, [postsData]);
 
   // Memoize the filter change handler to prevent infinite loops
   // Ensure language is always preserved and set to current locale

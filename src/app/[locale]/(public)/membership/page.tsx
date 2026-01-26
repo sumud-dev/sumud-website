@@ -1,9 +1,11 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import { ExternalLink, CheckCircle, Users, Heart, Calendar } from "lucide-react";
 
 export default function MembershipPage() {
+  const t = useTranslations("membership");
   const flomembersUrl =
     "https://fork.flomembers.com/sumud-suomen-palestiina-verkosto/join";
 
@@ -13,27 +15,27 @@ export default function MembershipPage() {
         {/* Header */}
         <header className="mb-12 text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-[#3E442B] mb-4">
-            Become a Member
+            {t("title")}
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Join Sumud to support our work for Palestinian rights and solidarity.
+            {t("subtitle")}
           </p>
         </header>
 
         {/* Benefits Section */}
         <div className="bg-white shadow-lg rounded-2xl p-8 mb-8">
           <h2 className="text-2xl font-semibold text-[#3E442B] mb-6 text-center">
-            Why Join Us?
+            {t("benefits.title")}
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="flex gap-4">
               <Users className="w-6 h-6 text-[#781D32] flex-shrink-0 mt-1" />
               <div>
                 <h3 className="font-semibold text-gray-900 mb-1">
-                  Be Part of the Movement
+                  {t("benefits.community.title")}
                 </h3>
                 <p className="text-gray-600 text-sm">
-                  Join a community dedicated to Palestinian solidarity and justice.
+                  {t("benefits.community.desc")}
                 </p>
               </div>
             </div>
@@ -41,10 +43,10 @@ export default function MembershipPage() {
               <Heart className="w-6 h-6 text-[#781D32] flex-shrink-0 mt-1" />
               <div>
                 <h3 className="font-semibold text-gray-900 mb-1">
-                  Support Our Campaigns
+                  {t("benefits.campaigns.title")}
                 </h3>
                 <p className="text-gray-600 text-sm">
-                  Help us organize events, campaigns, and advocacy efforts.
+                  {t("benefits.campaigns.desc")}
                 </p>
               </div>
             </div>
@@ -52,10 +54,10 @@ export default function MembershipPage() {
               <Calendar className="w-6 h-6 text-[#781D32] flex-shrink-0 mt-1" />
               <div>
                 <h3 className="font-semibold text-gray-900 mb-1">
-                  Exclusive Events
+                  {t("benefits.events.title")}
                 </h3>
                 <p className="text-gray-600 text-sm">
-                  Get access to member-only events and networking opportunities.
+                  {t("benefits.events.desc")}
                 </p>
               </div>
             </div>
@@ -63,10 +65,10 @@ export default function MembershipPage() {
               <CheckCircle className="w-6 h-6 text-[#781D32] flex-shrink-0 mt-1" />
               <div>
                 <h3 className="font-semibold text-gray-900 mb-1">
-                  Make a Difference
+                  {t("benefits.impact.title")}
                 </h3>
                 <p className="text-gray-600 text-sm">
-                  Your membership directly supports our mission and activities.
+                  {t("benefits.impact.desc")}
                 </p>
               </div>
             </div>
@@ -76,7 +78,7 @@ export default function MembershipPage() {
         {/* CTA Card */}
         <div className="bg-gradient-to-br from-[#781D32] to-[#5c1626] text-white shadow-lg rounded-2xl p-8 md:p-12 text-center">
           <h2 className="text-3xl font-bold mb-4">
-            Ready to Join?
+            {t("cta.title")}
           </h2>
           <p className="text-lg mb-8 opacity-90">
             Complete your registration through our secure membership portal.

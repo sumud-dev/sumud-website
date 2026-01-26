@@ -1,102 +1,96 @@
-import { pgTable, text, timestamp, uuid, jsonb, integer, pgEnum, index } from 'drizzle-orm/pg-core';
+import { 
+  pgTable, 
+  pgView,
+  varchar, 
+  text, 
+  timestamp, 
+  integer, 
+  json,
+  boolean, 
+  index, 
+  uniqueIndex 
+} from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 
-// Enums for posts (matching database values)
-export const postTypeEnum = pgEnum('post_type', ['article', 'news']);
-
-// ============================================
-// CORE POSTS TABLE
-// ============================================
+// Posts table (user-created originals)
 export const posts = pgTable('posts', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  slug: text('slug').notNull().unique(),
-  
-  // Language (primary language for this post - typically 'fi')
-  language: text('language').default('fi'),
-  
-  // Core content (translatable fields stored here for primary language)
-  title: text('title'),
-  excerpt: text('excerpt'),
-  content: text('content'),
-  
-  // Post metadata
-  type: postTypeEnum('type').default('article'),
-  status: text('status').default('draft'),
-  featuredImage: text('featured_image'),
-  categories: jsonb('categories'),
-  
-  // Author info
-  authorId: text('author_id'),
-  authorName: text('author_name'),
-  
-  // Stats
-  viewCount: integer('view_count').default(0),
-  
-  // Dates
-  publishedAt: timestamp('published_at', { withTimezone: true }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => ({
-  // Indexes for common queries
-  languageIdx: index('posts_language_idx').on(t.language),
-  statusIdx: index('posts_status_idx').on(t.status),
-  publishedAtIdx: index('posts_published_at_idx').on(t.publishedAt),
-}));
-
-// ============================================
-// POST TRANSLATIONS
-// ============================================
-export const postTranslations = pgTable('post_translations', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  postId: uuid('post_id').references(() => posts.id, { onDelete: 'set null' }),
-  language: text('language').notNull(), // e.g., 'en', 'fi', 'ar'
-  
-  // Core content (same fields as posts table)
-  slug: text('slug'),
+  id: varchar('id', { length: 255 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  slug: varchar('slug', { length: 255 }).notNull().unique(),
   title: text('title').notNull(),
-  excerpt: text('excerpt'),
-  content: text('content'),
-  
-  // Post metadata (can be different per translation)
-  type: text('type').default('article'),
-  status: text('status').default('published'),
+  excerpt: text('excerpt').notNull(),
+  content: text('content').notNull(),
+  language: varchar('language', { length: 10 }).notNull(),
+  type: varchar('type', { length: 50 }).notNull().default('article'),
+  status: varchar('status', { length: 50 }).notNull().default('draft'),
   featuredImage: text('featured_image'),
-  categories: jsonb('categories'),
-  
-  // Author info
-  authorId: text('author_id'),
-  authorName: text('author_name'),
-  
-  // Stats
-  viewCount: integer('view_count').default(0),
-  
-  // Dates
-  publishedAt: timestamp('published_at', { withTimezone: true }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
-}, (t) => ({
-  languageIdx: index('post_translations_language_idx').on(t.language),
-  postIdx: index('post_translations_post_idx').on(t.postId),
-  statusIdx: index('post_translations_status_idx').on(t.status),
+  categories: json('categories').$type<string[]>().notNull().default([]),
+  authorId: varchar('author_id', { length: 255 }),
+  authorName: varchar('author_name', { length: 255 }),
+  publishedAt: timestamp('published_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  viewCount: integer('view_count').notNull().default(0),
+}, (table) => ({
+  slugIndex: uniqueIndex('idx_posts_slug').on(table.slug),
+  languageIndex: index('idx_posts_language').on(table.language),
+  statusIndex: index('idx_posts_status').on(table.status),
 }));
 
-// ============================================
-// TYPE EXPORTS
-// ============================================
+// Post translations table (AI-generated translations)
+export const postTranslations = pgTable('post_translations', {
+  id: varchar('id', { length: 255 }).primaryKey().$defaultFn(() => crypto.randomUUID()),
+  postId: varchar('post_id', { length: 255 })
+    .notNull()
+    .references(() => posts.id, { onDelete: 'cascade' }),
+  slug: varchar('slug', { length: 255 }).notNull().unique(),
+  title: text('title').notNull(),
+  excerpt: text('excerpt').notNull(),
+  content: text('content').notNull(),
+  language: varchar('language', { length: 10 }).notNull(),
+  translatedFrom: varchar('translated_from', { length: 10 }).notNull(),
+  type: varchar('type', { length: 50 }).notNull(),
+  status: varchar('status', { length: 50 }).notNull(),
+  featuredImage: text('featured_image'),
+  categories: json('categories').$type<string[]>().notNull().default([]),
+  translatedAt: timestamp('translated_at').notNull().defaultNow(),
+  translationQuality: varchar('quality', { length: 20 }).default('auto'),
+  publishedAt: timestamp('published_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  viewCount: integer('view_count').notNull().default(0),
+}, (table) => ({
+  postIdIndex: index('idx_post_translations_post_id').on(table.postId),
+  slugIndex: uniqueIndex('idx_post_translations_slug').on(table.slug),
+  languageIndex: index('idx_post_translations_language').on(table.language),
+}));
+
+// Unified posts view (for optimized queries)
+export const postsUnifiedView = pgView('posts_unified_view', {
+  postId: varchar('id', { length: 255 }).notNull(),
+  postSlug: varchar('slug', { length: 255 }).notNull(),
+  postTitle: text('title').notNull(),
+  postExcerpt: text('excerpt').notNull(),
+  postContent: text('content').notNull(),
+  postLanguage: varchar('language', { length: 10 }).notNull(),
+  postType: varchar('type', { length: 50 }).notNull(),
+  postStatus: varchar('status', { length: 50 }).notNull(),
+  postFeaturedImage: text('featured_image'),
+  postCategories: json('categories').$type<string[]>(),
+  postAuthorId: varchar('author_id', { length: 255 }),
+  postAuthorName: varchar('author_name', { length: 255 }),
+  postPublishedAt: timestamp('published_at'),
+  postCreatedAt: timestamp('created_at').notNull(),
+  postUpdatedAt: timestamp('updated_at').notNull(),
+  postViewCount: integer('view_count').notNull(),
+  postIsTranslation: boolean('post_is_translation').notNull(),
+  postParentPostId: varchar('post_parent_post_id', { length: 255 }),
+  postTranslatedFromLanguage: varchar('post_translated_from_language', { length: 10 }),
+  postTranslationQuality: varchar('post_translation_quality', { length: 20 }),
+}).existing();
+
+// TypeScript types
 export type Post = typeof posts.$inferSelect;
 export type NewPost = typeof posts.$inferInsert;
 export type PostTranslation = typeof postTranslations.$inferSelect;
 export type NewPostTranslation = typeof postTranslations.$inferInsert;
-
-// ============================================
-// HELPER TYPES FOR QUERIES
-// ============================================
-export type PostWithTranslations = Post & {
-  translations: PostTranslation[];
-};
-
-export type LocalizedPost = Post & {
-  translation: PostTranslation;
-};
-
-// Union type for posts that can come from either table
-export type PostOrTranslation = Post | PostTranslation;
+export type PostUnifiedView = typeof postsUnifiedView.$inferSelect;

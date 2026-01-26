@@ -28,76 +28,77 @@ import { eq, and, desc, asc, like, sql, or } from 'drizzle-orm';
  * @param activeOnly - If true, only return active campaigns (for public pages)
  */
 export async function getActiveCampaigns(locale: string = 'en', activeOnly: boolean = false) {
-  if (locale === 'fi') {
-    // For Finnish: Query campaigns table directly
-    // Prefer translation if available, fallback to base campaign
-    const result = await db
-      .select({
-        id: campaigns.id,
-        campaignId: campaigns.id,
-        slug: campaigns.slug,
-        title: sql<string>`COALESCE(${campaignTranslations.title}, ${campaigns.title})`.as('title'),
-        description: sql<unknown>`COALESCE(${campaignTranslations.description}, ${campaigns.description})`.as('description'),
-        status: campaigns.status,
-        category: campaigns.category,
-        campaignType: campaigns.campaignType,
-        iconName: campaigns.iconName,
-        isFeatured: campaigns.isFeatured,
-        isActive: campaigns.isActive,
-        createdAt: campaigns.createdAt,
-        updatedAt: campaigns.updatedAt,
-      })
-      .from(campaigns)
-      .leftJoin(
-        campaignTranslations, 
-        and(
-          eq(campaignTranslations.campaignId, campaigns.id),
-          eq(campaignTranslations.language, 'fi')
-        )
-      )
-      .where(activeOnly ? eq(campaigns.isActive, true) : undefined)
-      .orderBy(desc(campaigns.isFeatured), desc(campaigns.createdAt));
-    
-    return result;
-  } else {
-    // For other locales: Query campaign_translations table with joined campaign base data
-    const query = db
-      .select({
-        id: campaignTranslations.id,
-        campaignId: campaignTranslations.campaignId,
-        slug: campaigns.slug, // Use campaign slug for consistency
-        title: campaignTranslations.title,
-        description: campaignTranslations.description,
-        demands: campaignTranslations.demands,
-        callToAction: campaignTranslations.callToAction,
-        howToParticipate: campaignTranslations.howToParticipate,
-        resources: campaignTranslations.resources,
-        successStories: campaignTranslations.successStories,
-        targets: campaignTranslations.targets,
-        featuredImage: campaignTranslations.featuredImage,
-        seoTitle: campaignTranslations.seoTitle,
-        seoDescription: campaignTranslations.seoDescription,
-        createdAt: campaignTranslations.createdAt,
-        updatedAt: campaignTranslations.updatedAt,
-        // Campaign base fields
-        status: campaigns.status,
-        category: campaigns.category,
-        campaignType: campaigns.campaignType,
-        iconName: campaigns.iconName,
-        isFeatured: campaigns.isFeatured,
-        isActive: campaigns.isActive,
-      })
-      .from(campaignTranslations)
-      .innerJoin(campaigns, eq(campaignTranslations.campaignId, campaigns.id))
-      .where(
-        activeOnly 
-          ? and(eq(campaignTranslations.language, locale), eq(campaigns.isActive, true))
-          : eq(campaignTranslations.language, locale)
-      )
-      .orderBy(desc(campaignTranslations.createdAt));
-    
-    return await query;
-  }
+  // First, try to get campaigns from campaigns table with matching language
+  const baseCampaigns = await db
+    .select({
+      id: campaigns.id,
+      campaignId: campaigns.id,
+      slug: campaigns.slug,
+      title: campaigns.title,
+      description: campaigns.description,
+      demands: campaigns.demands,
+      callToAction: campaigns.callToAction,
+      howToParticipate: campaigns.howToParticipate,
+      resources: campaigns.resources,
+      successStories: campaigns.successStories,
+      targets: campaigns.targets,
+      featuredImage: campaigns.featuredImage,
+      seoTitle: campaigns.seoTitle,
+      seoDescription: campaigns.seoDescription,
+      createdAt: campaigns.createdAt,
+      updatedAt: campaigns.updatedAt,
+      status: campaigns.status,
+      category: campaigns.category,
+      campaignType: campaigns.campaignType,
+      iconName: campaigns.iconName,
+      isFeatured: campaigns.isFeatured,
+      isActive: campaigns.isActive,
+    })
+    .from(campaigns)
+    .where(
+      activeOnly 
+        ? and(eq(campaigns.language, locale), eq(campaigns.isActive, true))
+        : eq(campaigns.language, locale)
+    )
+    .orderBy(desc(campaigns.isFeatured), desc(campaigns.createdAt));
+
+  // Then, get campaigns from campaign_translations table
+  const translatedCampaigns = await db
+    .select({
+      id: campaignTranslations.id,
+      campaignId: campaignTranslations.campaignId,
+      slug: campaigns.slug,
+      title: campaignTranslations.title,
+      description: campaignTranslations.description,
+      demands: campaignTranslations.demands,
+      callToAction: campaignTranslations.callToAction,
+      howToParticipate: campaignTranslations.howToParticipate,
+      resources: campaignTranslations.resources,
+      successStories: campaignTranslations.successStories,
+      targets: campaignTranslations.targets,
+      featuredImage: campaignTranslations.featuredImage,
+      seoTitle: campaignTranslations.seoTitle,
+      seoDescription: campaignTranslations.seoDescription,
+      createdAt: campaignTranslations.createdAt,
+      updatedAt: campaignTranslations.updatedAt,
+      status: campaigns.status,
+      category: campaigns.category,
+      campaignType: campaigns.campaignType,
+      iconName: campaigns.iconName,
+      isFeatured: campaigns.isFeatured,
+      isActive: campaigns.isActive,
+    })
+    .from(campaignTranslations)
+    .innerJoin(campaigns, eq(campaignTranslations.campaignId, campaigns.id))
+    .where(
+      activeOnly 
+        ? and(eq(campaignTranslations.language, locale), eq(campaigns.isActive, true))
+        : eq(campaignTranslations.language, locale)
+    )
+    .orderBy(desc(campaignTranslations.createdAt));
+  
+  // Combine both results
+  return [...baseCampaigns, ...translatedCampaigns];
 }
 
 /**
@@ -161,6 +162,7 @@ export async function getFeaturedCampaigns(locale: string = 'en') {
  * Get campaign by slug with full details
  * - For 'fi': Looks up in campaigns table
  * - For 'en': Looks up in campaigns table and joins with campaign_translations
+ * - Falls back to original language if translation not found
  */
 export async function getCampaignBySlug(slug: string, locale: string = 'en') {
   if (locale === 'fi') {
@@ -173,7 +175,7 @@ export async function getCampaignBySlug(slug: string, locale: string = 'en') {
     
     return result[0] ?? null;
   } else {
-    // Query campaign_translations for English with campaign base data
+    // Query campaign_translations for requested locale with campaign base data
     // Look up by campaign slug (not translation slug) for consistency
     const result = await db
       .select({
@@ -207,12 +209,23 @@ export async function getCampaignBySlug(slug: string, locale: string = 'en') {
       .where(
         and(
           eq(campaigns.slug, slug),
-          eq(campaignTranslations.language, 'en')
+          eq(campaignTranslations.language, locale)
         )
       )
       .limit(1);
 
-    return result[0] ?? null;
+    // If translation not found, fallback to original campaign in campaigns table
+    if (!result[0]) {
+      const fallbackResult = await db
+        .select()
+        .from(campaigns)
+        .where(eq(campaigns.slug, slug))
+        .limit(1);
+      
+      return fallbackResult[0] ?? null;
+    }
+
+    return result[0];
   }
 }
 

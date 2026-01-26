@@ -3,12 +3,23 @@
 import * as React from "react";
 import { Link } from "@/src/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { Plus, MoreHorizontal, Edit, Trash2, Eye, FileText, CheckCircle, Archive, Loader2 } from "lucide-react";
+import { 
+  Plus, 
+  MoreHorizontal, 
+  Edit, 
+  Trash2, 
+  Eye, 
+  FileText, 
+  CheckCircle, 
+  Archive, 
+  Loader2,
+  Globe,
+  User
+} from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { StatsCard } from "@/src/components/cards";
 import { Badge } from "@/src/components/ui/badge";
-import { getPosts, getPostStats, deletePost, type PostWithCategory } from "@/src/actions/article.actions";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -25,263 +36,467 @@ import {
   TableHeader,
   TableRow,
 } from "@/src/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/src/components/ui/select";
 import { getCategoryName } from "@/src/lib/utils/article.utils";
 
-// Helper data
-const statusColors: Record<string, string> = {
-  draft: "bg-yellow-100 text-yellow-800",
-  published: "bg-green-100 text-green-800",
-  archived: "bg-gray-100 text-gray-800",
+// Import React Query hooks
+import { 
+  usePosts,
+  usePostStatistics,
+  useUpdatePost,
+  useDeletePost,
+} from "@/src/lib/hooks/use-posts";
+
+// Status badge colors
+const STATUS_BADGE_COLORS: Record<string, string> = {
+  draft: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+  published: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  archived: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
 };
 
 const ArticlesPage: React.FC = () => {
-  const t = useTranslations("admin.articles");
-  const locale = useLocale() as "en" | "fi";
+  const translationKeys = useTranslations("admin.articles");
+  const currentLocale = useLocale() as "en" | "fi";
+  
+  // Local state for filters
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [posts, setPosts] = React.useState<PostWithCategory[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [stats, setStats] = React.useState({ total: 0, published: 0, drafts: 0, archived: 0 });
+  const [statusFilter, setStatusFilter] = React.useState<string>("all");
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const articlesPerPage = 20;
 
-  const fetchPosts = React.useCallback(async () => {
-    setLoading(true);
-    try {
-      const [postsResponse, statsResponse] = await Promise.all([
-        getPosts({ language: locale }),
-        getPostStats(locale),
-      ]);
-      
-      if (postsResponse.success && postsResponse.posts) {
-        setPosts(postsResponse.posts);
-      }
-      
-      if (statsResponse.success && statsResponse.stats) {
-        setStats(statsResponse.stats);
-      }
-    } catch (error) {
-      console.error("Error fetching posts:", error);
-    } finally {
-      setLoading(false);
+  // React Query hooks - fetch posts with filters
+  const { 
+    data: paginatedPostData, 
+    isLoading: isLoadingPosts,
+    error: postsError,
+    refetch: refetchPosts
+  } = usePosts({
+    language: currentLocale,
+    page: currentPage,
+    limit: articlesPerPage,
+    status: statusFilter === "all" ? undefined : statusFilter as any,
+    search: searchQuery || undefined,
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+  });
+
+  // React Query hook - fetch statistics
+  const { 
+    data: postStatistics,
+    isLoading: isLoadingStatistics 
+  } = usePostStatistics(currentLocale);
+
+  // React Query mutations
+  const deletePostMutation = useDeletePost();
+  const updatePostMutation = useUpdatePost();
+
+  /**
+   * Handle article deletion
+   */
+  const handleDeletePost = React.useCallback(async (
+    articleSlug: string, 
+    articleTitle: string
+  ) => {
+    const confirmationMessage = translationKeys("deleteConfirm", { title: articleTitle });
+    
+    if (!confirm(confirmationMessage)) {
+      return;
     }
-  }, [locale]);
 
-  React.useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
-
-  // Sort posts by date descending (newest first)
-  const sortedPosts = React.useMemo(() => {
-    return [...posts].sort((a, b) => {
-      const dateA = new Date(a.published_at || a.updated_at || 0).getTime();
-      const dateB = new Date(b.published_at || b.updated_at || 0).getTime();
-      return dateB - dateA;
+    deletePostMutation.mutate(articleSlug, {
+      onSuccess: () => {
+        toast.success(translationKeys("deleteSuccess"));
+        refetchPosts();
+      },
+      onError: (mutationError) => {
+        toast.error(mutationError.message || translationKeys("deleteFailed"));
+      },
     });
-  }, [posts]);
+  }, [deletePostMutation, translationKeys, refetchPosts]);
 
-  // Filter posts based on search
-  const filteredPosts = React.useMemo(() => {
-    if (!searchQuery) return sortedPosts;
-    return sortedPosts.filter((post) =>
-      post.title?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery, sortedPosts]);
-
-  const handleDelete = async (slug: string, title: string) => {
-    if (!confirm(t("deleteConfirm", { title }))) return;
-
-    try {
-      const result = await deletePost(slug);
-      if (result.success) {
-        setPosts((prev) => prev.filter((p) => p.slug !== slug));
-        toast.success(t("deleteSuccess"));
-      } else {
-        toast.error(result.error || t("deleteFailed"));
+  /**
+   * Handle status update (publish/unpublish/archive)
+   */
+  const handleStatusUpdate = React.useCallback(async (
+    postSlug: string,
+    newStatus: "draft" | "published" | "archived"
+  ) => {
+    updatePostMutation.mutate(
+      {
+        postSlug: postSlug,
+        updateData: { status: newStatus },
+      },
+      {
+        onSuccess: () => {
+          const statusMessage = newStatus === "published" 
+            ? translationKeys("publishSuccess")
+            : newStatus === "archived"
+            ? translationKeys("archiveSuccess")
+            : translationKeys("unpublishSuccess");
+          
+          toast.success(statusMessage);
+          refetchPosts();
+        },
+        onError: (mutationError) => {
+          toast.error(mutationError.message || translationKeys("statusUpdateFailed"));
+        },
       }
-    } catch (error) {
-      console.error("Error deleting article:", error);
-      toast.error(t("deleteFailed"));
+    );
+  }, [updatePostMutation, translationKeys, refetchPosts]);
+
+  /**
+   * Format date for display
+   */
+  const formatPostDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return "N/A";
+    
+    try {
+      return new Date(dateString).toLocaleDateString(currentLocale, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch {
+      return "N/A";
     }
   };
 
-  const handleStatusUpdate = (id: string, newStatus: "draft" | "published" | "archived") => {
-    setPosts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, status: newStatus } : p))
-    );
+  /**
+   * Get status badge label
+   */
+  const getStatusBadgeLabel = (status: string | null): string => {
+    if (!status) return "Draft";
+    return status.charAt(0).toUpperCase() + status.slice(1);
   };
+
+  // Loading state for statistics
+  const displayStatistics = {
+    totalArticles: postStatistics?.totalArticles || 0,
+    publishedArticles: postStatistics?.publishedArticles || 0,
+    draftArticles: postStatistics?.draftArticles || 0,
+    archivedArticles: postStatistics?.archivedArticles || 0,
+  };
+
+  // Get posts from paginated result
+  const displayedPosts = paginatedPostData?.posts || [];
+  const paginationInfo = paginatedPostData?.pagination;
 
   return (
     <div className="space-y-6 md:space-y-8">
+      {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{t("title")}</h1>
-          <p className="text-gray-600 mt-1">{t("description")}</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+            {translationKeys("title")}
+          </h1>
+          <p className="text-gray-600 mt-1">
+            {translationKeys("description")}
+          </p>
         </div>
         <Button asChild className="bg-[#781D32] hover:bg-[#781D32]/90">
           <Link href="/admin/articles/new">
             <Plus className="mr-2 h-4 w-4" />
-            {t("newButton")}
+            {translationKeys("newButton")}
           </Link>
         </Button>
       </div>
 
-      {/* Stats Cards */}
+      {/* Statistics Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 md:gap-6">
         <StatsCard
-          title={t("totalArticles")}
-          value={stats.total}
+          title={translationKeys("totalArticles")}
+          value={displayStatistics.totalArticles}
           icon={FileText}
           iconClassName="text-muted-foreground"
         />
         <StatsCard
-          title={t("published")}
-          value={stats.published}
+          title={translationKeys("published")}
+          value={displayStatistics.publishedArticles}
           icon={CheckCircle}
           iconClassName="text-green-500"
           valueClassName="text-green-600"
         />
         <StatsCard
-          title={t("drafts")}
-          value={stats.drafts}
+          title={translationKeys("drafts")}
+          value={displayStatistics.draftArticles}
           icon={Edit}
           iconClassName="text-yellow-500"
           valueClassName="text-yellow-600"
         />
         <StatsCard
-          title={t("archived")}
-          value={stats.archived}
+          title={translationKeys("archived")}
+          value={displayStatistics.archivedArticles}
           icon={Archive}
           iconClassName="text-gray-500"
           valueClassName="text-gray-600"
         />
       </div>
 
-      {/* Articles Table */}
+      {/* Posts Table Card */}
       <Card className="border-gray-200 shadow-sm">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold">{t("allArticles")}</CardTitle>
+          <CardTitle className="text-lg font-semibold">
+            {translationKeys("allArticles")}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {/* Search */}
-          <div className="mb-4">
+          {/* Filters Section */}
+          <div className="mb-4 flex flex-col sm:flex-row gap-4">
             <Input
-              placeholder={t("searchPlaceholder")}
+              placeholder={translationKeys("searchPlaceholder")}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(event) => {
+                setSearchQuery(event.target.value);
+                setCurrentPage(1); // Reset to first page on search
+              }}
               className="max-w-sm"
             />
+            
+            <Select 
+              value={statusFilter} 
+              onValueChange={(newValue) => {
+                setStatusFilter(newValue);
+                setCurrentPage(1); // Reset to first page on filter change
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="published">Published</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="archived">Archived</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Table */}
+          {/* Posts Table */}
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Title</TableHead>
+                  <TableHead>Post</TableHead>
+                  <TableHead className="hidden md:table-cell w-32">Author</TableHead>
                   <TableHead className="w-28">Date</TableHead>
                   <TableHead className="w-16">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {loading ? (
+                {/* Loading State */}
+                {isLoadingPosts && (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center py-8">
+                    <TableCell colSpan={4} className="text-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-500" />
+                      <p className="text-sm text-gray-500 mt-2">Loading posts...</p>
                     </TableCell>
                   </TableRow>
-                ) : filteredPosts.length === 0 ? (
+                )}
+
+                {/* Error State */}
+                {postsError && !isLoadingPosts && (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center py-8 text-gray-500">
-                      {t("noArticlesFound")}
+                    <TableCell colSpan={4} className="text-center py-8 text-red-500">
+                      Error loading articles: {postsError.message}
                     </TableCell>
                   </TableRow>
-                ) : (
-                  filteredPosts.map((post) => (
-                    <TableRow key={post.id}>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <Link 
-                            href={`/admin/articles/${post.slug}`}
-                            className="font-medium truncate max-w-xs block hover:text-[#781D32] hover:underline transition-colors"
-                          >
-                            {post.title}
-                          </Link>
-                          <div className="flex items-center gap-2">
-                            <Badge className={`${statusColors[post.status ?? "draft"]} text-xs`}>
-                              {(post.status ?? "draft").charAt(0).toUpperCase() + (post.status ?? "draft").slice(1)}
+                )}
+
+                {/* Empty State */}
+                {!isLoadingPosts && !postsError && displayedPosts.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                      {translationKeys("noPostsFound")}
+                    </TableCell>
+                  </TableRow>
+                )}
+
+                {/* Posts List */}
+                {!isLoadingPosts && !postsError && displayedPosts.map((post: any) => (
+                  <TableRow key={post.id}>
+                    {/* Post Info */}
+                    <TableCell>
+                      <div className="space-y-1">
+                        <Link 
+                          href={`/admin/articles/${post.slug}`}
+                          className="font-medium truncate max-w-xs block hover:text-[#781D32] hover:underline transition-colors"
+                        >
+                          {post.title}
+                        </Link>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {/* Status Badge */}
+                          <Badge className={`${STATUS_BADGE_COLORS[post.status ?? "draft"]} text-xs`}>
+                            {getStatusBadgeLabel(post.status)}
+                          </Badge>
+                          
+                          {/* Category Badge */}
+                          <Badge variant="outline" className="capitalize text-xs">
+                            {getCategoryName(post as any)}
+                          </Badge>
+                          
+                          {/* Translation Badge */}
+                          {post.isTranslation && (
+                            <Badge variant="secondary" className="text-xs">
+                              <Globe className="w-3 h-3 mr-1" />
+                              Translated
                             </Badge>
-                            <Badge variant="outline" className="capitalize text-xs">
-                              {getCategoryName(post as any)}
-                            </Badge>
-                          </div>
-                          {post.excerpt && (
-                            <p className="text-sm text-gray-500 truncate max-w-xs">
-                              {post.excerpt}
-                            </p>
                           )}
                         </div>
-                      </TableCell>
-                      <TableCell className="text-sm text-gray-600">
-                        {post.published_at
-                          ? new Date(post.published_at).toLocaleDateString()
-                          : post.updated_at 
-                          ? new Date(post.updated_at).toLocaleDateString()
-                          : "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link href={`/admin/articles/${post.slug}`}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                {t("viewDetails")}
-                              </Link>
-                            </DropdownMenuItem>
+                        {post.excerpt && (
+                          <p className="text-sm text-gray-500 truncate max-w-md">
+                            {post.excerpt}
+                          </p>
+                        )}
+                      </div>
+                    </TableCell>
+
+                    {/* Author Column (Hidden on mobile) */}
+                    <TableCell className="hidden md:table-cell">
+                      {post.isTranslation ? (
+                        <div className="flex items-center text-xs text-gray-500">
+                          <Globe className="w-3 h-3 mr-1" />
+                          AI Translated
+                        </div>
+                      ) : post.authorName ? (
+                        <div className="flex items-center text-sm">
+                          <User className="w-3 h-3 mr-1 text-gray-400" />
+                          {post.authorName}
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-400">—</span>
+                      )}
+                    </TableCell>
+
+                    {/* Date Column */}
+                    <TableCell className="text-sm text-gray-600">
+                      {formatPostDate(post.publishedAt?.toString() || post.updatedAt?.toString())}
+                    </TableCell>
+
+                    {/* Actions Column */}
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {/* View Details */}
+                          <DropdownMenuItem asChild>
+                            <Link href={`/admin/articles/${post.slug}`}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              {translationKeys("viewDetails")}
+                            </Link>
+                          </DropdownMenuItem>
+
+                          {/* Edit - Only for originals */}
+                          {!post.isTranslation && (
                             <DropdownMenuItem asChild>
                               <Link href={`/admin/articles/${post.slug}/edit`}>
                                 <Edit className="mr-2 h-4 w-4" />
-                                {t("edit")}
+                                {translationKeys("edit")}
                               </Link>
                             </DropdownMenuItem>
-                            {post.status === "draft" && (
-                              <DropdownMenuItem
-                                onClick={() => handleStatusUpdate(post.id, "published")}
-                              >
-                                <CheckCircle className="mr-2 h-4 w-4" />
-                                {t("publish")}
-                              </DropdownMenuItem>
-                            )}
-                            {post.status === "published" && (
-                              <DropdownMenuItem
-                                onClick={() => handleStatusUpdate(post.id, "draft")}
-                              >
-                                <Archive className="mr-2 h-4 w-4" />
-                                {t("unpublish")}
-                              </DropdownMenuItem>
-                            )}
+                          )}
+
+                          {/* Publish Draft */}
+                          {post.status === "draft" && (
                             <DropdownMenuItem
-                              onClick={() => handleDelete(post.slug, post.title ?? "Untitled")}
-                              className="text-red-600"
+                              onClick={() => handleStatusUpdate(post.slug, "published")}
+                              disabled={updatePostMutation.isPending}
                             >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              {t("delete")}
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              {translationKeys("publish")}
                             </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
+                          )}
+
+                          {/* Unpublish */}
+                          {post.status === "published" && (
+                            <DropdownMenuItem
+                              onClick={() => handleStatusUpdate(post.slug, "draft")}
+                              disabled={updatePostMutation.isPending}
+                            >
+                              <Archive className="mr-2 h-4 w-4" />
+                              {translationKeys("unpublish")}
+                            </DropdownMenuItem>
+                          )}
+
+                          {/* Delete */}
+                          <DropdownMenuItem
+                            onClick={() => handleDeletePost(post.slug, post.title || "Untitled")}
+                            className="text-red-600"
+                            disabled={deletePostMutation.isPending}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            {translationKeys("delete")}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          {paginationInfo && paginationInfo.totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4">
+              <p className="text-sm text-gray-600">
+                Showing {((paginationInfo.currentPage - 1) * paginationInfo.pageSize) + 1} to{' '}
+                {Math.min(paginationInfo.currentPage * paginationInfo.pageSize, paginationInfo.totalItems)} of{' '}
+                {paginationInfo.totalItems} articles
+              </p>
+              
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={!paginationInfo.hasPreviousPage || isLoadingPosts}
+                >
+                  Previous
+                </Button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, paginationInfo.totalPages) }, (_, index) => {
+                    const pageNumber = index + 1;
+                    return (
+                      <Button
+                        key={pageNumber}
+                        variant={pageNumber === paginationInfo.currentPage ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNumber)}
+                        disabled={isLoadingPosts}
+                        className="w-8 h-8 p-0"
+                      >
+                        {pageNumber}
+                      </Button>
+                    );
+                  })}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(paginationInfo.totalPages, prev + 1))}
+                  disabled={!paginationInfo.hasNextPage || isLoadingPosts}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
   );
-}
+};
 
 export default ArticlesPage;

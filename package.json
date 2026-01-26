@@ -16,7 +16,8 @@
     "seed:content": "npx ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/seed-content.ts",
     "seed:campaigns": "npx ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/seed-campaigns.ts",
     "seed:sub-campaigns": "npx ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/seed-sub-campaigns.ts",
-    "seed:events": "npx ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/migrate-events.ts"
+    "seed:events": "npx ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/migrate-events.ts",
+    "migrate:pages": "npx ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/migrate-pages-to-db.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.36.5",

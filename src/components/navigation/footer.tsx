@@ -4,6 +4,7 @@ import React from "react";
 import { Link } from "@/src/i18n/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Heart,
   Mail,
@@ -91,7 +92,10 @@ interface FooterProps {
   locale?: Locale;
 }
 
-export default function Footer({ locale = "en" }: FooterProps) {
+export default function Footer({ locale: localeProp }: FooterProps) {
+  const t = useTranslations("footer");
+  const currentLocale = useLocale() as Locale;
+  const locale = localeProp || currentLocale;
   const [config, setConfig] = React.useState<FooterConfig | null>(null);
 
   React.useEffect(() => {
@@ -114,35 +118,35 @@ export default function Footer({ locale = "en" }: FooterProps) {
     
     return [
       {
-        title: "Navigation",
+        title: t("sections.navigation"),
         links: config.quickLinks.map(link => ({
           name: link.labels[locale] || link.labels.en || link.labelKey,
           href: link.href,
         })),
       },
       {
-        title: "Get Involved",
+        title: t("sections.getInvolved"),
         links: config.getInvolvedLinks.map(link => ({
           name: link.labels[locale] || link.labels.en || link.labelKey,
           href: link.href,
         })),
       },
       {
-        title: "Resources",
+        title: t("sections.resources"),
         links: config.resourceLinks.map(link => ({
           name: link.labels[locale] || link.labels.en || link.labelKey,
           href: link.href,
         })),
       },
       {
-        title: "Legal",
+        title: t("sections.legal"),
         links: config.legalLinks.map(link => ({
           name: link.labels[locale] || link.labels.en || link.labelKey,
           href: link.href,
         })),
       },
     ];
-  }, [config, locale]);
+  }, [config, locale, t]);
 
   const socialLinks = React.useMemo(() => {
     if (!config) return defaultSocialLinks;
@@ -278,27 +282,27 @@ export default function Footer({ locale = "en" }: FooterProps) {
                   href="/privacy-policy"
                   className="text-white/60 hover:text-white transition-colors text-sm"
                 >
-                  Privacy
+                  {t("links.privacy")}
                 </Link>
                 <Link
                   href="/terms"
                   className="text-white/60 hover:text-white transition-colors text-sm"
                 >
-                  Terms
+                  {t("links.terms")}
                 </Link>
                 <Link
                   href="/accessibility"
                   className="text-white/60 hover:text-white transition-colors text-sm"
                 >
-                  Accessibility
+                  {t("links.accessibility")}
                 </Link>
               </div>
             </div>
 
             <div className="flex items-center space-x-2 text-white/60 text-sm">
-              <span>Made with</span>
+              <span>{t("madeWith.prefix")}</span>
               <Heart className="h-3 w-3 text-[#781D32]" />
-              <span>in Finland for Palestine</span>
+              <span>{t("madeWith.suffix")}</span>
             </div>
           </div>
         </div>

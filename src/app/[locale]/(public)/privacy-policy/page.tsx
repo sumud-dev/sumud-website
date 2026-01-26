@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Link } from "@/src/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Shield, Mail, Clock, FileText } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
@@ -23,6 +24,7 @@ const staggerContainer = {
 };
 
 export default function PrivacyPolicyPage() {
+  const t = useTranslations("privacyPolicy");
   const lastUpdated = "January 23, 2025";
 
   return (
@@ -41,15 +43,14 @@ export default function PrivacyPolicyPage() {
               <Shield className="h-8 w-8 text-white" />
             </div>
             <h1 className="text-4xl lg:text-5xl font-bold text-[#3E442B]">
-              Privacy Policy
+              {t("title")}
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Your privacy is important to us. This policy explains how Sumud
-              collects, uses, and protects your personal information.
+              {t("subtitle")}
             </p>
             <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
               <Clock className="h-4 w-4" />
-              <span>Last updated: {lastUpdated}</span>
+              <span>{t("lastUpdated")}: {lastUpdated}</span>
             </div>
           </motion.div>
 
@@ -58,36 +59,24 @@ export default function PrivacyPolicyPage() {
             <Card className="border-2 border-[#55613C]/20 bg-gradient-to-br from-[#781D32]/5 to-[#55613C]/5">
               <CardContent className="p-6">
                 <h2 className="text-xl font-bold text-[#3E442B] mb-4">
-                  Quick Overview
+                  {t("quickOverview")}
                 </h2>
                 <ul className="space-y-2 text-gray-700">
                   <li className="flex items-start">
                     <div className="w-2 h-2 bg-[#55613C] rounded-full mt-2 mr-3 flex-shrink-0" />
-                    <span>
-                      We collect only the information necessary to provide our
-                      services
-                    </span>
+                    <span>{t("overview.limited")}</span>
                   </li>
                   <li className="flex items-start">
                     <div className="w-2 h-2 bg-[#55613C] rounded-full mt-2 mr-3 flex-shrink-0" />
-                    <span>
-                      Your data is never sold or shared with third parties for
-                      commercial purposes
-                    </span>
+                    <span>{t("overview.noSelling")}</span>
                   </li>
                   <li className="flex items-start">
                     <div className="w-2 h-2 bg-[#55613C] rounded-full mt-2 mr-3 flex-shrink-0" />
-                    <span>
-                      You can request access to, correction, or deletion of your
-                      data at any time
-                    </span>
+                    <span>{t("overview.rights")}</span>
                   </li>
                   <li className="flex items-start">
                     <div className="w-2 h-2 bg-[#55613C] rounded-full mt-2 mr-3 flex-shrink-0" />
-                    <span>
-                      We use industry-standard security measures to protect your
-                      information
-                    </span>
+                    <span>{t("overview.security")}</span>
                   </li>
                 </ul>
               </CardContent>

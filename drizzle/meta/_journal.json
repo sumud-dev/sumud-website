@@ -50,6 +50,20 @@
       "when": 1736179200000,
       "tag": "0011_rename_content_to_description",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1769015645059,
+      "tag": "0007_fresh_barracuda",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1769409080915,
+      "tag": "0008_goofy_expediter",
+      "breakpoints": true
     }
   ]
 }

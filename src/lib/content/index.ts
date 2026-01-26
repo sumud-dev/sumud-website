@@ -4,9 +4,6 @@
  * Centralized exports for content management utilities
  */
 
-// Service
-export { default as ContentService } from './service';
-
 // Helpers
 export {
   getLocalizedContent,

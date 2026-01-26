@@ -5,7 +5,7 @@ import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/src/i18n/routing";
 import { Toaster } from "@/src/components/ui/sonner";
-import { ReactQueryProvider } from "@/src/components/providers/react-query-provider";
+import { ReactQueryProvider } from "@/src/lib/providers/react-query-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {

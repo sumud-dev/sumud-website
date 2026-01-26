@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Card,
   CardContent,
@@ -41,14 +41,15 @@ import {
 export function PageBuilderList() {
   const t = useTranslations("adminSettings.pageBuilder");
   const router = useRouter();
-  const { data: pages = [], isLoading } = usePages();
+  const locale = useLocale() as "en" | "fi";
+  const { data: pages = [], isLoading } = usePages(locale);
   const deletePage = useDeletePage();
   const duplicatePage = useDuplicatePage();
   const [deleteConfirmSlug, setDeleteConfirmSlug] = useState<string | null>(null);
 
   const handleDelete = async (slug: string) => {
     try {
-      await deletePage.mutateAsync(slug);
+      await deletePage.mutateAsync({ slug });
       toast.success(t("deleteDialog.success"));
       setDeleteConfirmSlug(null);
     } catch (err) {
@@ -74,7 +75,7 @@ export function PageBuilderList() {
             {t("description")}
           </p>
         </div>
-        <Button onClick={() => router.push("/en/admin/page-builder/new")}>
+        <Button onClick={() => router.push(`/${locale}/admin/page-builder/new`)}>
           <Plus className="h-4 w-4 mr-2" /> {t("newButton")}
         </Button>
       </div>
@@ -92,7 +93,7 @@ export function PageBuilderList() {
           ) : pages.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">{t("noPagesYet")}</p>
-              <Button onClick={() => router.push("/en/admin/page-builder/new")}>
+              <Button onClick={() => router.push(`/${locale}/admin/page-builder/new`)}>
                 {t("createFirstPage")}
               </Button>
             </div>
@@ -127,7 +128,7 @@ export function PageBuilderList() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => router.push(`/en/admin/page-builder/${page.slug}`)}
+                      onClick={() => router.push(`/${locale}/admin/page-builder/${page.slug}`)}
                     >
                       <Edit className="h-4 w-4 mr-1" /> {t("actions.edit")}
                     </Button>

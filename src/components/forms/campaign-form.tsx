@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Save, Loader2, Languages } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import {
@@ -44,12 +45,12 @@ const campaignSchema = z.object({
   autoTranslate: z.boolean(),
   callToAction: z.object({
     primary: z.object({
-      text: z.string(),
+      text: z.string().optional(),
       url: z.string().optional(),
       action: z.string().optional(),
     }).optional(),
     secondary: z.object({
-      text: z.string(),
+      text: z.string().optional(),
       url: z.string().optional(),
       action: z.string().optional(),
     }).optional(),
@@ -135,6 +136,7 @@ export function CampaignForm({
   submitLabel = "Save Campaign",
   submittingLabel = "Saving...",
 }: CampaignFormProps) {
+  const t = useTranslations("admin.campaigns.form");
   const form = useForm<CampaignFormData>({
     resolver: zodResolver(campaignSchema),
     defaultValues: {
@@ -194,7 +196,7 @@ export function CampaignForm({
             {/* Campaign Details */}
             <Card>
               <CardHeader>
-                <CardTitle>Campaign Details</CardTitle>
+                <CardTitle>{t("campaignDetails")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -202,10 +204,10 @@ export function CampaignForm({
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <FormLabel>{t("title")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter campaign title..."
+                          placeholder={t("titlePlaceholder")}
                           {...field}
                         />
                       </FormControl>
@@ -219,12 +221,12 @@ export function CampaignForm({
                   name="description"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>{t("description")}</FormLabel>
                       <FormControl>
                         <RichTextEditor
                           value={field.value}
                           onChange={field.onChange}
-                          placeholder="Describe your campaign..."
+                          placeholder={t("descriptionPlaceholder")}
                           className="min-h-[200px]"
                         />
                       </FormControl>
@@ -239,21 +241,21 @@ export function CampaignForm({
                     name="campaignType"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Campaign Type</FormLabel>
+                        <FormLabel>{t("campaignType")}</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value || ""}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select type" />
+                              <SelectValue placeholder={t("selectType")} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="awareness">Awareness</SelectItem>
-                            <SelectItem value="fundraising">Fundraising</SelectItem>
-                            <SelectItem value="advocacy">Advocacy</SelectItem>
-                            <SelectItem value="event">Event</SelectItem>
+                            <SelectItem value="awareness">{t("awareness")}</SelectItem>
+                            <SelectItem value="fundraising">{t("fundraising")}</SelectItem>
+                            <SelectItem value="advocacy">{t("advocacy")}</SelectItem>
+                            <SelectItem value="event">{t("event")}</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -266,10 +268,10 @@ export function CampaignForm({
                     name="category"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Category</FormLabel>
+                        <FormLabel>{t("category")}</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="e.g., Social Justice, Environment..."
+                            placeholder={t("categoryPlaceholder")}
                             {...field}
                           />
                         </FormControl>
@@ -284,18 +286,18 @@ export function CampaignForm({
                   name="goal"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Goal Amount (Optional)</FormLabel>
+                      <FormLabel>{t("goal")}</FormLabel>
                       <FormControl>
                         <Input
                           type="number"
-                          placeholder="Enter fundraising goal..."
+                          placeholder={t("goalPlaceholder")}
                           {...field}
                           value={field.value || ""}
                           onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
                         />
                       </FormControl>
                       <FormDescription>
-                        Set a fundraising goal if applicable.
+                        {t("goalDescription")}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -307,7 +309,7 @@ export function CampaignForm({
             {/* Timeline */}
             <Card>
               <CardHeader>
-                <CardTitle>Timeline</CardTitle>
+                <CardTitle>{t("timeline")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -316,7 +318,7 @@ export function CampaignForm({
                     name="startDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Start Date</FormLabel>
+                        <FormLabel>{t("startDate")}</FormLabel>
                         <FormControl>
                           <Input
                             type="date"
@@ -333,7 +335,7 @@ export function CampaignForm({
                     name="endDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>End Date</FormLabel>
+                        <FormLabel>{t("endDate")}</FormLabel>
                         <FormControl>
                           <Input
                             type="date"
@@ -351,21 +353,21 @@ export function CampaignForm({
             {/* Call To Action */}
             <Card>
               <CardHeader>
-                <CardTitle>Call To Action</CardTitle>
+                <CardTitle>{t("callToAction")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="border-b pb-4">
-                  <h3 className="font-semibold text-sm mb-3">Primary CTA</h3>
+                  <h3 className="font-semibold text-sm mb-3">{t("primaryCTA")}</h3>
                   <div className="space-y-3">
                     <FormField
                       control={form.control}
                       name="callToAction.primary.text"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Button Text</FormLabel>
+                          <FormLabel>{t("buttonText")}</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="e.g., Join Now, Donate, Learn More..."
+                              placeholder={t("ctaPlaceholder")}
                               {...field}
                             />
                           </FormControl>
@@ -381,7 +383,7 @@ export function CampaignForm({
                           <FormLabel>URL</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="https://example.com"
+                              placeholder={t("urlPlaceholder")}
                               {...field}
                             />
                           </FormControl>
@@ -393,17 +395,17 @@ export function CampaignForm({
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-sm mb-3">Secondary CTA (Optional)</h3>
+                  <h3 className="font-semibold text-sm mb-3">{t("secondaryCTA")}</h3>
                   <div className="space-y-3">
                     <FormField
                       control={form.control}
                       name="callToAction.secondary.text"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Button Text</FormLabel>
+                          <FormLabel>{t("buttonText")}</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="e.g., Learn More, Share..."
+                              placeholder={t("secondaryCtaPlaceholder")}
                               {...field}
                             />
                           </FormControl>
@@ -419,7 +421,7 @@ export function CampaignForm({
                           <FormLabel>URL</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="https://example.com"
+                              placeholder={t("urlPlaceholder")}
                               {...field}
                             />
                           </FormControl>
@@ -435,11 +437,11 @@ export function CampaignForm({
             {/* Targets */}
             <Card>
               <CardHeader>
-                <CardTitle>Targets</CardTitle>
+                <CardTitle>{t("targets")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormDescription>
-                  Define the targets or recipients of your campaign demands.
+                  {t("targetsDescription")}
                 </FormDescription>
                 <div className="space-y-3">
                   {form.watch("targets")?.map((_, index) => (
@@ -449,10 +451,10 @@ export function CampaignForm({
                         name={`targets.${index}.name`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Target Name</FormLabel>
+                            <FormLabel>{t("targetName")}</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="e.g., Government, Corporation..."
+                                placeholder={t("targetNamePlaceholder")}
                                 {...field}
                               />
                             </FormControl>
@@ -465,10 +467,10 @@ export function CampaignForm({
                         name={`targets.${index}.type`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Type</FormLabel>
+                            <FormLabel>{t("targetType")}</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="e.g., Government, Corporate..."
+                                placeholder={t("targetTypePlaceholder")}
                                 {...field}
                               />
                             </FormControl>
@@ -481,10 +483,10 @@ export function CampaignForm({
                         name={`targets.${index}.contact`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Contact</FormLabel>
+                            <FormLabel>{t("targetContact")}</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="Email or phone"
+                                placeholder={t("targetContactPlaceholder")}
                                 {...field}
                               />
                             </FormControl>
@@ -497,10 +499,10 @@ export function CampaignForm({
                         name={`targets.${index}.description`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Description</FormLabel>
+                            <FormLabel>{t("targetDescription")}</FormLabel>
                             <FormControl>
                               <Textarea
-                                placeholder="Details about the target..."
+                                placeholder={t("targetDescriptionPlaceholder")}
                                 className="min-h-[80px]"
                                 {...field}
                               />
@@ -518,7 +520,7 @@ export function CampaignForm({
                           form.setValue("targets", targets.filter((_, i) => i !== index));
                         }}
                       >
-                        Remove Target
+                        {t("removeTarget")}
                       </Button>
                     </div>
                   ))}
@@ -535,7 +537,7 @@ export function CampaignForm({
                     ]);
                   }}
                 >
-                  Add Target
+                  {t("addTarget")}
                 </Button>
               </CardContent>
             </Card>
@@ -543,11 +545,11 @@ export function CampaignForm({
             {/* Demands */}
             <Card>
               <CardHeader>
-                <CardTitle>Campaign Demands</CardTitle>
+                <CardTitle>{t("campaignDemands")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormDescription>
-                  List the key demands or goals of your campaign.
+                  {t("demandsDescription")}
                 </FormDescription>
                 <div className="space-y-3">
                   {form.watch("demands")?.map((_, index) => (
@@ -557,10 +559,10 @@ export function CampaignForm({
                         name={`demands.${index}.title`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Demand Title</FormLabel>
+                            <FormLabel>{t("demandTitle")}</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="Enter demand..."
+                                placeholder={t("demandTitlePlaceholder")}
                                 {...field}
                               />
                             </FormControl>
@@ -573,10 +575,10 @@ export function CampaignForm({
                         name={`demands.${index}.description`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Description</FormLabel>
+                            <FormLabel>{t("demandDescription")}</FormLabel>
                             <FormControl>
                               <Textarea
-                                placeholder="Details about this demand..."
+                                placeholder={t("demandDescriptionPlaceholder")}
                                 className="min-h-[80px]"
                                 {...field}
                               />
@@ -594,7 +596,7 @@ export function CampaignForm({
                           form.setValue("demands", demands.filter((_, i) => i !== index));
                         }}
                       >
-                        Remove Demand
+                        {t("removeDemand")}
                       </Button>
                     </div>
                   ))}
@@ -611,7 +613,7 @@ export function CampaignForm({
                     ]);
                   }}
                 >
-                  Add Demand
+                  {t("addDemand")}
                 </Button>
               </CardContent>
             </Card>
@@ -619,11 +621,11 @@ export function CampaignForm({
             {/* How To Participate */}
             <Card>
               <CardHeader>
-                <CardTitle>How To Participate</CardTitle>
+                <CardTitle>{t("howToParticipate")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormDescription>
-                  Guide participants on how to get involved in your campaign.
+                  {t("howToParticipateDescription")}
                 </FormDescription>
                 <div className="space-y-3">
                   {form.watch("howToParticipate")?.map((_, index) => (
@@ -633,10 +635,10 @@ export function CampaignForm({
                         name={`howToParticipate.${index}.title`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Step Title</FormLabel>
+                            <FormLabel>{t("stepTitle")}</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="e.g., Sign the Petition..."
+                                placeholder={t("stepTitlePlaceholder")}
                                 {...field}
                               />
                             </FormControl>
@@ -649,10 +651,10 @@ export function CampaignForm({
                         name={`howToParticipate.${index}.description`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Description</FormLabel>
+                            <FormLabel>{t("stepDescription")}</FormLabel>
                             <FormControl>
                               <Textarea
-                                placeholder="How to participate in this step..."
+                                placeholder={t("stepDescriptionPlaceholder")}
                                 className="min-h-[80px]"
                                 {...field}
                               />
@@ -666,10 +668,10 @@ export function CampaignForm({
                         name={`howToParticipate.${index}.icon`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Icon Name (Optional)</FormLabel>
+                            <FormLabel>{t("iconName")}</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="e.g., heart, star, share..."
+                                placeholder={t("iconNamePlaceholder")}
                                 {...field}
                               />
                             </FormControl>
@@ -686,7 +688,7 @@ export function CampaignForm({
                           form.setValue("howToParticipate", howTo.filter((_, i) => i !== index));
                         }}
                       >
-                        Remove Step
+                        {t("removeStep")}
                       </Button>
                     </div>
                   ))}
@@ -703,7 +705,7 @@ export function CampaignForm({
                     ]);
                   }}
                 >
-                  Add Step
+                  {t("addStep")}
                 </Button>
               </CardContent>
             </Card>
@@ -711,7 +713,7 @@ export function CampaignForm({
             {/* SEO */}
             <Card>
               <CardHeader>
-                <CardTitle>SEO Settings</CardTitle>
+                <CardTitle>{t("seoSettings")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -719,16 +721,16 @@ export function CampaignForm({
                   name="seoTitle"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>SEO Title</FormLabel>
+                      <FormLabel>{t("seoTitle")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="SEO optimized title (50-60 characters)..."
+                          placeholder={t("seoTitlePlaceholder")}
                           maxLength={60}
                           {...field}
                         />
                       </FormControl>
                       <FormDescription>
-                        {field.value?.length || 0}/60 characters
+                        {t("charactersCount", { current: field.value?.length || 0, max: 60 })}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -740,17 +742,17 @@ export function CampaignForm({
                   name="seoDescription"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>SEO Description</FormLabel>
+                      <FormLabel>{t("seoDescription")}</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Meta description (150-160 characters)..."
+                          placeholder={t("seoDescriptionPlaceholder")}
                           maxLength={160}
                           className="min-h-[80px]"
                           {...field}
                         />
                       </FormControl>
                       <FormDescription>
-                        {field.value?.length || 0}/160 characters
+                        {t("charactersCount", { current: field.value?.length || 0, max: 160 })}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -765,7 +767,7 @@ export function CampaignForm({
             {/* Publishing Options */}
             <Card>
               <CardHeader>
-                <CardTitle>Publishing</CardTitle>
+                <CardTitle>{t("publishing")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -773,23 +775,23 @@ export function CampaignForm({
                   name="language"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Language</FormLabel>
+                      <FormLabel>{t("language")}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select language" />
+                            <SelectValue placeholder={t("selectLanguage")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="fi">Suomi (Finnish)</SelectItem>
+                          <SelectItem value="en">{t("english")}</SelectItem>
+                          <SelectItem value="fi">{t("finnish")}</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormDescription>
-                        Primary language for this campaign
+                        {t("primaryLanguageDescription")}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -804,10 +806,10 @@ export function CampaignForm({
                       <div className="space-y-0.5">
                         <FormLabel className="flex items-center gap-2">
                           <Languages className="h-4 w-4" />
-                          Auto-translate
+                          {t("autoTranslate")}
                         </FormLabel>
                         <FormDescription className="text-xs">
-                          Automatically translate to {form.watch("language") === "en" ? "Finnish" : "English"}
+                          {t("autoTranslateDescription", { language: form.watch("language") === "en" ? t("finnish") : t("english") })}
                         </FormDescription>
                       </div>
                       <FormControl>
@@ -825,23 +827,23 @@ export function CampaignForm({
                   name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
+                      <FormLabel>{t("status")}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
+                            <SelectValue placeholder={t("selectStatus")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="active">Active</SelectItem>
-                          <SelectItem value="paused">Paused</SelectItem>
-                          <SelectItem value="completed">Completed</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
-                          <SelectItem value="archived">Archived</SelectItem>
+                          <SelectItem value="draft">{t("statusDraft")}</SelectItem>
+                          <SelectItem value="active">{t("statusActive")}</SelectItem>
+                          <SelectItem value="paused">{t("statusPaused")}</SelectItem>
+                          <SelectItem value="completed">{t("statusCompleted")}</SelectItem>
+                          <SelectItem value="cancelled">{t("statusCancelled")}</SelectItem>
+                          <SelectItem value="archived">{t("statusArchived")}</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -855,9 +857,9 @@ export function CampaignForm({
                   render={({ field }) => (
                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                       <div className="space-y-0.5">
-                        <FormLabel>Featured Campaign</FormLabel>
+                        <FormLabel>{t("isFeatured")}</FormLabel>
                         <FormDescription>
-                          Show on homepage
+                          {t("showOnHomepage")}
                         </FormDescription>
                       </div>
                       <FormControl>
@@ -887,7 +889,7 @@ export function CampaignForm({
                   </Button>
                   {form.watch("autoTranslate") && (
                     <p className="text-xs text-muted-foreground text-center">
-                      Will create versions in both languages
+                      {t("createBothLanguages")}
                     </p>
                   )}
                 </div>
@@ -897,7 +899,7 @@ export function CampaignForm({
             {/* Featured Image */}
             <Card>
               <CardHeader>
-                <CardTitle>Featured Image</CardTitle>
+                <CardTitle>{t("featuredImage")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -905,7 +907,7 @@ export function CampaignForm({
                   name="featuredImageUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Campaign Image</FormLabel>
+                      <FormLabel>{t("campaignImage")}</FormLabel>
                       <FormControl>
                         <ImageUpload
                           value={field.value}
@@ -916,7 +918,7 @@ export function CampaignForm({
                         />
                       </FormControl>
                       <FormDescription>
-                        Upload an image or provide a URL below. Maximum size: 5MB.
+                        {t("campaignImageDescription")}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -928,16 +930,16 @@ export function CampaignForm({
                   name="featuredImageUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Or enter image URL</FormLabel>
+                      <FormLabel>{t("orEnterImageUrl")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="https://example.com/image.jpg"
+                          placeholder={t("imageUrlPlaceholder")}
                           {...field}
                           disabled={isSubmitting}
                         />
                       </FormControl>
                       <FormDescription>
-                        Alternatively, paste an image URL directly.
+                        {t("imageUrlDescription")}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

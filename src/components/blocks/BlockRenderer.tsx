@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import NewsletterSignup from "@/src/components/ui/newsletter-signup";
 import { useEvents } from "@/src/lib/hooks/use-events";
-import { useArticles } from "@/src/lib/hooks/use-articles";
+import { usePosts } from "@/src/lib/hooks/use-posts";
 import { useCampaigns } from "@/src/lib/hooks/use-campaigns";
 import type {
   PageBlock,
@@ -663,13 +663,15 @@ export function HeritageHeroSectionBlock({ content }: { content: HeritageHeroBlo
 // News Section Block - Fetches articles from database using TanStack Query
 export function NewsSectionBlock({ content }: { content: NewsSectionBlockContent }) {
   const locale = useLocale();
-  const { data: articles = [], isLoading } = useArticles({
+  const { data: articlesResponse, isLoading } = usePosts({
     status: "published",
     limit: content.showCount || 3,
     language: locale,
   });
   const t = useTranslations("homepage");
   const tCommon = useTranslations("common");
+
+  const articles = articlesResponse?.posts || [];
 
   return (
     <section className="py-20 relative overflow-hidden">
@@ -747,7 +749,7 @@ export function NewsSectionBlock({ content }: { content: NewsSectionBlockContent
                             boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                           }}
                         >
-                          {article.category || "Article"}
+                          Article
                         </span>
                       </div>
 

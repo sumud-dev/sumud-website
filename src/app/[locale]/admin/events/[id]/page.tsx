@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Link, useRouter } from "@/src/i18n/navigation";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   Edit,
@@ -43,6 +44,7 @@ interface EventDetailPageProps {
 
 const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
   const router = useRouter();
+  const t = useTranslations("admin.events.detail");
   const [event, setEvent] = React.useState<Event | EventTranslation | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -73,7 +75,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
 
   const handleDelete = async () => {
     if (!event) return;
-    if (!confirm(`Are you sure you want to delete "${event.title}"?`)) return;
+    if (!confirm(t("delete.confirm", { title: event.title || "Untitled Event" }))) return;
 
     try {
       const result = await deleteEventAction(event.id);
@@ -103,7 +105,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
   };
 
   const formatDate = (dateValue: Date | string | null | undefined) => {
-    if (!dateValue) return "N/A";
+    if (!dateValue) return t("placeholders.notAvailable");
     const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
     return date.toLocaleDateString("en-US", {
       weekday: "long",
@@ -134,13 +136,13 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
             </Link>
           </Button>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            Loading...
+            {t("loading")}
           </h1>
         </div>
         <Card className="border-gray-200 shadow-sm">
           <CardContent className="py-12 text-center text-gray-500">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-            Loading event details...
+            {t("loadingDetails")}
           </CardContent>
         </Card>
       </div>
@@ -157,12 +159,12 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
             </Link>
           </Button>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            Event Not Found
+            {t("notFound")}
           </h1>
         </div>
         <Card className="border-gray-200 shadow-sm">
           <CardContent className="py-12 text-center text-gray-500">
-            {error || "The event you're looking for doesn't exist or has been deleted."}
+            {error || t("notFoundMessage")}
           </CardContent>
         </Card>
       </div>
@@ -183,16 +185,16 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
           </Button>
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-              Event Details
+              {t("pageTitle")}
             </h1>
-            <p className="text-gray-600 mt-1">View and manage event information</p>
+            <p className="text-gray-600 mt-1">{t("pageSubtitle")}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 ml-12 sm:ml-0">
           <Button variant="outline" asChild>
             <Link href={`/admin/events/${event.id}/edit`}>
               <Edit className="mr-2 h-4 w-4" />
-              Edit
+              {t("actions.edit")}
             </Link>
           </Button>
           <Button
@@ -200,7 +202,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
             onClick={handleDelete}
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            Delete
+            {t("actions.delete")}
           </Button>
         </div>
       </div>
@@ -212,7 +214,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
           <CardHeader className="pb-4">
             <div className="flex items-start justify-between gap-4">
               <CardTitle className="text-xl font-semibold">
-                {event.title || "Untitled Event"}
+                {event.title || t("placeholders.untitled")}
               </CardTitle>
               <Badge className={statusColors[currentStatus]}>
                 {currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1)}
@@ -237,7 +239,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
             {event.content && (
               <div>
                 <h3 className="text-sm font-medium text-gray-500 mb-2">
-                  Description
+                  {t("sections.description")}
                 </h3>
                 <p className="text-gray-700 whitespace-pre-wrap">{event.content}</p>
               </div>
@@ -251,7 +253,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
                 <div className="flex items-start gap-3">
                   <MapPin className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Location</p>
+                    <p className="text-sm font-medium text-gray-500">{t("labels.location")}</p>
                     <p className="text-gray-700">{displayValue(event.locations)}</p>
                   </div>
                 </div>
@@ -261,7 +263,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
                 <div className="flex items-start gap-3">
                   <Tag className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Category</p>
+                    <p className="text-sm font-medium text-gray-500">{t("labels.category")}</p>
                     <p className="text-gray-700">{displayValue(event.categories)}</p>
                   </div>
                 </div>
@@ -271,7 +273,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
                 <div className="flex items-start gap-3">
                   <User className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Organizer</p>
+                    <p className="text-sm font-medium text-gray-500">{t("labels.organizer")}</p>
                     <p className="text-gray-700">{displayValue(event.organizers)}</p>
                   </div>
                 </div>
@@ -281,7 +283,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
                 <div className="flex items-start gap-3">
                   <Globe className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Language</p>
+                    <p className="text-sm font-medium text-gray-500">{t("labels.language")}</p>
                     <p className="text-gray-700">{event.language}</p>
                   </div>
                 </div>
@@ -291,7 +293,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
                 <div className="flex items-start gap-3">
                   <User className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Author</p>
+                    <p className="text-sm font-medium text-gray-500">{t("labels.author")}</p>
                     <p className="text-gray-700">{event.authorName}</p>
                   </div>
                 </div>
@@ -301,7 +303,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
                 <div className="flex items-start gap-3">
                   <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Published</p>
+                    <p className="text-sm font-medium text-gray-500">{t("labels.published")}</p>
                     <p className="text-gray-700">{formatDate(event.publishedAt)}</p>
                   </div>
                 </div>
@@ -311,7 +313,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
                 <div className="flex items-start gap-3">
                   <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-500">Last Updated</p>
+                    <p className="text-sm font-medium text-gray-500">{t("labels.lastUpdated")}</p>
                     <p className="text-gray-700">{formatDate(event.updatedAt)}</p>
                   </div>
                 </div>
@@ -325,7 +327,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
           {/* Status Actions */}
           <Card className="border-gray-200 shadow-sm">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold">Actions</CardTitle>
+              <CardTitle className="text-lg font-semibold">{t("actions.title")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {currentStatus === "draft" && (
@@ -334,7 +336,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
                   onClick={() => handleStatusUpdate("published")}
                 >
                   <Play className="mr-2 h-4 w-4" />
-                  Publish Event
+                  {t("actions.publish")}
                 </Button>
               )}
               {currentStatus === "published" && (
@@ -344,7 +346,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
                   onClick={() => handleStatusUpdate("archived")}
                 >
                   <Archive className="mr-2 h-4 w-4" />
-                  Archive Event
+                  {t("actions.archive")}
                 </Button>
               )}
               {currentStatus === "archived" && (
@@ -354,7 +356,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
                   onClick={() => handleStatusUpdate("draft")}
                 >
                   <FileText className="mr-2 h-4 w-4" />
-                  Move to Draft
+                  {t("actions.moveToDraft")}
                 </Button>
               )}
 
@@ -363,7 +365,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
               {event.slug && (
                 <Button variant="outline" className="w-full" asChild>
                   <Link href={`/events/${event.slug}`} target="_blank">
-                    View Public Page
+                    {t("actions.viewPublic")}
                   </Link>
                 </Button>
               )}
@@ -373,25 +375,25 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
           {/* Event Info Card */}
           <Card className="border-gray-200 shadow-sm">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-semibold">Event Info</CardTitle>
+              <CardTitle className="text-lg font-semibold">{t("sections.eventInfo")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-500">ID</span>
+                <span className="text-gray-500">{t("labels.id")}</span>
                 <span className="font-mono text-xs text-gray-700 truncate max-w-[150px]">
                   {event.id}
                 </span>
               </div>
               {event.slug && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Slug</span>
+                  <span className="text-gray-500">{t("labels.slug")}</span>
                   <span className="text-gray-700 truncate max-w-[150px]">
                     {event.slug}
                   </span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-gray-500">Status</span>
+                <span className="text-gray-500">{t("labels.status")}</span>
                 <span className="text-gray-700 capitalize">{currentStatus}</span>
               </div>
             </CardContent>

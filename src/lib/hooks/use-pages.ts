@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useLocale } from 'next-intl';
 import {
   listPagesAction,
   getPageAction,
@@ -23,11 +24,11 @@ export const pageQueryKeys = {
 /**
  * Hook to fetch all pages
  */
-export function usePages() {
+export function usePages(locale?: string) {
   return useQuery({
-    queryKey: pageQueryKeys.list(),
+    queryKey: locale ? [...pageQueryKeys.list(), locale] : pageQueryKeys.list(),
     queryFn: async () => {
-      const result = await listPagesAction();
+      const result = await listPagesAction(locale);
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -39,11 +40,14 @@ export function usePages() {
 /**
  * Hook to fetch a single page by slug
  */
-export function usePage(slug: string) {
+export function usePage(slug: string, locale?: 'en' | 'fi') {
+  const currentLocale = useLocale() as 'en' | 'fi';
+  const lang = locale || currentLocale;
+  
   return useQuery({
-    queryKey: pageQueryKeys.detail(slug),
+    queryKey: [...pageQueryKeys.detail(slug), lang],
     queryFn: async () => {
-      const result = await getPageAction(slug);
+      const result = await getPageAction(slug, lang);
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -78,24 +82,28 @@ export function useCreatePage() {
  */
 export function useUpdatePage() {
   const queryClient = useQueryClient();
-
+  const locale = useLocale() as 'en' | 'fi';
+  
   return useMutation({
     mutationFn: async ({
       slug,
       data,
+      language,
     }: {
       slug: string;
       data: Parameters<typeof updatePageAction>[1];
+      language?: 'en' | 'fi';
     }) => {
-      const result = await updatePageAction(slug, data);
+      const result = await updatePageAction(slug, data, language || locale);
       if (!result.success) {
         throw new Error(result.error);
       }
       return result.data;
     },
     onSuccess: (_, { slug }) => {
+      // Invalidate all language versions
       queryClient.invalidateQueries({ queryKey: pageQueryKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: pageQueryKeys.detail(slug) });
+      queryClient.invalidateQueries({ queryKey: pageQueryKeys.details() });
     },
   });
 }
@@ -105,10 +113,11 @@ export function useUpdatePage() {
  */
 export function useDeletePage() {
   const queryClient = useQueryClient();
-
+  const locale = useLocale() as 'en' | 'fi';
+  
   return useMutation({
-    mutationFn: async (slug: string) => {
-      const result = await deletePageAction(slug);
+    mutationFn: async ({ slug, language }: { slug: string; language?: 'en' | 'fi' }) => {
+      const result = await deletePageAction(slug, language || locale);
       if (!result.success) {
         throw new Error(result.error);
       }
@@ -116,6 +125,7 @@ export function useDeletePage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: pageQueryKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: pageQueryKeys.details() });
     },
   });
 }

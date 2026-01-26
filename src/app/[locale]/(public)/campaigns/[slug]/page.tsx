@@ -128,7 +128,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
           className="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors group"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-          Back to Campaigns
+          {t("detail.backToCampaigns")}
         </Link>
       </div>
 
@@ -162,7 +162,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
               {campaign.isFeatured && (
                 <Badge className="px-4 py-1.5 text-sm font-medium rounded-full bg-yellow-400 text-gray-900 shadow-lg backdrop-blur-sm border-0 flex items-center gap-1.5">
                   <Zap className="w-4 h-4" />
-                  Featured
+                  {t("detail.featured")}
                 </Badge>
               )}
             </div>
@@ -205,11 +205,11 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="grid w-full grid-cols-5 mb-8">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="participate">How to Participate</TabsTrigger>
-            <TabsTrigger value="resources">Resources</TabsTrigger>
-            <TabsTrigger value="impact">Impact</TabsTrigger>
-            <TabsTrigger value="action">Call to Action</TabsTrigger>
+            <TabsTrigger value="overview">{t("tabs.overview")}</TabsTrigger>
+            <TabsTrigger value="participate">{t("tabs.participate")}</TabsTrigger>
+            <TabsTrigger value="resources">{t("tabs.resources")}</TabsTrigger>
+            <TabsTrigger value="impact">{t("tabs.impact")}</TabsTrigger>
+            <TabsTrigger value="action">{t("tabs.action")}</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -226,7 +226,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                 >
                   <Target style={{ color: typeColor }} className="w-6 h-6" />
                 </div>
-                About This Campaign
+                {t("detail.aboutTitle")}
               </h2>
               <div className="prose prose-lg max-w-none">
                 <p className="text-gray-700 leading-relaxed whitespace-pre-line">
@@ -250,7 +250,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                 >
                   <Users style={{ color: typeColor }} className="w-6 h-6" />
                 </div>
-                How to Participate
+                {t("detail.participateTitle")}
               </h2>
               <div className="space-y-4">
                 {campaign.howToParticipate && Array.isArray(campaign.howToParticipate) && campaign.howToParticipate.length > 0 ? (
@@ -277,7 +277,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                     </motion.div>
                   ))
                 ) : (
-                  <p className="text-gray-600">Participation details will be available soon.</p>
+                  <p className="text-gray-600">{t("detail.participatePlaceholder")}</p>
                 )}
               </div>
             </motion.div>
@@ -297,7 +297,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                 >
                   <Download style={{ color: typeColor }} className="w-6 h-6" />
                 </div>
-                Resources & Materials
+                {t("detail.resourcesTitle")}
               </h2>
               {campaign.resources && Array.isArray(campaign.resources) && campaign.resources.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -338,7 +338,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                   })}
                 </div>
               ) : (
-                <p className="text-gray-600">Resources will be available soon.</p>
+                <p className="text-gray-600">{t("detail.resourcesPlaceholder")}</p>
               )}
             </motion.div>
           </TabsContent>
@@ -357,7 +357,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                 >
                   <TrendingUp style={{ color: typeColor }} className="w-6 h-6" />
                 </div>
-                Success Stories & Impact
+                {t("detail.impactTitle")}
               </h2>
               {campaign.successStories && Array.isArray(campaign.successStories) && campaign.successStories.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -382,7 +382,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-600">Success stories will be shared soon.</p>
+                <p className="text-gray-600">{t("detail.impactPlaceholder")}</p>
               )}
             </motion.div>
           </TabsContent>
@@ -404,7 +404,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                 {tCommon("buttons.readyToTakeAction")}
               </h2>
               <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
-                Join thousands of supporters working for Palestinian freedom and justice. Every action counts.
+                {t("detail.joinMessage")}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Button
@@ -423,7 +423,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
 
               {/* Social Share Buttons */}
               <div className="mt-8 pt-8 border-t border-gray-700/60">
-                <p className="text-sm text-gray-400 mb-4">Share this campaign</p>
+                <p className="text-sm text-gray-400 mb-4">{t("detail.shareThis")}</p>
                 <div className="flex items-center justify-center gap-3">
                   <Button
                     variant="ghost"

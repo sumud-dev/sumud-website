@@ -2,6 +2,12 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { 
+  updateCampaignAction, 
+  updateCampaignTranslationAction,
+  deleteCampaignAction 
+} from '@/src/actions/campaigns.actions';
 import { queryKeys } from '@/src/lib/react-query/query-keys';
 import type { CampaignFilters } from '@/src/lib/react-query/query-keys';
 import type { CampaignType, CampaignParticipationStep, CampaignResource, CampaignSuccessStory } from '@/src/types/Campaigns';
@@ -11,6 +17,8 @@ export type CampaignDescription = string | { type: 'blocks' | 'markdown' | 'html
 
 export interface Campaign {
   id: string;
+  campaignId?: string; // For translations, this is the parent campaign ID
+  parentId?: string; // Legacy field for checking if it's a translation
   title: string;
   slug: string;
   description: CampaignDescription;
@@ -31,6 +39,8 @@ export interface Campaign {
   resources?: CampaignResource[];
   successStories?: CampaignSuccessStory[] | string[];
   targets?: unknown;
+  seoTitle?: string;
+  seoDescription?: string;
 }
 
 /**
@@ -130,4 +140,88 @@ export function useCampaign(slug: string) {
     isLoading,
     error: isError ? error : null,
   };
+}
+
+/**
+ * Hook to update campaign base fields
+ */
+export function useUpdateCampaign() {
+  const queryClient = useQueryClient();
+  const locale = useLocale();
+  
+  return useMutation({
+    mutationFn: async ({ 
+      campaignId, 
+      slug, 
+      data,
+      language 
+    }: { 
+      campaignId: string; 
+      slug: string; 
+      data: any;
+      language?: string;
+    }) => {
+      const result = await updateCampaignAction(campaignId, slug, data, language || locale);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onSuccess: (_, { slug }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.detail(slug) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.lists() });
+    },
+  });
+}
+
+/**
+ * Hook to update campaign translation
+ */
+export function useUpdateCampaignTranslation() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ 
+      campaignId, 
+      slug, 
+      locale, 
+      data 
+    }: { 
+      campaignId: string; 
+      slug: string; 
+      locale: string; 
+      data: any;
+    }) => {
+      const result = await updateCampaignTranslationAction(campaignId, slug, locale, data);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onSuccess: (_, { slug }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.detail(slug) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.lists() });
+    },
+  });
+}
+
+/**
+ * Hook to delete campaign
+ */
+export function useDeleteCampaign() {
+  const queryClient = useQueryClient();
+  const locale = useLocale();
+  
+  return useMutation({
+    mutationFn: async ({ slug, language }: { slug: string; language?: string }) => {
+      const result = await deleteCampaignAction(slug, language || locale);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.lists() });
+    },
+  });
 }

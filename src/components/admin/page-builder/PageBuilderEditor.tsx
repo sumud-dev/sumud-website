@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import NextImage from "next/image";
 import {
   Card,
@@ -43,6 +44,20 @@ import {
   FileText,
   Check,
   Palette,
+  ChevronRight,
+  MessageCircle,
+  UserCheck,
+  Package,
+  Space,
+  AlertCircle,
+  Link2,
+  Facebook,
+  Twitter,
+  Instagram,
+  Linkedin,
+  Share2,
+  Star,
+  DollarSign,
 } from "lucide-react";
 import { Badge } from "@/src/components/ui/badge";
 import { Input } from "@/src/components/ui/input";
@@ -109,39 +124,6 @@ const AVAILABLE_COLORS = [
   { value: 'bg-[#2A9D8F]', label: 'Teal', color: '#2A9D8F' },
 ] as const;
 
-const blockTypes: { type: PageBlockType; label: string; icon: React.ElementType; category?: string }[] = [
-  // Basic Blocks
-  { type: "hero", label: "Hero Banner", icon: Sparkles, category: "Basic" },
-  { type: "heading", label: "Heading", icon: Type, category: "Basic" },
-  { type: "text", label: "Text Block", icon: Type, category: "Basic" },
-  { type: "image", label: "Image", icon: Image, category: "Basic" },
-  { type: "cta", label: "Call to Action", icon: MousePointer, category: "Basic" },
-  { type: "divider", label: "Divider", icon: Minus, category: "Basic" },
-  
-  // Content Blocks
-  { type: "stats", label: "Stats Section", icon: BarChart3, category: "Content" },
-  { type: "campaigns-grid", label: "Campaigns Grid", icon: Grid3X3, category: "Content" },
-  { type: "quote", label: "Quote Section", icon: Quote, category: "Content" },
-  { type: "carousel", label: "Carousel", icon: Columns, category: "Content" },
-  { type: "form", label: "Form Fields", icon: FormInput, category: "Content" },
-  { type: "video", label: "Video", icon: Video, category: "Content" },
-  
-  // Section Layouts
-  { type: "heritage-hero", label: "Heritage Hero", icon: LayoutTemplate, category: "Sections" },
-  { type: "news-section", label: "News Section", icon: Newspaper, category: "Sections" },
-  { type: "events-section", label: "Events Section", icon: Calendar, category: "Sections" },
-  { type: "campaigns-section", label: "Campaigns Section", icon: Flag, category: "Sections" },
-  { type: "newsletter-section", label: "Newsletter", icon: Mail, category: "Sections" },
-  
-  // Editable Page Sections (locale-nested content)
-  { type: "page-hero", label: "Page Hero", icon: Sparkles, category: "Page Sections" },
-  { type: "mission-section", label: "Mission Section", icon: Type, category: "Page Sections" },
-  { type: "features-section", label: "Features Section", icon: Grid3X3, category: "Page Sections" },
-  { type: "values-section", label: "Values Section", icon: BarChart3, category: "Page Sections" },
-  { type: "engagement-section", label: "Engagement Section", icon: MousePointer, category: "Page Sections" },
-  { type: "cta-section", label: "CTA Section", icon: Flag, category: "Page Sections" },
-];
-
 function generateId() {
   return Math.random().toString(36).substr(2, 9);
 }
@@ -179,19 +161,22 @@ function getBlockAvailableLocales(block: PageBlock): Locale[] {
 interface PageBuilderEditorProps {
   initialData?: PageData;
   isNew?: boolean;
+  initialLocale?: PageLocale;
 }
 
-export function PageBuilderEditor({ initialData, isNew = false }: PageBuilderEditorProps) {
+export function PageBuilderEditor({ initialData, isNew = false, initialLocale = 'en' }: PageBuilderEditorProps) {
   const router = useRouter();
+  const locale = useLocale();
   const createPage = useCreatePage();
   const updatePage = useUpdatePage();
+  const t = useTranslations("adminSettings.pageBuilder.editor");
 
-  // Initialize state directly from props
+  // Initialize state directly from props, respecting the initial locale
   const initialTrans = initialData?.translations || {};
-  const initialLangData = initialTrans.en || { title: "", description: "", blocks: [] };
+  const initialLangData = initialTrans[initialLocale] || initialTrans.en || { title: "", description: "", blocks: [] };
   
   const [allTranslations, setAllTranslations] = useState<PageData["translations"]>(initialTrans);
-  const [currentLang, setCurrentLang] = useState<PageLocale>("en");
+  const [currentLang, setCurrentLang] = useState<PageLocale>(initialLocale);
   const [blocks, setBlocks] = useState<PageBlock[]>(initialLangData.blocks || []);
   const [pageTitle, setPageTitle] = useState(initialLangData.title || initialData?.slug || "");
   const [pageDescription, setPageDescription] = useState(initialLangData.description || "");
@@ -200,6 +185,50 @@ export function PageBuilderEditor({ initialData, isNew = false }: PageBuilderEdi
   const [status, setStatus] = useState<"draft" | "published">(initialData?.status || "draft");
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
+
+  // Get translated block types
+  const blockTypes: { type: PageBlockType; label: string; icon: React.ElementType; category?: string }[] = [
+    // Basic Blocks
+    { type: "hero", label: t("blockTypes.hero"), icon: Sparkles, category: t("blockCategories.Basic") },
+    { type: "heading", label: t("blockTypes.heading"), icon: Type, category: t("blockCategories.Basic") },
+    { type: "text", label: t("blockTypes.text"), icon: Type, category: t("blockCategories.Basic") },
+    { type: "image", label: t("blockTypes.image"), icon: Image, category: t("blockCategories.Basic") },
+    { type: "cta", label: t("blockTypes.cta"), icon: MousePointer, category: t("blockCategories.Basic") },
+    { type: "divider", label: t("blockTypes.divider"), icon: Minus, category: t("blockCategories.Basic") },
+    { type: "spacer", label: t("blockTypes.spacer"), icon: Space, category: t("blockCategories.Basic") },
+    
+    // Content Blocks
+    { type: "stats", label: t("blockTypes.stats"), icon: BarChart3, category: t("blockCategories.Content") },
+    { type: "campaigns-grid", label: t("blockTypes.campaigns-grid"), icon: Grid3X3, category: t("blockCategories.Content") },
+    { type: "quote", label: t("blockTypes.quote"), icon: Quote, category: t("blockCategories.Content") },
+    { type: "carousel", label: t("blockTypes.carousel"), icon: Columns, category: t("blockCategories.Content") },
+    { type: "form", label: t("blockTypes.form"), icon: FormInput, category: t("blockCategories.Content") },
+    { type: "video", label: t("blockTypes.video"), icon: Video, category: t("blockCategories.Content") },
+    { type: "accordion", label: t("blockTypes.accordion"), icon: ChevronRight, category: t("blockCategories.Content") },
+    { type: "tabs", label: t("blockTypes.tabs"), icon: Columns, category: t("blockCategories.Content") },
+    { type: "testimonials", label: t("blockTypes.testimonials"), icon: MessageCircle, category: t("blockCategories.Content") },
+    { type: "team-members", label: t("blockTypes.team-members"), icon: UserCheck, category: t("blockCategories.Content") },
+    { type: "icon-box", label: t("blockTypes.icon-box"), icon: Package, category: t("blockCategories.Content") },
+    { type: "pricing-table", label: t("blockTypes.pricing-table"), icon: DollarSign, category: t("blockCategories.Content") },
+    { type: "alert", label: t("blockTypes.alert"), icon: AlertCircle, category: t("blockCategories.Content") },
+    { type: "button-group", label: t("blockTypes.button-group"), icon: Link2, category: t("blockCategories.Content") },
+    { type: "social-icons", label: t("blockTypes.social-icons"), icon: Share2, category: t("blockCategories.Content") },
+    
+    // Section Layouts
+    { type: "heritage-hero", label: t("blockTypes.heritage-hero"), icon: LayoutTemplate, category: t("blockCategories.Sections") },
+    { type: "news-section", label: t("blockTypes.news-section"), icon: Newspaper, category: t("blockCategories.Sections") },
+    { type: "events-section", label: t("blockTypes.events-section"), icon: Calendar, category: t("blockCategories.Sections") },
+    { type: "campaigns-section", label: t("blockTypes.campaigns-section"), icon: Flag, category: t("blockCategories.Sections") },
+    { type: "newsletter-section", label: t("blockTypes.newsletter-section"), icon: Mail, category: t("blockCategories.Sections") },
+    
+    // Editable Page Sections (locale-nested content)
+    { type: "page-hero", label: t("blockTypes.page-hero"), icon: Sparkles, category: t("blockCategories.Page Sections") },
+    { type: "mission-section", label: t("blockTypes.mission-section"), icon: Type, category: t("blockCategories.Page Sections") },
+    { type: "features-section", label: t("blockTypes.features-section"), icon: Grid3X3, category: t("blockCategories.Page Sections") },
+    { type: "values-section", label: t("blockTypes.values-section"), icon: BarChart3, category: t("blockCategories.Page Sections") },
+    { type: "engagement-section", label: t("blockTypes.engagement-section"), icon: MousePointer, category: t("blockCategories.Page Sections") },
+    { type: "cta-section", label: t("blockTypes.cta-section"), icon: Flag, category: t("blockCategories.Page Sections") },
+  ];
 
   // Auto-generate slug and path when title changes (only for new pages and if not manually edited)
   const handlePageTitleChange = (newTitle: string) => {
@@ -343,8 +372,8 @@ export function PageBuilderEditor({ initialData, isNew = false }: PageBuilderEdi
           status,
           translations: finalTranslations,
         });
-        toast.success("Page created successfully");
-        router.push("/en/admin/page-builder");
+        toast.success(t("pageCreated"));
+        router.push(`/${locale}/admin/page-builder`);
       } else {
         await updatePage.mutateAsync({
           slug: initialData!.slug,
@@ -354,11 +383,11 @@ export function PageBuilderEditor({ initialData, isNew = false }: PageBuilderEdi
             path: finalPath,
           },
         });
-        toast.success("Page updated successfully");
-        router.push("/en/admin/page-builder");
+        toast.success(t("pageUpdated"));
+        router.push(`/${locale}/admin/page-builder`);
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to save page");
+      toast.error(err instanceof Error ? err.message : t("saveFailed"));
     }
   };
 
@@ -372,16 +401,16 @@ export function PageBuilderEditor({ initialData, isNew = false }: PageBuilderEdi
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => router.push("/en/admin/page-builder")}
+            onClick={() => router.push(`/${locale}/admin/page-builder`)}
             className="mb-2"
           >
-            <ArrowLeft className="h-4 w-4 mr-1" /> Back to Pages
+            <ArrowLeft className="h-4 w-4 mr-1" /> {t("backToPages")}
           </Button>
           <h1 className="text-3xl font-display font-bold">
-            {isNew ? "Create New Page" : `Edit: ${initialLangData.title || initialData?.slug}`}
+            {isNew ? t("createNewPage") : t("editPage", { title: initialLangData.title || initialData?.slug || "" })}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Build your page with blocks below.
+            {t("buildInstruction")}
           </p>
         </div>
         <Button
@@ -390,14 +419,14 @@ export function PageBuilderEditor({ initialData, isNew = false }: PageBuilderEdi
           className="gap-2"
         >
           {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-          <Save className="h-4 w-4" /> Save Page
+          <Save className="h-4 w-4" /> {t("savePage")}
         </Button>
       </div>
 
       <Tabs defaultValue="settings" className="w-full">
         <TabsList className="mb-4">
-          <TabsTrigger value="settings">Page Settings</TabsTrigger>
-          <TabsTrigger value="blocks">Page Builder</TabsTrigger>
+          <TabsTrigger value="settings">{t("pageSettings")}</TabsTrigger>
+          <TabsTrigger value="blocks">{t("pageBuilder")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="settings" className="space-y-4">
@@ -405,25 +434,25 @@ export function PageBuilderEditor({ initialData, isNew = false }: PageBuilderEdi
             <CardContent className="pt-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Page Title</Label>
+                  <Label>{t("pageTitle")}</Label>
                   <Input
                     value={pageTitle}
                     onChange={(e) => handlePageTitleChange(e.target.value)}
-                    placeholder="Enter page title"
+                    placeholder={t("pageTitlePlaceholder")}
                   />
                 </div>
                 <div>
-                  <Label>URL Path</Label>
+                  <Label>{t("urlPath")}</Label>
                   <Input
                     value={path}
                     onChange={(e) => setPath(e.target.value)}
                     className="font-mono"
-                    placeholder="/page-path"
+                    placeholder={t("urlPathPlaceholder")}
                   />
                 </div>
               </div>
               <div>
-                <Label>Slug (URL identifier)</Label>
+                <Label>{t("slug")}</Label>
                 <Input
                   value={slug}
                   onChange={(e) => {
@@ -431,50 +460,50 @@ export function PageBuilderEditor({ initialData, isNew = false }: PageBuilderEdi
                     setSlugManuallyEdited(true);
                   }}
                   className="font-mono"
-                  placeholder="page-slug"
+                  placeholder={t("slugPlaceholder")}
                   disabled={!isNew}
                 />
                 {!isNew && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Slug cannot be changed after creation
+                    {t("slugLocked")}
                   </p>
                 )}
                 {isNew && slug && (
                   <p className="text-xs text-muted-foreground mt-2">
-                    Page will be accessible at: <span className="font-mono text-foreground">/p/{slug}</span>
+                    {t("pageAccessible", { path: `/p/${slug}` })}
                   </p>
                 )}
               </div>
               <div>
-                <Label>Description</Label>
+                <Label>{t("description")}</Label>
                 <Textarea
                   value={pageDescription}
                   onChange={(e) => setPageDescription(e.target.value)}
-                  placeholder="Page description for SEO"
+                  placeholder={t("descriptionPlaceholder")}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Status</Label>
+                  <Label>{t("status")}</Label>
                   <Select value={status} onValueChange={(v) => setStatus(v as "draft" | "published")}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="published">Published</SelectItem>
+                      <SelectItem value="draft">{t("draft")}</SelectItem>
+                      <SelectItem value="published">{t("published")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label>Language</Label>
+                  <Label>{t("language")}</Label>
                   <Select value={currentLang} onValueChange={(v) => handleLangChange(v as PageLocale)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="fi">Suomi</SelectItem>
+                      <SelectItem value="en">{t("english")}</SelectItem>
+                      <SelectItem value="fi">{t("finnish")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -503,7 +532,7 @@ export function PageBuilderEditor({ initialData, isNew = false }: PageBuilderEdi
               <div className="space-y-3">
                 {blocks.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">
-                    No blocks yet. Add blocks above to build your page.
+                    {t("noBlocksYet")}
                   </p>
                 ) : (
                   blocks.map((block, idx) => (
@@ -691,6 +720,7 @@ function LocaleNestedItemsEditor({
   itemFields,
   itemExtraFields = [],
 }: LocaleNestedItemsEditorProps) {
+  const t = useTranslations("adminSettings.pageBuilder.editor");
   const [activeLocale, setActiveLocale] = useState<Locale>('en');
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set([0]));
   
@@ -748,11 +778,10 @@ function LocaleNestedItemsEditor({
 
   const addItem = () => {
     const newItem: Record<string, unknown> = {
-      key: `item-${Date.now()}`,
+      key: `item-${generateId()}`,
       content: {
         en: {},
         fi: {},
-        ar: {},
       },
     };
     itemExtraFields.forEach(field => {
@@ -786,7 +815,7 @@ function LocaleNestedItemsEditor({
 
       {/* Header Section */}
       <div className="border rounded-lg p-3 space-y-3">
-        <Label className="text-sm font-medium">Section Header</Label>
+        <Label className="text-sm font-medium">{t("labels.sectionHeader")}</Label>
         {headerFields.map((field) => (
           <div key={field.key} className="space-y-1">
             <Label className="text-xs text-muted-foreground">{field.label}</Label>
@@ -811,9 +840,9 @@ function LocaleNestedItemsEditor({
       {/* Items Section */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium">Items ({items.length})</Label>
+          <Label className="text-sm font-medium">{t("labels.items", { count: items.length })}</Label>
           <Button variant="outline" size="sm" onClick={addItem}>
-            <Plus className="h-3 w-3 mr-1" /> Add Item
+            <Plus className="h-3 w-3 mr-1" /> {t("labels.addItem")}
           </Button>
         </div>
         
@@ -830,7 +859,7 @@ function LocaleNestedItemsEditor({
                 <div className="flex items-center gap-2">
                   {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                   <span className="text-sm font-medium">
-                    {itemContent.en?.title || `Item ${index + 1}`}
+                    {itemContent.en?.title || t("labels.item", { number: index + 1 })}
                   </span>
                 </div>
                 <Button 
@@ -849,7 +878,7 @@ function LocaleNestedItemsEditor({
                     <div className="grid grid-cols-2 gap-2">
                       {itemExtraFields.map((field) => (
                         <div key={field} className="space-y-1">
-                          <Label className="text-xs capitalize">{field}</Label>
+                          <Label className="text-xs capitalize">{field === 'icon' ? t("labels.iconCapitalized") : field === 'color' ? t("labels.color") : field === 'href' ? t("labels.href") : field}</Label>
                           {field === 'icon' ? (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -860,7 +889,7 @@ function LocaleNestedItemsEditor({
                                     return IconComponent ? (
                                       <><IconComponent className="h-4 w-4" /> {selectedIcon.label}</>
                                     ) : (
-                                      <span className="text-muted-foreground">Select icon...</span>
+                                      <span className="text-muted-foreground">{t("labels.selectIcon")}</span>
                                     );
                                   })()}
                                 </Button>
@@ -896,7 +925,7 @@ function LocaleNestedItemsEditor({
                                     ) : (
                                       <>
                                         <Palette className="h-4 w-4" />
-                                        <span className="text-muted-foreground">Select color...</span>
+                                        <span className="text-muted-foreground">{t("labels.selectColor")}</span>
                                       </>
                                     );
                                   })()}
@@ -984,6 +1013,7 @@ function BlockEditor({
   onUpdateField,
   onRemoveField,
 }: BlockEditorProps) {
+  const t = useTranslations("adminSettings.pageBuilder.editor");
   const content = block.content as unknown as Record<string, unknown>;
 
   switch (block.type) {
@@ -994,7 +1024,7 @@ function BlockEditor({
             className="col-span-3"
             value={(content.text as string) || ""}
             onChange={(e) => onUpdate({ ...content, text: e.target.value })}
-            placeholder="Heading text"
+            placeholder={t("placeholders.headingText")}
           />
           <Select
             value={(content.level as string) || "h2"}
@@ -1004,9 +1034,9 @@ function BlockEditor({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="h1">H1</SelectItem>
-              <SelectItem value="h2">H2</SelectItem>
-              <SelectItem value="h3">H3</SelectItem>
+              <SelectItem value="h1">{t("selectOptions.h1")}</SelectItem>
+              <SelectItem value="h2">{t("selectOptions.h2")}</SelectItem>
+              <SelectItem value="h3">{t("selectOptions.h3")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -1017,7 +1047,7 @@ function BlockEditor({
         <Textarea
           value={(content.text as string) || ""}
           onChange={(e) => onUpdate({ ...content, text: e.target.value })}
-          placeholder="Text content"
+          placeholder={t("placeholders.textContent")}
         />
       );
 
@@ -1027,18 +1057,18 @@ function BlockEditor({
           <Input
             value={(content.src as string) || ""}
             onChange={(e) => onUpdate({ ...content, src: e.target.value })}
-            placeholder="Image URL"
+            placeholder={t("placeholders.imageUrl")}
           />
           <div className="grid grid-cols-2 gap-2">
             <Input
               value={(content.alt as string) || ""}
               onChange={(e) => onUpdate({ ...content, alt: e.target.value })}
-              placeholder="Alt text"
+              placeholder={t("placeholders.altText")}
             />
             <Input
               value={(content.caption as string) || ""}
               onChange={(e) => onUpdate({ ...content, caption: e.target.value })}
-              placeholder="Caption"
+              placeholder={t("placeholders.caption")}
             />
           </div>
         </div>
@@ -1050,12 +1080,12 @@ function BlockEditor({
           <Input
             value={(content.text as string) || ""}
             onChange={(e) => onUpdate({ ...content, text: e.target.value })}
-            placeholder="Button text"
+            placeholder={t("placeholders.buttonText")}
           />
           <Input
             value={(content.url as string) || ""}
             onChange={(e) => onUpdate({ ...content, url: e.target.value })}
-            placeholder="Link URL"
+            placeholder={t("placeholders.linkUrl")}
           />
           <Select
             value={(content.style as string) || "primary"}
@@ -1065,9 +1095,9 @@ function BlockEditor({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="primary">Primary</SelectItem>
-              <SelectItem value="secondary">Secondary</SelectItem>
-              <SelectItem value="outline">Outline</SelectItem>
+              <SelectItem value="primary">{t("selectOptions.primary")}</SelectItem>
+              <SelectItem value="secondary">{t("selectOptions.secondary")}</SelectItem>
+              <SelectItem value="outline">{t("selectOptions.outline")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -1079,14 +1109,14 @@ function BlockEditor({
           <Input
             value={(content.url as string) || ""}
             onChange={(e) => onUpdate({ ...content, url: e.target.value })}
-            placeholder="Video URL (YouTube, Vimeo)"
+            placeholder={t("placeholders.videoUrl")}
           />
           <div className="flex items-center gap-2">
             <Checkbox
               checked={(content.autoplay as boolean) || false}
               onCheckedChange={(v) => onUpdate({ ...content, autoplay: v })}
             />
-            <Label>Autoplay</Label>
+            <Label>{t("labels.autoplay")}</Label>
           </div>
         </div>
       );
@@ -1101,13 +1131,13 @@ function BlockEditor({
               <Input
                 value={slide.image}
                 onChange={(e) => onUpdateSlide(idx, "image", e.target.value)}
-                placeholder="Image URL"
+                placeholder={t("placeholders.imageUrl")}
                 className="flex-1"
               />
               <Input
                 value={slide.caption}
                 onChange={(e) => onUpdateSlide(idx, "caption", e.target.value)}
-                placeholder="Caption"
+                placeholder={t("placeholders.caption")}
                 className="flex-1"
               />
               <Button variant="ghost" size="sm" onClick={() => onRemoveSlide(idx)}>
@@ -1116,7 +1146,7 @@ function BlockEditor({
             </div>
           ))}
           <Button variant="outline" size="sm" onClick={onAddSlide} className="gap-1">
-            <Plus className="h-3 w-3" /> Add Slide
+            <Plus className="h-3 w-3" /> {t("labels.addSlide")}
           </Button>
         </div>
       );
@@ -1135,23 +1165,23 @@ function BlockEditor({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="text">Text</SelectItem>
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="textarea">Textarea</SelectItem>
-                  <SelectItem value="checkbox">Checkbox</SelectItem>
-                  <SelectItem value="select">Select</SelectItem>
+                  <SelectItem value="text">{t("selectOptions.text")}</SelectItem>
+                  <SelectItem value="email">{t("selectOptions.email")}</SelectItem>
+                  <SelectItem value="textarea">{t("selectOptions.textarea")}</SelectItem>
+                  <SelectItem value="checkbox">{t("selectOptions.checkbox")}</SelectItem>
+                  <SelectItem value="select">{t("selectOptions.select")}</SelectItem>
                 </SelectContent>
               </Select>
               <Input
                 value={field.label}
                 onChange={(e) => onUpdateField(idx, "label", e.target.value)}
-                placeholder="Label"
+                placeholder={t("placeholders.label")}
                 className="flex-1"
               />
               <Input
                 value={field.placeholder}
                 onChange={(e) => onUpdateField(idx, "placeholder", e.target.value)}
-                placeholder="Placeholder"
+                placeholder={t("placeholders.placeholder")}
                 className="flex-1"
               />
               <div className="flex items-center gap-1">
@@ -1159,7 +1189,7 @@ function BlockEditor({
                   checked={field.required}
                   onCheckedChange={(v) => onUpdateField(idx, "required", !!v)}
                 />
-                <span className="text-xs">Req</span>
+                <span className="text-xs">{t("labels.required")}</span>
               </div>
               <Button variant="ghost" size="sm" onClick={() => onRemoveField(idx)}>
                 <Trash2 className="h-3 w-3" />
@@ -1167,7 +1197,7 @@ function BlockEditor({
             </div>
           ))}
           <Button variant="outline" size="sm" onClick={onAddField} className="gap-1">
-            <Plus className="h-3 w-3" /> Add Field
+            <Plus className="h-3 w-3" /> {t("labels.addField")}
           </Button>
         </div>
       );
@@ -1182,9 +1212,9 @@ function BlockEditor({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="line">Line</SelectItem>
-            <SelectItem value="dashed">Dashed</SelectItem>
-            <SelectItem value="space">Space</SelectItem>
+            <SelectItem value="line">{t("selectOptions.line")}</SelectItem>
+            <SelectItem value="dashed">{t("selectOptions.dashed")}</SelectItem>
+            <SelectItem value="space">{t("selectOptions.space")}</SelectItem>
           </SelectContent>
         </Select>
       );
@@ -1195,28 +1225,28 @@ function BlockEditor({
           <Input
             value={(content.title as string) || ""}
             onChange={(e) => onUpdate({ ...content, title: e.target.value })}
-            placeholder="Hero title"
+            placeholder={t("placeholders.heroTitle")}
           />
           <Input
             value={(content.subtitle as string) || ""}
             onChange={(e) => onUpdate({ ...content, subtitle: e.target.value })}
-            placeholder="Subtitle"
+            placeholder={t("placeholders.subtitle")}
           />
           <Input
             value={(content.image as string) || ""}
             onChange={(e) => onUpdate({ ...content, image: e.target.value })}
-            placeholder="Background image URL"
+            placeholder={t("placeholders.backgroundImageUrl")}
           />
           <div className="grid grid-cols-2 gap-2">
             <Input
               value={(content.buttonText as string) || ""}
               onChange={(e) => onUpdate({ ...content, buttonText: e.target.value })}
-              placeholder="Button text"
+              placeholder={t("placeholders.buttonText")}
             />
             <Input
               value={(content.buttonUrl as string) || ""}
               onChange={(e) => onUpdate({ ...content, buttonUrl: e.target.value })}
-              placeholder="Button URL"
+              placeholder={t("placeholders.buttonUrl")}
             />
           </div>
         </div>
@@ -1235,7 +1265,7 @@ function BlockEditor({
                   newItems[idx] = { ...newItems[idx], value: e.target.value };
                   onUpdate({ ...content, items: newItems });
                 }}
-                placeholder="Value (e.g., 100+)"
+                placeholder={t("placeholders.value")}
                 className="w-24"
               />
               <Input
@@ -1245,7 +1275,7 @@ function BlockEditor({
                   newItems[idx] = { ...newItems[idx], label: e.target.value };
                   onUpdate({ ...content, items: newItems });
                 }}
-                placeholder="Label"
+                placeholder={t("placeholders.label")}
                 className="flex-1"
               />
               <Button
@@ -1269,7 +1299,7 @@ function BlockEditor({
             }}
             className="gap-1"
           >
-            <Plus className="h-3 w-3" /> Add Stat
+            <Plus className="h-3 w-3" /> {t("labels.addStat")}
           </Button>
         </div>
       );
@@ -1280,15 +1310,15 @@ function BlockEditor({
           <Input
             value={(content.title as string) || ""}
             onChange={(e) => onUpdate({ ...content, title: e.target.value })}
-            placeholder="Section title"
+            placeholder={t("placeholders.sectionTitle")}
           />
           <Input
             value={(content.subtitle as string) || ""}
             onChange={(e) => onUpdate({ ...content, subtitle: e.target.value })}
-            placeholder="Subtitle"
+            placeholder={t("placeholders.subtitle")}
           />
           <div className="flex items-center gap-2">
-            <Label>Show campaigns:</Label>
+            <Label>{t("labels.showCampaigns")}</Label>
             <Input
               type="number"
               value={(content.showCount as number) || 6}
@@ -1307,23 +1337,23 @@ function BlockEditor({
           <Textarea
             value={(content.text as string) || ""}
             onChange={(e) => onUpdate({ ...content, text: e.target.value })}
-            placeholder="Quote text"
+            placeholder={t("placeholders.quoteText")}
           />
           <Input
             value={(content.author as string) || ""}
             onChange={(e) => onUpdate({ ...content, author: e.target.value })}
-            placeholder="Author name"
+            placeholder={t("placeholders.authorName")}
           />
           <div className="grid grid-cols-2 gap-2">
             <Input
               value={(content.buttonText as string) || ""}
               onChange={(e) => onUpdate({ ...content, buttonText: e.target.value })}
-              placeholder="Button text (optional)"
+              placeholder={t("placeholders.buttonTextOptional")}
             />
             <Input
               value={(content.buttonUrl as string) || ""}
               onChange={(e) => onUpdate({ ...content, buttonUrl: e.target.value })}
-              placeholder="Button URL"
+              placeholder={t("placeholders.buttonUrl")}
             />
           </div>
         </div>
@@ -1334,51 +1364,51 @@ function BlockEditor({
       return (
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Main Title</Label>
+            <Label>{t("labels.mainTitle")}</Label>
             <Input
               value={(content.title as string) || ""}
               onChange={(e) => onUpdate({ ...content, title: e.target.value })}
-              placeholder="e.g., Preserving Our Heritage"
+              placeholder={t("examples.preservingHeritage")}
             />
           </div>
           <div className="space-y-2">
-            <Label>Subtitle</Label>
+            <Label>{t("placeholders.subtitle")}</Label>
             <Input
               value={(content.subtitle as string) || ""}
               onChange={(e) => onUpdate({ ...content, subtitle: e.target.value })}
-              placeholder="e.g., Building Our Future"
+              placeholder={t("examples.buildingFuture")}
             />
           </div>
           <div className="space-y-2">
-            <Label>Description (italic tagline)</Label>
+            <Label>{t("labels.descriptionItalicTagline")}</Label>
             <Input
               value={(content.description as string) || ""}
               onChange={(e) => onUpdate({ ...content, description: e.target.value })}
-              placeholder="e.g., Through art, culture, and community"
+              placeholder={t("examples.throughArtCulture")}
             />
           </div>
           <div className="space-y-2">
-            <Label>Main Paragraph</Label>
+            <Label>{t("labels.mainParagraph")}</Label>
             <Textarea
               value={(content.tagline as string) || ""}
               onChange={(e) => onUpdate({ ...content, tagline: e.target.value })}
-              placeholder="Main description paragraph..."
+              placeholder={t("examples.mainDescriptionParagraph")}
               rows={4}
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Join Button Text</Label>
+              <Label>{t("labels.joinButtonText")}</Label>
               <Input
                 value={(content.joinButtonText as string) || ""}
                 onChange={(e) =>
                   onUpdate({ ...content, joinButtonText: e.target.value })
                 }
-                placeholder="e.g., Join Our Movement"
+                placeholder={t("examples.joinOurMovement")}
               />
             </div>
             <div className="space-y-2">
-              <Label>Join Button URL</Label>
+              <Label>{t("labels.joinButtonUrl")}</Label>
               <Input
                 value={(content.joinButtonUrl as string) || ""}
                 onChange={(e) =>
@@ -1390,17 +1420,17 @@ function BlockEditor({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Learn Button Text</Label>
+              <Label>{t("labels.learnButtonText")}</Label>
               <Input
                 value={(content.learnButtonText as string) || ""}
                 onChange={(e) =>
                   onUpdate({ ...content, learnButtonText: e.target.value })
                 }
-                placeholder="e.g., Visit Our Shop"
+                placeholder={t("examples.visitOurShop")}
               />
             </div>
             <div className="space-y-2">
-              <Label>Learn Button URL</Label>
+              <Label>{t("labels.learnButtonUrl")}</Label>
               <Input
                 value={(content.learnButtonUrl as string) || ""}
                 onChange={(e) =>
@@ -1411,7 +1441,7 @@ function BlockEditor({
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Hero Image</Label>
+            <Label>{t("labels.heroImage")}</Label>
             <div className="flex gap-2">
               <Input
                 type="file"
@@ -1431,14 +1461,14 @@ function BlockEditor({
                       });
 
                       if (!response.ok) {
-                        throw new Error("Upload failed");
+                        throw new Error(t("messages.uploadFailed"));
                       }
 
                       const data = await response.json();
                       onUpdate({ ...content, image: data.secure_url });
-                      toast.success("Image uploaded successfully");
+                      toast.success(t("messages.imageUploadedSuccess"));
                     } catch (error) {
-                      toast.error("Failed to upload image");
+                      toast.error(t("messages.imageUploadFailed"));
                       console.error("Upload error:", error);
                     }
                   }
@@ -1450,7 +1480,7 @@ function BlockEditor({
               <div className="relative w-full h-32 rounded-lg overflow-hidden border">
                 <NextImage
                   src={(content.image as string)}
-                  alt="Hero preview"
+                  alt={t("placeholders.imageUrl")}
                   fill
                   className="object-cover"
                 />
@@ -1459,12 +1489,12 @@ function BlockEditor({
             <Input
               value={(content.image as string) || ""}
               onChange={(e) => onUpdate({ ...content, image: e.target.value })}
-              placeholder="Or paste image URL: /images/hero-embroidery.jpg"
+              placeholder={t("placeholders.imageUrlOrPaste")}
               className="text-sm"
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            Full-screen hero section with Palestinian heritage design
+            {t("labels.fullScreenHeroDescription")}
           </p>
         </div>
       );
@@ -1475,10 +1505,10 @@ function BlockEditor({
           <Input
             value={(content.title as string) || ""}
             onChange={(e) => onUpdate({ ...content, title: e.target.value })}
-            placeholder="Section title"
+            placeholder={t("placeholders.sectionTitle")}
           />
           <div className="flex items-center gap-2">
-            <Label>Number of articles:</Label>
+            <Label>{t("labels.numberOfArticles")}</Label>
             <Input
               type="number"
               value={(content.showCount as number) || 4}
@@ -1491,7 +1521,7 @@ function BlockEditor({
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            Displays latest news articles with featured content
+            {t("labels.displaysLatestNews")}
           </p>
         </div>
       );
@@ -1502,10 +1532,10 @@ function BlockEditor({
           <Input
             value={(content.title as string) || ""}
             onChange={(e) => onUpdate({ ...content, title: e.target.value })}
-            placeholder="Section title"
+            placeholder={t("placeholders.sectionTitle")}
           />
           <div className="flex items-center gap-2">
-            <Label>Number of events:</Label>
+            <Label>{t("labels.numberOfEvents")}</Label>
             <Input
               type="number"
               value={(content.showCount as number) || 3}
@@ -1518,7 +1548,7 @@ function BlockEditor({
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            Displays upcoming events with dates and locations
+            {t("labels.displaysUpcomingEvents")}
           </p>
         </div>
       );
@@ -1529,15 +1559,15 @@ function BlockEditor({
           <Input
             value={(content.title as string) || ""}
             onChange={(e) => onUpdate({ ...content, title: e.target.value })}
-            placeholder="Section title"
+            placeholder={t("placeholders.sectionTitle")}
           />
           <Input
             value={(content.subtitle as string) || ""}
             onChange={(e) => onUpdate({ ...content, subtitle: e.target.value })}
-            placeholder="Subtitle"
+            placeholder={t("placeholders.subtitle")}
           />
           <div className="flex items-center gap-2">
-            <Label>Number of campaigns:</Label>
+            <Label>{t("labels.numberOfCampaigns")}</Label>
             <Input
               type="number"
               value={(content.showCount as number) || 6}
@@ -1550,7 +1580,7 @@ function BlockEditor({
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            Displays active campaigns from the database
+            {t("labels.displaysActiveCampaigns")}
           </p>
         </div>
       );
@@ -1558,7 +1588,7 @@ function BlockEditor({
     case "newsletter-section":
       return (
         <div className="space-y-2">
-          <Label>Newsletter Variant</Label>
+          <Label>{t("labels.newsletterVariant")}</Label>
           <Select
             value={(content.variant as string) || "default"}
             onValueChange={(v) => onUpdate({ ...content, variant: v })}
@@ -1567,12 +1597,12 @@ function BlockEditor({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="default">Default</SelectItem>
-              <SelectItem value="compact">Compact</SelectItem>
+              <SelectItem value="default">{t("selectOptions.default")}</SelectItem>
+              <SelectItem value="compact">{t("selectOptions.compact")}</SelectItem>
             </SelectContent>
           </Select>
           <p className="text-xs text-muted-foreground">
-            Newsletter signup section with email subscription
+            {t("labels.newsletterDescription")}
           </p>
         </div>
       );
@@ -1587,17 +1617,17 @@ function BlockEditor({
           content={content}
           onUpdate={onUpdate}
           fields={[
-            { key: 'title', label: 'Title', type: 'input' },
-            { key: 'subtitle', label: 'Subtitle', type: 'input' },
-            { key: 'description', label: 'Description', type: 'textarea' },
+            { key: 'title', label: t("labels.title"), type: 'input' },
+            { key: 'subtitle', label: t("placeholders.subtitle"), type: 'input' },
+            { key: 'description', label: t("labels.description"), type: 'textarea' },
           ]}
           extraFields={
             <div className="space-y-2">
-              <Label>Icon (Lucide name)</Label>
+              <Label>{t("labels.iconLucideNameLabel")}</Label>
               <Input
                 value={(content.icon as string) || ''}
                 onChange={(e) => onUpdate({ ...content, icon: e.target.value })}
-                placeholder="e.g., Globe, Heart, Users"
+                placeholder={t("placeholders.iconLucideName")}
               />
             </div>
           }
@@ -1610,8 +1640,8 @@ function BlockEditor({
           content={content}
           onUpdate={onUpdate}
           fields={[
-            { key: 'title', label: 'Title', type: 'input' },
-            { key: 'description', label: 'Description', type: 'textarea' },
+            { key: 'title', label: t("labels.title"), type: 'input' },
+            { key: 'description', label: t("labels.description"), type: 'textarea' },
           ]}
         />
       );
@@ -1622,12 +1652,12 @@ function BlockEditor({
           content={content}
           onUpdate={onUpdate}
           headerFields={[
-            { key: 'title', label: 'Title', type: 'input' },
-            { key: 'subtitle', label: 'Subtitle', type: 'textarea' },
+            { key: 'title', label: t("labels.title"), type: 'input' },
+            { key: 'subtitle', label: t("placeholders.subtitle"), type: 'textarea' },
           ]}
           itemFields={[
-            { key: 'title', label: 'Title', type: 'input' },
-            { key: 'description', label: 'Description', type: 'textarea' },
+            { key: 'title', label: t("labels.title"), type: 'input' },
+            { key: 'description', label: t("labels.description"), type: 'textarea' },
           ]}
           itemExtraFields={['icon', 'color']}
         />
@@ -1639,12 +1669,12 @@ function BlockEditor({
           content={content}
           onUpdate={onUpdate}
           headerFields={[
-            { key: 'title', label: 'Title', type: 'input' },
-            { key: 'subtitle', label: 'Subtitle', type: 'textarea' },
+            { key: 'title', label: t("labels.title"), type: 'input' },
+            { key: 'subtitle', label: t("placeholders.subtitle"), type: 'textarea' },
           ]}
           itemFields={[
-            { key: 'title', label: 'Title', type: 'input' },
-            { key: 'description', label: 'Description', type: 'textarea' },
+            { key: 'title', label: t("labels.title"), type: 'input' },
+            { key: 'description', label: t("labels.description"), type: 'textarea' },
           ]}
           itemExtraFields={['icon']}
         />
@@ -1656,13 +1686,13 @@ function BlockEditor({
           content={content}
           onUpdate={onUpdate}
           headerFields={[
-            { key: 'title', label: 'Title', type: 'input' },
-            { key: 'subtitle', label: 'Subtitle', type: 'textarea' },
+            { key: 'title', label: t("labels.title"), type: 'input' },
+            { key: 'subtitle', label: t("placeholders.subtitle"), type: 'textarea' },
           ]}
           itemFields={[
-            { key: 'title', label: 'Title', type: 'input' },
-            { key: 'description', label: 'Description', type: 'textarea' },
-            { key: 'action', label: 'Action Button Text', type: 'input' },
+            { key: 'title', label: t("labels.title"), type: 'input' },
+            { key: 'description', label: t("labels.description"), type: 'textarea' },
+            { key: 'action', label: t("labels.actionButtonText"), type: 'input' },
           ]}
           itemExtraFields={['icon', 'href']}
         />
@@ -1674,32 +1704,745 @@ function BlockEditor({
           content={content}
           onUpdate={onUpdate}
           fields={[
-            { key: 'title', label: 'Title', type: 'input' },
-            { key: 'description', label: 'Description', type: 'textarea' },
-            { key: 'primaryButtonText', label: 'Primary Button Text', type: 'input' },
-            { key: 'secondaryButtonText', label: 'Secondary Button Text', type: 'input' },
+            { key: 'title', label: t("labels.title"), type: 'input' },
+            { key: 'description', label: t("labels.description"), type: 'textarea' },
+            { key: 'primaryButtonText', label: t("labels.primaryButtonUrl"), type: 'input' },
+            { key: 'secondaryButtonText', label: t("labels.secondaryButtonUrl"), type: 'input' },
           ]}
           extraFields={
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Primary Button URL</Label>
+                <Label>{t("labels.primaryButtonUrl")}</Label>
                 <Input
-                  value={(content.primaryButtonHref as string) || ''}
+                  value={(content.primaryButtonHref as string) || ""}
                   onChange={(e) => onUpdate({ ...content, primaryButtonHref: e.target.value })}
                   placeholder="/membership"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Secondary Button URL</Label>
+                <Label>{t("labels.secondaryButtonUrl")}</Label>
                 <Input
-                  value={(content.secondaryButtonHref as string) || ''}
+                  value={(content.secondaryButtonHref as string) || ""}
                   onChange={(e) => onUpdate({ ...content, secondaryButtonHref: e.target.value })}
-                  placeholder="/campaigns"
+                  placeholder="/about"
                 />
               </div>
             </div>
           }
         />
+      );
+
+    // WordPress/Elementor-style Blocks
+    case "accordion":
+      const accordionItems = (content.items as Array<{ title: string; content: string; isOpen?: boolean }>) || [];
+      return (
+        <div className="space-y-3">
+          {accordionItems.map((item, idx) => (
+            <div key={idx} className="border rounded-lg p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <Input
+                  value={item.title}
+                  onChange={(e) => {
+                    const newItems = [...accordionItems];
+                    newItems[idx] = { ...item, title: e.target.value };
+                    onUpdate({ ...content, items: newItems });
+                  }}
+                  placeholder={t("placeholders.accordionTitle")}
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    const newItems = accordionItems.filter((_, i) => i !== idx);
+                    onUpdate({ ...content, items: newItems });
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <Textarea
+                value={item.content}
+                onChange={(e) => {
+                  const newItems = [...accordionItems];
+                  newItems[idx] = { ...item, content: e.target.value };
+                  onUpdate({ ...content, items: newItems });
+                }}
+                placeholder={t("placeholders.accordionContent")}
+              />
+            </div>
+          ))}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              const newItems = [...accordionItems, { title: '', content: '', isOpen: false }];
+              onUpdate({ ...content, items: newItems });
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {t("actions.addItem")}
+          </Button>
+        </div>
+      );
+
+    case "testimonials":
+      const testimonials = (content.items as Array<{ name: string; role: string; company?: string; image?: string; quote: string; rating?: number }>) || [];
+      return (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Select
+              value={(content.layout as string) || "grid"}
+              onValueChange={(v) => onUpdate({ ...content, layout: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="grid">{t("options.grid")}</SelectItem>
+                <SelectItem value="slider">{t("options.slider")}</SelectItem>
+                <SelectItem value="single">{t("options.single")}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={String((content.columns as number) || 3)}
+              onValueChange={(v) => onUpdate({ ...content, columns: parseInt(v) })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2">2 {t("options.columns")}</SelectItem>
+                <SelectItem value="3">3 {t("options.columns")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {testimonials.map((testimonial, idx) => (
+            <div key={idx} className="border rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm">Testimonial {idx + 1}</Label>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    const newItems = testimonials.filter((_, i) => i !== idx);
+                    onUpdate({ ...content, items: newItems });
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <Input
+                value={testimonial.name}
+                onChange={(e) => {
+                  const newItems = [...testimonials];
+                  newItems[idx] = { ...testimonial, name: e.target.value };
+                  onUpdate({ ...content, items: newItems });
+                }}
+                placeholder={t("placeholders.name")}
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  value={testimonial.role}
+                  onChange={(e) => {
+                    const newItems = [...testimonials];
+                    newItems[idx] = { ...testimonial, role: e.target.value };
+                    onUpdate({ ...content, items: newItems });
+                  }}
+                  placeholder={t("placeholders.role")}
+                />
+                <Input
+                  value={testimonial.company || ""}
+                  onChange={(e) => {
+                    const newItems = [...testimonials];
+                    newItems[idx] = { ...testimonial, company: e.target.value };
+                    onUpdate({ ...content, items: newItems });
+                  }}
+                  placeholder={t("placeholders.company")}
+                />
+              </div>
+              <Input
+                value={testimonial.image || ""}
+                onChange={(e) => {
+                  const newItems = [...testimonials];
+                  newItems[idx] = { ...testimonial, image: e.target.value };
+                  onUpdate({ ...content, items: newItems });
+                }}
+                placeholder={t("placeholders.imageUrl")}
+              />
+              <Textarea
+                value={testimonial.quote}
+                onChange={(e) => {
+                  const newItems = [...testimonials];
+                  newItems[idx] = { ...testimonial, quote: e.target.value };
+                  onUpdate({ ...content, items: newItems });
+                }}
+                placeholder={t("placeholders.testimonialQuote")}
+              />
+            </div>
+          ))}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              const newItems = [...testimonials, { name: '', role: '', quote: '', rating: 5 }];
+              onUpdate({ ...content, items: newItems });
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {t("actions.addTestimonial")}
+          </Button>
+        </div>
+      );
+
+    case "tabs":
+      const tabs = (content.tabs as Array<{ title: string; content: string; icon?: string }>) || [];
+      return (
+        <div className="space-y-3">
+          {tabs.map((tab, idx) => (
+            <div key={idx} className="border rounded-lg p-3 space-y-2">
+              <div className="flex items-center gap-2">
+                <Input
+                  className="flex-1"
+                  value={tab.title}
+                  onChange={(e) => {
+                    const newTabs = [...tabs];
+                    newTabs[idx] = { ...tab, title: e.target.value };
+                    onUpdate({ ...content, tabs: newTabs });
+                  }}
+                  placeholder={t("placeholders.tabTitle")}
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    const newTabs = tabs.filter((_, i) => i !== idx);
+                    onUpdate({ ...content, tabs: newTabs });
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <Textarea
+                value={tab.content}
+                onChange={(e) => {
+                  const newTabs = [...tabs];
+                  newTabs[idx] = { ...tab, content: e.target.value };
+                  onUpdate({ ...content, tabs: newTabs });
+                }}
+                placeholder={t("placeholders.tabContent")}
+              />
+            </div>
+          ))}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              const newTabs = [...tabs, { title: '', content: '', icon: '' }];
+              onUpdate({ ...content, tabs: newTabs });
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {t("actions.addTab")}
+          </Button>
+        </div>
+      );
+
+    case "team-members":
+      const members = (content.members as Array<{ name: string; role: string; bio?: string; image?: string; email?: string; social?: { linkedin?: string; twitter?: string; facebook?: string } }>) || [];
+      return (
+        <div className="space-y-3">
+          <Select
+            value={String((content.columns as number) || 3)}
+            onValueChange={(v) => onUpdate({ ...content, columns: parseInt(v) })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2">2 {t("options.columns")}</SelectItem>
+              <SelectItem value="3">3 {t("options.columns")}</SelectItem>
+              <SelectItem value="4">4 {t("options.columns")}</SelectItem>
+            </SelectContent>
+          </Select>
+          {members.map((member, idx) => (
+            <div key={idx} className="border rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm">Member {idx + 1}</Label>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    const newMembers = members.filter((_, i) => i !== idx);
+                    onUpdate({ ...content, members: newMembers });
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  value={member.name}
+                  onChange={(e) => {
+                    const newMembers = [...members];
+                    newMembers[idx] = { ...member, name: e.target.value };
+                    onUpdate({ ...content, members: newMembers });
+                  }}
+                  placeholder={t("placeholders.name")}
+                />
+                <Input
+                  value={member.role}
+                  onChange={(e) => {
+                    const newMembers = [...members];
+                    newMembers[idx] = { ...member, role: e.target.value };
+                    onUpdate({ ...content, members: newMembers });
+                  }}
+                  placeholder={t("placeholders.role")}
+                />
+              </div>
+              <Input
+                value={member.image || ""}
+                onChange={(e) => {
+                  const newMembers = [...members];
+                  newMembers[idx] = { ...member, image: e.target.value };
+                  onUpdate({ ...content, members: newMembers });
+                }}
+                placeholder={t("placeholders.imageUrl")}
+              />
+              <Textarea
+                value={member.bio || ""}
+                onChange={(e) => {
+                  const newMembers = [...members];
+                  newMembers[idx] = { ...member, bio: e.target.value };
+                  onUpdate({ ...content, members: newMembers });
+                }}
+                placeholder={t("placeholders.bio")}
+              />
+              <Input
+                value={member.email || ""}
+                onChange={(e) => {
+                  const newMembers = [...members];
+                  newMembers[idx] = { ...member, email: e.target.value };
+                  onUpdate({ ...content, members: newMembers });
+                }}
+                placeholder={t("placeholders.email")}
+              />
+            </div>
+          ))}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              const newMembers = [...members, { name: '', role: '', bio: '', image: '', email: '' }];
+              onUpdate({ ...content, members: newMembers });
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {t("actions.addMember")}
+          </Button>
+        </div>
+      );
+
+    case "icon-box":
+      return (
+        <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <Select
+              value={(content.icon as string) || "Heart"}
+              onValueChange={(v) => onUpdate({ ...content, icon: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {AVAILABLE_ICONS.map((icon) => (
+                  <SelectItem key={icon.name} value={icon.name}>
+                    {icon.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={(content.iconPosition as string) || "top"}
+              onValueChange={(v) => onUpdate({ ...content, iconPosition: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="top">{t("options.top")}</SelectItem>
+                <SelectItem value="left">{t("options.left")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Input
+            value={(content.title as string) || ""}
+            onChange={(e) => onUpdate({ ...content, title: e.target.value })}
+            placeholder={t("placeholders.title")}
+          />
+          <Textarea
+            value={(content.description as string) || ""}
+            onChange={(e) => onUpdate({ ...content, description: e.target.value })}
+            placeholder={t("placeholders.description")}
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <Input
+              value={(content.linkText as string) || ""}
+              onChange={(e) => onUpdate({ ...content, linkText: e.target.value })}
+              placeholder={t("placeholders.linkText")}
+            />
+            <Input
+              value={(content.linkUrl as string) || ""}
+              onChange={(e) => onUpdate({ ...content, linkUrl: e.target.value })}
+              placeholder={t("placeholders.linkUrl")}
+            />
+          </div>
+        </div>
+      );
+
+    case "pricing-table":
+      const plans = (content.plans as Array<{ name: string; price: string; period?: string; features: string[]; buttonText: string; buttonUrl: string; highlighted?: boolean; badge?: string }>) || [];
+      return (
+        <div className="space-y-3">
+          <Select
+            value={String((content.columns as number) || 3)}
+            onValueChange={(v) => onUpdate({ ...content, columns: parseInt(v) })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="2">2 {t("options.columns")}</SelectItem>
+              <SelectItem value="3">3 {t("options.columns")}</SelectItem>
+              <SelectItem value="4">4 {t("options.columns")}</SelectItem>
+            </SelectContent>
+          </Select>
+          {plans.map((plan, idx) => (
+            <div key={idx} className="border rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm">Plan {idx + 1}</Label>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    const newPlans = plans.filter((_, i) => i !== idx);
+                    onUpdate({ ...content, plans: newPlans });
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <Input
+                  value={plan.name}
+                  onChange={(e) => {
+                    const newPlans = [...plans];
+                    newPlans[idx] = { ...plan, name: e.target.value };
+                    onUpdate({ ...content, plans: newPlans });
+                  }}
+                  placeholder={t("placeholders.planName")}
+                />
+                <Input
+                  value={plan.price}
+                  onChange={(e) => {
+                    const newPlans = [...plans];
+                    newPlans[idx] = { ...plan, price: e.target.value };
+                    onUpdate({ ...content, plans: newPlans });
+                  }}
+                  placeholder={t("placeholders.price")}
+                />
+                <Input
+                  value={plan.period || ""}
+                  onChange={(e) => {
+                    const newPlans = [...plans];
+                    newPlans[idx] = { ...plan, period: e.target.value };
+                    onUpdate({ ...content, plans: newPlans });
+                  }}
+                  placeholder={t("placeholders.period")}
+                />
+              </div>
+              <Textarea
+                value={plan.features.join('\n')}
+                onChange={(e) => {
+                  const newPlans = [...plans];
+                  newPlans[idx] = { ...plan, features: e.target.value.split('\n').filter(f => f.trim()) };
+                  onUpdate({ ...content, plans: newPlans });
+                }}
+                placeholder={t("placeholders.features")}
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  value={plan.buttonText}
+                  onChange={(e) => {
+                    const newPlans = [...plans];
+                    newPlans[idx] = { ...plan, buttonText: e.target.value };
+                    onUpdate({ ...content, plans: newPlans });
+                  }}
+                  placeholder={t("placeholders.buttonText")}
+                />
+                <Input
+                  value={plan.buttonUrl}
+                  onChange={(e) => {
+                    const newPlans = [...plans];
+                    newPlans[idx] = { ...plan, buttonUrl: e.target.value };
+                    onUpdate({ ...content, plans: newPlans });
+                  }}
+                  placeholder={t("placeholders.buttonUrl")}
+                />
+              </div>
+            </div>
+          ))}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              const newPlans = [...plans, { name: '', price: '', features: [], buttonText: 'Choose Plan', buttonUrl: '' }];
+              onUpdate({ ...content, plans: newPlans });
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {t("actions.addPlan")}
+          </Button>
+        </div>
+      );
+
+    case "spacer":
+      return (
+        <div className="space-y-2">
+          <Label>{t("labels.height")} (px)</Label>
+          <Input
+            type="number"
+            value={(content.height as number) || 50}
+            onChange={(e) => onUpdate({ ...content, height: parseInt(e.target.value) || 50 })}
+            placeholder="50"
+          />
+        </div>
+      );
+
+    case "alert":
+      return (
+        <div className="space-y-2">
+          <Select
+            value={(content.type as string) || "info"}
+            onValueChange={(v) => onUpdate({ ...content, type: v })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="info">{t("options.info")}</SelectItem>
+              <SelectItem value="success">{t("options.success")}</SelectItem>
+              <SelectItem value="warning">{t("options.warning")}</SelectItem>
+              <SelectItem value="error">{t("options.error")}</SelectItem>
+            </SelectContent>
+          </Select>
+          <Input
+            value={(content.title as string) || ""}
+            onChange={(e) => onUpdate({ ...content, title: e.target.value })}
+            placeholder={t("placeholders.alertTitle")}
+          />
+          <Textarea
+            value={(content.message as string) || ""}
+            onChange={(e) => onUpdate({ ...content, message: e.target.value })}
+            placeholder={t("placeholders.alertMessage")}
+          />
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={(content.dismissible as boolean) || false}
+              onCheckedChange={(checked) => onUpdate({ ...content, dismissible: checked })}
+            />
+            <Label>{t("labels.dismissible")}</Label>
+          </div>
+        </div>
+      );
+
+    case "button-group":
+      const buttons = (content.buttons as Array<{ text: string; url: string; style: string; icon?: string }>) || [];
+      return (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <Select
+              value={(content.alignment as string) || "center"}
+              onValueChange={(v) => onUpdate({ ...content, alignment: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="left">{t("options.left")}</SelectItem>
+                <SelectItem value="center">{t("options.center")}</SelectItem>
+                <SelectItem value="right">{t("options.right")}</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={(content.stack as boolean) || false}
+                onCheckedChange={(checked) => onUpdate({ ...content, stack: checked })}
+              />
+              <Label>{t("labels.stackButtons")}</Label>
+            </div>
+          </div>
+          {buttons.map((button, idx) => (
+            <div key={idx} className="border rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm">Button {idx + 1}</Label>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    const newButtons = buttons.filter((_, i) => i !== idx);
+                    onUpdate({ ...content, buttons: newButtons });
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <Input
+                  value={button.text}
+                  onChange={(e) => {
+                    const newButtons = [...buttons];
+                    newButtons[idx] = { ...button, text: e.target.value };
+                    onUpdate({ ...content, buttons: newButtons });
+                  }}
+                  placeholder={t("placeholders.buttonText")}
+                />
+                <Input
+                  value={button.url}
+                  onChange={(e) => {
+                    const newButtons = [...buttons];
+                    newButtons[idx] = { ...button, url: e.target.value };
+                    onUpdate({ ...content, buttons: newButtons });
+                  }}
+                  placeholder={t("placeholders.buttonUrl")}
+                />
+                <Select
+                  value={button.style}
+                  onValueChange={(v) => {
+                    const newButtons = [...buttons];
+                    newButtons[idx] = { ...button, style: v };
+                    onUpdate({ ...content, buttons: newButtons });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="primary">{t("options.primary")}</SelectItem>
+                    <SelectItem value="secondary">{t("options.secondary")}</SelectItem>
+                    <SelectItem value="outline">{t("options.outline")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          ))}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              const newButtons = [...buttons, { text: '', url: '', style: 'primary' }];
+              onUpdate({ ...content, buttons: newButtons });
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {t("actions.addButton")}
+          </Button>
+        </div>
+      );
+
+    case "social-icons":
+      const platforms = (content.platforms as Array<{ name: string; url: string; icon: string }>) || [];
+      return (
+        <div className="space-y-3">
+          <div className="grid grid-cols-3 gap-2">
+            <Select
+              value={(content.style as string) || "rounded"}
+              onValueChange={(v) => onUpdate({ ...content, style: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="default">{t("options.default")}</SelectItem>
+                <SelectItem value="rounded">{t("options.rounded")}</SelectItem>
+                <SelectItem value="square">{t("options.square")}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={(content.size as string) || "md"}
+              onValueChange={(v) => onUpdate({ ...content, size: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sm">{t("options.small")}</SelectItem>
+                <SelectItem value="md">{t("options.medium")}</SelectItem>
+                <SelectItem value="lg">{t("options.large")}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={(content.alignment as string) || "center"}
+              onValueChange={(v) => onUpdate({ ...content, alignment: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="left">{t("options.left")}</SelectItem>
+                <SelectItem value="center">{t("options.center")}</SelectItem>
+                <SelectItem value="right">{t("options.right")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {platforms.map((platform, idx) => (
+            <div key={idx} className="border rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm">Platform {idx + 1}</Label>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    const newPlatforms = platforms.filter((_, i) => i !== idx);
+                    onUpdate({ ...content, platforms: newPlatforms });
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  value={platform.name}
+                  onChange={(e) => {
+                    const newPlatforms = [...platforms];
+                    newPlatforms[idx] = { ...platform, name: e.target.value };
+                    onUpdate({ ...content, platforms: newPlatforms });
+                  }}
+                  placeholder={t("placeholders.platformName")}
+                />
+                <Input
+                  value={platform.url}
+                  onChange={(e) => {
+                    const newPlatforms = [...platforms];
+                    newPlatforms[idx] = { ...platform, url: e.target.value };
+                    onUpdate({ ...content, platforms: newPlatforms });
+                  }}
+                  placeholder={t("placeholders.url")}
+                />
+              </div>
+            </div>
+          ))}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              const newPlatforms = [...platforms, { name: '', url: '', icon: 'Share2' }];
+              onUpdate({ ...content, platforms: newPlatforms });
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {t("actions.addPlatform")}
+          </Button>
+        </div>
       );
 
     default:

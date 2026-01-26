@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getPosts } from '@/src/actions/article.actions';
+import { getPosts } from '@/src/actions/posts.actions';
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     
     const status = searchParams.get('status') || 'published';
-    const result = await getPosts({
+    const response = await getPosts({
       search: searchParams.get('search') || undefined,
       status: status as 'draft' | 'published' | 'archived',
       language: searchParams.get('language') || 'en',
@@ -14,30 +14,35 @@ export async function GET(request: NextRequest) {
       limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : 50,
     });
 
-    if (!result.success) {
+    if (!response.success) {
       return NextResponse.json(
-        { error: result.error || 'Failed to fetch articles' },
+        { error: response.error || 'Failed to fetch articles' },
         { status: 500 }
       );
     }
 
+    const { posts, pagination } = response.result;
+
     // Transform posts to match expected article format
-    const articles = result.posts
+    const articles = posts
       .filter(post => post.title && post.slug) // Filter out incomplete articles
       .map((post) => ({
         id: post.id,
         slug: post.slug,
         title: post.title || '',
         excerpt: post.excerpt || '',
-        category: post.category?.name || 'uncategorized',
+        category: 'article',
         status: post.status || 'published',
-        publishedAt: post.published_at,
-        updatedAt: post.updated_at,
+        publishedAt: post.publishedAt,
+        updatedAt: post.updatedAt,
         image: post.featuredImage,
         author: post.authorName ? { name: post.authorName } : undefined,
       }));
 
-    return NextResponse.json({ data: articles, total: articles.length });
+    return NextResponse.json({ 
+      data: articles, 
+      total: pagination.totalItems 
+    });
   } catch (error) {
     console.error('Error in articles API:', error);
     return NextResponse.json(

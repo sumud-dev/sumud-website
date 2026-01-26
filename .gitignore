@@ -48,3 +48,4 @@ next-env.d.ts
 .netlify
 /usage-of-campagins-schema-actions
 backup.sql
+/scripts

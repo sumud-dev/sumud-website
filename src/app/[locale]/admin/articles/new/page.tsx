@@ -30,7 +30,9 @@ import {
 } from "@/src/components/ui/select";
 import { Switch } from "@/src/components/ui/switch";
 import { toast } from "sonner";
-import { createPost } from "@/src/actions/article.actions";
+import { createPost } from "@/src/actions/posts.actions";
+import { useQueryClient } from "@tanstack/react-query";
+import { postQueryKeys } from "@/src/lib/hooks/use-posts";
 
 const articleSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title too long"),
@@ -56,6 +58,7 @@ const LANGUAGE_LABELS: Record<string, string> = {
 
 export default function NewArticlePage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isTranslating, setIsTranslating] = React.useState(false);
 
@@ -79,6 +82,13 @@ export default function NewArticlePage() {
     if (data.autoTranslate) {
       setIsTranslating(true);
     }
+
+    console.log('[Frontend] Form submission data:', {
+      autoTranslate: data.autoTranslate,
+      language: data.language,
+      title: data.title
+    });
+
     try {
       // Generate slug from title
       const slug = data.title
@@ -95,7 +105,7 @@ export default function NewArticlePage() {
         excerpt: data.excerpt,
         status: data.status,
         language: data.language,
-        featured_image: data.featuredImageUrl || null,
+        featuredImage: data.featuredImageUrl || null,
         categories: data.tags
           ? data.tags
               .split(",")
@@ -103,20 +113,42 @@ export default function NewArticlePage() {
               .filter(Boolean)
           : [],
         autoTranslate: data.autoTranslate,
+        // Add target languages when auto-translate is enabled
+        targetLanguages: data.autoTranslate
+          ? ["en", "fi"].filter((lang) => lang !== data.language)
+          : undefined,
       };
+
+      console.log('[Frontend] Prepared article data:', {
+        autoTranslate: articleData.autoTranslate,
+        targetLanguages: articleData.targetLanguages,
+        language: articleData.language
+      });
 
       const result = await createPost(articleData);
 
+      console.log('[Frontend] Result from createPost:', {
+        success: result.success,
+        translationsCount: result.success ? result.createdTranslations?.length : 0
+      });
+
       if (!result.success) {
-        throw new Error(result.error || "Failed to create article");
+        toast.error(result.error || "Failed to create article");
+        return;
       }
 
-      const createdCount = result.createdPosts?.length || 1;
+      const translationsCount = result.createdTranslations?.length || 0;
       toast.success(
-        data.autoTranslate
-          ? `Article created and translated to ${createdCount} language(s)!`
+        translationsCount > 0
+          ? `Article created with ${translationsCount} translation(s)!`
           : "Article created successfully!"
       );
+      
+      // Invalidate React Query cache to refresh the articles list
+      queryClient.invalidateQueries({ queryKey: postQueryKeys.allPosts });
+      
+      // Small delay to ensure the success toast appears before navigation
+      await new Promise(resolve => setTimeout(resolve, 100));
       router.push("/admin/articles");
     } catch (error) {
       console.error("Error creating article:", error);
@@ -283,7 +315,7 @@ export default function NewArticlePage() {
                             Auto-translate
                           </FormLabel>
                           <FormDescription className="text-xs">
-                            Automatically translate to all languages (EN, AR, FI)
+                            Automatically translate to all languages (EN, FI)
                           </FormDescription>
                         </div>
                         <FormControl>
@@ -336,13 +368,13 @@ export default function NewArticlePage() {
                       ) : (
                         <>
                           <Save className="mr-2 h-4 w-4" />
-                          Save Article
+                          Create Post
                         </>
                       )}
                     </Button>
                     {form.watch("autoTranslate") && (
                       <p className="text-xs text-muted-foreground text-center">
-                        Will create versions in all 3 languages
+                        Will create versions in all 2 languages
                       </p>
                     )}
                   </div>

@@ -26,9 +26,8 @@ import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import { Progress } from "@/src/components/ui/progress";
-import Footer from "@/src/components/navigation/footer";
 import ArticleCard from "@/src/components/articles/ArticleCard";
-import { useArticle, useRelatedArticles } from "@/src/lib/hooks/use-articles";
+import { usePostBySlug, usePosts } from "@/src/lib/hooks/use-posts";
 import { formatArticleDate, getCategoryConfig } from "@/src/lib/types/article";
 
 const fadeInUp = {
@@ -58,10 +57,44 @@ export default function ArticlePage() {
     data: article,
     isLoading: articleLoading,
     error: articleError,
-  } = useArticle(slug);
+  } = usePostBySlug(slug);
 
-  const { data: relatedArticles = [], isLoading: relatedLoading } =
-    useRelatedArticles(article?.category, slug);
+  // Fetch related articles - get recent published articles and filter by category client-side
+  const { data: relatedArticlesData } = usePosts({
+    status: 'published',
+    limit: 10, // Fetch more to have options after filtering
+  });
+  
+  // Filter to same category and exclude current article
+  const relatedArticles = React.useMemo(() => {
+    if (!article || !relatedArticlesData?.posts) return [];
+    const articleCategories = article.categories || [];
+    return relatedArticlesData.posts
+      .filter(post => {
+        if (post.slug === slug) return false;
+        const postCategories = post.categories || [];
+        // Check if post has any category in common with the article
+        return postCategories.some(cat => articleCategories.includes(cat));
+      })
+      .slice(0, 3)
+      .map(post => ({
+        id: post.id,
+        slug: post.slug,
+        title: post.title,
+        excerpt: post.excerpt,
+        content: post.content,
+        category: post.categories?.[0],
+        status: post.status,
+        publishedAt: post.publishedAt?.toISOString(),
+        createdAt: post.createdAt.toISOString(),
+        updatedAt: post.updatedAt.toISOString(),
+        image: post.featuredImage || undefined,
+        author: post.authorId ? {
+          id: post.authorId,
+          name: post.authorName || 'Unknown',
+        } : undefined,
+      }));
+  }, [article, relatedArticlesData, slug]);
 
   // Scroll tracking for reading progress
   React.useEffect(() => {
@@ -251,7 +284,7 @@ export default function ArticlePage() {
     );
   }
 
-  const categoryStyle = getCategoryConfig(article.category) || {
+  const categoryStyle = getCategoryConfig(article.categories?.[0]) || {
     label: "Article",
     icon: "Newspaper",
     color: "text-gray-600",
@@ -306,7 +339,7 @@ export default function ArticlePage() {
               <div className="flex items-center gap-4 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  <span>{formatArticleDate(article.publishedAt)}</span>
+                  <span>{formatArticleDate(article.publishedAt || article.createdAt)}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
@@ -421,11 +454,9 @@ export default function ArticlePage() {
 
         {/* Featured Image */}
         {(() => {
-          const imageUrl = (article as any).featuredImage?.url 
-            || article.image 
+          const imageUrl = article.featuredImage 
             || "/images/placeholder-article.svg";
-          const imageAlt = (article as any).featuredImage?.alt 
-            || article.title 
+          const imageAlt = article.title 
             || "Article image";
           
           return (
@@ -507,30 +538,6 @@ export default function ArticlePage() {
               {/* Article Footer */}
               <div className="mt-12 pt-8 border-t border-[#55613C]/20">
                 <div className="flex items-center justify-between flex-wrap gap-4">
-                  <div className="flex items-center gap-4">
-                    <Button
-                      variant="outline"
-                      onClick={handleLike}
-                      className={`transition-colors ${
-                        isLiked
-                          ? "border-[#781D32] bg-[#781D32]/10 text-[#781D32]"
-                          : "border-gray-300 hover:border-[#781D32] hover:text-[#781D32]"
-                      }`}
-                    >
-                      <Heart
-                        className={`h-4 w-4 mr-2 ${isLiked ? "fill-current" : ""}`}
-                      />
-                      {isLiked ? 1 : 0} likes
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      className="border-gray-300 hover:border-[#781D32] hover:text-[#781D32]"
-                    >
-                      <MessageCircle className="h-4 w-4 mr-2" />0 comments
-                    </Button>
-                  </div>
-
                   <Button
                     onClick={() => handleShare("default")}
                     className="bg-[#781D32] hover:bg-[#781D32]/90 text-white"
@@ -588,8 +595,6 @@ export default function ArticlePage() {
           <ChevronUp className="h-6 w-6" />
         </motion.button>
       )}
-
-      <Footer />
     </div>
   );
 }

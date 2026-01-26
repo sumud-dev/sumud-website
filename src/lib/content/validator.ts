@@ -4,7 +4,7 @@
  * Validates content files against schema requirements
  */
 
-import type { Locale } from '@/src/lib/pages/file-storage';
+import type { Locale } from '@/src/lib/navigation/file-storage';
 
 export interface ValidationError {
   field: string;

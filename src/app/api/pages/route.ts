@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { listPages, readPage } from "@/src/lib/pages/file-storage";
+import { 
+  listPagesPaginated, 
+  findPageBySlugAndLanguage 
+} from "@/src/lib/db/queries/pages.queries";
 
 /**
  * GET /api/pages
@@ -11,10 +14,12 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get("status");
     const slug = searchParams.get("slug");
+    const language = (searchParams.get("language") || "en") as 'en' | 'fi';
 
     // If requesting a specific page
     if (slug) {
-      const page = await readPage(slug);
+      const page = await findPageBySlugAndLanguage(slug, language);
+      
       if (!page) {
         return NextResponse.json(
           { success: false, error: "Page not found" },
@@ -34,22 +39,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, data: page });
     }
 
-    // List all pages
-    const pages = await listPages();
-
-    // Filter by status if specified
-    let filteredPages = pages;
-    if (status) {
-      filteredPages = pages.filter((p) => p.status === status);
-    } else {
-      // If not authenticated, only show published pages
-      const { userId } = await auth();
-      if (!userId) {
-        filteredPages = pages.filter((p) => p.status === "published");
-      }
+    // List all pages from database
+    const { userId } = await auth();
+    const filters = status ? { status: status as 'draft' | 'published' | 'archived', isActive: true } : { isActive: true };
+    
+    // If not authenticated, only show published pages
+    if (!userId && !status) {
+      filters.status = 'published';
     }
+    
+    const { pages } = await listPagesPaginated(
+      filters,
+      { limit: 1000, sortBy: 'createdAt', sortOrder: 'desc' }
+    );
 
-    return NextResponse.json({ success: true, data: filteredPages });
+    return NextResponse.json({ success: true, data: pages });
   } catch (error) {
     console.error("Error fetching pages:", error);
     return NextResponse.json(

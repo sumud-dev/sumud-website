@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { readPage, listPages } from "@/src/lib/pages/file-storage";
+import { getPublicPageAction, listPublishedPagesAction } from "@/src/actions/pages.actions";
 import { PageRenderer } from "@/src/components/blocks";
 import type { PageLocale } from "@/src/lib/types/page";
 
@@ -14,12 +14,19 @@ interface PageProps {
 // Generate static params for all published pages
 export async function generateStaticParams() {
   try {
-    const pages = await listPages();
-    const publishedPages = pages.filter((p) => p.status === "published");
+    const result = await listPublishedPagesAction();
+    
+    if (!result.success) {
+      console.error("Error listing published pages:", result.error);
+      return [];
+    }
 
-    return publishedPages.map((page) => ({
-      slug: page.slug,
-    }));
+    const pages = result.data as Array<{ slug: string; status: string }>;
+    return pages
+      .filter((p) => p.status === "published")
+      .map((page) => ({
+        slug: page.slug,
+      }));
   } catch (error) {
     console.error("Error generating static params:", error);
     return [];
@@ -31,13 +38,15 @@ export async function generateMetadata({ params }: PageProps) {
   const { locale, slug } = await params;
   
   try {
-    const page = await readPage(slug);
-    if (!page || page.status !== "published") {
+    const result = await getPublicPageAction(slug, locale as 'en' | 'fi');
+    
+    if (!result.success || !result.data) {
       return {
         title: "Page Not Found",
       };
     }
 
+    const page = result.data;
     const translation = page.translations[locale as PageLocale] || page.translations.en;
 
     return {
@@ -57,17 +66,17 @@ export default async function DynamicPage({ params }: PageProps) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  // Read page from JSON file
-  const page = await readPage(slug);
+  // Read page from database
+  const result = await getPublicPageAction(slug, locale as 'en' | 'fi');
+  const page = result.success ? result.data : null;
 
-  // Check if page exists and is published
-  if (!page || page.status !== "published") {
+  // Check if page exists (getPublicPageAction already filters for published status)
+  if (!page) {
     notFound();
   }
 
   // Get translation for current locale, fallback to English
-  const translation =
-    page.translations[locale as PageLocale] || page.translations.en;
+  const translation = page.translations[locale as PageLocale] || page.translations.en;
 
   if (!translation) {
     notFound();

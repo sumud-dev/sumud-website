@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Link } from "@/src/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -34,28 +35,36 @@ const teamStats = [
     icon: Users,
     number: "25+",
     label: "Team Members",
+    key: "stats.members",
     description: "Dedicated volunteers",
+    descKey: "stats.membersDesc",
     color: "bg-[#781D32]",
   },
   {
     icon: Globe,
     number: "8",
     label: "Countries",
+    key: "stats.countries",
     description: "International reach",
+    descKey: "stats.countriesDesc",
     color: "bg-[#55613C]",
   },
   {
     icon: Award,
     number: "500+",
     label: "Hours Monthly",
+    key: "stats.hours",
     description: "Volunteer contribution",
+    descKey: "stats.hoursDesc",
     color: "bg-[#3E442B]",
   },
   {
     icon: Heart,
     number: "3",
     label: "Years",
+    key: "stats.years",
     description: "Working together",
+    descKey: "stats.yearsDesc",
     color: "bg-[#781D32]",
   },
 ];
@@ -327,6 +336,7 @@ function TeamMemberCard({ member }: { member: TeamMember }) {
 }
 
 export default function TeamPage() {
+  const t = useTranslations("team");
   return (
     <>
       {/* Hero Section */}
@@ -341,14 +351,13 @@ export default function TeamPage() {
             animate="animate"
           >
             <Badge className="mb-4 bg-[#781D32]/10 text-[#781D32] border-[#781D32]/20">
-              Our Team
+              {t("hero.badge")}
             </Badge>
             <h1 className="text-4xl lg:text-5xl font-bold text-[#3E442B] mb-6">
-              The People Behind Sumud
+              {t("hero.title")}
             </h1>
             <p className="text-xl text-gray-600 leading-relaxed mb-8">
-              Meet the dedicated individuals working tirelessly to build bridges,
-              advocate for justice, and strengthen the bonds between Finnish and Palestinian communities.
+              {t("hero.subtitle")}
             </p>
           </motion.div>
 
@@ -371,10 +380,10 @@ export default function TeamPage() {
                       {stat.number}
                     </div>
                     <div className="font-medium text-[#781D32] mb-1">
-                      {stat.label}
+                      {stat.key && t(stat.key) || stat.label}
                     </div>
                     <div className="text-sm text-gray-600">
-                      {stat.description}
+                      {stat.descKey && t(stat.descKey) || stat.description}
                     </div>
                   </CardContent>
                 </Card>
@@ -433,7 +442,7 @@ export default function TeamPage() {
             whileInView="animate"
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl font-bold text-[#3E442B] mb-4">Our Team</h2>
+            <h2 className="text-3xl font-bold text-[#3E442B] mb-4">{t("section.team")}</h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               From core team members to dedicated volunteers, every person contributes
               to our mission of solidarity and justice.
@@ -506,11 +515,10 @@ export default function TeamPage() {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl font-bold text-white mb-4">
-              Join Our Team
+              {t("section.join")}
             </h2>
             <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-              Whether you&apos;re looking to volunteer your time, share your skills, or take on a leadership role,
-              there&apos;s a place for you in our movement for Palestinian solidarity.
+              {t("section.join.desc")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button

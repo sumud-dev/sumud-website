@@ -20,21 +20,109 @@
    Creating an optimized production build ...
 [@sentry/nextjs] DEPRECATION WARNING: disableLogger is deprecated and will be removed in a future version. Use webpack.treeshake.removeDebugLogging instead.
 [@sentry/nextjs] DEPRECATION WARNING: automaticVercelMonitors is deprecated and will be removed in a future version. Use webpack.automaticVercelMonitors instead.
- ✓ Compiled successfully in 3.3s
+ ✓ Compiled successfully in 3.4s
    Running next.config.js provided runAfterProductionCompile ...
- ✓ Completed runAfterProductionCompile in 6140ms
+ ✓ Completed runAfterProductionCompile in 8014ms
    Running TypeScript ...
-Failed to compile.
+   Collecting page data using 13 workers ...
+   Generating static pages using 13 workers (0/98) ...
+   Generating static pages using 13 workers (24/98) 
+   Generating static pages using 13 workers (48/98) 
+   Generating static pages using 13 workers (73/98) 
+ ✓ Generating static pages using 13 workers (98/98) in 465.4ms
+   Finalizing page optimization ...
 
-./src/app/[locale]/admin/events/page.tsx:458:37
-Type error: Type 'string | undefined' is not assignable to type 'string | number | Date'.
-  Type 'undefined' is not assignable to type 'string | number | Date'.
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ● /[locale]
+│ ├ /en
+│ └ /fi
+├ ● /[locale]/about
+│ ├ /en/about
+│ └ /fi/about
+├ ƒ /[locale]/admin
+├ ƒ /[locale]/admin/articles
+├ ƒ /[locale]/admin/articles/[slug]
+├ ƒ /[locale]/admin/articles/[slug]/edit
+├ ƒ /[locale]/admin/articles/new
+├ ƒ /[locale]/admin/campaigns
+├ ƒ /[locale]/admin/campaigns/[slug]
+├ ƒ /[locale]/admin/campaigns/[slug]/edit
+├ ƒ /[locale]/admin/campaigns/new
+├ ƒ /[locale]/admin/categories
+├ ƒ /[locale]/admin/categories/new
+├ ƒ /[locale]/admin/content
+├ ƒ /[locale]/admin/content/[namespace]
+├ ƒ /[locale]/admin/content/search
+├ ƒ /[locale]/admin/events
+├ ƒ /[locale]/admin/events/[id]
+├ ƒ /[locale]/admin/events/[id]/edit
+├ ƒ /[locale]/admin/events/new
+├ ƒ /[locale]/admin/page-builder
+├ ƒ /[locale]/admin/page-builder/[slug]
+├ ƒ /[locale]/admin/page-builder/new
+├ ƒ /[locale]/admin/settings
+├ ● /[locale]/articles
+│ ├ /en/articles
+│ └ /fi/articles
+├ ƒ /[locale]/articles/[slug]
+├ ƒ /[locale]/auth/confirm
+├ ● /[locale]/campaigns
+│ ├ /en/campaigns
+│ └ /fi/campaigns
+├ ƒ /[locale]/campaigns/[slug]
+├ ● /[locale]/contact
+│ ├ /en/contact
+│ └ /fi/contact
+├ ● /[locale]/events
+│ ├ /en/events
+│ └ /fi/events
+├ ƒ /[locale]/events/[slug]
+├ ● /[locale]/join
+│ ├ /en/join
+│ └ /fi/join
+├ ● /[locale]/membership
+│ ├ /en/membership
+│ └ /fi/membership
+├ ● /[locale]/p/[slug]
+│ ├ /en/p/home
+│ ├ /en/p/about
+│ ├ /en/p/contact
+│ └ [+15 more paths]
+├ ● /[locale]/pages/[slug]
+│ ├ /en/pages/home
+│ ├ /en/pages/about
+│ ├ /en/pages/contact
+│ └ [+15 more paths]
+├ ● /[locale]/partners
+│ ├ /en/partners
+│ └ /fi/partners
+├ ● /[locale]/privacy-policy
+│ ├ /en/privacy-policy
+│ └ /fi/privacy-policy
+├ ƒ /[locale]/sign-in/[[...sign-in]]
+├ ● /[locale]/team
+│ ├ /en/team
+│ └ /fi/team
+├ ƒ /api/admin/content/buttons
+├ ƒ /api/admin/content/messages/[locale]
+├ ƒ /api/articles
+├ ƒ /api/articles/[slug]
+├ ƒ /api/campaigns
+├ ƒ /api/campaigns/[slug]
+├ ƒ /api/events
+├ ƒ /api/events/[slug]
+├ ƒ /api/pages
+├ ƒ /api/test-db
+├ ƒ /api/upload
+├ ƒ /api/webhooks/clerk
+└ ƒ /sign-in/[[...sign-in]]
 
-[0m [90m 456 |[39m             [33m<[39m[33mAlertDialogTitle[39m[33m>[39m{t([32m"deleteConfirm"[39m)}[33m<[39m[33m/[39m[33mAlertDialogTitle[39m[33m>[39m
- [90m 457 |[39m             [33m<[39m[33mAlertDialogDescription[39m[33m>[39m
-[31m[1m>[22m[39m[90m 458 |[39m               {t([32m"deleteMessage"[39m[33m,[39m { title[33m:[39m deleteConfirm[33m?[39m[33m.[39mtitle })}
- [90m     |[39m                                     [31m[1m^[22m[39m
- [90m 459 |[39m             [33m<[39m[33m/[39m[33mAlertDialogDescription[39m[33m>[39m
- [90m 460 |[39m           [33m<[39m[33m/[39m[33mAlertDialogHeader[39m[33m>[39m
- [90m 461 |[39m           [33m<[39m[33mAlertDialogFooter[39m[33m>[39m[0m
-Next.js build worker exited with code: 1 and signal: null
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

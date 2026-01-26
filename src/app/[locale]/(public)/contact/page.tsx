@@ -1,5 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
-import { readPage } from "@/src/lib/pages/file-storage";
+import { getPublicPageAction } from "@/src/actions/pages.actions";
 import { PageRenderer } from "@/src/components/blocks";
 import type { PageLocale } from "@/src/lib/types/page";
 
@@ -14,13 +14,15 @@ export async function generateMetadata({ params }: ContactPageProps) {
   const { locale } = await params;
 
   try {
-    const page = await readPage("contact");
-    if (!page) {
+    const result = await getPublicPageAction("contact", locale as 'en' | 'fi');
+    
+    if (!result.success || !result.data) {
       return {
         title: "Contact Us - Sumud",
       };
     }
 
+    const page = result.data;
     const translation = page.translations[locale as PageLocale] || page.translations.en;
 
     return {
@@ -40,8 +42,9 @@ export default async function ContactPage({ params }: ContactPageProps) {
   // Enable static rendering
   setRequestLocale(locale);
 
-  // Read contact page content from JSON file
-  const page = await readPage("contact");
+  // Read contact page content from database
+  const result = await getPublicPageAction("contact", locale as 'en' | 'fi');
+  const page = result.success ? result.data : null;
 
   // If no page, render empty page
   if (!page) {
@@ -49,10 +52,11 @@ export default async function ContactPage({ params }: ContactPageProps) {
   }
 
   // Get blocks for the current locale, fallback to English if not available
-  const blocks = page.translations[locale as PageLocale]?.blocks || page.translations.en?.blocks || [];
+  const translation = page.translations[locale as PageLocale] || page.translations.en;
+  const blocks = translation?.blocks || [];
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4]">
+    <main className="min-h-screen bg-linear-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4]">
       <PageRenderer blocks={blocks} locale={locale} />
     </main>
   );

@@ -7,6 +7,10 @@ export const campaigns = pgTable('campaigns', {
   id: uuid('id').primaryKey().defaultRandom(),
   slug: text('slug').notNull().unique(),
   
+  // Parent campaign ID for translations (null for primary language)
+  parentId: uuid('parent_id')
+    .references((): any => campaigns.id, { onDelete: 'cascade' }),
+  
   // Language (primary language for this campaign - typically 'fi')
   language: text('language').default('fi'),
   
@@ -108,6 +112,7 @@ export const campaigns = pgTable('campaigns', {
   activeIdx: index('campaigns_active_idx').on(t.isActive),
   featuredIdx: index('campaigns_featured_idx').on(t.isFeatured),
   languageIdx: index('campaigns_language_idx').on(t.language),
+  parentIdIdx: index('campaigns_parent_id_idx').on(t.parentId),
 }));
 
 // ============================================
@@ -117,7 +122,7 @@ export const campaignTranslations = pgTable('campaign_translations', {
   id: uuid('id').primaryKey().defaultRandom(),
   campaignId: uuid('campaign_id')
     .references(() => campaigns.id, { onDelete: 'set null' }),
-  language: text('language').notNull(), // e.g., 'en', 'fi', 'ar'
+  language: text('language').notNull(), // e.g., 'en', 'fi'
   
   // Core content (same fields as campaigns table)
   slug: text('slug'),
