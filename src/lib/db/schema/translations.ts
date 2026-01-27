@@ -12,7 +12,12 @@ import { pgTable, uuid, text, timestamp, jsonb, boolean, index, unique } from 'd
 export const uiTranslations = pgTable('ui_translations', {
   id: uuid('id').primaryKey().defaultRandom(),
   
-  // Translation key (e.g., 'common.loading', 'admin.dashboard.title')
+  // Namespace/category for organization (e.g., 'common', 'admin', 'navigation', 'footer', 'campaignsPage')
+  // This comes first to match the unique constraint order
+  namespace: text('namespace').notNull(),
+  
+  // Translation key (e.g., 'loading', 'dashboard.title', 'hero.title')
+  // Keys can be reused across different namespaces
   key: text('key').notNull(),
   
   // Language code (e.g., 'en', 'ar', 'fi')
@@ -20,9 +25,6 @@ export const uiTranslations = pgTable('ui_translations', {
   
   // Translated value
   value: text('value').notNull(),
-  
-  // Namespace/category for organization (e.g., 'common', 'admin', 'navigation')
-  namespace: text('namespace').notNull(),
   
   // Optional metadata for complex translations
   metadata: jsonb('metadata').$type<{
@@ -41,8 +43,8 @@ export const uiTranslations = pgTable('ui_translations', {
   createdBy: uuid('created_by'),
   updatedBy: uuid('updated_by'),
 }, (t) => ({
-  // Unique constraint on key + language
-  keyLanguageUnique: unique('ui_translations_key_language_unique').on(t.key, t.language),
+  // Unique constraint on namespace + key + language (allows same key in different namespaces)
+  namespaceKeyLanguageUnique: unique('ui_translations_namespace_key_language_unique').on(t.namespace, t.key, t.language),
   // Indexes for common queries
   keyIdx: index('ui_translations_key_idx').on(t.key),
   languageIdx: index('ui_translations_language_idx').on(t.language),
