@@ -27,6 +27,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/src/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/src/components/ui/alert-dialog";
 import { Input } from "@/src/components/ui/input";
 import {
   Table,
@@ -69,6 +79,7 @@ const ArticlesPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
   const [currentPage, setCurrentPage] = React.useState(1);
   const articlesPerPage = 20;
+  const [deleteConfirm, setDeleteConfirm] = React.useState<{ slug: string; title: string } | null>(null);
 
   // React Query hooks - fetch posts with filters
   const { 
@@ -99,26 +110,20 @@ const ArticlesPage: React.FC = () => {
   /**
    * Handle article deletion
    */
-  const handleDeletePost = React.useCallback(async (
-    articleSlug: string, 
-    articleTitle: string
-  ) => {
-    const confirmationMessage = translationKeys("deleteConfirm", { title: articleTitle });
-    
-    if (!confirm(confirmationMessage)) {
-      return;
-    }
+  const handleDeletePost = React.useCallback(async () => {
+    if (!deleteConfirm) return;
 
-    deletePostMutation.mutate(articleSlug, {
+    deletePostMutation.mutate(deleteConfirm.slug, {
       onSuccess: () => {
         toast.success(translationKeys("deleteSuccess"));
+        setDeleteConfirm(null);
         refetchPosts();
       },
       onError: (mutationError) => {
         toast.error(mutationError.message || translationKeys("deleteFailed"));
       },
     });
-  }, [deletePostMutation, translationKeys, refetchPosts]);
+  }, [deletePostMutation, translationKeys, refetchPosts, deleteConfirm]);
 
   /**
    * Handle status update (publish/unpublish/archive)
@@ -429,9 +434,8 @@ const ArticlesPage: React.FC = () => {
 
                           {/* Delete */}
                           <DropdownMenuItem
-                            onClick={() => handleDeletePost(post.slug, post.title || "Untitled")}
+                            onClick={() => setDeleteConfirm({ slug: post.slug, title: post.title || "Untitled" })}
                             className="text-red-600"
-                            disabled={deletePostMutation.isPending}
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
                             {translationKeys("delete")}
@@ -495,6 +499,30 @@ const ArticlesPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={!!deleteConfirm}
+        onOpenChange={() => setDeleteConfirm(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{translationKeys("deleteConfirm", { title: "" })}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {translationKeys("deleteMessage", { title: deleteConfirm?.title ?? "" })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{translationKeys("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePost}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {translationKeys("delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

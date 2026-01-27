@@ -32,6 +32,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/src/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/src/components/ui/alert-dialog";
 import { Input } from "@/src/components/ui/input";
 import {
   Table,
@@ -106,6 +116,7 @@ const CampaignsPage: React.FC = () => {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [deleteConfirm, setDeleteConfirm] = React.useState<{ slug: string; title: string } | null>(null);
 
   // Fetch campaigns from the database
   const fetchCampaignsData = React.useCallback(async (showRefreshToast = false) => {
@@ -163,20 +174,21 @@ const CampaignsPage: React.FC = () => {
     return { total, active, drafts, completed };
   }, [campaigns]);
 
-  const handleDelete = async (slug: string, title: string) => {
-    if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
     
     try {
-      const result = await deleteCampaignAction(slug, locale);
+      const result = await deleteCampaignAction(deleteConfirm.slug, locale);
       
       if (!result.success) {
         toast.error(`Failed to delete campaign: ${result.error}`);
         return;
       }
       
-      toast.success(`"${title}" has been deleted`);
+      toast.success(`"${deleteConfirm.title}" has been deleted`);
+      setDeleteConfirm(null);
       // Remove from local state
-      setCampaigns(prev => prev.filter(c => c.slug !== slug));
+      setCampaigns(prev => prev.filter(c => c.slug !== deleteConfirm.slug));
     } catch (err) {
       console.error("Error deleting campaign:", err);
       toast.error(t("deleteDialog.error"));
@@ -390,7 +402,7 @@ const CampaignsPage: React.FC = () => {
                               )}
                               <DropdownMenuItem
                                 onClick={() =>
-                                  handleDelete(campaign.slug, campaign.title ?? "No campaign title")
+                                  setDeleteConfirm({ slug: campaign.slug, title: campaign.title ?? "No campaign title" })
                                 }
                                 className="text-red-600"
                               >
@@ -408,6 +420,30 @@ const CampaignsPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={!!deleteConfirm}
+        onOpenChange={() => setDeleteConfirm(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("deleteDialog.title")}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("deleteDialog.description", { title: deleteConfirm?.title ?? "" })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("deleteDialog.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t("deleteDialog.confirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
