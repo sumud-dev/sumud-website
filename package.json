@@ -20,7 +20,7 @@
     "migrate:pages": "npx ts-node --compiler-options '{\"module\":\"CommonJS\"}' scripts/migrate-pages-to-db.ts"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.36.5",
+    "@clerk/nextjs": "^6.37.1",
     "@hookform/resolvers": "^5.2.2",
     "@neondatabase/serverless": "^1.0.2",
     "@radix-ui/react-accordion": "^1.2.12",
