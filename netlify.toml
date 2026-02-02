@@ -15,19 +15,5 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Ensure content and messages folders are included
 [build.environment]
   NODE_VERSION = "20"
-
-# Include necessary folders for server-side operations
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  force = false
-
-# Notes:
-# - The Netlify Next.js plugin will handle SSR and Edge Functions for supported Next.js features.
-# - content/ and messages/ folders are automatically included in deployment
-# - Environment variables (DATABASE_URL, CLOUDINARY_*, CLERK_*, etc.) must be set in Netlify UI
-# - Sentry configuration requires SENTRY_AUTH_TOKEN and SENTRY_DSN in Netlify UI

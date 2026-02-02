@@ -43,7 +43,7 @@ export function useEvents(filters?: EventFilters) {
       if (filters?.page) params.append('page', String(filters.page));
       if (filters?.limit) params.append('limit', String(filters.limit));
 
-      const response = await fetch(`/api/events?${params.toString()}`);
+      const response = await fetch(`/api/events?${params.toString()}`, { cache: 'no-store' });
       
       if (!response.ok) {
         throw new Error('Failed to fetch events');
@@ -94,7 +94,7 @@ export function useEvent(slug: string) {
       const params = new URLSearchParams();
       params.append('language', locale);
       
-      const response = await fetch(`/api/events/${slug}?${params.toString()}`);
+      const response = await fetch(`/api/events/${slug}?${params.toString()}`, { cache: 'no-store' });
       
       if (!response.ok) {
         throw new Error('Failed to fetch event');

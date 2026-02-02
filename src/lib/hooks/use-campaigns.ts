@@ -90,7 +90,7 @@ export function useCampaigns(filters?: CampaignFilters) {
       if (filters?.page) params.append('page', String(filters.page));
       if (filters?.limit) params.append('limit', String(filters.limit));
 
-      const response = await fetch(`/api/campaigns?${params.toString()}`);
+      const response = await fetch(`/api/campaigns?${params.toString()}`, { cache: 'no-store' });
       
       if (!response.ok) {
         throw new Error('Failed to fetch campaigns');
@@ -122,7 +122,7 @@ export function useCampaign(slug: string) {
       const params = new URLSearchParams();
       params.append('language', locale);
       
-      const response = await fetch(`/api/campaigns/${slug}?${params.toString()}`);
+      const response = await fetch(`/api/campaigns/${slug}?${params.toString()}`, { cache: 'no-store' });
       
       if (!response.ok) {
         throw new Error('Failed to fetch campaign');
