@@ -386,15 +386,39 @@ export async function getPublicPageAction(
   language: 'en' | 'fi'
 ): Promise<ActionResult<PageData | null>> {
   try {
-    // Only return published pages for public access
+    // Find the requested language version
     const page = await findPageBySlugAndLanguage(slug, language);
     
     if (!page || page.status !== 'published') {
       return { success: true, data: null };
     }
     
-    // Convert to PageData format
-    const pageData = pageRecordToPageData(page, language);
+    // Determine the primary page ID
+    // If this page is a translation (has parentId), use that ID
+    // Otherwise, this is the primary page, use its ID
+    const primaryPageId = page.parentId || page.id;
+    
+    // Fetch all translations for this page using the primary ID
+    const translations = await findTranslationsForPage(primaryPageId);
+    
+    // Find the primary page record (it should have parentId === null)
+    // It could be either the current page or one of the translations
+    let primaryPage = page.parentId ? null : page;
+    if (!primaryPage) {
+      // If current page is a translation, find the primary page
+      // Primary page has no parentId and matches the primaryPageId
+      const possiblePrimaries = [page, ...translations];
+      primaryPage = possiblePrimaries.find(p => p.id === primaryPageId && !p.parentId) || null;
+    }
+    
+    if (!primaryPage) {
+      // Fallback to just returning the requested language
+      const pageData = pageRecordToPageData(page, language);
+      return { success: true, data: pageData };
+    }
+    
+    // Convert to PageData format with all translations
+    const pageData = pageRecordsToPageData(primaryPage, translations);
     
     return { success: true, data: pageData };
   } catch (error) {

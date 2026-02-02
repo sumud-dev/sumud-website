@@ -17,3 +17,4 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  npm_flags = "--legacy-peer-deps"
