@@ -137,6 +137,16 @@ This project uses **Drizzle ORM** with PostgreSQL.
 
 ---
 
+## netlify Deployment
+Build the project:
+	```bash
+		npm run build
+	```	
+Deploy to production:
+	```bash
+		netlify deploy --prod
+	```			
+
 ## 🐞 Troubleshooting
 
 - **Port in use?** The app runs on port 3001 by default. Change it in `package.json` if needed.

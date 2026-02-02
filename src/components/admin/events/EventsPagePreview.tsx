@@ -54,7 +54,7 @@ export function EventsPagePreview({
   });
   
   const sampleEvent = eventsResponse?.data?.[0];
-  const totalEvents = eventsResponse?.total || 0;
+  const totalEvents = eventsResponse?.data?.length || 0;
   
   // Fetch translations from database
   useEffect(() => {

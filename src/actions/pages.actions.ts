@@ -22,7 +22,7 @@ import {
   type PageRecord,
 } from '@/src/lib/db/queries/pages.queries';
 import type { PageData } from '@/src/lib/types/page';
-import { PAGE_BLOCK_TYPES, type PageBlock } from '@/src/lib/types/page';
+import { PAGE_BLOCK_TYPES, type PageBlock, type PageBlockType } from '@/src/lib/types/page';
 import {
   translateBatch,
   type SupportedLocale,
@@ -99,19 +99,32 @@ async function requireAuth(): Promise<string> {
  * Convert database PageRecord to a single translation object
  */
 function pageRecordToTranslation(record: PageRecord) {
-  // Handle UI translations pages - create a virtual block to store the metadata
-  if (record.content?.type === 'ui-translations') {
+  // Handle UI translations pages - check metadata for ui-translations marker
+  const isUITranslationsPage = record.metadata?.customFields?.uiTranslations === true;
+  const namespace = record.metadata?.customFields?.uiTranslationsNamespace as string | undefined;
+  
+  if (isUITranslationsPage && namespace) {
+    // For UI translations pages, return empty blocks
+    // The actual UI will be rendered by the UI translations editor
     return {
       title: record.title,
       description: record.metadata?.description || '',
-      blocks: [{
-        id: 'ui-translations-marker',
-        type: 'text' as PageBlockType,
-        content: {
-          type: 'ui-translations',
-          namespace: record.content.namespace,
-        },
-      }],
+      blocks: [],
+    };
+  }
+
+  // Fallback: Check old content structure for backwards compatibility
+  // This handles cases where migration hasn't run yet
+  const content = record.content as any;
+  const isOldUITranslations = 
+    content?.type === 'ui-translations' || 
+    content?.data?.[0]?.content?.type === 'ui-translations';
+    
+  if (isOldUITranslations) {
+    return {
+      title: record.title,
+      description: record.metadata?.description || '',
+      blocks: [],
     };
   }
 
@@ -154,17 +167,30 @@ function pageRecordsToPageData(
     createdAt: primaryPage.createdAt.toISOString(),
     updatedAt: primaryPage.updatedAt.toISOString(),
     translations: {},
+    metadata: {},
   };
 
   // Add primary page translation (should be Finnish)
   const primaryLocale = (primaryPage.language as 'en' | 'fi') || 'fi'; // Default to 'fi' not 'en'
   pageData.translations[primaryLocale] = pageRecordToTranslation(primaryPage);
+  
+  // Add primary page metadata
+  if (primaryPage.metadata?.customFields) {
+    if (!pageData.metadata) pageData.metadata = {};
+    pageData.metadata[primaryLocale] = primaryPage.metadata.customFields as any;
+  }
 
   // Add other translations
   translations.forEach(translation => {
     const locale = (translation.language as 'en' | 'fi') || 'en';
     if (locale !== primaryLocale) {
       pageData.translations[locale] = pageRecordToTranslation(translation);
+      
+      // Add translation metadata
+      if (translation.metadata?.customFields) {
+        if (!pageData.metadata) pageData.metadata = {};
+        pageData.metadata[locale] = translation.metadata.customFields as any;
+      }
     }
   });
 

@@ -104,11 +104,7 @@ export const RichTextEditor: React.FC<EditorProps> = ({
   };
 
   const handleHeading = (level: 1 | 2 | 3) => {
-    if (level === 0) {
-      execCommand('formatBlock', '<p>');
-    } else {
-      execCommand('formatBlock', `<h${level}>`);
-    }
+    execCommand('formatBlock', `<h${level}>`);
   };
 
   const handleAlignLeft = () => execCommand('justifyLeft');

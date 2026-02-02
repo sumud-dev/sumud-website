@@ -54,7 +54,7 @@ export function CampaignsPagePreview({
   });
   
   const sampleCampaign = campaignsResponse?.data?.[0];
-  const totalCampaigns = campaignsResponse?.total || 0;
+  const totalCampaigns = campaignsResponse?.data?.length || 0;
   
   // Fetch translations from database
   useEffect(() => {

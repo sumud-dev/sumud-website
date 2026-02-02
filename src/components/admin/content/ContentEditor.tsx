@@ -117,7 +117,7 @@ function ContentField({ item, value, onChange, hasChanged }: ContentFieldProps) 
           value={value}
           onChange={(e) => onChange(item.id, e.target.value)}
           className={`min-h-20 resize-y ${hasChanged ? "border-amber-400" : ""}`}
-              placeholder={t("placeholder.enterKey", { key: displayKey || item.key })}
+              placeholder={t("placeholder.enterKey", { key: displayKey || item.key || '' })}
         />
       ) : (
         <Input
@@ -125,7 +125,7 @@ function ContentField({ item, value, onChange, hasChanged }: ContentFieldProps) 
           value={value}
           onChange={(e) => onChange(item.id, e.target.value)}
           className={hasChanged ? "border-amber-400" : ""}
-              placeholder={t("placeholder.enterKey", { key: displayKey || item.key })}
+              placeholder={t("placeholder.enterKey", { key: displayKey || item.key || '' })}
         />
       )}
     </div>

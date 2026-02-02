@@ -742,6 +742,18 @@ export interface PageData {
     en?: PageTranslation;
     fi?: PageTranslation;
   };
+  metadata?: {
+    en?: {
+      uiTranslations?: boolean;
+      uiTranslationsNamespace?: string;
+      [key: string]: any;
+    };
+    fi?: {
+      uiTranslations?: boolean;
+      uiTranslationsNamespace?: string;
+      [key: string]: any;
+    };
+  };
 }
 
 // Page summary for listings (without full block content)

@@ -174,11 +174,16 @@ export function PageBuilderEditor({ initialData, isNew = false, initialLocale = 
   const updatePage = useUpdatePage();
   const t = useTranslations("adminSettings.pageBuilder");
 
-  // Check if this page uses UI translations
-  const usesUITranslations = initialData?.translations?.en?.blocks?.[0]?.content?.type === "ui-translations" 
-    || initialData?.translations?.fi?.blocks?.[0]?.content?.type === "ui-translations";
+  // Check if this page uses UI translations by checking metadata
+  // UI translations info is stored in metadata.customFields
+  const metadataEn = initialData?.metadata?.en;
+  const metadataFi = initialData?.metadata?.fi;
+  const usesUITranslations = 
+    metadataEn?.uiTranslations === true || 
+    metadataFi?.uiTranslations === true;
+  
   const uiTranslationsNamespace = usesUITranslations 
-    ? (initialData?.translations?.en?.blocks?.[0]?.content?.namespace || initialData?.translations?.fi?.blocks?.[0]?.content?.namespace)
+    ? (metadataEn?.uiTranslationsNamespace || metadataFi?.uiTranslationsNamespace) as string | null
     : null;
 
   // Initialize state directly from props, respecting the initial locale
