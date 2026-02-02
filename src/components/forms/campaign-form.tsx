@@ -19,7 +19,7 @@ import {
 } from "@/src/components/ui/form";
 import { Input } from "@/src/components/ui/input";
 import { Textarea } from "@/src/components/ui/textarea";
-import { RichTextEditor } from "@/src/components/ui/rich-text-editor";
+import { RichTextEditor } from "@/src/lib/tipTap-editor/RichTextEditor";
 import {
   Select,
   SelectContent,

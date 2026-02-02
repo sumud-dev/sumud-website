@@ -58,6 +58,7 @@ import {
   EVENT_TYPES,
   EVENT_LOCATION_MODES,
 } from "@/src/lib/types/event";
+import { markdownToHtml } from "@/src/lib/utils/markdown";
 
 // Animation variants
 const fadeInUp = {
@@ -394,7 +395,7 @@ export default function EventDetailPage() {
                   ) : (
                     <>
                       <Share2 className="h-5 w-5 mr-2" />
-                      {t("buttons.shareEvent")}
+                      {t("buttons.share")}
                     </>
                   )}
                 </Button>
@@ -449,15 +450,25 @@ export default function EventDetailPage() {
                       <div className="p-2 bg-white/20 rounded-lg">
                         <Info className="h-6 w-6" />
                       </div>
-                      {t("sections.aboutThisEvent")}
+                      {t("sections.aboutEvent")}
                     </h2>
                   </div>
                   <CardContent className="p-8 lg:p-10">
-                    <div className="prose prose-lg max-w-none text-[#1A1D14] leading-relaxed">
+                    <div className="prose prose-lg max-w-none text-[#1A1D14] leading-relaxed 
+                      prose-headings:text-[#1A1D14] prose-headings:font-bold prose-headings:mb-4 prose-headings:mt-6 first:prose-headings:mt-0
+                      prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
+                      prose-p:text-[#3E442B] prose-p:leading-loose prose-p:mb-4
+                      prose-a:text-[#781D32] prose-a:no-underline hover:prose-a:underline
+                      prose-strong:text-[#1A1D14] prose-strong:font-semibold
+                      prose-ul:my-4 prose-ol:my-4 prose-li:my-2 prose-li:text-[#3E442B]
+                      prose-blockquote:border-l-4 prose-blockquote:border-[#781D32] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600
+                      prose-img:rounded-lg prose-img:shadow-md prose-img:my-6
+                      prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
+                      prose-pre:bg-gray-900 prose-pre:text-gray-100">
                       {event.content ? (
-                        <div className="whitespace-pre-wrap text-[#3E442B] text-base leading-loose">{event.content}</div>
+                        <div dangerouslySetInnerHTML={{ __html: markdownToHtml(event.content) }} />
                       ) : event.description ? (
-                        <div className="whitespace-pre-wrap text-[#3E442B] text-base leading-loose">{event.description}</div>
+                        <div dangerouslySetInnerHTML={{ __html: markdownToHtml(event.description) }} />
                       ) : (
                         <p className="text-gray-500 italic text-center py-8">
                           {t("sections.eventDetailsComingSoon")}
@@ -680,7 +691,7 @@ export default function EventDetailPage() {
                       className="w-full border-2 border-[#2D3320]/30 hover:bg-[#2D3320] hover:text-white hover:border-[#2D3320] transition-all duration-300 font-semibold"
                     >
                       <Share2 className="h-5 w-5 mr-2" />
-                      {t("buttons.shareEvent")}
+                      {t("buttons.share")}
                     </Button>
                     <Button
                       variant="outline"

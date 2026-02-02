@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Calendar, MapPin } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
@@ -38,6 +39,7 @@ export function EventCalendar({
   onDateSelect,
   compact = false,
 }: EventCalendarProps) {
+  const t = useTranslations("events");
   // Initialize with a fixed date to avoid hydration mismatch
   const [currentDate, setCurrentDate] = useState(() => {
     // Use a stable initial date
@@ -161,21 +163,29 @@ export function EventCalendar({
   };
 
   const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
+    t("calendar.january"),
+    t("calendar.february"),
+    t("calendar.march"),
+    t("calendar.april"),
+    t("calendar.may"),
+    t("calendar.june"),
+    t("calendar.july"),
+    t("calendar.august"),
+    t("calendar.september"),
+    t("calendar.october"),
+    t("calendar.november"),
+    t("calendar.december"),
   ];
 
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dayNames = [
+    t("calendar.sunday"),
+    t("calendar.monday"),
+    t("calendar.tuesday"),
+    t("calendar.wednesday"),
+    t("calendar.thursday"),
+    t("calendar.friday"),
+    t("calendar.saturday"),
+  ];
 
   return (
     <div className="w-full space-y-4">
@@ -300,7 +310,7 @@ export function EventCalendar({
               {/* Legend */}
               <div className="mt-4 pt-4 border-t border-[#55613C]/10">
                 <div className="flex flex-wrap gap-2 text-xs">
-                  <span className="text-[#3E442B] font-medium">Event types:</span>
+                  <span className="text-[#3E442B] font-medium">{t("calendar.eventTypes")}</span>
                   {Object.entries(EVENT_TYPES).map(([key, label]) => (
                     <div key={key} className="flex items-center gap-1">
                       <div
@@ -336,10 +346,10 @@ export function EventCalendar({
                   <MapPin className="h-4 w-4 text-[#781D32]" />
                   <h3 className="font-semibold text-[#3E442B]">
                     {selectedDate 
-                      ? `Events on ${selectedDate.toLocaleDateString()}`
+                      ? `${t("calendar.eventsOn")} ${selectedDate.toLocaleDateString()}`
                       : hoveredDate
-                      ? `Events on ${hoveredDate.toLocaleDateString()}`
-                      : "Today's Events"
+                      ? `${t("calendar.eventsOn")} ${hoveredDate.toLocaleDateString()}`
+                      : t("calendar.todaysEvents")
                     }
                   </h3>
                 </div>
@@ -354,7 +364,7 @@ export function EventCalendar({
                   if (displayEvents.length === 0) {
                     return (
                       <p className="text-gray-500 text-sm italic">
-                        No events scheduled for this date
+                        {t("calendar.noEventsScheduled")}
                       </p>
                     );
                   }
@@ -386,14 +396,14 @@ export function EventCalendar({
                             variant="outline" 
                             className="text-xs border-[#55613C]/20 text-[#55613C]"
                           >
-                            {event.event_type ? (EVENT_TYPES as any)[event.event_type] : 'Event'}
+                            {event.event_type ? (EVENT_TYPES as any)[event.event_type] : t("card.event")}
                           </Badge>
                         </motion.div>
                       ))}
                       
                       {displayEvents.length > 3 && (
                         <p className="text-xs text-gray-500 text-center pt-2">
-                          +{displayEvents.length - 3} more events
+                          +{displayEvents.length - 3} {t("calendar.moreEvents")}
                         </p>
                       )}
                     </div>

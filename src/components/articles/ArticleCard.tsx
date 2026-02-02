@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Link } from "@/src/i18n/navigation";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Share2,
   Bookmark,
@@ -117,6 +118,8 @@ export default function ArticleCard({
   isLoading = false,
   priority = false,
 }: ArticleCardProps) {
+  const t = useTranslations("articlesPage");
+  const locale = useLocale();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
 
@@ -173,6 +176,15 @@ export default function ArticleCard({
     setIsLiked(!isLiked);
   };
 
+  // Format date with locale
+  const formattedDate = article.publishedAt 
+    ? new Date(article.publishedAt).toLocaleDateString(locale, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
+    : '';
+
   // Medium-style featured layout (hero)
   if (size === "featured" || size === "large") {
     return (
@@ -212,7 +224,7 @@ export default function ArticleCard({
                 {engagementData.isNew && (
                   <Badge className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 font-medium">
                     <Sparkles className="w-3 h-3 mr-1" />
-                    New
+                    {t("card.new")}
                   </Badge>
                 )}
               </div>
@@ -235,12 +247,12 @@ export default function ArticleCard({
                 <div className="flex items-center gap-4 text-sm text-gray-500">
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    <span>{readTime} min read</span>
+                    <span>{readTime} {t("card.minRead")}</span>
                   </div>
                   <span>·</span>
                   <div className="flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
-                    <span suppressHydrationWarning>{formatArticleDate(article.publishedAt)}</span>
+                    <span suppressHydrationWarning>{formattedDate}</span>
                   </div>
                 </div>
 
@@ -336,7 +348,7 @@ export default function ArticleCard({
                 {engagementData.isNew && (
                   <Badge className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 font-medium">
                     <Sparkles className="w-3 h-3 mr-1" />
-                    New
+                    {t("card.new")}
                   </Badge>
                 )}
               </div>
@@ -357,12 +369,12 @@ export default function ArticleCard({
               <div className="flex items-center gap-3 text-xs text-gray-500 pt-1 border-t border-gray-100">
                 <div className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  <span>{readTime} min</span>
+                  <span>{readTime} {t("card.min")}</span>
                 </div>
                 <span>·</span>
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  <span suppressHydrationWarning>{formatArticleDate(article.publishedAt)}</span>
+                  <span suppressHydrationWarning>{formattedDate}</span>
                 </div>
               </div>
             </div>
@@ -408,7 +420,7 @@ export default function ArticleCard({
                 {engagementData.isNew && (
                   <Badge className="bg-emerald-100 text-emerald-700 text-xs px-1.5 py-0.5">
                     <Sparkles className="w-3 h-3 mr-1" />
-                    New
+                    {t("card.new")}
                   </Badge>
                 )}
               </div>
@@ -422,10 +434,10 @@ export default function ArticleCard({
               <div className="flex items-center gap-3 text-xs text-gray-500">
                 <div className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  <span>{readTime} min</span>
+                  <span>{readTime} {t("card.min")}</span>
                 </div>
                 <span>·</span>
-                <span suppressHydrationWarning>{formatArticleDate(article.publishedAt)}</span>
+                <span suppressHydrationWarning>{formattedDate}</span>
               </div>
             </div>
 
@@ -497,7 +509,7 @@ export default function ArticleCard({
               {engagementData.isNew && (
                 <Badge className="bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 font-medium">
                   <Sparkles className="w-3 h-3 mr-1" />
-                  New
+                  {t("card.new")}
                 </Badge>
               )}
             </div>
@@ -519,10 +531,10 @@ export default function ArticleCard({
               <div className="flex items-center gap-3 text-xs text-gray-500">
                 <div className="flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  <span>{readTime} min</span>
+                  <span>{readTime} {t("card.min")}</span>
                 </div>
                 <span>·</span>
-                <span suppressHydrationWarning>{formatArticleDate(article.publishedAt)}</span>
+                <span suppressHydrationWarning>{formattedDate}</span>
               </div>
 
               {showSocialActions && (

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Save, Plus, Trash2, Loader2, ChevronDown, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
 import { Label } from "@/src/components/ui/label";
@@ -28,22 +29,19 @@ interface ButtonsEditorProps {
   onSaveSuccess?: () => void;
 }
 
-const localeNames: Record<Locale, string> = {
-  en: "English",
-  fi: "Suomi",
-};
+// locale names come from translations
 
 // Define button sections based on namespaces in the database
-const BUTTON_SECTIONS: Record<string, { namespace: string; label: string; description: string }> = {
+const BUTTON_SECTIONS: Record<string, { namespace: string; labelKey: string; descriptionKey: string }> = {
   "common": {
     namespace: "common",
-    label: "Common Buttons",
-    description: "Shared buttons used across the site (button keys in common namespace)"
+    labelKey: "buttonSections.common.label",
+    descriptionKey: "buttonSections.common.description"
   },
   "footer": {
     namespace: "footer",
-    label: "Footer Buttons",
-    description: "Buttons in the footer section"
+    labelKey: "buttonSections.footer.label",
+    descriptionKey: "buttonSections.footer.description"
   },
 };
 
@@ -53,6 +51,7 @@ export default function ButtonsEditor({ locale, onSaveSuccess }: ButtonsEditorPr
   const [hasChanges, setHasChanges] = React.useState(false);
   const [buttonSections, setButtonSections] = React.useState<ButtonSection[]>([]);
   const [expandedSections, setExpandedSections] = React.useState<Set<string>>(new Set());
+  const t = useTranslations("adminSettings.content");
 
   // Load buttons from database
   React.useEffect(() => {
@@ -87,7 +86,7 @@ export default function ButtonsEditor({ locale, onSaveSuccess }: ButtonsEditorPr
         
         setButtonSections(sections);
         setHasChanges(false);
-      } catch (error) {
+        } catch (error) {
         console.error("Error loading buttons:", error);
         toast.error("Failed to load buttons configuration");
       } finally {
@@ -189,7 +188,7 @@ export default function ButtonsEditor({ locale, onSaveSuccess }: ButtonsEditorPr
         }
       }
       
-      toast.success(`Buttons updated successfully for ${localeNames[locale]}`);
+      toast.success(t("savedForLocale", { locale: t(`locale.${locale}`) }));
       setHasChanges(false);
       onSaveSuccess?.();
     } catch (error) {
@@ -214,10 +213,10 @@ export default function ButtonsEditor({ locale, onSaveSuccess }: ButtonsEditorPr
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">
-            Button Labels - {localeNames[locale]}
+            {t("buttons.titleWithLocale", { locale: t(`locale.${locale}`) })}
           </h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Manage button text across all sections of the site
+            {t("buttons.description")}
           </p>
         </div>
         <Button
@@ -225,15 +224,15 @@ export default function ButtonsEditor({ locale, onSaveSuccess }: ButtonsEditorPr
           disabled={!hasChanges || isSaving}
           className="gap-2"
         >
-          {isSaving ? (
+              {isSaving ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Saving...
+              {t("buttons.save.saving")}
             </>
           ) : (
             <>
               <Save className="h-4 w-4" />
-              Save Changes
+              {t("buttons.save.default")}
             </>
           )}
         </Button>
@@ -261,15 +260,15 @@ export default function ButtonsEditor({ locale, onSaveSuccess }: ButtonsEditorPr
                     )}
                     <div>
                       <CardTitle className="text-base">
-                        {sectionConfig?.label || sectionKey}
+                        {sectionConfig ? t(sectionConfig.labelKey) : sectionKey}
                       </CardTitle>
                       <CardDescription className="text-xs mt-1">
-                        {sectionConfig?.description || ""}
+                        {sectionConfig ? t(sectionConfig.descriptionKey) : ""}
                       </CardDescription>
                     </div>
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    {section.buttons.length} buttons
+                    {section.buttons.length} {t("buttons.section.buttonsCount")}
                   </div>
                 </div>
               </CardHeader>
@@ -321,7 +320,7 @@ export default function ButtonsEditor({ locale, onSaveSuccess }: ButtonsEditorPr
                     onClick={() => handleAddButton(sectionIndex)}
                   >
                     <Plus className="h-4 w-4" />
-                    Add Button
+                    {t("buttons.section.addButton")}
                   </Button>
                 </CardContent>
               )}
@@ -335,8 +334,8 @@ export default function ButtonsEditor({ locale, onSaveSuccess }: ButtonsEditorPr
         <div className="sticky bottom-4 bg-amber-50 border border-amber-200 rounded-lg p-4 shadow-lg">
           <div className="flex items-center justify-between">
             <p className="text-sm text-amber-800">
-              You have unsaved changes. Don&apos;t forget to save before leaving.
-            </p>
+                {t("buttons.unsavedMessage")}
+              </p>
             <Button
               onClick={handleSave}
               disabled={isSaving}

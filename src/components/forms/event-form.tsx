@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -60,9 +61,15 @@ export function EventForm({
   event,
   onSubmit,
   isSubmitting,
-  submitLabel = "Save Event",
-  submittingLabel = "Saving...",
+  submitLabel,
+  submittingLabel,
 }: EventFormProps) {
+  const tForm = useTranslations("admin.events.form");
+  const t = useTranslations("admin.events");
+
+  // default labels from translations when not passed in
+  submitLabel = submitLabel ?? tForm("save.default");
+  submittingLabel = submittingLabel ?? tForm("save.saving");
   // Helper to convert jsonb fields to string
   const jsonbToString = (value: unknown): string => {
     if (!value) return "";
@@ -113,7 +120,7 @@ export function EventForm({
           <div className="lg:col-span-2 space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Event Details</CardTitle>
+                <CardTitle>{tForm("section.details")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -121,10 +128,10 @@ export function EventForm({
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <FormLabel>{tForm("title.label")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter event title..."
+                          placeholder={tForm("title.placeholder")}
                           {...field}
                         />
                       </FormControl>
@@ -138,10 +145,10 @@ export function EventForm({
                   name="content"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Content</FormLabel>
+                      <FormLabel>{tForm("content.label")}</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Write your event content..."
+                          placeholder={tForm("content.placeholder")}
                           className="min-h-[300px]"
                           {...field}
                         />
@@ -156,15 +163,15 @@ export function EventForm({
                   name="categories"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Categories</FormLabel>
+                      <FormLabel>{tForm("categories.label")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter categories (comma-separated)"
+                          placeholder={tForm("categories.placeholder")}
                           {...field}
                         />
                       </FormControl>
                       <FormDescription>
-                        Categories help organize and filter events.
+                        {tForm("categories.description")}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -175,8 +182,8 @@ export function EventForm({
 
             {/* Location & Organizer Info */}
             <Card>
-              <CardHeader>
-                <CardTitle>Location & Organizer</CardTitle>
+                <CardHeader>
+                <CardTitle>{tForm("section.locationOrganizer")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -184,10 +191,10 @@ export function EventForm({
                   name="locations"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Location</FormLabel>
+                      <FormLabel>{tForm("location.label")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter event location..."
+                          placeholder={tForm("location.placeholder")}
                           {...field}
                         />
                       </FormControl>
@@ -201,10 +208,10 @@ export function EventForm({
                   name="organizers"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Organizers</FormLabel>
+                      <FormLabel>{tForm("organizers.label")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter organizers..."
+                          placeholder={tForm("organizers.placeholder")}
                           {...field}
                         />
                       </FormControl>
@@ -218,10 +225,10 @@ export function EventForm({
                   name="authorName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Author Name</FormLabel>
+                      <FormLabel>{tForm("author.label")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Enter author name..."
+                          placeholder={tForm("author.placeholder")}
                           {...field}
                         />
                       </FormControl>
@@ -238,7 +245,7 @@ export function EventForm({
             {/* Publishing Options */}
             <Card>
               <CardHeader>
-                <CardTitle>Publishing</CardTitle>
+                <CardTitle>{tForm("publishing.title")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -246,20 +253,20 @@ export function EventForm({
                   name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
+                      <FormLabel>{tForm("status.label")}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select status" />
+                            <SelectValue placeholder={tForm("status.placeholder")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="published">Published</SelectItem>
-                          <SelectItem value="archived">Archived</SelectItem>
+                          <SelectItem value="draft">{t("status.draft")}</SelectItem>
+                          <SelectItem value="published">{t("status.published")}</SelectItem>
+                          <SelectItem value="archived">{t("status.archived")}</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -272,24 +279,24 @@ export function EventForm({
                   name="language"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Language</FormLabel>
+                      <FormLabel>{tForm("language.label")}</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select language" />
+                            <SelectValue placeholder={tForm("language.placeholder")} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="en">English</SelectItem>
+                          <SelectItem value="en">{tForm("language.en")}</SelectItem>
 
-                          <SelectItem value="fi">Finnish</SelectItem>
+                          <SelectItem value="fi">{tForm("language.fi")}</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormDescription>
-                        The primary language of this event
+                        {tForm("language.description")}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -304,10 +311,10 @@ export function EventForm({
                       <div className="space-y-0.5">
                         <FormLabel className="flex items-center gap-2">
                           <Languages className="h-4 w-4" />
-                          Auto-translate
+                          {tForm("autoTranslate.label")}
                         </FormLabel>
                         <FormDescription className="text-xs">
-                          Automatically translate to all languages (EN, FI)
+                          {tForm("autoTranslate.description")}
                         </FormDescription>
                       </div>
                       <FormControl>
@@ -341,7 +348,7 @@ export function EventForm({
             {/* Featured Image */}
             <Card>
               <CardHeader>
-                <CardTitle>Featured Image</CardTitle>
+                <CardTitle>{tForm("featuredImage.title")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -349,7 +356,7 @@ export function EventForm({
                   name="featuredImageUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Featured Image</FormLabel>
+                      <FormLabel>{tForm("featuredImage.title")}</FormLabel>
                       <FormControl>
                         <ImageUpload
                           value={field.value}
@@ -360,7 +367,7 @@ export function EventForm({
                         />
                       </FormControl>
                       <FormDescription>
-                        Upload an image or provide a URL below. Maximum size: 5MB.
+                        {tForm("featuredImage.description")}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -372,16 +379,16 @@ export function EventForm({
                   name="featuredImageUrl"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Or enter image URL</FormLabel>
+                      <FormLabel>{tForm("featuredImage.orUrl")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="https://example.com/image.jpg"
+                          placeholder={tForm("featuredImage.placeholder")}
                           {...field}
                           disabled={isSubmitting}
                         />
                       </FormControl>
                       <FormDescription>
-                        Alternatively, paste an image URL directly.
+                        {tForm("featuredImage.alternativeDescription")}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -393,16 +400,16 @@ export function EventForm({
                   name="altTexts"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Alt Text</FormLabel>
+                      <FormLabel>{tForm("alt.label")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Image description for accessibility"
+                          placeholder={tForm("alt.placeholder")}
                           {...field}
                           disabled={isSubmitting}
                         />
                       </FormControl>
                       <FormDescription>
-                        Describe the image for screen readers.
+                        {tForm("alt.description")}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

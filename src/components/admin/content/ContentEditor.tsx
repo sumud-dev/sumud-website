@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Save, RotateCcw, Search, X, Loader2, Languages } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Input } from "@/src/components/ui/input";
 import { Textarea } from "@/src/components/ui/textarea";
 import { Button } from "@/src/components/ui/button";
@@ -91,6 +92,7 @@ interface ContentFieldProps {
 function ContentField({ item, value, onChange, hasChanged }: ContentFieldProps) {
   const contentType = inferContentType(item.key || "", item.value || "");
   const displayKey = formatKeyForDisplay(item.key || "");
+  const t = useTranslations("adminSettings.content");
 
   return (
     <div className="space-y-2 py-3 border-b last:border-b-0">
@@ -104,18 +106,18 @@ function ContentField({ item, value, onChange, hasChanged }: ContentFieldProps) 
           </code>
           {hasChanged && (
             <Badge variant="outline" className="text-xs text-amber-600 border-amber-300">
-              Modified
+              {t("modified")}
             </Badge>
           )}
         </Label>
       </div>
-      {contentType === "textarea" ? (
+          {contentType === "textarea" ? (
         <Textarea
           id={item.id}
           value={value}
           onChange={(e) => onChange(item.id, e.target.value)}
           className={`min-h-20 resize-y ${hasChanged ? "border-amber-400" : ""}`}
-          placeholder={`Enter ${item.key}...`}
+              placeholder={t("placeholder.enterKey", { key: displayKey || item.key })}
         />
       ) : (
         <Input
@@ -123,7 +125,7 @@ function ContentField({ item, value, onChange, hasChanged }: ContentFieldProps) 
           value={value}
           onChange={(e) => onChange(item.id, e.target.value)}
           className={hasChanged ? "border-amber-400" : ""}
-          placeholder={`Enter ${item.key}...`}
+              placeholder={t("placeholder.enterKey", { key: displayKey || item.key })}
         />
       )}
     </div>
@@ -143,6 +145,7 @@ export default function ContentEditor({
   const [expandedGroups, setExpandedGroups] = React.useState<string[]>([]);
   const [autoTranslate, setAutoTranslate] = React.useState(false);
   const [isTranslating, setIsTranslating] = React.useState(false);
+  const t = useTranslations("adminSettings.content");
 
   // Initialize edited values from content
   React.useEffect(() => {
@@ -243,7 +246,7 @@ export default function ContentEditor({
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search keys or values..."
+              placeholder={t("searchAllContent")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 pr-10"
@@ -269,7 +272,7 @@ export default function ContentEditor({
         <div className="flex items-center gap-2">
           {changedCount > 0 && (
             <Badge variant="outline" className="text-amber-600 border-amber-300">
-              {changedCount} unsaved change{changedCount !== 1 ? "s" : ""}
+              {t("unsavedChangesCount", { count: changedCount })}
             </Badge>
           )}
           

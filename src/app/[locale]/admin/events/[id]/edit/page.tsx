@@ -8,6 +8,7 @@ import { EventForm, type EventFormData } from "@/src/components/forms/event-form
 import { fetchEventByIdAction, updateEventAction } from "@/src/actions/events.actions";
 import { type Event } from "@/src/lib/db/schema";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface EditEventPageProps {
   params: Promise<{
@@ -17,6 +18,7 @@ interface EditEventPageProps {
 
 export default function EditEventPage({ params }: EditEventPageProps) {
   const router = useRouter();
+  const t = useTranslations("admin.events.edit");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
   const [event, setEvent] = React.useState<Event | null>(null);
@@ -40,7 +42,7 @@ export default function EditEventPage({ params }: EditEventPageProps) {
           toast.error(result.error);
         }
       } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : "Failed to fetch event";
+        const errorMsg = err instanceof Error ? err.message : t("fetchError");
         setError(errorMsg);
         toast.error(errorMsg);
       } finally {
@@ -53,7 +55,7 @@ export default function EditEventPage({ params }: EditEventPageProps) {
 
   const handleSubmit = async (data: EventFormData) => {
     if (!event || !currentId) {
-      toast.error("No event loaded");
+      toast.error(t("noEventLoaded"));
       return;
     }
 
@@ -105,13 +107,13 @@ export default function EditEventPage({ params }: EditEventPageProps) {
       });
 
       if (result.success) {
-        toast.success("Event updated successfully");
+        toast.success(t("updateSuccess"));
         router.push("/admin/events");
       } else {
-        toast.error(result.error || "Failed to update event");
+        toast.error(result.error || t("updateError"));
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update event");
+      toast.error(error instanceof Error ? error.message : t("updateError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -128,7 +130,7 @@ export default function EditEventPage({ params }: EditEventPageProps) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading event...</span>
+        <span className="ml-2">{t("loadingEvent")}</span>
       </div>
     );
   }
@@ -137,11 +139,11 @@ export default function EditEventPage({ params }: EditEventPageProps) {
     return (
       <div className="text-center py-12">
         <h2 className="text-xl font-semibold text-gray-900 mb-2">
-          Error Loading Event
+          {t("errorLoadingTitle")}
         </h2>
         <p className="text-gray-600 mb-4">{error}</p>
         <Button asChild>
-          <Link href="/admin/events">Back to Events</Link>
+          <Link href="/admin/events">{t("backToEvents")}</Link>
         </Button>
       </div>
     );
@@ -151,13 +153,13 @@ export default function EditEventPage({ params }: EditEventPageProps) {
     return (
       <div className="text-center py-12">
         <h2 className="text-xl font-semibold text-gray-900 mb-2">
-          Event Not Found
+          {t("eventNotFoundTitle")}
         </h2>
         <p className="text-gray-600 mb-4">
-          The event you&apos;re looking for doesn&apos;t exist.
+          {t("eventNotFoundDescription")}
         </p>
         <Button asChild>
-          <Link href="/admin/events">Back to Events</Link>
+          <Link href="/admin/events">{t("backToEvents")}</Link>
         </Button>
       </div>
     );
@@ -170,18 +172,18 @@ export default function EditEventPage({ params }: EditEventPageProps) {
           <Button variant="ghost" size="sm" asChild>
             <Link href="/admin/events">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Events
+              {t("backToEvents")}
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Edit Event</h1>
-            <p className="text-gray-600">Update event: {event.title}</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
+            <p className="text-gray-600">{t("description", { title: event.title })}</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
           <Button type="button" variant="outline" onClick={handlePreview}>
             <Eye className="mr-2 h-4 w-4" />
-            Preview
+            {t("preview")}
           </Button>
         </div>
       </div>
@@ -190,8 +192,8 @@ export default function EditEventPage({ params }: EditEventPageProps) {
         event={event}
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
-        submitLabel="Update Event"
-        submittingLabel="Updating..."
+        submitLabel={t("submitLabel")}
+        submittingLabel={t("submittingLabel")}
       />
     </div>
   );

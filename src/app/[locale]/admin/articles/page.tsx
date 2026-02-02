@@ -14,7 +14,8 @@ import {
   Archive, 
   Loader2,
   Globe,
-  User
+  User,
+  Languages
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
@@ -71,7 +72,7 @@ const STATUS_BADGE_COLORS: Record<string, string> = {
 };
 
 const ArticlesPage: React.FC = () => {
-  const translationKeys = useTranslations("admin.articles");
+  const t = useTranslations("admin.articles");
   const currentLocale = useLocale() as "en" | "fi";
   
   // Local state for filters
@@ -115,15 +116,15 @@ const ArticlesPage: React.FC = () => {
 
     deletePostMutation.mutate(deleteConfirm.slug, {
       onSuccess: () => {
-        toast.success(translationKeys("deleteSuccess"));
+        toast.success(t("deleteSuccess"));
         setDeleteConfirm(null);
         refetchPosts();
       },
       onError: (mutationError) => {
-        toast.error(mutationError.message || translationKeys("deleteFailed"));
+        toast.error(mutationError.message || t("deleteFailed"));
       },
     });
-  }, [deletePostMutation, translationKeys, refetchPosts, deleteConfirm]);
+  }, [deletePostMutation, t, refetchPosts, deleteConfirm]);
 
   /**
    * Handle status update (publish/unpublish/archive)
@@ -140,26 +141,26 @@ const ArticlesPage: React.FC = () => {
       {
         onSuccess: () => {
           const statusMessage = newStatus === "published" 
-            ? translationKeys("publishSuccess")
+            ? t("publishSuccess")
             : newStatus === "archived"
-            ? translationKeys("archiveSuccess")
-            : translationKeys("unpublishSuccess");
+            ? t("archiveSuccess")
+            : t("unpublishSuccess");
           
           toast.success(statusMessage);
           refetchPosts();
         },
         onError: (mutationError) => {
-          toast.error(mutationError.message || translationKeys("statusUpdateFailed"));
+          toast.error(mutationError.message || t("statusUpdateFailed"));
         },
       }
     );
-  }, [updatePostMutation, translationKeys, refetchPosts]);
+  }, [updatePostMutation, t, refetchPosts]);
 
   /**
    * Format date for display
    */
   const formatPostDate = (dateString: string | null | undefined): string => {
-    if (!dateString) return "N/A";
+    if (!dateString) return t("notAvailable");
     
     try {
       return new Date(dateString).toLocaleDateString(currentLocale, {
@@ -168,7 +169,7 @@ const ArticlesPage: React.FC = () => {
         day: 'numeric',
       });
     } catch {
-      return "N/A";
+      return t("notAvailable");
     }
   };
 
@@ -198,44 +199,52 @@ const ArticlesPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            {translationKeys("title")}
+            {t("title")}
           </h1>
           <p className="text-gray-600 mt-1">
-            {translationKeys("description")}
+            {t("description")}
           </p>
         </div>
-        <Button asChild className="bg-[#781D32] hover:bg-[#781D32]/90">
-          <Link href="/admin/articles/new">
-            <Plus className="mr-2 h-4 w-4" />
-            {translationKeys("newButton")}
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link href="/admin/articles/ui-translations">
+              <Languages className="mr-2 h-4 w-4" />
+              {t("uiTranslationsButton")}
+            </Link>
+          </Button>
+          <Button asChild className="bg-[#781D32] hover:bg-[#781D32]/90">
+            <Link href="/admin/articles/new">
+              <Plus className="mr-2 h-4 w-4" />
+              {t("newButton")}
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 md:gap-6">
         <StatsCard
-          title={translationKeys("totalArticles")}
+          title={t("totalArticles")}
           value={displayStatistics.totalArticles}
           icon={FileText}
           iconClassName="text-muted-foreground"
         />
         <StatsCard
-          title={translationKeys("published")}
+          title={t("published")}
           value={displayStatistics.publishedArticles}
           icon={CheckCircle}
           iconClassName="text-green-500"
           valueClassName="text-green-600"
         />
         <StatsCard
-          title={translationKeys("drafts")}
+          title={t("drafts")}
           value={displayStatistics.draftArticles}
           icon={Edit}
           iconClassName="text-yellow-500"
           valueClassName="text-yellow-600"
         />
         <StatsCard
-          title={translationKeys("archived")}
+          title={t("archived")}
           value={displayStatistics.archivedArticles}
           icon={Archive}
           iconClassName="text-gray-500"
@@ -247,14 +256,14 @@ const ArticlesPage: React.FC = () => {
       <Card className="border-gray-200 shadow-sm">
         <CardHeader className="pb-4">
           <CardTitle className="text-lg font-semibold">
-            {translationKeys("allArticles")}
+            {t("allArticles")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           {/* Filters Section */}
           <div className="mb-4 flex flex-col sm:flex-row gap-4">
             <Input
-              placeholder={translationKeys("searchPlaceholder")}
+              placeholder={t("searchPlaceholder")}
               value={searchQuery}
               onChange={(event) => {
                 setSearchQuery(event.target.value);
@@ -271,13 +280,13 @@ const ArticlesPage: React.FC = () => {
               }}
             >
               <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Filter by status" />
+                <SelectValue placeholder={t("filterByStatus")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="published">Published</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
+                <SelectItem value="all">{t("filter.allStatus")}</SelectItem>
+                <SelectItem value="published">{t("filter.published")}</SelectItem>
+                <SelectItem value="draft">{t("filter.draft")}</SelectItem>
+                <SelectItem value="archived">{t("filter.archived")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -287,10 +296,10 @@ const ArticlesPage: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Post</TableHead>
-                  <TableHead className="hidden md:table-cell w-32">Author</TableHead>
-                  <TableHead className="w-28">Date</TableHead>
-                  <TableHead className="w-16">Actions</TableHead>
+                  <TableHead>{t("table.post")}</TableHead>
+                  <TableHead className="hidden md:table-cell w-32">{t("table.author")}</TableHead>
+                  <TableHead className="w-28">{t("table.date")}</TableHead>
+                  <TableHead className="w-16">{t("table.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -299,7 +308,7 @@ const ArticlesPage: React.FC = () => {
                   <TableRow>
                     <TableCell colSpan={4} className="text-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin mx-auto text-gray-500" />
-                      <p className="text-sm text-gray-500 mt-2">Loading posts...</p>
+                      <p className="text-sm text-gray-500 mt-2">{t("loadingPosts")}</p>
                     </TableCell>
                   </TableRow>
                 )}
@@ -308,7 +317,7 @@ const ArticlesPage: React.FC = () => {
                 {postsError && !isLoadingPosts && (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center py-8 text-red-500">
-                      Error loading articles: {postsError.message}
+                      {t("errorLoading")} {postsError.message}
                     </TableCell>
                   </TableRow>
                 )}
@@ -317,7 +326,7 @@ const ArticlesPage: React.FC = () => {
                 {!isLoadingPosts && !postsError && displayedPosts.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center py-8 text-gray-500">
-                      {translationKeys("noPostsFound")}
+                      {t("noPostsFound")}
                     </TableCell>
                   </TableRow>
                 )}
@@ -349,7 +358,7 @@ const ArticlesPage: React.FC = () => {
                           {post.isTranslation && (
                             <Badge variant="secondary" className="text-xs">
                               <Globe className="w-3 h-3 mr-1" />
-                              Translated
+                              {t("badge.translated")}
                             </Badge>
                           )}
                         </div>
@@ -366,7 +375,7 @@ const ArticlesPage: React.FC = () => {
                       {post.isTranslation ? (
                         <div className="flex items-center text-xs text-gray-500">
                           <Globe className="w-3 h-3 mr-1" />
-                          AI Translated
+                          {t("author.aiTranslated")}
                         </div>
                       ) : post.authorName ? (
                         <div className="flex items-center text-sm">
@@ -374,7 +383,7 @@ const ArticlesPage: React.FC = () => {
                           {post.authorName}
                         </div>
                       ) : (
-                        <span className="text-sm text-gray-400">—</span>
+                        <span className="text-sm text-gray-400">{t("author.unknown")}</span>
                       )}
                     </TableCell>
 
@@ -396,7 +405,7 @@ const ArticlesPage: React.FC = () => {
                           <DropdownMenuItem asChild>
                             <Link href={`/admin/articles/${post.slug}`}>
                               <Eye className="mr-2 h-4 w-4" />
-                              {translationKeys("viewDetails")}
+                              {t("viewDetails")}
                             </Link>
                           </DropdownMenuItem>
 
@@ -405,7 +414,7 @@ const ArticlesPage: React.FC = () => {
                             <DropdownMenuItem asChild>
                               <Link href={`/admin/articles/${post.slug}/edit`}>
                                 <Edit className="mr-2 h-4 w-4" />
-                                {translationKeys("edit")}
+                                {t("editButton")}
                               </Link>
                             </DropdownMenuItem>
                           )}
@@ -417,7 +426,7 @@ const ArticlesPage: React.FC = () => {
                               disabled={updatePostMutation.isPending}
                             >
                               <CheckCircle className="mr-2 h-4 w-4" />
-                              {translationKeys("publish")}
+                              {t("publish")}
                             </DropdownMenuItem>
                           )}
 
@@ -428,7 +437,7 @@ const ArticlesPage: React.FC = () => {
                               disabled={updatePostMutation.isPending}
                             >
                               <Archive className="mr-2 h-4 w-4" />
-                              {translationKeys("unpublish")}
+                              {t("unpublish")}
                             </DropdownMenuItem>
                           )}
 
@@ -438,7 +447,7 @@ const ArticlesPage: React.FC = () => {
                             className="text-red-600"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            {translationKeys("delete")}
+                            {t("delete")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -453,9 +462,11 @@ const ArticlesPage: React.FC = () => {
           {paginationInfo && paginationInfo.totalPages > 1 && (
             <div className="flex items-center justify-between mt-4">
               <p className="text-sm text-gray-600">
-                Showing {((paginationInfo.currentPage - 1) * paginationInfo.pageSize) + 1} to{' '}
-                {Math.min(paginationInfo.currentPage * paginationInfo.pageSize, paginationInfo.totalItems)} of{' '}
-                {paginationInfo.totalItems} articles
+                {t("pagination.showing", {
+                  start: ((paginationInfo.currentPage - 1) * paginationInfo.pageSize) + 1,
+                  end: Math.min(paginationInfo.currentPage * paginationInfo.pageSize, paginationInfo.totalItems),
+                  total: paginationInfo.totalItems
+                })}
               </p>
               
               <div className="flex gap-2">
@@ -465,7 +476,7 @@ const ArticlesPage: React.FC = () => {
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={!paginationInfo.hasPreviousPage || isLoadingPosts}
                 >
-                  Previous
+                  {t("pagination.previous")}
                 </Button>
                 
                 <div className="flex items-center gap-1">
@@ -492,7 +503,7 @@ const ArticlesPage: React.FC = () => {
                   onClick={() => setCurrentPage(prev => Math.min(paginationInfo.totalPages, prev + 1))}
                   disabled={!paginationInfo.hasNextPage || isLoadingPosts}
                 >
-                  Next
+                  {t("pagination.next")}
                 </Button>
               </div>
             </div>
@@ -507,18 +518,18 @@ const ArticlesPage: React.FC = () => {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{translationKeys("deleteConfirm", { title: "" })}</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteConfirm", { title: "" })}</AlertDialogTitle>
             <AlertDialogDescription>
-              {translationKeys("deleteMessage", { title: deleteConfirm?.title ?? "" })}
+              {t("deleteMessage", { title: deleteConfirm?.title ?? "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{translationKeys("cancel")}</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeletePost}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {translationKeys("delete")}
+              {t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

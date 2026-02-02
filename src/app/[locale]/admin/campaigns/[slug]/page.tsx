@@ -318,7 +318,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
 
   // Handlers
   const handleDelete = async () => {
-    if (!campaign || !confirm(t("delete.confirm", { title: campaign.title || t("untitledCampaign") }))) return;
+    if (!campaign || !confirm(t("deleteConfirm", { title: campaign.title || t("untitledCampaign") }))) return;
     
     setIsDeleting(true);
     try {
@@ -390,7 +390,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
 
   // Helper to get campaign type label from translations
   const getCampaignTypeLabel = (type: string | null) => {
-    if (!type) return t("info.typeNotSet");
+    if (!type) return t("typeNotSet");
     if (CAMPAIGN_TYPE_KEYS.includes(type as typeof CAMPAIGN_TYPE_KEYS[number])) {
       return t(`types.${type}`);
     }
@@ -479,7 +479,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
       {/* Quick Info Bar */}
       <div className="flex flex-wrap items-center gap-4 p-4 bg-muted/30 rounded-lg border">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">{t("info.status")}:</span>
+          <span className="text-sm text-muted-foreground">{t("status")}:</span>
           <StatusBadge status={campaign.status} />
           {campaign.status === "draft" && (
             <Button size="sm" variant="ghost" onClick={() => handleStatusUpdate("active")} disabled={isUpdating} className="h-7 text-green-600 hover:text-green-700 hover:bg-green-50">
@@ -515,7 +515,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
         <Separator orientation="vertical" className="h-6 hidden sm:block" />
         
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">{t("info.type")}:</span>
+          <span className="text-sm text-muted-foreground">{t("type")}:</span>
           <Badge variant="outline">
             <Target className="mr-1 h-3 w-3" />
             {getCampaignTypeLabel(campaign.campaignType)}
@@ -525,16 +525,16 @@ export default function CampaignDetailsPage({ params }: PageProps) {
         <Separator orientation="vertical" className="h-6 hidden sm:block" />
         
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">{t("info.active")}:</span>
+          <span className="text-sm text-muted-foreground">{t("active")}:</span>
           <Badge variant={campaign.isActive ? "default" : "secondary"} className="text-xs">
-            {campaign.isActive ? t("info.yes") : t("info.no")}
+            {campaign.isActive ? t("yes") : t("no")}
           </Badge>
         </div>
         
         <Separator orientation="vertical" className="h-6 hidden sm:block" />
         
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">{t("info.slug")}:</span>
+          <span className="text-sm text-muted-foreground">{t("slug")}:</span>
           <code className="font-mono text-xs bg-muted px-2 py-0.5 rounded">{campaign.slug}</code>
         </div>
         
@@ -542,7 +542,7 @@ export default function CampaignDetailsPage({ params }: PageProps) {
           <>
             <Separator orientation="vertical" className="h-6 hidden sm:block" />
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">{t("info.icon")}:</span>
+              <span className="text-sm text-muted-foreground">{t("icon")}:</span>
               <code className="font-mono text-xs bg-muted px-2 py-0.5 rounded">{campaign.iconName}</code>
             </div>
           </>
@@ -654,14 +654,14 @@ export default function CampaignDetailsPage({ params }: PageProps) {
                 <div className="text-center p-4 bg-muted rounded-lg">
                   <Heart className="h-6 w-6 mx-auto mb-2 text-[#55613C]" />
                   <p className="text-2xl font-bold text-[#55613C]">{Number(campaign.stats.totalDonations).toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground">{t("stats.donations")}</p>
+                  <p className="text-sm text-muted-foreground">{t("stats.totalDonations")}</p>
                 </div>
               )}
               {campaign.stats?.totalViews !== undefined && (
                 <div className="text-center p-4 bg-muted rounded-lg">
                   <Eye className="h-6 w-6 mx-auto mb-2 text-blue-600" />
                   <p className="text-2xl font-bold text-blue-600">{Number(campaign.stats.totalViews).toLocaleString()}</p>
-                  <p className="text-sm text-muted-foreground">{t("stats.views")}</p>
+                  <p className="text-sm text-muted-foreground">{t("stats.totalViews")}</p>
                 </div>
               )}
             </div>
@@ -671,9 +671,9 @@ export default function CampaignDetailsPage({ params }: PageProps) {
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-8">
             <TrendingUp className="h-12 w-12 text-muted-foreground/50 mb-4" />
-            <h3 className="text-lg font-medium text-muted-foreground">{t("stats.noStatsTitle")}</h3>
+            <h3 className="text-lg font-medium text-muted-foreground">{t("stats.noStats")}</h3>
             <p className="text-sm text-muted-foreground text-center max-w-md mt-1">
-              {t("stats.noStatsMessage")}
+              {t("stats.noStats")}
             </p>
           </CardContent>
         </Card>

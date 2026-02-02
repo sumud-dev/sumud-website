@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import { Calendar, Sparkles, X } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
@@ -26,12 +27,14 @@ export function EventsQuickActions({
   onFeaturedToggle,
   onDateClear,
 }: EventsQuickActionsProps) {
+  const t = useTranslations("events");
+
   return (
     <Card className="mt-6 glass-cream blur-transition border-2 border-[#2D3320]/30 shadow-lg hover:shadow-xl gpu-accelerated rounded-xl transition-all duration-200">
       <CardHeader className="bg-linear-to-br from-[#F8F6F0] to-white border-b-2 border-[#2D3320]/20">
         <CardTitle className="flex items-center gap-2 text-lg text-[#1A1D14] font-bold">
           <Sparkles className="h-5 w-5 text-[#781D32]" />
-          Quick Actions
+          {t("quickActions.title")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3 pt-6">
@@ -46,7 +49,7 @@ export function EventsQuickActions({
           } transition-all duration-200`}
         >
           <Calendar className="h-4 w-4 mr-2" />
-          {showUpcomingOnly ? "Showing Upcoming" : "Show Upcoming Only"}
+          {showUpcomingOnly ? t("quickActions.upcomingActive") : t("quickActions.upcoming")}
         </Button>
         <Button
           variant={isFeatured ? "default" : "outline"}
@@ -59,13 +62,13 @@ export function EventsQuickActions({
           } transition-all duration-200`}
         >
           <Sparkles className="h-4 w-4 mr-2" />
-          {isFeatured ? "Showing Featured" : "Show Featured Only"}
+          {isFeatured ? t("quickActions.featuredActive") : t("quickActions.featured")}
         </Button>
 
         {selectedDate && (
           <div className="pt-3 border-t-2 border-[#2D3320]/20">
             <p className="text-sm text-[#1A1D14] font-bold mb-2">
-              Selected Date:
+              {t("quickActions.selectedDate")}
             </p>
             <div className="flex items-center justify-between p-3 bg-[#781D32]/10 rounded-md border border-[#781D32]/30 shadow-sm">
               <span className="text-sm text-[#781D32] font-semibold" suppressHydrationWarning>

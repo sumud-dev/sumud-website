@@ -64,10 +64,6 @@ project-root/
 │       │   ├── service.ts    # Content service
 │       │   ├── helpers.ts    # Helper functions
 │       │   └── validator.ts  # Validation utilities
-│       ├── pages/
-│       │   └── file-storage.ts
-│       └── navigation/
-│           └── file-storage.ts
 └── scripts/
     └── migrate-content.ts    # Migration tools
 ```

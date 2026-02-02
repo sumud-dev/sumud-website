@@ -68,7 +68,7 @@ const SORT_OPTIONS = [
 ];
 
 export default function CampaignsPage() {
-  const t = useTranslations("campaignsPage");
+  const t = useTranslations("campaigns");
   const locale = useLocale();
   const [selectedType, setSelectedType] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
@@ -451,7 +451,7 @@ export default function CampaignsPage() {
 interface CampaignCardProps {
   campaign: Campaign;
   index: number;
-  t: ReturnType<typeof useTranslations<"campaignsPage">>;
+  t: ReturnType<typeof useTranslations<"campaigns">>;
 }
 
 function CampaignCard({ campaign, index, t }: CampaignCardProps) {

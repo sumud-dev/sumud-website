@@ -18,22 +18,13 @@
  * - "homepage" (UI) ✅ vs "pages" (content) ❌
  */
 export const UI_TRANSLATION_NAMESPACES = [
-  'common',           // Common UI elements (buttons, labels, etc.)
   'admin',            // Admin interface
   'adminSettings',    // Admin settings pages
   'errors',           // Error messages
   'navigation',       // Navigation menu labels (NOT navigation content/config)
   'footer',           // Footer UI elements
-  'homepage',         // Homepage UI sections (NOT page content)
-  'about',            // About page UI (NOT page content)
-  'articlesPage',     // Articles listing page UI (NOT article content)
-  'campaignsPage',    // Campaigns listing page UI (NOT campaign content)
-  'eventsDetail',     // Events detail page UI (NOT event content)
-  'membership',       // Membership page UI
-  'petitions',        // Petitions page UI
-  'impact',           // Impact page UI
-  'auth',             // Authentication UI
-  'articles',         // Articles general UI (NOT article content)
+  'events',           // Events page UI elements
+  'campaigns',        // Campaigns page UI element
 ] as const;
 
 /**
@@ -43,9 +34,7 @@ export const UI_TRANSLATION_NAMESPACES = [
 export const INVALID_UI_NAMESPACES = [
   'pages',            // ❌ Use page_builder_translations
   'page',             // ❌ Use page_builder_translations
-  'events',           // ❌ Use event_translations
   'event',            // ❌ Use event_translations
-  'campaigns',        // ❌ Use campaign_translations
   'campaign',         // ❌ Use campaign_translations
   'posts',            // ❌ Use post_translations
   'post',             // ❌ Use post_translations

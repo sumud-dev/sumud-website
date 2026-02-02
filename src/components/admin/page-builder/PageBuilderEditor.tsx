@@ -83,6 +83,9 @@ import {
   useUpdatePage,
 } from "@/src/lib/hooks/use-pages";
 import { TranslationStatusIndicator } from "@/src/components/admin/translation/TranslationStatusIndicator";
+import { ArticlesUITranslationsEditor } from "@/src/components/admin/articles/ArticlesUITranslationsEditor";
+import { EventsUITranslationsEditor } from "@/src/components/admin/events/EventsUITranslationsEditor";
+import { CampaignsUITranslationsEditor } from "@/src/components/admin/campaigns/CampaignsUITranslationsEditor";
 import { generateSlug } from "@/src/lib/utils/utils";
 import type {
   PageBlock,
@@ -169,7 +172,14 @@ export function PageBuilderEditor({ initialData, isNew = false, initialLocale = 
   const locale = useLocale();
   const createPage = useCreatePage();
   const updatePage = useUpdatePage();
-  const t = useTranslations("adminSettings.pageBuilder.editor");
+  const t = useTranslations("adminSettings.pageBuilder");
+
+  // Check if this page uses UI translations
+  const usesUITranslations = initialData?.translations?.en?.blocks?.[0]?.content?.type === "ui-translations" 
+    || initialData?.translations?.fi?.blocks?.[0]?.content?.type === "ui-translations";
+  const uiTranslationsNamespace = usesUITranslations 
+    ? (initialData?.translations?.en?.blocks?.[0]?.content?.namespace || initialData?.translations?.fi?.blocks?.[0]?.content?.namespace)
+    : null;
 
   // Initialize state directly from props, respecting the initial locale
   const initialTrans = initialData?.translations || {};
@@ -513,10 +523,34 @@ export function PageBuilderEditor({ initialData, isNew = false, initialLocale = 
         </TabsContent>
 
         <TabsContent value="blocks" className="space-y-4">
+          {usesUITranslations && uiTranslationsNamespace ? (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <LayoutTemplate className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                      <div>
+                        <h3 className="font-semibold text-blue-900 dark:text-blue-100">
+                          {t("uiTranslationsMode.title") || "UI Translations Mode"}
+                        </h3>
+                        <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                          {t("uiTranslationsMode.description") || `This page uses UI translations from the "${uiTranslationsNamespace}" namespace. Edit the text content below.`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {uiTranslationsNamespace === "articlesPage" && <ArticlesUITranslationsEditor />}
+                  {uiTranslationsNamespace === "events" && <EventsUITranslationsEditor />}
+                  {uiTranslationsNamespace === "campaigns" && <CampaignsUITranslationsEditor />}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
           <Card>
             <CardContent className="pt-6">
-              <div className="flex flex-wrap gap-2 p-3 bg-muted rounded-lg mb-4">
-                {blockTypes.map((bt) => (
+              <div className="flex flex-wrap gap-2 p-3 bg-muted rounded-lg mb-4">{blockTypes.map((bt) => (
                   <Button
                     key={bt.type}
                     variant="outline"
@@ -610,6 +644,7 @@ export function PageBuilderEditor({ initialData, isNew = false, initialLocale = 
               </div>
             </CardContent>
           </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
@@ -720,7 +755,7 @@ function LocaleNestedItemsEditor({
   itemFields,
   itemExtraFields = [],
 }: LocaleNestedItemsEditorProps) {
-  const t = useTranslations("adminSettings.pageBuilder.editor");
+  const t = useTranslations("adminSettings.pageBuilder");
   const [activeLocale, setActiveLocale] = useState<Locale>('en');
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set([0]));
   
@@ -1013,7 +1048,7 @@ function BlockEditor({
   onUpdateField,
   onRemoveField,
 }: BlockEditorProps) {
-  const t = useTranslations("adminSettings.pageBuilder.editor");
+  const t = useTranslations("adminSettings.pageBuilder");
   const content = block.content as unknown as Record<string, unknown>;
 
   switch (block.type) {

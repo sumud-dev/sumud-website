@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense, lazy } from "react";
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Clock } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
@@ -35,6 +36,8 @@ export function EventsEmptyState({
   hasActiveFilters,
   onClearFilters,
 }: EventsEmptyStateProps) {
+  const t = useTranslations("events");
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -70,8 +73,8 @@ export function EventsEmptyState({
               <TypewriterOnScroll
                 text={
                   selectedDate
-                    ? "Let's find events for another date!"
-                    : "Great events are coming soon!"
+                    ? t("emptyState.titleWithDate")
+                    : t("emptyState.titleWithoutDate")
                 }
                 speed={80}
               />
@@ -79,8 +82,8 @@ export function EventsEmptyState({
           </div>
           <p className="text-[#3E442B] mb-8 max-w-md mx-auto font-medium text-lg">
             {selectedDate
-              ? "Our community is always organizing. Try a different date or explore our growing network of events."
-              : "We're continuously adding new ways to connect and take action. Check back soon or adjust your search."}
+              ? t("emptyState.descriptionWithDate")
+              : t("emptyState.descriptionWithoutDate")}
           </p>
         </ScrollReveal>
       </Suspense>
@@ -108,7 +111,7 @@ export function EventsEmptyState({
                   >
                     🔄
                   </motion.span>
-                  Clear Filters & Explore
+                  {t("emptyState.clearFilters")}
                 </Button>
               </motion.div>
             )}
@@ -118,7 +121,7 @@ export function EventsEmptyState({
               animate={{ opacity: [0.6, 1, 0.6] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
-              &ldquo;Every gathering strengthens our solidarity movement.&rdquo;
+              {t("emptyState.quote")}
             </motion.p>
           </div>
         </ScrollReveal>

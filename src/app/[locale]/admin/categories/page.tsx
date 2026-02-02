@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Link } from "@/src/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { Plus, MoreHorizontal, Edit, Trash2, FolderOpen, CheckCircle, XCircle, FileText } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
@@ -125,6 +126,7 @@ const statusColors = {
 };
 
 const CategoriesPage: React.FC = () => {
+  const t = useTranslations("admin.categories");
   const [searchQuery, setSearchQuery] = React.useState("");
 
   // Sort categories by createdAt descending (newest first)
@@ -154,7 +156,7 @@ const CategoriesPage: React.FC = () => {
   }, []);
 
   const handleDelete = (slug: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete the category "${name}"?`)) return;
+    if (!confirm(t("deleteConfirm", { name }))) return;
   };
 
   const handleStatusToggle = (slug: string, currentStatus: string) => {
@@ -165,13 +167,13 @@ const CategoriesPage: React.FC = () => {
     <div className="space-y-6 md:space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Categories</h1>
-          <p className="text-gray-600 mt-1">Manage article categories and organization</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{t("title")}</h1>
+          <p className="text-gray-600 mt-1">{t("description")}</p>
         </div>
         <Button asChild className="bg-[#781D32] hover:bg-[#781D32]/90">
           <Link href="/admin/categories/new">
             <Plus className="mr-2 h-4 w-4" />
-            New Category
+            {t("newCategory")}
           </Link>
         </Button>
       </div>
@@ -179,20 +181,20 @@ const CategoriesPage: React.FC = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 md:gap-6">
         <StatsCard
-          title="Total Categories"
+          title={t("totalCategories")}
           value={stats.total}
           icon={FolderOpen}
           iconClassName="text-muted-foreground"
         />
         <StatsCard
-          title="Active"
+          title={t("active")}
           value={stats.active}
           icon={CheckCircle}
           iconClassName="text-green-500"
           valueClassName="text-green-600"
         />
         <StatsCard
-          title="Inactive"
+          title={t("inactive")}
           value={stats.inactive}
           icon={XCircle}
           iconClassName="text-gray-500"
@@ -264,7 +266,7 @@ const CategoriesPage: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <Badge className={statusColors[category.status]}>
-                          {category.status.charAt(0).toUpperCase() + category.status.slice(1)}
+                          {t(`status.${category.status}`)}
                         </Badge>
                       </TableCell>
                       <TableCell>

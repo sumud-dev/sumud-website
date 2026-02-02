@@ -104,7 +104,7 @@ const EventsPage: React.FC = () => {
       setEvents(data.events);
       setPagination(data.pagination);
     } else {
-      toast.error(`Failed to load events: ${result.error}`);
+      toast.error(t("loadEventsError", { error: result.error }));
     }
     setIsLoading(false);
   }, [locale]);
@@ -143,12 +143,12 @@ const EventsPage: React.FC = () => {
     
     const result = await deleteEventAction(deleteConfirm.id);
     if (result.success) {
-      toast.success(`"${deleteConfirm.title}" deleted successfully`);
+      toast.success(t("deleteSuccess", { title: deleteConfirm.title }));
       setDeleteConfirm(null);
       // Refetch to update pagination
       fetchEvents(currentPage);
     } else {
-      toast.error(result.error || "Failed to delete event");
+      toast.error(result.error || t("deleteError"));
     }
   };
 
@@ -162,16 +162,16 @@ const EventsPage: React.FC = () => {
       setEvents((prev) =>
         prev.map((e) => (e.id === id ? { ...e, status: newStatus } : e))
       );
-      toast.success(`"${title}" status updated to ${newStatus}`);
+      toast.success(t("statusUpdateSuccess", { title, status: t(`status.${newStatus}`) }));
     } else {
-      toast.error(result.error || "Failed to update status");
+      toast.error(result.error || t("statusUpdateError"));
     }
   };
 
   const formatDate = (dateInput: string | Date | null) => {
-    if (!dateInput) return "N/A";
+    if (!dateInput) return t("notAvailable");
     const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
-    return date.toLocaleDateString("en-US", {
+    return date.toLocaleDateString(locale, {
       weekday: "short",
       year: "numeric",
       month: "short",
@@ -249,10 +249,10 @@ const EventsPage: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-gray-50">
-                    <TableHead>Event</TableHead>
-                    <TableHead className="w-32">Published</TableHead>
-                    <TableHead className="w-24">Status</TableHead>
-                    <TableHead className="w-16">Actions</TableHead>
+                    <TableHead>{t("table.event")}</TableHead>
+                    <TableHead className="w-32">{t("table.published")}</TableHead>
+                    <TableHead className="w-24">{t("table.status")}</TableHead>
+                    <TableHead className="w-16">{t("table.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -262,7 +262,7 @@ const EventsPage: React.FC = () => {
                         colSpan={4}
                         className="text-center py-8 text-gray-500"
                       >
-                        Loading events...
+                        {t("loadingEvents")}
                       </TableCell>
                     </TableRow>
                   ) : filteredEvents.length === 0 ? (
@@ -271,7 +271,7 @@ const EventsPage: React.FC = () => {
                         colSpan={4}
                         className="text-center py-8 text-gray-500"
                       >
-                        No events found.
+                        {t("noEventsFound")}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -282,7 +282,7 @@ const EventsPage: React.FC = () => {
                             href={`/admin/events/${event.id}`}
                             className="font-medium text-gray-900 truncate block hover:text-[#781D32] hover:underline transition-colors"
                           >
-                            {event.title || "Untitled"}
+                            {event.title || t("untitledEvent")}
                           </Link>
                           {event.content && (
                             <p className="text-sm text-gray-500 mt-1 truncate">
@@ -297,8 +297,7 @@ const EventsPage: React.FC = () => {
                         </TableCell>
                         <TableCell className="py-3">
                           <Badge className={statusColors[event.status || "draft"] || statusColors.draft}>
-                            {(event.status || "draft").charAt(0).toUpperCase() +
-                              (event.status || "draft").slice(1)}
+                            {t(`status.${event.status || "draft"}`)}
                           </Badge>
                         </TableCell>
                         <TableCell className="py-3">
@@ -312,13 +311,13 @@ const EventsPage: React.FC = () => {
                               <DropdownMenuItem asChild>
                                 <Link href={`/admin/events/${event.id}`}>
                                   <Eye className="mr-2 h-4 w-4" />
-                                  View Details
+                                  {t("actions.view")}
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem asChild>
                                 <Link href={`/admin/events/${event.id}/edit`}>
                                   <Edit className="mr-2 h-4 w-4" />
-                                  Edit
+                                  {t("actions.edit")}
                                 </Link>
                               </DropdownMenuItem>
                               {event.status === "draft" && (
@@ -327,12 +326,12 @@ const EventsPage: React.FC = () => {
                                     handleStatusUpdate(
                                       event.id,
                                       "published",
-                                      event.title || "Untitled"
+                                      event.title || t("untitledEvent")
                                     )
                                   }
                                 >
                                   <Play className="mr-2 h-4 w-4" />
-                                  Publish
+                                  {t("actions.publish")}
                                 </DropdownMenuItem>
                               )}
                               {event.status === "published" && (
@@ -341,12 +340,12 @@ const EventsPage: React.FC = () => {
                                     handleStatusUpdate(
                                       event.id,
                                       "archived",
-                                      event.title || "Untitled"
+                                      event.title || t("untitledEvent")
                                     )
                                   }
                                 >
                                   <Archive className="mr-2 h-4 w-4" />
-                                  Archive
+                                  {t("actions.archive")}
                                 </DropdownMenuItem>
                               )}
                               {event.status === "archived" && (
@@ -355,22 +354,22 @@ const EventsPage: React.FC = () => {
                                     handleStatusUpdate(
                                       event.id,
                                       "draft",
-                                      event.title || "Untitled"
+                                      event.title || t("untitledEvent")
                                     )
                                   }
                                 >
                                   <FileText className="mr-2 h-4 w-4" />
-                                  Move to Draft
+                                  {t("actions.moveToDraft")}
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuItem
                                 onClick={() =>
-                                  setDeleteConfirm({ id: event.id, title: event.title || "Untitled" })
+                                  setDeleteConfirm({ id: event.id, title: event.title || t("untitledEvent") })
                                 }
                                 className="text-red-600"
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
+                                {t("actions.delete")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>

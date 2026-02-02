@@ -15,7 +15,6 @@ import {
 } from "@/src/components/ui/select";
 import ArticleCard from "@/src/components/articles/ArticleCard";
 import { usePosts } from "@/src/lib/hooks/use-posts";
-import { usePage } from "@/src/lib/hooks/use-pages";
 import type { Article } from "@/src/lib/types/article";
 import type { GetPostsOptions } from "@/src/actions/posts.actions";
 
@@ -51,36 +50,6 @@ function ArticleNavigation({
   const t = useTranslations("articlesPage");
   const locale = useLocale();
   const [searchQuery, setSearchQuery] = useState(filters.search || "");
-
-  // Fetch page builder content
-  const { data: pageData } = usePage("articles");
-
-  // Extract localized content from page builder
-  const pageContent = useMemo(() => {
-    if (!pageData) return null;
-    
-    const textBlock = pageData.translations.en?.blocks?.find(
-      (b) => b.id === "articles-page-text"
-    );
-    const heroBlock = pageData.translations.en?.blocks?.find(
-      (b) => b.id === "articles-page-hero"
-    );
-    const categoriesBlock = pageData.translations.en?.blocks?.find(
-      (b) => b.id === "articles-page-categories"
-    );
-    
-    const textContent = (textBlock?.content as { content?: Record<string, Record<string, string>> })?.content;
-    const heroContent = (heroBlock?.content as { content?: Record<string, { title: string; subtitle?: string; description: string }> })?.content;
-    const categoriesContent = (categoriesBlock?.content as { content?: Record<string, Record<string, string>> })?.content;
-    
-    const localeKey = locale as "en" | "fi";
-    
-    return {
-      hero: heroContent?.[localeKey] || heroContent?.en,
-      text: textContent?.[localeKey] || textContent?.en,
-      categories: categoriesContent?.[localeKey] || categoriesContent?.en,
-    };
-  }, [pageData, locale]);
 
   // Debounced search - ensure language is always preserved
   useEffect(() => {
@@ -177,14 +146,14 @@ function ArticleNavigation({
             </div>
 
             <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white">
-              {pageContent?.hero?.title || t("hero.title")}
+              {t("hero.title")}
               <span className="block text-3xl lg:text-4xl font-medium opacity-90 mt-3">
-                {pageContent?.hero?.subtitle || t("hero.subtitle")}
+                {t("hero.subtitle")}
               </span>
             </h1>
 
             <p className="text-xl lg:text-2xl max-w-3xl mx-auto leading-relaxed text-white/90">
-              {pageContent?.hero?.description || t("hero.description")}
+              {t("hero.description")}
             </p>
           </motion.div>
         </div>
@@ -212,7 +181,7 @@ function ArticleNavigation({
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                 <Input
                   type="text"
-                  placeholder={pageContent?.text?.searchPlaceholder || t("search.placeholder")}
+                  placeholder={t("search.placeholder")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-12 h-12 backdrop-blur-sm rounded-xl"

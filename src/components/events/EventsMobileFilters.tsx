@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense, lazy, useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Calendar, SlidersHorizontal, Search, Sparkles } from "lucide-react";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
@@ -80,6 +81,7 @@ export function EventsMobileFilters({
   onClearFilters,
 }: EventsMobileFiltersProps) {
   const [mounted, setMounted] = useState(false);
+  const t = useTranslations("events");
 
   // Prevent SSR hydration mismatch for Sheet components
   useEffect(() => {
@@ -101,20 +103,20 @@ export function EventsMobileFilters({
                     className="flex items-center gap-2 border-2 border-[#2D3320]/40 text-[#1A1D14] hover:bg-[#781D32] hover:text-white hover:border-[#781D32] font-medium transition-all duration-200"
                   >
                     <Calendar className="h-4 w-4" />
-                    Calendar
+                    {t("filters.calendar")}
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="bottom" className="h-[90vh]">
                   <SheetHeader>
                     <SheetTitle className="text-[#1A1D14] text-xl font-bold">
-                      Event Calendar
+                      {t("filters.eventCalendar")}
                     </SheetTitle>
                     <SheetDescription className="text-[#3E442B] font-medium">
-                      Select a date to view events
+                      {t("filters.selectDateDescription")}
                     </SheetDescription>
                   </SheetHeader>
                   <div className="mt-4">
-                    <Suspense fallback={<div>Loading calendar...</div>}>
+                    <Suspense fallback={<div>{t("loading.calendar")}</div>}>
                       <EventCalendar
                         events={events}
                         selectedDate={selectedDate}
@@ -139,7 +141,7 @@ export function EventsMobileFilters({
                   className="flex items-center gap-2 border-2 border-[#2D3320]/40 text-[#1A1D14] hover:bg-[#781D32] hover:text-white hover:border-[#781D32] font-medium transition-all duration-200"
                 >
                   <SlidersHorizontal className="h-4 w-4" />
-                  Filters
+                  {t("filters.filters")}
                   {activeFiltersCount > 0 && (
                     <Badge className="ml-1 bg-[#781D32] text-white text-xs px-2 py-0.5 font-bold border border-white/30 shadow-md">
                       {activeFiltersCount}
@@ -150,21 +152,21 @@ export function EventsMobileFilters({
               <SheetContent side="right">
                 <SheetHeader>
                   <SheetTitle className="text-[#1A1D14] text-xl font-bold">
-                    Filter Events
+                    {t("filters.filterEvents")}
                   </SheetTitle>
                   <SheetDescription className="text-[#3E442B] font-medium">
-                    Customize your event search
+                    {t("filters.customizeSearch")}
                   </SheetDescription>
                 </SheetHeader>
                 <div className="mt-6 space-y-4">
                   {/* Mobile Search */}
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-[#1A1D14]">
-                      Search Events
+                      {t("filters.searchEvents")}
                     </label>
                     <div className="flex gap-2">
                       <Input
-                        placeholder="Search events..."
+                        placeholder={t("filters.searchPlaceholder")}
                         value={searchInput}
                         onChange={(e) => onSearchChange(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && onSearch()}
@@ -184,7 +186,7 @@ export function EventsMobileFilters({
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-[#1A1D14]">
-                        Event Type
+                        {t("filters.eventType")}
                       </label>
                       <Select
                         value={filters.eventType || "all"}
@@ -193,11 +195,11 @@ export function EventsMobileFilters({
                         }
                       >
                         <SelectTrigger className="border-2 border-[#2D3320]/40 focus:border-[#781D32] text-[#1A1D14] font-medium">
-                          <SelectValue placeholder="All Types" />
+                          <SelectValue placeholder={t("filters.allTypes")} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all" className="font-medium">
-                            All Types
+                            {t("filters.allTypes")}
                           </SelectItem>
                           {Object.entries(EVENT_TYPES).map(([key, label]) => (
                             <SelectItem
@@ -214,7 +216,7 @@ export function EventsMobileFilters({
 
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-[#1A1D14]">
-                        Location
+                        {t("filters.location")}
                       </label>
                       <Select
                         value={filters.locationMode || "all"}
@@ -223,11 +225,11 @@ export function EventsMobileFilters({
                         }
                       >
                         <SelectTrigger className="border-2 border-[#2D3320]/40 focus:border-[#781D32] text-[#1A1D14] font-medium">
-                          <SelectValue placeholder="All Locations" />
+                          <SelectValue placeholder={t("filters.allLocations")} />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all" className="font-medium">
-                            All Locations
+                            {t("filters.allLocations")}
                           </SelectItem>
                           {Object.entries(EVENT_LOCATION_MODES).map(
                             ([key, label]) => (
@@ -256,7 +258,7 @@ export function EventsMobileFilters({
                         }
                       >
                         <Calendar className="h-4 w-4 mr-2" />
-                        Upcoming Only
+                        {t("filters.upcomingOnly")}
                       </Button>
                       <Button
                         variant={filters.featured ? "default" : "outline"}
@@ -271,7 +273,7 @@ export function EventsMobileFilters({
                         }
                       >
                         <Sparkles className="h-4 w-4 mr-2" />
-                        Featured Events
+                        {t("filters.featuredEvents")}
                       </Button>
                     </div>
 
@@ -285,7 +287,7 @@ export function EventsMobileFilters({
                         }}
                         className="w-full text-[#781D32] hover:bg-[#781D32]/10 font-semibold border border-[#781D32]/30"
                       >
-                        Clear All Filters
+                        {t("filters.clearAllFilters")}
                       </Button>
                     )}
                   </div>
@@ -296,7 +298,7 @@ export function EventsMobileFilters({
           </div>
 
           <div className="text-sm text-[#1A1D14] font-bold bg-[#781D32]/10 px-3 py-1.5 rounded-full border border-[#781D32]/30">
-            {!isLoading && `${eventsCount} events`}
+            {!isLoading && `${eventsCount} ${t("card.pagination")}`}
           </div>
         </div>
       </div>

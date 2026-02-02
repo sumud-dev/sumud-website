@@ -27,7 +27,6 @@ import {
   translateBatch,
   type SupportedLocale,
 } from '@/src/lib/services/translation.service';
-import { ensureTranslationKeysAction } from '@/src/actions/translations';
 
 // ============================================
 // VALIDATION SCHEMAS
@@ -100,6 +99,22 @@ async function requireAuth(): Promise<string> {
  * Convert database PageRecord to a single translation object
  */
 function pageRecordToTranslation(record: PageRecord) {
+  // Handle UI translations pages - create a virtual block to store the metadata
+  if (record.content?.type === 'ui-translations') {
+    return {
+      title: record.title,
+      description: record.metadata?.description || '',
+      blocks: [{
+        id: 'ui-translations-marker',
+        type: 'text' as PageBlockType,
+        content: {
+          type: 'ui-translations',
+          namespace: record.content.namespace,
+        },
+      }],
+    };
+  }
+
   return {
     title: record.title,
     description: record.metadata?.description || '',
@@ -181,90 +196,7 @@ function extractBlocks(content: PageRecord['content']): PageBlock[] {
   return [];
 }
 
-/**
- * Extract translation keys from page blocks and ensure they exist in UI translations.
- * Called after creating/updating a page to sync button text, navigation labels, etc.
- */
-async function syncBlockTranslations(
-  pageSlug: string,
-  translations: PageData['translations']
-): Promise<void> {
-  const keys: Array<{
-    key: string;
-    namespace: string;
-    defaultValues: { en: string; fi: string };
-  }> = [];
 
-  // Extract from each locale's blocks
-  const enBlocks = translations.en?.blocks || [];
-  const fiBlocks = translations.fi?.blocks || [];
-
-  // Process button-group blocks
-  for (const block of enBlocks) {
-    if (block.type === 'button-group') {
-      const buttons = (block.content as { buttons?: Array<{ text: string }> })?.buttons || [];
-      const fiBlock = fiBlocks.find(b => b.id === block.id);
-      const fiButtons = fiBlock 
-        ? (fiBlock.content as { buttons?: Array<{ text: string }> })?.buttons || []
-        : [];
-      
-      buttons.forEach((btn, idx) => {
-        if (btn.text) {
-          const key = `pageBuilder.${pageSlug}.button.${block.id}.${idx}`;
-          keys.push({
-            key,
-            namespace: 'pageBuilder',
-            defaultValues: {
-              en: btn.text,
-              fi: fiButtons[idx]?.text || btn.text,
-            },
-          });
-        }
-      });
-    }
-
-    // Process CTA blocks
-    if (block.type === 'cta') {
-      const content = block.content as { text?: string };
-      const fiBlock = fiBlocks.find(b => b.id === block.id);
-      const fiContent = fiBlock?.content as { text?: string } | undefined;
-      
-      if (content.text) {
-        keys.push({
-          key: `pageBuilder.${pageSlug}.cta.${block.id}`,
-          namespace: 'pageBuilder',
-          defaultValues: {
-            en: content.text,
-            fi: fiContent?.text || content.text,
-          },
-        });
-      }
-    }
-
-    // Process hero blocks with button text
-    if (block.type === 'hero') {
-      const content = block.content as { buttonText?: string };
-      const fiBlock = fiBlocks.find(b => b.id === block.id);
-      const fiContent = fiBlock?.content as { buttonText?: string } | undefined;
-      
-      if (content.buttonText) {
-        keys.push({
-          key: `pageBuilder.${pageSlug}.heroButton.${block.id}`,
-          namespace: 'pageBuilder',
-          defaultValues: {
-            en: content.buttonText,
-            fi: fiContent?.buttonText || content.buttonText,
-          },
-        });
-      }
-    }
-  }
-
-  // Sync to UI translations table if there are keys
-  if (keys.length > 0) {
-    await ensureTranslationKeysAction(keys);
-  }
-}
 
 // Lines 177-205 (Add helper to sync block structures)
 /**
@@ -532,9 +464,6 @@ export async function createPageAction(
       });
     }
 
-    // Sync block translations to UI translations table
-    await syncBlockTranslations(validated.slug, validated.translations);
-
     // Convert to PageData format
     const pageData = pageRecordToPageData(newPage, primaryLocale);
 
@@ -652,11 +581,6 @@ export async function updatePageAction(
 
     const updatedTranslations = await findTranslationsForPage(updated.id);
     const pageData = pageRecordsToPageData(updated, updatedTranslations);
-
-    // Sync block translations to UI translations table
-    if (data.translations) {
-      await syncBlockTranslations(slug, data.translations as PageData['translations']);
-    }
 
     // Revalidate paths
     revalidatePath('/admin/page-builder');

@@ -1,6 +1,7 @@
 "use client";
 
 import { Link } from "@/src/i18n/navigation";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -15,9 +16,7 @@ import {
   CalendarPlus,
   ExternalLink,
   Heart,
-  MessageCircle,
   Sparkles,
-  TrendingUp,
   CheckCircle,
   AlertCircle,
   XCircle
@@ -60,6 +59,7 @@ export function EventCard({
   onRegister,
   className = "",
 }: EventCardProps) {
+  const t = useTranslations("events");
   const [isLiked, setIsLiked] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -111,12 +111,12 @@ export function EventCard({
 
   const getLocationText = () => {
     if (event.location_mode === "virtual") {
-      return event.virtual_platform || "Online Event";
+      return event.virtual_platform || t("card.onlineEvent");
     }
     if (event.location_mode === "hybrid") {
-      return `${event.venue_name || "TBD"} + Online`;
+      return `${event.venue_name || t("card.tbd")} + Online`;
     }
-    return event.venue_name || "Location TBD";
+    return event.venue_name || t("card.locationTbd");
   };
 
   const getCapacityPercentage = () => {
@@ -149,7 +149,7 @@ export function EventCard({
       case "live":
         return (
           <Badge className="bg-red-500 text-white border-red-500 animate-pulse">
-            🔴 LIVE NOW
+            {t("card.liveNow")}
           </Badge>
         );
       case "upcoming":
@@ -158,7 +158,7 @@ export function EventCard({
         return (
           <Badge variant="secondary" className="text-gray-600 border-gray-200">
             <Clock className="h-3 w-3 mr-1" />
-            Past Event
+            {t("card.pastEvent")}
           </Badge>
         );
       default:
@@ -267,7 +267,7 @@ export function EventCard({
                   >
                     <Badge className="bg-linear-to-r from-yellow-400 to-yellow-500 text-white border-0 shadow-lg">
                       <Sparkles className="h-3 w-3 mr-1" />
-                      Featured
+                      {t("card.featured")}
                     </Badge>
                   </motion.div>
                 )}
@@ -280,7 +280,7 @@ export function EventCard({
                   className="text-white border-white/20 backdrop-blur-sm shadow-lg"
                   style={{ backgroundColor: `${eventTypeColor}CC` }}
                 >
-                  {event.event_type ? (EVENT_TYPES as any)[event.event_type] : 'Event'}
+                  {event.event_type ? (EVENT_TYPES as any)[event.event_type] : t("card.event")}
                 </Badge>
                 
                 {showSocialActions && (
@@ -310,13 +310,13 @@ export function EventCard({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="border-[#55613C]/20">
                         <DropdownMenuItem onClick={() => handleShare('twitter')}>
-                          Share on Twitter
+                          {t("card.shareTwitter")}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleShare('facebook')}>
-                          Share on Facebook
+                          {t("card.shareFacebook")}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleShare('copy')}>
-                          Copy Link
+                          {t("card.copyLink")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -362,7 +362,7 @@ export function EventCard({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-gray-500 uppercase tracking-wide">
-                    {event.location_mode ? (EVENT_LOCATION_MODES as any)[event.location_mode] : 'Location'}
+                    {event.location_mode ? (EVENT_LOCATION_MODES as any)[event.location_mode] : t("card.location")}
                   </p>
                   <p className="font-medium text-[#3E442B] line-clamp-1">
                     {getLocationText()}
@@ -375,13 +375,13 @@ export function EventCard({
                   <div className="flex items-center gap-2 text-gray-700">
                     <Users className="h-4 w-4 shrink-0 text-[#781D32]" />
                     <span className="font-medium">
-                      {formatCapacity()} registered
+                      {formatCapacity()} {t("card.registered")}
                     </span>
                   </div>
                   
                   {event.max_capacity && showCapacityIndicator && (
                     <div className="text-xs text-gray-500">
-                      {getCapacityPercentage().toFixed(0)}% full
+                      {getCapacityPercentage().toFixed(0)}% {t("card.capacityFull")}
                     </div>
                   )}
                 </div>
@@ -393,9 +393,9 @@ export function EventCard({
                       className="h-2 bg-gray-200"
                     />
                     <div className="flex justify-between text-xs text-gray-500">
-                      <span>Available spots</span>
+                      <span>{t("card.availableSpots")}</span>
                       <span>
-                        {Math.max(0, event.max_capacity - (event.current_registrations ?? 0))} remaining
+                        {Math.max(0, event.max_capacity - (event.current_registrations ?? 0))} {t("card.remaining")}
                       </span>
                     </div>
                   </div>
@@ -405,17 +405,17 @@ export function EventCard({
               <div className="flex items-center gap-2 flex-wrap">
                 {!event.registration_required ? (
                   <Badge className="text-xs bg-green-100 text-green-700 border-green-200 hover:bg-green-100">
-                    Free Event
+                    {t("card.freeEvent")}
                   </Badge>
                 ) : (
                   <Badge variant="outline" className="text-xs border-[#781D32]/30 text-[#781D32]">
-                    Registration Required
+                    {t("card.registrationRequired")}
                   </Badge>
                 )}
                 
                 {event.max_capacity && (event.current_registrations ?? 0) >= event.max_capacity && (
                   <Badge variant="secondary" className="text-xs bg-red-100 text-red-700">
-                    Sold Out
+                    {t("card.soldOut")}
                   </Badge>
                 )}
               </div>
@@ -433,7 +433,7 @@ export function EventCard({
               >
                 <Link href={`/events/${event.slug}`}>
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  View Details
+                  {t("card.viewDetails")}
                 </Link>
               </Button>
               
@@ -452,12 +452,12 @@ export function EventCard({
                       {isRegistering ? (
                         <div className="flex items-center gap-2">
                           <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                          Registering...
+                          {t("card.registering")}
                         </div>
                       ) : (
                         <>
                           <CheckCircle className="h-4 w-4 mr-2" />
-                          Register Now
+                          {t("card.registerNow")}
                         </>
                       )}
                     </Button>
@@ -469,10 +469,10 @@ export function EventCard({
                       className="flex-1 bg-gray-100 text-gray-500"
                     >
                       {event.max_capacity && (event.current_registrations ?? 0) >= event.max_capacity
-                        ? "Event Full"
+                        ? t("card.eventFull")
                         : !isUpcoming
-                        ? "Event Ended" 
-                        : "Registration Closed"}
+                        ? t("card.eventEnded") 
+                        : t("card.registrationClosed")}
                     </Button>
                   )}
                 </>
@@ -493,23 +493,6 @@ export function EventCard({
                     </Button>
                   )}
                 </div>
-                
-                {showSocialActions && (
-                  <div className="flex items-center gap-3 text-xs text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <Heart className={`h-3 w-3 ${isLiked ? 'fill-red-500 text-red-500' : ''}`} />
-                      <span>{(event.current_registrations ?? 0) > 10 ? Math.floor((event.current_registrations ?? 0) / 5) : 0}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <MessageCircle className="h-3 w-3" />
-                      <span>0</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <TrendingUp className="h-3 w-3" />
-                      <span>35</span>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>

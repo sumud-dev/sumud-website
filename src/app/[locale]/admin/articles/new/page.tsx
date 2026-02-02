@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter, Link } from "@/src/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -9,7 +10,7 @@ import { ArrowLeft, Save, Eye, Languages, Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { ImageUpload } from "@/src/components/ui/image-upload";
-import { RichTextEditor } from "@/src/components/ui/rich-text-editor";
+import { RichTextEditor } from "@/src/lib/tipTap-editor/RichTextEditor";
 import {
   Form,
   FormControl,
@@ -51,14 +52,12 @@ const articleSchema = z.object({
 
 type ArticleFormData = z.infer<typeof articleSchema>;
 
-const LANGUAGE_LABELS: Record<string, string> = {
-  en: "English",
-  fi: "Suomi (Finnish)",
-};
+  // use translations for language labels
 
 export default function NewArticlePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const t = useTranslations("admin.articles.new");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isTranslating, setIsTranslating] = React.useState(false);
 
@@ -167,7 +166,7 @@ export default function NewArticlePage() {
     const formData = form.getValues();
     // Here you would typically open a preview modal or new tab
     console.log("Preview data:", formData);
-    toast.info("Preview functionality would be implemented here");
+    toast.info(t("previewNote"));
   };
 
   return (
@@ -177,18 +176,18 @@ export default function NewArticlePage() {
           <Button variant="ghost" size="sm" asChild>
             <Link href="/admin/articles">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Articles
+              {t("backToArticles")}
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">New Article</h1>
-            <p className="text-gray-600">Create a new article or blog post</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
+            <p className="text-gray-600">{t("description")}</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
           <Button type="button" variant="outline" onClick={handlePreview}>
             <Eye className="mr-2 h-4 w-4" />
-            Preview
+            {t("preview")}
           </Button>
         </div>
       </div>
@@ -200,7 +199,7 @@ export default function NewArticlePage() {
             <div className="lg:col-span-2 space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Article Details</CardTitle>
+                  <CardTitle>{t("articleDetails")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
@@ -208,10 +207,10 @@ export default function NewArticlePage() {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Title</FormLabel>
+                        <FormLabel>{t("title")}</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Enter article title..."
+                            placeholder={t("placeholders.title") ?? "Enter article title..."}
                             {...field}
                           />
                         </FormControl>
@@ -225,18 +224,15 @@ export default function NewArticlePage() {
                     name="excerpt"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Excerpt</FormLabel>
+                        <FormLabel>{t("excerpt")}</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Brief description of the article..."
+                            placeholder={t("placeholders.excerpt") ?? "Brief description of the article..."}
                             className="min-h-[100px]"
                             {...field}
                           />
                         </FormControl>
-                        <FormDescription>
-                          This will be shown in article previews and search
-                          results.
-                        </FormDescription>
+                        <FormDescription>{t("excerptDescription")}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -247,18 +243,16 @@ export default function NewArticlePage() {
                     name="content"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Content</FormLabel>
+                        <FormLabel>{t("content")}</FormLabel>
                         <FormControl>
                           <RichTextEditor
                             value={field.value}
                             onChange={field.onChange}
-                            placeholder="Write your article content here..."
+                            placeholder={t("placeholders.content") ?? "Write your article content here..."}
                             className="min-h-[300px]"
                           />
                         </FormControl>
-                        <FormDescription>
-                          The main content of your article.
-                        </FormDescription>
+                        <FormDescription>{t("contentDescription")}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -273,7 +267,7 @@ export default function NewArticlePage() {
               {/* Publishing Options */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Publishing</CardTitle>
+                  <CardTitle>{t("publishing")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
@@ -281,24 +275,22 @@ export default function NewArticlePage() {
                     name="language"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Language</FormLabel>
+                          <FormLabel>{t("languageLabel")}</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select language" />
+                              <SelectValue placeholder={t("selectLanguage") ?? "Select language"} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="en">{LANGUAGE_LABELS.en}</SelectItem>
-                            <SelectItem value="fi">{LANGUAGE_LABELS.fi}</SelectItem>
+                            <SelectItem value="en">{t("language.en")}</SelectItem>
+                            <SelectItem value="fi">{t("language.fi")}</SelectItem>
                           </SelectContent>
                         </Select>
-                        <FormDescription>
-                          The primary language of this article
-                        </FormDescription>
+                        <FormDescription>{t("languageDescription") ?? "The primary language of this article"}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -312,10 +304,10 @@ export default function NewArticlePage() {
                         <div className="space-y-0.5">
                           <FormLabel className="flex items-center gap-2">
                             <Languages className="h-4 w-4" />
-                            Auto-translate
+                            {t("autoTranslate")}
                           </FormLabel>
                           <FormDescription className="text-xs">
-                            Automatically translate to all languages (EN, FI)
+                            {t("autoTranslateDescription") ?? "Automatically translate to all languages (EN, FI)"}
                           </FormDescription>
                         </div>
                         <FormControl>
@@ -333,20 +325,20 @@ export default function NewArticlePage() {
                     name="status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Status</FormLabel>
+                        <FormLabel>{t("statusLabel")}</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           defaultValue={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
+                              <SelectValue placeholder={t("selectStatus") ?? "Select status"} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="draft">Draft</SelectItem>
-                            <SelectItem value="published">Published</SelectItem>
-                            <SelectItem value="archived">Archived</SelectItem>
+                            <SelectItem value="draft">{t("status.draft")}</SelectItem>
+                            <SelectItem value="published">{t("status.published")}</SelectItem>
+                            <SelectItem value="archived">{t("status.archived")}</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -361,20 +353,20 @@ export default function NewArticlePage() {
                       className="bg-[#781D32] hover:bg-[#781D32]/90"
                     >
                       {isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          {isTranslating ? "Translating..." : "Saving..."}
-                        </>
-                      ) : (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            {isTranslating ? t("translating") : t("saving")}
+                          </>
+                        ) : (
                         <>
                           <Save className="mr-2 h-4 w-4" />
-                          Create Post
+                          {t("saveButton")}
                         </>
                       )}
                     </Button>
                     {form.watch("autoTranslate") && (
                       <p className="text-xs text-muted-foreground text-center">
-                        Will create versions in all 2 languages
+                        {t("autoTranslateNote", { count: 2 })}
                       </p>
                     )}
                   </div>
@@ -384,7 +376,7 @@ export default function NewArticlePage() {
               {/* Featured Image */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Featured Image</CardTitle>
+                  <CardTitle>{t("featuredImage")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
@@ -392,7 +384,7 @@ export default function NewArticlePage() {
                     name="featuredImageUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Featured Image</FormLabel>
+                        <FormLabel>{t("featuredImage")}</FormLabel>
                         <FormControl>
                           <ImageUpload
                             value={field.value}
@@ -403,7 +395,7 @@ export default function NewArticlePage() {
                           />
                         </FormControl>
                         <FormDescription>
-                          Upload an image or provide a URL below. Maximum size: 5MB.
+                          {t("featuredImageDescription", { maxSize: 5 })}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -415,7 +407,7 @@ export default function NewArticlePage() {
                     name="featuredImageUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Or enter image URL</FormLabel>
+                        <FormLabel>{t("enterImageUrl")}</FormLabel>
                         <FormControl>
                           <Input
                             placeholder="https://example.com/image.jpg"
@@ -424,7 +416,7 @@ export default function NewArticlePage() {
                           />
                         </FormControl>
                         <FormDescription>
-                          Alternatively, paste an image URL directly.
+                          {t("enterImageUrlDescription")}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -436,7 +428,7 @@ export default function NewArticlePage() {
               {/* Tags and SEO */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Tags & SEO</CardTitle>
+                  <CardTitle>{t("tagsAndSeo")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
@@ -444,15 +436,15 @@ export default function NewArticlePage() {
                     name="tags"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Tags</FormLabel>
+                        <FormLabel>{t("tags") ?? "Tags"}</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="culture, heritage, community..."
+                            placeholder={t("placeholders.tags")}
                             {...field}
                           />
                         </FormControl>
                         <FormDescription>
-                          Separate tags with commas
+                          {t("tagsHint")}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -464,17 +456,15 @@ export default function NewArticlePage() {
                     name="metaDescription"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Meta Description</FormLabel>
+                        <FormLabel>{t("metaDescription")}</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="SEO meta description..."
+                            placeholder={t("metaDescriptionPlaceholder") ?? "SEO meta description..."}
                             className="min-h-[80px]"
                             {...field}
                           />
                         </FormControl>
-                        <FormDescription>
-                          Optimal length: 120-160 characters
-                        </FormDescription>
+                        <FormDescription>{t("metaDescriptionHint")}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

@@ -5,25 +5,16 @@ import Image from "next/image";
 import { Link } from "@/src/i18n/navigation";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Calendar,
   Clock,
   Share2,
-  Bookmark,
   ArrowLeft,
-  Eye,
-  Heart,
-  MessageCircle,
-  ChevronUp,
-  Facebook,
-  Twitter,
-  Linkedin,
-  Copy,
-  Check,
+  ChevronUp
 } from "lucide-react";
 
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import { Progress } from "@/src/components/ui/progress";
 import ArticleCard from "@/src/components/articles/ArticleCard";
@@ -43,6 +34,8 @@ const fadeInLeft = {
 };
 
 export default function ArticlePage() {
+  const t = useTranslations("articlesPage");
+  const locale = useLocale();
   const params = useParams();
   const slug = params.slug as string;
   const [isBookmarked, setIsBookmarked] = useState(false);
@@ -267,16 +260,15 @@ export default function ArticlePage() {
       <div className="min-h-screen bg-[#F4F3F0]">
         <div className="max-w-7xl mx-auto px-4 py-12 text-center">
           <h1 className="text-2xl font-bold text-[#3E442B] mb-4">
-            Article Not Found
+            {t("detail.notFound.title")}
           </h1>
           <p className="text-gray-600 mb-6">
-            The article you&apos;re looking for doesn&apos;t exist or has been
-            removed.
+            {t("detail.notFound.message")}
           </p>
           <Link href="/articles">
             <Button className="bg-[#781D32] hover:bg-[#781D32]/90">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Articles
+              {t("detail.backToArticles")}
             </Button>
           </Link>
         </div>
@@ -321,7 +313,7 @@ export default function ArticlePage() {
               className="inline-flex items-center text-[#55613C] hover:text-[#781D32] transition-colors group"
             >
               <ArrowLeft className="mr-2 h-4 w-4 transition-transform group-hover:-translate-x-1" />
-              Back to Articles
+              {t("detail.backToArticles")}
             </Link>
           </motion.div>
 
@@ -339,15 +331,19 @@ export default function ArticlePage() {
               <div className="flex items-center gap-4 text-sm text-gray-600">
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
-                  <span>{formatArticleDate(article.publishedAt || article.createdAt)}</span>
+                  <span suppressHydrationWarning>
+                    {article.publishedAt || article.createdAt
+                      ? new Date(article.publishedAt || article.createdAt).toLocaleDateString(locale, {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })
+                      : ''}
+                  </span>
                 </div>
                 <div className="flex items-center gap-1">
                   <Clock className="h-4 w-4" />
-                  <span>{readTime} min read</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Eye className="h-4 w-4" />
-                  <span>0 views</span>
+                  <span>{readTime} {t("card.minRead")}</span>
                 </div>
               </div>
             </div>
@@ -359,96 +355,6 @@ export default function ArticlePage() {
             <p className="text-lg text-gray-700 leading-relaxed mb-6">
               {article.excerpt}
             </p>
-
-            {/* Actions */}
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleLike}
-                  className={`transition-colors ${
-                    isLiked
-                      ? "border-[#781D32] bg-[#781D32]/10 text-[#781D32]"
-                      : "border-gray-300 hover:border-[#781D32] hover:text-[#781D32]"
-                  }`}
-                >
-                  <Heart
-                    className={`h-4 w-4 mr-1 ${isLiked ? "fill-current" : ""}`}
-                  />
-                  {isLiked ? 1 : 0}
-                </Button>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleBookmark}
-                  className={`transition-colors ${
-                    isBookmarked
-                      ? "border-[#781D32] bg-[#781D32]/10 text-[#781D32]"
-                      : "border-gray-300 hover:border-[#781D32] hover:text-[#781D32]"
-                  }`}
-                >
-                  <Bookmark
-                    className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`}
-                  />
-                </Button>
-
-                <div className="relative">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowShareOptions(!showShareOptions)}
-                    className="border-gray-300 hover:border-[#781D32] hover:text-[#781D32]"
-                  >
-                    <Share2 className="h-4 w-4" />
-                  </Button>
-
-                  {showShareOptions && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="absolute right-0 top-12 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-10"
-                    >
-                      <div className="flex flex-col gap-1 min-w-[150px]">
-                        <button
-                          onClick={() => handleShare("twitter")}
-                          className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded text-sm"
-                        >
-                          <Twitter className="h-4 w-4 text-blue-400" />
-                          Twitter
-                        </button>
-                        <button
-                          onClick={() => handleShare("facebook")}
-                          className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded text-sm"
-                        >
-                          <Facebook className="h-4 w-4 text-blue-600" />
-                          Facebook
-                        </button>
-                        <button
-                          onClick={() => handleShare("linkedin")}
-                          className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded text-sm"
-                        >
-                          <Linkedin className="h-4 w-4 text-blue-700" />
-                          LinkedIn
-                        </button>
-                        <button
-                          onClick={() => handleShare("copy")}
-                          className="flex items-center gap-2 px-3 py-2 hover:bg-gray-50 rounded text-sm"
-                        >
-                          {copySuccess ? (
-                            <Check className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <Copy className="h-4 w-4" />
-                          )}
-                          {copySuccess ? "Copied!" : "Copy Link"}
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </div>
-              </div>
-            </div>
           </motion.div>
         </div>
 
@@ -543,7 +449,7 @@ export default function ArticlePage() {
                     className="bg-[#781D32] hover:bg-[#781D32]/90 text-white"
                   >
                     <Share2 className="h-4 w-4 mr-2" />
-                    Share Article
+                    {t("detail.shareArticle")}
                   </Button>
                 </div>
               </div>
@@ -563,11 +469,10 @@ export default function ArticlePage() {
               className="text-center mb-12"
             >
               <h2 className="text-3xl font-bold text-[#3E442B] mb-4">
-                Related Articles
+                {t("detail.relatedTitle")}
               </h2>
               <p className="text-gray-600 max-w-2xl mx-auto">
-                Continue exploring our coverage of Palestinian solidarity and
-                Finnish civil society engagement
+                {t("detail.relatedSubtitle")}
               </p>
             </motion.div>
 

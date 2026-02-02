@@ -1,8 +1,8 @@
 "use client";
 
-import React, { Suspense, lazy, useMemo } from "react";
+import React, { Suspense, lazy, useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Button } from "@/src/components/ui/button";
 import { useEvents } from "@/src/lib/hooks/use-events";
@@ -10,6 +10,7 @@ import { useEventFilters } from "@/src/lib/hooks/use-event-filters";
 import { useCelebration } from "@/src/components/ui/celebration";
 import { usePage } from "@/src/lib/hooks/use-pages";
 import { fadeInUp, staggerContainer } from "@/src/lib/utils/animations";
+import { getTranslationsAction } from "@/src/actions/translations";
 import type { EventsHeroContent } from "@/src/components/events/EventsHero";
 
 // Lazy load components for better performance
@@ -78,12 +79,41 @@ const EventsResultsSummary = lazy(() =>
 
 export default function EventsPage() {
   const locale = useLocale();
+  const t = useTranslations("events");
+  const [heroTranslations, setHeroTranslations] = useState<Record<string, string>>({});
+  const [loadingHero, setLoadingHero] = useState(true);
+  
   // Use the custom hook for all filter state management
   const filterState = useEventFilters();
   const { celebration, completeCelebration } = useCelebration();
   
   // Fetch page builder content for events page
   const { data: pageData } = usePage("events");
+  
+  // Fetch hero translations from database
+  useEffect(() => {
+    const loadHeroTranslations = async () => {
+      setLoadingHero(true);
+      try {
+        const result = await getTranslationsAction(locale);
+        if (result.success && result.data) {
+          const translations: Record<string, string> = {};
+          result.data
+            .filter((t) => t.namespace === "events" && t.key.startsWith("hero."))
+            .forEach((t) => {
+              translations[t.key] = t.value;
+            });
+          setHeroTranslations(translations);
+        }
+      } catch (error) {
+        console.error("Failed to load hero translations:", error);
+      } finally {
+        setLoadingHero(false);
+      }
+    };
+    
+    loadHeroTranslations();
+  }, [locale]);
   
   // Extract localized content from page builder
   const pageContent = useMemo(() => {
@@ -93,34 +123,28 @@ export default function EventsPage() {
     const textBlock = pageData.translations.en?.blocks?.find(
       (b) => b.id === "events-page-text"
     );
-    const heroBlock = pageData.translations.en?.blocks?.find(
-      (b) => b.id === "events-page-hero"
-    );
     
     // Extract locale-specific content
     const textContent = (textBlock?.content as { content?: Record<string, Record<string, string>> })?.content;
-    const heroContent = (heroBlock?.content as { content?: Record<string, { title: string; subtitle?: string; description: string }> })?.content;
-    
     const localeKey = locale as "en" | "fi";
     
     return {
-      hero: heroContent?.[localeKey] || heroContent?.en,
       text: textContent?.[localeKey] || textContent?.en,
     };
   }, [pageData, locale]);
   
-  // Build hero content from page builder
+  // Build hero content from database translations
   const heroContent: EventsHeroContent | undefined = useMemo(() => {
-    if (!pageContent?.hero || !pageContent?.text) return undefined;
+    if (loadingHero || !heroTranslations["hero.title"]) return undefined;
     return {
-      title: pageContent.hero.title,
-      subtitle: pageContent.hero.subtitle,
-      description: pageContent.hero.description,
-      eventsLabel: pageContent.text.eventsLabel || "events",
-      globalVirtualLabel: pageContent.text.globalVirtualLabel || "Global & Virtual",
-      communityDrivenLabel: pageContent.text.communityDrivenLabel || "Community Driven",
+      title: heroTranslations["hero.title"],
+      subtitle: heroTranslations["hero.subtitle"] || "",
+      description: heroTranslations["hero.description"] || "",
+      eventsLabel: heroTranslations["hero.eventsLabel"] || "events",
+      globalVirtualLabel: heroTranslations["hero.globalVirtualLabel"] || "Global & Virtual",
+      communityDrivenLabel: heroTranslations["hero.communityDrivenLabel"] || "Community Driven",
     };
-  }, [pageContent]);
+  }, [heroTranslations, loadingHero]);
 
   // Helper to format date in local timezone as YYYY-MM-DD
   const formatLocalDate = (date: Date): string => {
@@ -160,8 +184,8 @@ export default function EventsPage() {
 
   // Error state
   if (error) {
-    const failedText = pageContent?.text?.failedToLoad || "Failed to load events";
-    const tryAgainText = pageContent?.text?.tryAgain || "Try Again";
+    const failedText = pageContent?.text?.failedToLoad || t("error.failedToLoad");
+    const tryAgainText = pageContent?.text?.tryAgain || t("error.tryAgain");
     return (
       <>
         <div className="container mx-auto px-4 py-8">
@@ -184,7 +208,7 @@ export default function EventsPage() {
   }
 
   return (
-    <Suspense fallback={<div>Loading events...</div>}>
+    <Suspense fallback={<div>{t("loading.events")}</div>}>
       <CulturalEasterEggs>
         <>
           {/* Hero Section */}
@@ -252,7 +276,7 @@ export default function EventsPage() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.6, delay: 0.3 }}
                   >
-                    <Suspense fallback={<div>Loading calendar...</div>}>
+                    <Suspense fallback={<div>{t("loading.calendar")}</div>}>
                       <EventCalendar
                         events={calendarEvents}
                         selectedDate={filterState.selectedDate}
@@ -296,7 +320,7 @@ export default function EventsPage() {
 
                   {/* Events Grid */}
                   {isLoading ? (
-                    <Suspense fallback={<div>Loading...</div>}>
+                    <Suspense fallback={<div>{t("loading.default")}</div>}>
                       <EventsSkeletonLoader />
                     </Suspense>
                   ) : events.length === 0 ? (
@@ -322,7 +346,7 @@ export default function EventsPage() {
                             whileHover={{ y: -4, scale: 1.02 }}
                             className="transform transition-all duration-200"
                           >
-                            <Suspense fallback={<div>Loading event...</div>}>
+                            <Suspense fallback={<div>{t("loading.event")}</div>}>
                               <EventCard
                                 event={event}
                                 showRegistration={true}
@@ -351,7 +375,7 @@ export default function EventsPage() {
                           transition={{ duration: 0.6, delay: 0.3 }}
                           className="text-center mt-8 text-sm text-[#3E442B] font-semibold bg-[#F8F6F0] py-3 px-6 rounded-full inline-block border border-[#2D3320]/20"
                         >
-                          {pageContent?.text?.showingText || "Showing"}{" "}
+                          {pageContent?.text?.showingText || t("pagination.showing")}{" "}
                           {((pagination?.page || 1) - 1) *
                             (pagination?.limit || 12) +
                             1}{" "}
@@ -360,7 +384,7 @@ export default function EventsPage() {
                             (pagination?.page || 1) * (pagination?.limit || 12),
                             pagination?.total || 0
                           )}{" "}
-                          {pageContent?.text?.ofText || "of"} {pagination?.total || 0} {pageContent?.text?.eventsText || "events"}
+                          {pageContent?.text?.ofText || t("pagination.of")} {pagination?.total || 0} {pageContent?.text?.eventsText || t("pagination.events")}
                         </motion.div>
                       )}
                     </>

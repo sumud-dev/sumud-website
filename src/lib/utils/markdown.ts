@@ -53,3 +53,39 @@ export function markdownToHtml(markdown: string): string {
 
   return html;
 }
+
+/**
+ * Get HTML content from campaign description
+ * Handles both string and JSONB formats
+ */
+export function getDescriptionHtml(description: string | { type: 'blocks' | 'markdown' | 'html'; data: unknown } | null): string {
+  if (!description) return '';
+  
+  // If it's already a string, convert markdown to HTML
+  if (typeof description === 'string') {
+    return markdownToHtml(description);
+  }
+  
+  // If it's a JSONB object with data property
+  if (typeof description === 'object' && 'data' in description) {
+    if (typeof description.data === 'string') {
+      // For markdown type, convert to HTML
+      if (description.type === 'markdown') {
+        return markdownToHtml(description.data);
+      }
+      // For HTML type, return as is
+      if (description.type === 'html') {
+        return description.data;
+      }
+      // Default: treat as markdown
+      return markdownToHtml(description.data);
+    }
+    // For blocks type, try to extract text from blocks and convert
+    if (description.type === 'blocks' && Array.isArray(description.data)) {
+      const text = description.data.map((block: { text?: string }) => block.text || '').join('\n');
+      return markdownToHtml(text);
+    }
+  }
+  
+  return '';
+}

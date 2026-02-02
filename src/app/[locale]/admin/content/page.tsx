@@ -47,12 +47,12 @@ type ContentNamespace = string;
 
 // Mock namespace info
 const NAMESPACE_INFO: Record<string, { label: string; description: string; icon: string }> = {
-  common: { label: "Common", description: "Common UI elements and shared content", icon: "Globe" },
-  navigation: { label: "Navigation", description: "Menu items and navigation labels", icon: "Menu" },
-  homepage: { label: "Homepage", description: "Homepage content and sections", icon: "Home" },
-  about: { label: "About", description: "About page content", icon: "Info" },
-  team: { label: "Team", description: "Team member information", icon: "Users" },
-  articles: { label: "Articles", description: "Article-related content", icon: "FileText" },
+  common: { label: "common.label", description: "common.description", icon: "Globe" },
+  navigation: { label: "navigation.label", description: "navigation.description", icon: "Menu" },
+  homepage: { label: "homepage.label", description: "homepage.description", icon: "Home" },
+  about: { label: "about.label", description: "about.description", icon: "Info" },
+  team: { label: "team.label", description: "team.description", icon: "Users" },
+  articles: { label: "articles.label", description: "articles.description", icon: "FileText" },
 };
 
 // Icon mapping for namespaces
@@ -74,17 +74,18 @@ const iconMap: Record<string, React.ElementType> = {
 };
 
 const localeNames: Record<Locale, string> = {
-  en: "English",
-  fi: "Suomi",
+  en: "locale.en",
+  fi: "locale.fi",
 };
 
 interface NamespaceCardProps {
   namespace: ContentNamespace;
   locale: Locale;
   itemCount?: number;
+  t: (key: string) => string;
 }
 
-function NamespaceCard({ namespace, locale, itemCount }: NamespaceCardProps) {
+function NamespaceCard({ namespace, locale, itemCount, t }: NamespaceCardProps) {
   const info = NAMESPACE_INFO[namespace];
   const IconComponent = iconMap[info?.icon] || Globe;
 
@@ -102,9 +103,9 @@ function NamespaceCard({ namespace, locale, itemCount }: NamespaceCardProps) {
               </Badge>
             )}
           </div>
-          <CardTitle className="text-lg mt-3">{info?.label || namespace}</CardTitle>
+          <CardTitle className="text-lg mt-3">{t(`namespaces.${info?.label}`)}</CardTitle>
           <CardDescription className="text-sm line-clamp-2">
-            {info?.description || `Manage ${namespace} content`}
+            {t(`namespaces.${info?.description}`)}
           </CardDescription>
         </CardHeader>
       </Card>
@@ -184,7 +185,7 @@ export default function AdminContentPage() {
                 >
                   <CardHeader className="pb-2">
                     <CardTitle className="text-lg flex items-center justify-between">
-                      {localeNames[locale]}
+                      {t(localeNames[locale])}
                       <Badge variant={activeLocale === locale ? "default" : "outline"}>
                         {locale.toUpperCase()}
                       </Badge>
@@ -192,8 +193,8 @@ export default function AdminContentPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex justify-between text-sm text-muted-foreground">
-                      <span>{localeStats?.count || 0} {t("keys")}</span>
-                      <span>{localeStats?.namespaces || 0} {t("sections")}</span>
+                      <span>{localeStats?.count || 0} {t("mainPage.keys")}</span>
+                      <span>{localeStats?.namespaces || 0} {t("mainPage.sections")}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -252,6 +253,7 @@ export default function AdminContentPage() {
                   key={namespace}
                   namespace={namespace as ContentNamespace}
                   locale={activeLocale}
+                  t={t}
                 />
               ))}
             </div>
@@ -273,7 +275,7 @@ export default function AdminContentPage() {
                   className="gap-2"
                 >
                   <Globe className="h-3 w-3" />
-                  {localeNames[locale]}
+                  {t(localeNames[locale])}
                 </Button>
               ))}
             </div>
@@ -296,7 +298,7 @@ export default function AdminContentPage() {
                   className="gap-2"
                 >
                   <Globe className="h-3 w-3" />
-                  {localeNames[locale]}
+                  {t(localeNames[locale])}
                 </Button>
               ))}
             </div>
@@ -319,7 +321,7 @@ export default function AdminContentPage() {
                   className="gap-2"
                 >
                   <Globe className="h-3 w-3" />
-                  {localeNames[locale]}
+                  {t(localeNames[locale])}
                 </Button>
               ))}
             </div>

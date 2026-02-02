@@ -68,13 +68,14 @@ interface NamespacePageProps {
   params: Promise<{ namespace: string }>;
 }
 
-const localeNames: Record<Locale, string> = {
-  en: "English",
-  fi: "Suomi",
-};
+// locale names come from translations
 
 export default function NamespaceEditorPage({ params }: NamespacePageProps) {
   const t = useTranslations("adminSettings.content");
+  const localeNames: Record<Locale, string> = {
+    en: t("locale.en"),
+    fi: t("locale.fi"),
+  };
   const searchParams = useSearchParams();
   const [resolvedParams, setResolvedParams] = React.useState<{ namespace: string } | null>(null);
   
@@ -153,7 +154,7 @@ export default function NamespaceEditorPage({ params }: NamespacePageProps) {
               </Badge>
             </h1>
             <p className="text-muted-foreground mt-1">
-              {namespaceInfo?.description || `Edit ${namespace} content`}
+              {namespaceInfo?.description || t("editNamespaceContent", { namespace })}
             </p>
           </div>
         </div>
@@ -184,9 +185,9 @@ export default function NamespaceEditorPage({ params }: NamespacePageProps) {
                 {content[locale].length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <Globe className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <h3 className="text-lg font-medium mb-2">No content found</h3>
+                    <h3 className="text-lg font-medium mb-2">{t("noContentFound")}</h3>
                     <p className="text-sm">
-                      No content exists for {localeNames[locale]} in this section.
+                      {t("noContentForLocale", { locale: localeNames[locale] })}
                     </p>
                   </div>
                 ) : (

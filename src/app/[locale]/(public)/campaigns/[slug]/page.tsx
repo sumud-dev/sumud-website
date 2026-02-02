@@ -28,6 +28,7 @@ import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
 import { useCampaign, getDescriptionText } from "@/src/lib/hooks/use-campaigns";
+import { getDescriptionHtml } from "@/src/lib/utils/markdown";
 import { type CampaignType, type CampaignParticipationStep, type CampaignResource, type CampaignSuccessStory } from "@/src/types/Campaigns";
 
 // Campaign type colors matching the main page
@@ -71,7 +72,7 @@ interface CampaignDetailPageProps {
 }
 
 export default function CampaignDetailPage({ params }: CampaignDetailPageProps) {
-  const t = useTranslations("campaignsPage");
+  const t = useTranslations("campaigns");
   const tCommon = useTranslations("common");
 
   const resolvedParams = React.use(params);
@@ -173,9 +174,10 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
             </h1>
 
             {/* Short Description */}
-            <p className="text-xl sm:text-2xl text-gray-700 mb-8 max-w-4xl font-light leading-relaxed line-clamp-2">
-              {getDescriptionText(campaign.description)}
-            </p>
+            <div 
+              className="text-xl sm:text-2xl text-gray-700 mb-8 max-w-4xl font-light leading-relaxed line-clamp-2"
+              dangerouslySetInnerHTML={{ __html: getDescriptionHtml(campaign.description) }}
+            />
 
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-4">
@@ -228,11 +230,10 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                 </div>
                 {t("detail.aboutTitle")}
               </h2>
-              <div className="prose prose-lg max-w-none">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                  {getDescriptionText(campaign.description)}
-                </p>
-              </div>
+              <div 
+                className="prose prose-lg max-w-none text-gray-700 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: getDescriptionHtml(campaign.description) }}
+              />
             </motion.div>
           </TabsContent>
 

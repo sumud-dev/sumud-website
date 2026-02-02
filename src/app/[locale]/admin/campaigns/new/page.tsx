@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Link, useRouter } from "@/src/i18n/navigation";
 import { ArrowLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/src/components/ui/button";
 import { CampaignForm, type CampaignFormData } from "@/src/components/forms/campaign-form";
 import { createCampaignAction } from "@/src/actions/campaigns.actions";
@@ -11,6 +12,7 @@ import { toast } from "sonner";
 
 export default function NewCampaignPage() {
   const router = useRouter();
+  const t = useTranslations("admin.campaigns.new");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isTranslating, setIsTranslating] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -89,13 +91,13 @@ export default function NewCampaignPage() {
           <Button variant="ghost" size="sm" asChild>
             <Link href="/admin/campaigns">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Campaigns
+              {t("backToCampaigns")}
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">New Campaign</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
             <p className="text-gray-600">
-              Create a new campaign to raise awareness and mobilize support.
+              {t("description")}
             </p>
           </div>
         </div>
@@ -110,8 +112,8 @@ export default function NewCampaignPage() {
       <CampaignForm
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
-        submitLabel="Create Campaign"
-        submittingLabel={isTranslating ? "Translating..." : "Creating..."}
+        submitLabel={t("submitButton")}
+        submittingLabel={isTranslating ? t("translating") : t("submittingButton")}
       />
     </div>
   );

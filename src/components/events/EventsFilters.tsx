@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Search, Filter, X, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/src/components/ui/input";
@@ -50,6 +51,8 @@ export function EventsFilters({
   onClearFilters,
   onDateClear,
 }: EventsFiltersProps) {
+  const t = useTranslations("events");
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSearch();
@@ -74,7 +77,7 @@ export function EventsFilters({
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#781D32]" />
                 <Input
                   type="text"
-                  placeholder="Search events..."
+                  placeholder={t("filters.searchPlaceholder")}
                   value={searchInput}
                   onChange={(e) => onSearchChange(e.target.value)}
                   className="w-full pl-10 pr-4 border-2 border-[#2D3320]/40 focus:border-[#781D32] focus:ring-2 focus:ring-[#781D32]/30 transition-all duration-200 focus:scale-105 text-[#1A1D14] font-medium placeholder:text-[#3E442B]/60 shadow-sm"
@@ -90,11 +93,11 @@ export function EventsFilters({
                 onValueChange={(value) => onFilterChange("eventType", value)}
               >
                 <SelectTrigger className="w-52 border-2 border-[#2D3320]/40 focus:border-[#781D32] focus:ring-2 focus:ring-[#781D32]/30 text-[#1A1D14] font-medium shadow-sm">
-                  <SelectValue placeholder="All Types" />
+                  <SelectValue placeholder={t("filters.allTypes")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all" className="font-medium">
-                    All Types
+                    {t("filters.allTypes")}
                   </SelectItem>
                   {Object.entries(EVENT_TYPES).map(([key, label]) => (
                     <SelectItem key={key} value={key} className="font-medium">
@@ -109,11 +112,11 @@ export function EventsFilters({
                 onValueChange={(value) => onFilterChange("locationMode", value)}
               >
                 <SelectTrigger className="w-52 border-2 border-[#2D3320]/40 focus:border-[#781D32] focus:ring-2 focus:ring-[#781D32]/30 text-[#1A1D14] font-medium shadow-sm">
-                  <SelectValue placeholder="All Locations" />
+                  <SelectValue placeholder={t("filters.allLocations")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all" className="font-medium">
-                    All Locations
+                    {t("filters.allLocations")}
                   </SelectItem>
                   {Object.entries(EVENT_LOCATION_MODES).map(([key, label]) => (
                     <SelectItem key={key} value={key} className="font-medium">
@@ -135,7 +138,7 @@ export function EventsFilters({
             >
               <span className="text-sm text-[#1A1D14] font-bold flex items-center gap-2">
                 <SlidersHorizontal className="h-4 w-4" />
-                Active filters:
+                {t("filters.activeFilters")}
               </span>
               {searchInput.trim() && (
                 <Badge
@@ -173,7 +176,7 @@ export function EventsFilters({
                   className="bg-[#781D32] text-white hover:bg-[#5E1727] cursor-pointer font-semibold px-3 py-1.5 border-2 border-white/30 shadow-md transition-all duration-200 hover:scale-105"
                   onClick={onUpcomingToggle}
                 >
-                  Upcoming Only
+                  {t("filters.upcomingOnly")}
                   <X className="h-3 w-3 ml-1.5" />
                 </Badge>
               )}
@@ -193,7 +196,7 @@ export function EventsFilters({
                 onClick={onClearFilters}
                 className="h-8 text-sm text-[#781D32] hover:text-white hover:bg-[#781D32] font-semibold border border-[#781D32]/40 transition-all duration-200"
               >
-                Clear All
+                {t("filters.clearAll")}
               </Button>
             </motion.div>
           )}

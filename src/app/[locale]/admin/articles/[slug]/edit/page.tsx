@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter, Link } from "@/src/i18n/navigation";
+import { useTranslations } from "next-intl";
 import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
@@ -11,7 +12,7 @@ import * as z from "zod";
 import { ArrowLeft, Save, Eye, Loader2, Languages } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { ImageUpload } from "@/src/components/ui/image-upload";
-import { RichTextEditor } from "@/src/components/ui/rich-text-editor";
+import { RichTextEditor } from "@/src/lib/tipTap-editor/RichTextEditor";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import {
   Form,
@@ -59,6 +60,7 @@ interface EditArticlePageProps {
 
 export default function EditArticlePage({ params }: EditArticlePageProps) {
   const router = useRouter();
+  const t = useTranslations("admin.articles.edit");
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [resolvedSlug, setResolvedSlug] = React.useState<string>("");
@@ -119,7 +121,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
   const onSubmit = async (data: ArticleFormData) => {
     if (!article) {
       console.error("No article loaded");
-      toast.error("No article loaded");
+      toast.error(t("noArticleLoaded"));
       return;
     }
 
@@ -140,7 +142,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
       );
 
       if (result.success) {
-        toast.success("Article updated successfully");
+        toast.success(t("updateSuccess"));
         
         // Generate new slug from title if title changed
         const newSlug = data.title
@@ -160,11 +162,11 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
           router.push("/admin/articles");
         }
       } else {
-        toast.error(result.error || "Failed to update article");
+        toast.error(result.error || t("updateError"));
       }
     } catch (error) {
       console.error("Error updating article:", error);
-      toast.error("Failed to update article");
+      toast.error(t("updateError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -181,7 +183,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loader2 className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading article...</span>
+        <span className="ml-2">{t("loading")}</span>
       </div>
     );
   }
@@ -189,14 +191,10 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
   if (!article) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">
-          Article Not Found
-        </h2>
-        <p className="text-gray-600 mb-4">
-          The article you&apos;re looking for doesn&apos;t exist.
-        </p>
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">{t("notFound")}</h2>
+        <p className="text-gray-600 mb-4">{t("notFound")}</p>
         <Button asChild>
-          <Link href="/admin/articles">Back to Articles</Link>
+          <Link href="/admin/articles">{t("backToArticles")}</Link>
         </Button>
       </div>
     );
@@ -209,18 +207,18 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
           <Button variant="ghost" size="sm" asChild>
             <Link href="/admin/articles">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Articles
+              {t("backToArticles")}
             </Link>
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Edit Article</h1>
-            <p className="text-gray-600">Update article: {article.title}</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
+            <p className="text-gray-600">{t("description", { title: article.title })}</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
           <Button type="button" variant="outline" onClick={handlePreview}>
             <Eye className="mr-2 h-4 w-4" />
-            Preview
+            {t("preview")}
           </Button>
         </div>
       </div>
@@ -232,7 +230,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
             <div className="lg:col-span-2 space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Article Details</CardTitle>
+                  <CardTitle>{t("articleDetails")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
@@ -240,10 +238,10 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                     name="title"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Title</FormLabel>
+                        <FormLabel>{t("title")}</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Enter article title..."
+                            placeholder={t("placeholders.title") ?? "Enter article title..."}
                             {...field}
                           />
                         </FormControl>
@@ -257,18 +255,15 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                     name="excerpt"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Excerpt</FormLabel>
+                        <FormLabel>{t("excerpt")}</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="Brief description of the article..."
+                            placeholder={t("placeholders.excerpt") ?? "Brief description of the article..."}
                             className="min-h-[100px]"
                             {...field}
                           />
                         </FormControl>
-                        <FormDescription>
-                          This will be shown in article previews and search
-                          results.
-                        </FormDescription>
+                        <FormDescription>{t("excerptDescription")}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -279,12 +274,12 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                     name="content"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Content</FormLabel>
+                        <FormLabel>{t("content")}</FormLabel>
                         <FormControl>
                           <RichTextEditor
                             value={field.value}
                             onChange={field.onChange}
-                            placeholder="Write your article content..."
+                            placeholder={t("placeholders.content") ?? "Write your article content..."}
                             className="min-h-[300px]"
                           />
                         </FormControl>
@@ -301,7 +296,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
               {/* Publishing Options */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Publishing</CardTitle>
+                  <CardTitle>{t("publishing")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
@@ -312,11 +307,9 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                         <div className="space-y-0.5">
                           <FormLabel className="flex items-center gap-2">
                             <Languages className="h-4 w-4" />
-                            Auto-translate
+                            {t("autoTranslate")}
                           </FormLabel>
-                          <FormDescription className="text-xs">
-                            Automatically translate to all languages (EN, AR, FI)
-                          </FormDescription>
+                          <FormDescription className="text-xs">{t("autoTranslateDescription")}</FormDescription>
                         </div>
                         <FormControl>
                           <Switch
@@ -333,19 +326,19 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                     name="language"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Language</FormLabel>
+                        <FormLabel>{t("languageLabel")}</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select language" />
+                              <SelectValue placeholder={t("selectLanguage") ?? "Select language"} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="en">English</SelectItem>
-                            <SelectItem value="fi">Finnish</SelectItem>
+                            <SelectItem value="en">{t("language.en")}</SelectItem>
+                            <SelectItem value="fi">{t("language.fi")}</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -358,20 +351,20 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                     name="status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Status</FormLabel>
+                        <FormLabel>{t("statusLabel")}</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
+                              <SelectValue placeholder={t("selectStatus") ?? "Select status"} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="draft">Draft</SelectItem>
-                            <SelectItem value="published">Published</SelectItem>
-                            <SelectItem value="archived">Archived</SelectItem>
+                            <SelectItem value="draft">{t("status.draft")}</SelectItem>
+                            <SelectItem value="published">{t("status.published")}</SelectItem>
+                            <SelectItem value="archived">{t("status.archived")}</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -390,7 +383,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                       ) : (
                         <Save className="mr-2 h-4 w-4" />
                       )}
-                      {isSubmitting ? "Updating..." : "Update Article"}
+                      {isSubmitting ? t("saving") : t("saveButton")}
                     </Button>
                   </div>
                 </CardContent>
@@ -399,7 +392,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
               {/* Featured Image */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Featured Image</CardTitle>
+                  <CardTitle>{t("featuredImage")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
@@ -407,7 +400,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                     name="featuredImageUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Featured Image</FormLabel>
+                        <FormLabel>{t("featuredImage")}</FormLabel>
                         <FormControl>
                           <ImageUpload
                             value={field.value}
@@ -430,16 +423,16 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                     name="featuredImageUrl"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Or enter image URL</FormLabel>
+                        <FormLabel>{t("enterImageUrl")}</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="https://example.com/image.jpg"
+                            placeholder={t("placeholders.imageUrl")}
                             {...field}
                             disabled={isSubmitting}
                           />
                         </FormControl>
                         <FormDescription>
-                          Alternatively, paste an image URL directly.
+                          {t("enterImageUrlDescription")}
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -451,7 +444,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
               {/* SEO */}
               <Card>
                 <CardHeader>
-                  <CardTitle>SEO</CardTitle>
+                  <CardTitle>{t("seo")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <FormField
@@ -459,17 +452,15 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                     name="metaDescription"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Meta Description</FormLabel>
+                        <FormLabel>{t("metaDescription")}</FormLabel>
                         <FormControl>
                           <Textarea
-                            placeholder="SEO meta description..."
+                            placeholder={t("metaDescriptionPlaceholder") ?? "SEO meta description..."}
                             className="min-h-20"
                             {...field}
                           />
                         </FormControl>
-                        <FormDescription>
-                          Optimal length: 120-160 characters
-                        </FormDescription>
+                        <FormDescription>{t("metaDescriptionHint")}</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}

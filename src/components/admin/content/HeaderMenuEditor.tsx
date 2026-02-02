@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { Save, Plus, Trash2, GripVertical, Loader2, ChevronDown, ChevronRight, X } from "lucide-react";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
@@ -72,6 +73,7 @@ function editorLinkToConfigLink(
 }
 
 export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEditorProps) {
+  const t = useTranslations("adminSettings.content");
   const [isLoading, setIsLoading] = React.useState(true);
   const [fullConfig, setFullConfig] = React.useState<HeaderConfig | null>(null);
   const [navItems, setNavItems] = React.useState<EditorNavLink[]>([]);
@@ -100,7 +102,7 @@ export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEd
           setNavItems(config.navigationLinks.map(l => configLinkToEditorLink(l, locale)));
           setHasChanges(false);
         } else {
-          toast.error("Failed to load header configuration");
+          toast.error(t("header.error.loadConfig"));
         }
         
         if (pagesResult.success) {
@@ -108,13 +110,13 @@ export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEd
         }
       } catch (error) {
         console.error("Error loading data:", error);
-        toast.error("Failed to load configuration");
+        toast.error(t("header.error.loadFailed"));
       } finally {
         setIsLoading(false);
       }
     }
     loadData();
-  }, [locale]);
+  }, [locale, t]);
 
   const handleAddLink = () => {
     setNavItems((prev) => [...prev, { labelKey: "", label: "", href: "" }]);
@@ -235,15 +237,15 @@ export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEd
       
       if (result.success) {
         setFullConfig(result.data);
-        toast.success(`Header menu saved for ${localeNames[locale]}`);
+        toast.success(t("header.success", { locale: localeNames[locale] }));
         setHasChanges(false);
         onSaveSuccess?.();
       } else {
-        toast.error(result.error || "Failed to save header menu");
+        toast.error(result.error || t("header.error.saveFailed"));
       }
     } catch (error) {
       console.error("Error saving header menu:", error);
-      toast.error("Failed to save header menu");
+      toast.error(t("header.error.saveFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -261,14 +263,14 @@ export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEd
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Site Branding</CardTitle>
+          <CardTitle>{t("header.branding.title")}</CardTitle>
           <CardDescription>
-            Configure the site name and logo displayed in the header
+            {t("header.branding.description")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="siteName">Site Name</Label>
+            <Label htmlFor="siteName">{t("header.siteName.label")}</Label>
             <Input
               id="siteName"
               value={siteName}
@@ -276,18 +278,18 @@ export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEd
                 setSiteName(e.target.value);
                 setHasChanges(true);
               }}
-              placeholder="Enter site name"
+              placeholder={t("header.siteName.placeholder")}
               className="max-w-md"
             />
           </div>
           <div className="space-y-2">
-            <Label>Header Logo</Label>
+            <Label>{t("header.logo.label")}</Label>
             <div className="space-y-3">
               {logo && (
                 <div className="relative w-40 h-20 bg-muted rounded-lg overflow-hidden">
                   <Image
                     src={logo}
-                    alt="Header logo"
+                    alt={t("header.logo.alt")}
                     fill
                     className="object-contain"
                   />
@@ -318,19 +320,18 @@ export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEd
 
       <Card>
         <CardHeader>
-          <CardTitle>Navigation Links</CardTitle>
+          <CardTitle>{t("header.navigation.title")}</CardTitle>
           <CardDescription>
-            Manage the navigation menu items for {localeNames[locale]}. These items appear in the main header.
-            Select from existing pages or add custom links. Items can have sub-menus.
+            {t("header.navigation.description", { locale: localeNames[locale] })}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Column Headers */}
           <div className="hidden md:grid grid-cols-4 gap-2 px-12 text-xs font-medium text-muted-foreground">
-            <span>Page / Link Type</span>
-            <span>Translation Key</span>
-            <span>Display Label</span>
-            <span>URL Path</span>
+            <span>{t("header.navigation.columnPage")}</span>
+            <span>{t("header.navigation.columnKey")}</span>
+            <span>{t("header.navigation.columnLabel")}</span>
+            <span>{t("header.navigation.columnPath")}</span>
           </div>
           <div className="space-y-3">
             {navItems.map((item, index) => (
@@ -366,10 +367,10 @@ export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEd
                         }}
                       >
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select page..." />
+                          <SelectValue placeholder={t("header.navigation.selectPage")} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="__custom__">Custom Link</SelectItem>
+                          <SelectItem value="__custom__">{t("header.navigation.customLink")}</SelectItem>
                           {availablePages.map((page) => (
                             <SelectItem key={page.slug} value={page.slug}>
                               {page.title.replace(/ - Sumud$/, '')} ({page.path})
@@ -380,18 +381,18 @@ export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEd
                       <Input
                         value={item.labelKey}
                         onChange={(e) => handleUpdateLink(index, "labelKey", e.target.value)}
-                        placeholder="Key (e.g., about)"
+                        placeholder={t("header.navigation.placeholderKey")}
                         className="font-mono text-sm"
                       />
                       <Input
                         value={item.label}
                         onChange={(e) => handleUpdateLink(index, "label", e.target.value)}
-                        placeholder={`Label in ${localeNames[locale]}`}
+                        placeholder={t("header.navigation.placeholderLabel", { locale: localeNames[locale] })}
                       />
                       <Input
                         value={item.href}
                         onChange={(e) => handleUpdateLink(index, "href", e.target.value)}
-                        placeholder="/page-path"
+                        placeholder={t("header.navigation.placeholderPath")}
                       />
                     </div>
                   </div>
@@ -401,10 +402,10 @@ export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEd
                       size="sm"
                       onClick={() => handleAddSubLink(index)}
                       className="text-xs"
-                      title="Add sub-menu item"
+                      title={t("header.navigation.addSubTitle")}
                     >
                       <Plus className="h-3 w-3 mr-1" />
-                      Sub
+                      {t("header.navigation.addSub")}
                     </Button>
                     <Button
                       variant="ghost"
@@ -436,10 +437,10 @@ export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEd
                             }}
                           >
                             <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select page..." />
+                              <SelectValue placeholder={t("header.navigation.selectPage")} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="__custom__">Custom Link</SelectItem>
+                              <SelectItem value="__custom__">{t("header.navigation.customLink")}</SelectItem>
                               {availablePages.map((page) => (
                                 <SelectItem key={page.slug} value={page.slug}>
                                   {page.title.replace(/ - Sumud$/, '')} ({page.path})
@@ -450,18 +451,18 @@ export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEd
                           <Input
                             value={child.labelKey}
                             onChange={(e) => handleUpdateSubLink(index, childIndex, "labelKey", e.target.value)}
-                            placeholder="Key"
+                            placeholder={t("header.navigation.placeholderKey")}
                             className="font-mono text-sm"
                           />
                           <Input
                             value={child.label}
                             onChange={(e) => handleUpdateSubLink(index, childIndex, "label", e.target.value)}
-                            placeholder={`Label in ${localeNames[locale]}`}
+                            placeholder={t("header.navigation.placeholderLabel", { locale: localeNames[locale] })}
                           />
                           <Input
                             value={child.href}
                             onChange={(e) => handleUpdateSubLink(index, childIndex, "href", e.target.value)}
-                            placeholder="/page-path"
+                            placeholder={t("header.navigation.placeholderPath")}
                           />
                         </div>
                         <Button
@@ -482,14 +483,14 @@ export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEd
 
           <Button variant="outline" onClick={handleAddLink} className="gap-2">
             <Plus className="h-4 w-4" />
-            Add Navigation Link
+            {t("header.navigation.addLink")}
           </Button>
         </CardContent>
       </Card>
 
       <div className="flex items-center justify-end gap-4">
         {hasChanges && (
-          <span className="text-sm text-muted-foreground">Unsaved changes</span>
+          <span className="text-sm text-muted-foreground">{t("header.unsaved")}</span>
         )}
         <Button onClick={handleSave} disabled={isSaving || !hasChanges} className="gap-2">
           {isSaving ? (
@@ -497,7 +498,7 @@ export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEd
           ) : (
             <Save className="h-4 w-4" />
           )}
-          Save Header Menu
+          {t("header.save")}
         </Button>
       </div>
     </div>

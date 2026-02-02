@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { ArrowLeft, Globe, Loader2, Search, X, Edit2 } from "lucide-react";
 import { Input } from "@/src/components/ui/input";
@@ -30,6 +31,7 @@ import { searchContent, updateContent } from "@/src/actions/content.actions";
 import type { SiteContent, Locale } from "@/src/types/Content";
 
 export default function ContentSearchPage() {
+  const t = useTranslations("adminSettings.content");
   const searchParams = useSearchParams();
   const initialLocale = (searchParams.get("locale") as Locale) || "en";
 
@@ -108,17 +110,17 @@ export default function ContentSearchPage() {
         <Button variant="ghost" size="sm" className="w-fit" asChild>
           <Link href="/admin/content">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Content
+            {t("search.backToContent")}
           </Link>
         </Button>
 
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Search className="h-8 w-8" />
-            Search All Content
+            {t("search.title")}
           </h1>
           <p className="text-muted-foreground mt-1">
-            Search across all translations by key or value
+            {t("search.description")}
           </p>
         </div>
       </div>
@@ -128,7 +130,7 @@ export default function ContentSearchPage() {
         <div className="relative flex-1 max-w-lg">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search keys or values (min 2 characters)..."
+            placeholder={t("search.placeholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 pr-10"
@@ -152,7 +154,7 @@ export default function ContentSearchPage() {
             size="sm"
             onClick={() => setActiveLocale("all")}
           >
-            All Languages
+            {t("search.allLanguages")}
           </Button>
           {(["en", "fi"] as Locale[]).map((locale) => (
             <Button
@@ -175,12 +177,12 @@ export default function ContentSearchPage() {
       ) : searchQuery.length < 2 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>Enter at least 2 characters to search</p>
+          <p>{t("search.minCharacters")}</p>
         </div>
       ) : results.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Globe className="h-12 w-12 mx-auto mb-4 opacity-50" />
-          <p>No results found for &quot;{searchQuery}&quot;</p>
+          <p>{t("search.noResults", { query: searchQuery })}</p>
         </div>
       ) : (
         <>
@@ -192,11 +194,11 @@ export default function ContentSearchPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-20">Locale</TableHead>
-                  <TableHead className="w-[150px]">Section</TableHead>
-                  <TableHead className="w-[250px]">Key</TableHead>
-                  <TableHead>Value</TableHead>
-                  <TableHead className="w-20">Actions</TableHead>
+                  <TableHead className="w-20">{t("search.table.locale")}</TableHead>
+                  <TableHead className="w-[150px]">{t("search.table.section")}</TableHead>
+                  <TableHead className="w-[250px]">{t("search.table.key")}</TableHead>
+                  <TableHead>{t("search.table.value")}</TableHead>
+                  <TableHead className="w-20">{t("search.table.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -241,7 +243,7 @@ export default function ContentSearchPage() {
       <Dialog open={!!editItem} onOpenChange={() => setEditItem(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Edit Content</DialogTitle>
+            <DialogTitle>{t("search.edit.title")}</DialogTitle>
             <DialogDescription>
               <span className="flex items-center gap-2 mt-2">
                 <Badge variant="outline">
@@ -256,26 +258,26 @@ export default function ContentSearchPage() {
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-value">Value</Label>
+              <Label htmlFor="edit-value">{t("search.edit.value")}</Label>
               <Textarea
                 id="edit-value"
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
                 className="min-h-[150px]"
-                placeholder="Enter content..."
+                placeholder={t("search.edit.placeholder")}
               />
             </div>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditItem(null)}>
-              Cancel
+              {t("search.edit.cancel")}
             </Button>
             <Button onClick={handleSave} disabled={isSaving}>
               {isSaving ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : null}
-              Save Changes
+              {t("search.edit.save")}
             </Button>
           </DialogFooter>
         </DialogContent>

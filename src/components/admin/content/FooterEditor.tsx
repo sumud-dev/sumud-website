@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Save, Plus, Trash2, GripVertical, Loader2, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Input } from "@/src/components/ui/input";
 import { Textarea } from "@/src/components/ui/textarea";
 import { Button } from "@/src/components/ui/button";
@@ -24,10 +25,7 @@ interface FooterEditorProps {
   onSaveSuccess?: () => void;
 }
 
-const localeNames: Record<Locale, string> = {
-  en: "English",
-  fi: "Suomi",
-};
+// locale display names are provided via translations
 
 // Helper to convert config NavLink to editor format
 interface EditorLink {
@@ -63,6 +61,11 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
   const [hasChanges, setHasChanges] = React.useState(false);
+  const t = useTranslations("adminSettings.content");
+  const localeNames: Record<Locale, string> = {
+    en: t("locale.en"),
+    fi: t("locale.fi"),
+  };
   
   // Store the full config to preserve other locale data
   const [fullConfig, setFullConfig] = React.useState<FooterConfig | null>(null);
@@ -108,17 +111,17 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
           setContactLocation(config.contact?.location || "");
           setHasChanges(false);
         } else {
-          toast.error("Failed to load footer configuration");
+          toast.error(t("footer.error.loadConfig"));
         }
       } catch (error) {
         console.error("Error loading footer config:", error);
-        toast.error("Failed to load footer configuration");
+        toast.error(t("footer.error.loadConfig"));
       } finally {
         setIsLoading(false);
       }
     }
     loadConfig();
-  }, [locale]);
+  }, [locale, t]);
 
   const handleAddLink = (
     setter: React.Dispatch<React.SetStateAction<EditorLink[]>>
@@ -218,15 +221,15 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
       
       if (result.success) {
         setFullConfig(result.data);
-        toast.success(`Footer saved for ${localeNames[locale]}`);
+        toast.success(t("savedForLocale", { locale: t(`locale.${locale}`) }));
         setHasChanges(false);
         onSaveSuccess?.();
       } else {
-        toast.error(result.error || "Failed to save footer");
+        toast.error(result.error || t("footer.error.saveFailed"));
       }
     } catch (error) {
       console.error("Error saving footer:", error);
-      toast.error("Failed to save footer");
+      toast.error(t("footer.error.saveFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -261,7 +264,7 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
                 onChange={(e) =>
                   handleUpdateLink(setLinks, index, "labelKey", e.target.value)
                 }
-                placeholder="Key"
+                placeholder={t("footer.link.placeholder.key")}
                 className="font-mono text-xs"
               />
               <Input
@@ -269,14 +272,14 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
                 onChange={(e) =>
                   handleUpdateLink(setLinks, index, "label", e.target.value)
                 }
-                placeholder={`Label (${localeNames[locale]})`}
+                placeholder={t("footer.link.placeholder.label", { locale: localeNames[locale] })}
               />
               <Input
                 value={item.href}
                 onChange={(e) =>
                   handleUpdateLink(setLinks, index, "href", e.target.value)
                 }
-                placeholder="/path"
+                placeholder={t("footer.link.placeholder.path")}
               />
             </div>
             <Button
@@ -296,7 +299,7 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
           className="gap-1"
         >
           <Plus className="h-3 w-3" />
-          Add Link
+          {t("footer.link.add")}
         </Button>
       </CardContent>
     </Card>
@@ -315,32 +318,32 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
       {/* Footer Description */}
       <Card>
         <CardHeader>
-          <CardTitle>Footer Description & Logo</CardTitle>
+          <CardTitle>{t("footer.description.title")}</CardTitle>
           <CardDescription>
-            Main description text and logo shown in the footer
+            {t("footer.description.subtitle")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Description</Label>
+            <Label>{t("footer.description.label")}</Label>
             <Textarea
               value={description}
               onChange={(e) => {
                 setDescription(e.target.value);
                 setHasChanges(true);
             }}
-            placeholder="Enter footer description"
+            placeholder={t("footer.description.placeholder")}
             rows={3}
           />
           </div>
           <div className="space-y-2">
-            <Label>Footer Logo</Label>
+            <Label>{t("footer.logo.label")}</Label>
             <div className="space-y-3">
               {logo && (
                 <div className="relative w-40 h-20 bg-muted rounded-lg overflow-hidden">
                   <Image
                     src={logo}
-                    alt="Footer logo"
+                    alt={t("footer.logo.alt")}
                     fill
                     className="object-contain"
                   />
@@ -372,26 +375,26 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
       {/* Link Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <LinkSection
-          title="Quick Links"
-          description="Main navigation links"
+          title={t("footer.quickLinks.title")}
+          description={t("footer.quickLinks.description")}
           links={quickLinks}
           setLinks={setQuickLinks}
         />
         <LinkSection
-          title="Get Involved"
-          description="Engagement links"
+          title={t("footer.getInvolved.title")}
+          description={t("footer.getInvolved.description")}
           links={getInvolvedLinks}
           setLinks={setGetInvolvedLinks}
         />
         <LinkSection
-          title="Resources"
-          description="Help and resource links"
+          title={t("footer.resources.title")}
+          description={t("footer.resources.description")}
           links={resourceLinks}
           setLinks={setResourceLinks}
         />
         <LinkSection
-          title="Legal"
-          description="Legal and policy links"
+          title={t("footer.legal.title")}
+          description={t("footer.legal.description")}
           links={legalLinks}
           setLinks={setLegalLinks}
         />
@@ -400,8 +403,8 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
       {/* Social Links */}
       <Card>
         <CardHeader>
-          <CardTitle>Social Links</CardTitle>
-          <CardDescription>Social media links displayed in the footer</CardDescription>
+          <CardTitle>{t("footer.social.title")}</CardTitle>
+          <CardDescription>{t("footer.social.description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           {socialLinks.map((item, index) => (
@@ -414,7 +417,7 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
                 onChange={(e) =>
                   handleUpdateSocialLink(index, "platform", e.target.value)
                 }
-                placeholder="Platform (e.g., Facebook)"
+                placeholder={t("footer.social.placeholder.platform")}
                 className="w-40"
               />
               <Input
@@ -422,7 +425,7 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
                 onChange={(e) =>
                   handleUpdateSocialLink(index, "url", e.target.value)
                 }
-                placeholder="https://..."
+                placeholder={t("footer.social.placeholder.url")}
                 className="flex-1"
               />
               <Button
@@ -442,7 +445,7 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
             className="gap-1"
           >
             <Plus className="h-3 w-3" />
-            Add Social Link
+            {t("footer.social.add")}
           </Button>
         </CardContent>
       </Card>
@@ -450,14 +453,14 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
       {/* Newsletter Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Newsletter Section</CardTitle>
+          <CardTitle>{t("footer.newsletter.title")}</CardTitle>
           <CardDescription>
-            Newsletter subscription text for {localeNames[locale]}
+            {t("footer.newsletter.description", { locale: t(`locale.${locale}`) })}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="newsletterTitle">Title</Label>
+            <Label htmlFor="newsletterTitle">{t("footer.newsletter.field.title")}</Label>
             <Input
               id="newsletterTitle"
               value={newsletterTitle}
@@ -465,11 +468,11 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
                 setNewsletterTitle(e.target.value);
                 setHasChanges(true);
               }}
-              placeholder="Newsletter title"
+              placeholder={t("footer.newsletter.field.titlePlaceholder")}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="newsletterSubtitle">Subtitle</Label>
+            <Label htmlFor="newsletterSubtitle">{t("footer.newsletter.field.subtitle")}</Label>
             <Input
               id="newsletterSubtitle"
               value={newsletterSubtitle}
@@ -477,7 +480,7 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
                 setNewsletterSubtitle(e.target.value);
                 setHasChanges(true);
               }}
-              placeholder="Newsletter subtitle"
+              placeholder={t("footer.newsletter.field.subtitlePlaceholder")}
             />
           </div>
         </CardContent>
@@ -486,8 +489,8 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
       {/* Copyright */}
       <Card>
         <CardHeader>
-          <CardTitle>Copyright Text</CardTitle>
-          <CardDescription>Copyright notice displayed at the bottom</CardDescription>
+          <CardTitle>{t("footer.copyright.title")}</CardTitle>
+          <CardDescription>{t("footer.copyright.description")}</CardDescription>
         </CardHeader>
         <CardContent>
           <Input
@@ -496,7 +499,7 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
               setCopyright(e.target.value);
               setHasChanges(true);
             }}
-            placeholder="© 2025 Your Company. All rights reserved."
+            placeholder={t("footer.copyright.placeholder")}
           />
         </CardContent>
       </Card>
@@ -504,12 +507,12 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
       {/* Contact Information */}
       <Card>
         <CardHeader>
-          <CardTitle>Contact Information</CardTitle>
-          <CardDescription>Contact details displayed in the footer</CardDescription>
+          <CardTitle>{t("footer.contact.title")}</CardTitle>
+          <CardDescription>{t("footer.contact.description")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="contactEmail">Email</Label>
+            <Label htmlFor="contactEmail">{t("footer.contact.email.label")}</Label>
             <Input
               id="contactEmail"
               type="email"
@@ -518,11 +521,11 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
                 setContactEmail(e.target.value);
                 setHasChanges(true);
               }}
-              placeholder="info@example.com"
+              placeholder={t("footer.contact.email.placeholder")}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="contactPhone">Phone</Label>
+            <Label htmlFor="contactPhone">{t("footer.contact.phone.label")}</Label>
             <Input
               id="contactPhone"
               value={contactPhone}
@@ -530,11 +533,11 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
                 setContactPhone(e.target.value);
                 setHasChanges(true);
               }}
-              placeholder="+358 XX XXX XXXX"
+              placeholder={t("footer.contact.phone.placeholder")}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="contactLocation">Location</Label>
+            <Label htmlFor="contactLocation">{t("footer.contact.location.label")}</Label>
             <Input
               id="contactLocation"
               value={contactLocation}
@@ -542,7 +545,7 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
                 setContactLocation(e.target.value);
                 setHasChanges(true);
               }}
-              placeholder="City, Country"
+              placeholder={t("footer.contact.location.placeholder")}
             />
           </div>
         </CardContent>
@@ -551,7 +554,7 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
       {/* Save Button */}
       <div className="flex items-center justify-end gap-4">
         {hasChanges && (
-          <span className="text-sm text-muted-foreground">Unsaved changes</span>
+          <span className="text-sm text-muted-foreground">{t("footer.unsaved")}</span>
         )}
         <Button onClick={handleSave} disabled={isSaving || !hasChanges} className="gap-2">
           {isSaving ? (
@@ -559,7 +562,7 @@ export default function FooterEditor({ locale, onSaveSuccess }: FooterEditorProp
           ) : (
             <Save className="h-4 w-4" />
           )}
-          Save Footer
+          {t("footer.save")}
         </Button>
       </div>
     </div>

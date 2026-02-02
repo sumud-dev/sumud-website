@@ -145,12 +145,14 @@ export async function upsertTranslation(data: {
   updatedBy?: string;
 }): Promise<UITranslation> {
   try {
-    // Check if translation exists
+    // Check if translation exists - must include namespace in the check
+    // because unique constraint is on (namespace, key, language)
     const existing = await db
       .select()
       .from(uiTranslations)
       .where(
         and(
+          eq(uiTranslations.namespace, data.namespace),
           eq(uiTranslations.key, data.key),
           eq(uiTranslations.language, data.language)
         )

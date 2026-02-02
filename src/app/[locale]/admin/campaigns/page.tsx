@@ -134,11 +134,11 @@ const CampaignsPage: React.FC = () => {
           toast.success(t("refreshed"));
         }
       } else {
-        toast.error(!result.success ? result.error : "Failed to fetch campaigns");
+        toast.error(!result.success ? result.error : t("fetchError"));
       }
     } catch (err) {
       console.error("Error fetching campaigns:", err);
-      toast.error("An unexpected error occurred while fetching campaigns");
+      toast.error(t("fetchErrorUnexpected"));
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
