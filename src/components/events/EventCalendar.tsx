@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Calendar, MapPin } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
@@ -40,6 +40,7 @@ export function EventCalendar({
   compact = false,
 }: EventCalendarProps) {
   const t = useTranslations("events");
+  const locale = useLocale();
   // Initialize with a fixed date to avoid hydration mismatch
   const [currentDate, setCurrentDate] = useState(() => {
     // Use a stable initial date
@@ -346,9 +347,9 @@ export function EventCalendar({
                   <MapPin className="h-4 w-4 text-[#781D32]" />
                   <h3 className="font-semibold text-[#3E442B]">
                     {selectedDate 
-                      ? `${t("calendar.eventsOn")} ${selectedDate.toLocaleDateString()}`
+                      ? `${t("calendar.eventsOn")} ${selectedDate.toLocaleDateString(locale === 'fi' ? 'fi-FI' : 'en-US')}`
                       : hoveredDate
-                      ? `${t("calendar.eventsOn")} ${hoveredDate.toLocaleDateString()}`
+                      ? `${t("calendar.eventsOn")} ${hoveredDate.toLocaleDateString(locale === 'fi' ? 'fi-FI' : 'en-US')}`
                       : t("calendar.todaysEvents")
                     }
                   </h3>
@@ -389,7 +390,7 @@ export function EventCalendar({
                               {event.title}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {formatEventDate(getEventStartDate(event))}
+                              {formatEventDate(getEventStartDate(event), locale)}
                             </p>
                           </div>
                           <Badge 

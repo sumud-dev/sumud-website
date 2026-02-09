@@ -166,7 +166,7 @@ export async function createCampaign(
   translations: Array<{
     locale: string;
     title: string;
-    description?: any;
+    description?: string; // HTML string from TipTap editor
     demands?: any;
     callToAction?: any;
     howToParticipate?: any;
@@ -187,11 +187,14 @@ export async function createCampaign(
     return value as T;
   };
   
-  // Create primary campaign (whichever language is first)
+  // Ensure base slug doesn't have locale suffix
+  const baseSlug = campaignData.slug.replace(/-(?:en|fi)$/, '');
+  
+  // Create primary campaign (whichever language is first) with slug-locale format
   const [newCampaign] = await db
     .insert(campaigns)
     .values({
-      slug: campaignData.slug,
+      slug: `${baseSlug}-${primaryLocale}`, // Add locale suffix to slug
       category: emptyToNull(campaignData.category),
       campaignType: emptyToNull(campaignData.campaignType),
       iconName: emptyToNull(campaignData.iconName),
@@ -222,7 +225,7 @@ export async function createCampaign(
     await db.insert(campaigns).values(
       otherTranslations.map(t => ({
         // Generate unique slug for translation by appending language code
-        slug: `${campaignData.slug}-${t.locale}`,
+        slug: `${baseSlug}-${t.locale}`,
         category: emptyToNull(campaignData.category),
         campaignType: emptyToNull(campaignData.campaignType),
         iconName: emptyToNull(campaignData.iconName),

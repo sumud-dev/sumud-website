@@ -89,22 +89,38 @@ const campaignStatusColors: Record<CampaignStatus, string> = {
 function extractDescriptionText(description: unknown): string {
   if (!description) return '';
   
-  // If it's already a string, return it
-  if (typeof description === 'string') return description;
+  let text = '';
   
+  // If it's already a string, use it
+  if (typeof description === 'string') {
+    text = description;
+  }
   // If it's a JSONB object with data property
-  if (typeof description === 'object' && description !== null && 'data' in description) {
+  else if (typeof description === 'object' && description !== null && 'data' in description) {
     const desc = description as { type?: string; data?: unknown };
     if (typeof desc.data === 'string') {
-      return desc.data;
+      text = desc.data;
     }
     // For blocks type, try to extract text from blocks
-    if (desc.type === 'blocks' && Array.isArray(desc.data)) {
-      return desc.data.map((block: { text?: string }) => block.text || '').join(' ');
+    else if (desc.type === 'blocks' && Array.isArray(desc.data)) {
+      text = desc.data.map((block: { text?: string }) => block.text || '').join(' ');
     }
   }
   
-  return '';
+  // Strip TipTap HTML wrapper tags and all HTML tags
+  text = text.replace(/<div data-raw-html="true"[^>]*>.*?<\/div>/gs, '');
+  text = text.replace(/<div data-raw-html="true"[^>]*\/>/g, '');
+  text = text.replace(/<[^>]+>/g, '');
+  
+  // Decode HTML entities
+  text = text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&');
+  
+  return text.trim();
 }
 
 const CampaignsPage: React.FC = () => {

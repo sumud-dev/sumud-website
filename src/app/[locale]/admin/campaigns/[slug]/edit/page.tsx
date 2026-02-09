@@ -7,7 +7,7 @@ import { ArrowLeft, Eye } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/src/components/ui/button";
 import { CampaignForm, type CampaignFormData } from "@/src/components/forms/campaign-form";
-import { useCampaign, useUpdateCampaign, useUpdateCampaignTranslation } from "@/src/lib/hooks/use-campaigns";
+import { useCampaign, useUpdateCampaign } from "@/src/lib/hooks/use-campaigns";
 import { toast } from "sonner";
 
 interface EditCampaignPageProps {
@@ -30,9 +30,8 @@ export default function EditCampaignPage({ params }: EditCampaignPageProps) {
   // Fetch campaign with React Query
   const { data: campaign, isLoading, error } = useCampaign(slug);
   
-  // Mutations
+  // Single mutation for updating campaign
   const updateCampaign = useUpdateCampaign();
-  const updateTranslation = useUpdateCampaignTranslation();
 
   // Map campaign data for form
   const mappedCampaign = React.useMemo(() => {
@@ -67,28 +66,20 @@ export default function EditCampaignPage({ params }: EditCampaignPageProps) {
     if (!campaign) return;
 
     try {
-      // Get campaign ID (handle both primary and translation records)
-      const campaignId = campaign.parentId || campaign.id;
+      // Get the campaign ID - use the record's own ID since we're in a single-table system
+      const campaignId = campaign.id;
 
-      // Update base campaign fields
+      // Update all campaign fields in one call
       await updateCampaign.mutateAsync({
         campaignId,
         slug,
         data: {
+          // Base fields
           status: data.status,
           category: data.category,
           campaignType: data.campaignType,
           isFeatured: data.isFeatured,
-        },
-        language: locale,
-      });
-
-      // Update translation content
-      await updateTranslation.mutateAsync({
-        campaignId,
-        slug,
-        locale,
-        data: {
+          // Content fields (stored directly in the campaign record for current locale)
           title: data.title,
           description: data.description,
           callToAction: data.callToAction,
@@ -98,6 +89,8 @@ export default function EditCampaignPage({ params }: EditCampaignPageProps) {
           seoTitle: data.seoTitle,
           seoDescription: data.seoDescription,
         },
+        language: locale,
+        autoTranslate: data.autoTranslate, // Use form value to determine if translation to other locale is needed
       });
 
       toast.success(t("successMessage"));
@@ -148,7 +141,7 @@ export default function EditCampaignPage({ params }: EditCampaignPageProps) {
     );
   }
 
-  const isSubmitting = updateCampaign.isPending || updateTranslation.isPending;
+  const isSubmitting = updateCampaign.isPending;
 
   return (
     <div className="space-y-6">

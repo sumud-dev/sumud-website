@@ -1,237 +1,79 @@
-import { TemplateType } from '../../types/editor';
+import { TemplateType } from '@/src/lib/types/editor';
 
 /**
- * Template content generator
- * Pure functions that return HTML content for templates
+ * Beautiful Editor Templates - Complete Implementation  
+ * 24 Professional Templates with shadcn-inspired design
+ * 
+ * Usage:
+ * import { getTemplate } from './editor-templates';
+ * const html = getTemplate('hero');
+ * editor.chain().focus().insertContent(html).run();
  */
 
-export const templateContent: Record<TemplateType, string> = {
-  card: `
-    <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; margin: 16px 0; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-      <h3>Card Title</h3>
-      <p>Add your content here. This card component is perfect for highlighting important information.</p>
-    </div>
-  `,
+export function templateContent(type: TemplateType): string {
+  return TEMPLATES[type] || '';
+}
+
+// ============================================================================
+// TEMPLATE IMPLEMENTATIONS
+// All templates use inline styles for maximum compatibility
+// ============================================================================
+
+const TEMPLATES: Record<TemplateType, string> = {
   
-  twoColumn: `
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 16px 0;">
-      <div>
-        <h3>Left Column</h3>
-        <p>Content for the left side goes here.</p>
-      </div>
-      <div>
-        <h3>Right Column</h3>
-        <p>Content for the right side goes here.</p>
-      </div>
-    </div>
-  `,
+  // LAYOUT TEMPLATES
+  card: `<div style="border:1px solid #e5e7eb;border-radius:12px;padding:32px;margin:24px 0;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.1)"><h3 style="font-size:1.5rem;font-weight:700;margin:0 0 12px 0;color:#111827">Card Title</h3><p style="color:#6b7280;margin:0 0 20px 0;line-height:1.6">Add your content here. This card component is perfect for highlighting important information.</p><div style="padding-top:16px;border-top:1px solid #f3f4f6"><a href="#" style="color:#2563eb;text-decoration:none;font-weight:500;font-size:0.875rem">Learn more →</a></div></div>`,
   
-  threeColumn: `
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 16px 0;">
-      <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
-        <h4>Column 1</h4>
-        <p>First column content</p>
-      </div>
-      <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
-        <h4>Column 2</h4>
-        <p>Second column content</p>
-      </div>
-      <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
-        <h4>Column 3</h4>
-        <p>Third column content</p>
-      </div>
-    </div>
-  `,
+  twoColumn: `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:32px;margin:32px 0"><div style="padding:24px;border-radius:8px;background:#f9fafb;border:1px solid #e5e7eb"><h4 style="font-size:1.25rem;font-weight:600;margin:0 0 12px 0;color:#111827">Left Column</h4><p style="color:#6b7280;margin:0;line-height:1.6">Add your content in the left column. Perfect for side-by-side comparisons.</p></div><div style="padding:24px;border-radius:8px;background:#f9fafb;border:1px solid #e5e7eb"><h4 style="font-size:1.25rem;font-weight:600;margin:0 0 12px 0;color:#111827">Right Column</h4><p style="color:#6b7280;margin:0;line-height:1.6">Add your content in the right column.</p></div></div>`,
   
-  hero: `
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 60px 40px; border-radius: 12px; text-align: center; margin: 24px 0;">
-      <h1 style="color: white; font-size: 3em; margin-bottom: 16px;">Welcome to Your Platform</h1>
-      <p style="font-size: 1.25em; margin-bottom: 32px;">Start creating amazing content today</p>
-      <a href="#" style="background: white; color: #667eea; padding: 14px 36px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">Get Started</a>
-    </div>
-  `,
+  threeColumn: `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;margin:32px 0"><div style="padding:24px;border-radius:8px;background:linear-gradient(to bottom,#fff,#f9fafb);border:1px solid #e5e7eb;text-align:center"><div style="width:48px;height:48px;margin:0 auto 16px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#2563eb;font-size:1.5rem;font-weight:700">1</div><h4 style="font-size:1.125rem;font-weight:600;margin:0 0 8px 0;color:#111827">First</h4><p style="color:#6b7280;margin:0;font-size:0.875rem">Description for the first column.</p></div><div style="padding:24px;border-radius:8px;background:linear-gradient(to bottom,#fff,#f9fafb);border:1px solid #e5e7eb;text-align:center"><div style="width:48px;height:48px;margin:0 auto 16px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#2563eb;font-size:1.5rem;font-weight:700">2</div><h4 style="font-size:1.125rem;font-weight:600;margin:0 0 8px 0;color:#111827">Second</h4><p style="color:#6b7280;margin:0;font-size:0.875rem">Description for the second column.</p></div><div style="padding:24px;border-radius:8px;background:linear-gradient(to bottom,#fff,#f9fafb);border:1px solid #e5e7eb;text-align:center"><div style="width:48px;height:48px;margin:0 auto 16px;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#2563eb;font-size:1.5rem;font-weight:700">3</div><h4 style="font-size:1.125rem;font-weight:600;margin:0 0 8px 0;color:#111827">Third</h4><p style="color:#6b7280;margin:0;font-size:0.875rem">Description for the third column.</p></div></div>`,
   
-  features: `
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin: 24px 0;">
-      <div style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px; text-align: center; transition: transform 0.2s;">
-        <div style="font-size: 3em; margin-bottom: 16px;">🚀</div>
-        <h3>Fast & Reliable</h3>
-        <p style="color: #6b7280;">Lightning-fast performance you can count on</p>
-      </div>
-      <div style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px; text-align: center; transition: transform 0.2s;">
-        <div style="font-size: 3em; margin-bottom: 16px;">🔒</div>
-        <h3>Secure</h3>
-        <p style="color: #6b7280;">Enterprise-grade security built-in</p>
-      </div>
-      <div style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 28px; text-align: center; transition: transform 0.2s;">
-        <div style="font-size: 3em; margin-bottom: 16px;">💎</div>
-        <h3>Premium Quality</h3>
-        <p style="color: #6b7280;">Best-in-class features and support</p>
-      </div>
-    </div>
-  `,
+  gridLayout: `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin:32px 0"><div style="padding:20px;border-radius:8px;border:1px solid #e5e7eb;background:#fff"><div style="width:40px;height:40px;background:#eff6ff;border-radius:8px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;color:#2563eb;font-weight:700;font-size:1.125rem">✓</div><h5 style="font-size:1rem;font-weight:600;margin:0 0 8px 0;color:#111827">Feature One</h5><p style="color:#6b7280;margin:0;font-size:0.875rem">Brief description of this feature.</p></div><div style="padding:20px;border-radius:8px;border:1px solid #e5e7eb;background:#fff"><div style="width:40px;height:40px;background:#eff6ff;border-radius:8px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;color:#2563eb;font-weight:700;font-size:1.125rem">✓</div><h5 style="font-size:1rem;font-weight:600;margin:0 0 8px 0;color:#111827">Feature Two</h5><p style="color:#6b7280;margin:0;font-size:0.875rem">Brief description of this feature.</p></div><div style="padding:20px;border-radius:8px;border:1px solid #e5e7eb;background:#fff"><div style="width:40px;height:40px;background:#eff6ff;border-radius:8px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;color:#2563eb;font-weight:700;font-size:1.125rem">✓</div><h5 style="font-size:1rem;font-weight:600;margin:0 0 8px 0;color:#111827">Feature Three</h5><p style="color:#6b7280;margin:0;font-size:0.875rem">Brief description of this feature.</p></div><div style="padding:20px;border-radius:8px;border:1px solid #e5e7eb;background:#fff"><div style="width:40px;height:40px;background:#eff6ff;border-radius:8px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;color:#2563eb;font-weight:700;font-size:1.125rem">✓</div><h5 style="font-size:1rem;font-weight:600;margin:0 0 8px 0;color:#111827">Feature Four</h5><p style="color:#6b7280;margin:0;font-size:0.875rem">Brief description of this feature.</p></div></div>`,
   
-  pricing: `
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; margin: 32px 0;">
-      <div style="border: 2px solid #e5e7eb; border-radius: 16px; padding: 36px; text-align: center;">
-        <h3 style="font-size: 1.5em; margin-bottom: 12px;">Starter</h3>
-        <div style="font-size: 3em; font-weight: bold; margin: 20px 0;">$9<span style="font-size: 0.4em; color: #6b7280; font-weight: normal;">/month</span></div>
-        <ul style="list-style: none; padding: 0; margin: 24px 0; text-align: left;">
-          <li style="padding: 8px 0; border-bottom: 1px solid #f3f4f6;">✓ 10 Projects</li>
-          <li style="padding: 8px 0; border-bottom: 1px solid #f3f4f6;">✓ Basic Support</li>
-          <li style="padding: 8px 0; border-bottom: 1px solid #f3f4f6;">✓ 5GB Storage</li>
-        </ul>
-        <a href="#" style="background: #3b82f6; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; display: inline-block; margin-top: 16px;">Choose Plan</a>
-      </div>
-      <div style="border: 3px solid #3b82f6; border-radius: 16px; padding: 36px; text-align: center; position: relative; box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);">
-        <div style="position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: #3b82f6; color: white; padding: 6px 20px; border-radius: 20px; font-size: 0.85em; font-weight: 600;">POPULAR</div>
-        <h3 style="font-size: 1.5em; margin-bottom: 12px;">Professional</h3>
-        <div style="font-size: 3em; font-weight: bold; margin: 20px 0;">$29<span style="font-size: 0.4em; color: #6b7280; font-weight: normal;">/month</span></div>
-        <ul style="list-style: none; padding: 0; margin: 24px 0; text-align: left;">
-          <li style="padding: 8px 0; border-bottom: 1px solid #f3f4f6;">✓ Unlimited Projects</li>
-          <li style="padding: 8px 0; border-bottom: 1px solid #f3f4f6;">✓ Priority Support</li>
-          <li style="padding: 8px 0; border-bottom: 1px solid #f3f4f6;">✓ 50GB Storage</li>
-          <li style="padding: 8px 0; border-bottom: 1px solid #f3f4f6;">✓ Advanced Features</li>
-        </ul>
-        <a href="#" style="background: #3b82f6; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; display: inline-block; margin-top: 16px;">Choose Plan</a>
-      </div>
-      <div style="border: 2px solid #e5e7eb; border-radius: 16px; padding: 36px; text-align: center;">
-        <h3 style="font-size: 1.5em; margin-bottom: 12px;">Enterprise</h3>
-        <div style="font-size: 3em; font-weight: bold; margin: 20px 0;">$99<span style="font-size: 0.4em; color: #6b7280; font-weight: normal;">/month</span></div>
-        <ul style="list-style: none; padding: 0; margin: 24px 0; text-align: left;">
-          <li style="padding: 8px 0; border-bottom: 1px solid #f3f4f6;">✓ Everything in Pro</li>
-          <li style="padding: 8px 0; border-bottom: 1px solid #f3f4f6;">✓ Dedicated Support</li>
-          <li style="padding: 8px 0; border-bottom: 1px solid #f3f4f6;">✓ Unlimited Storage</li>
-          <li style="padding: 8px 0; border-bottom: 1px solid #f3f4f6;">✓ Custom Integrations</li>
-        </ul>
-        <a href="#" style="background: #3b82f6; color: white; padding: 12px 32px; border-radius: 8px; text-decoration: none; display: inline-block; margin-top: 16px;">Contact Sales</a>
-      </div>
-    </div>
-  `,
+  sidebarLayout: `<div style="display:grid;grid-template-columns:280px 1fr;gap:32px;margin:32px 0"><div style="padding:24px;border-radius:8px;background:#f9fafb;border:1px solid #e5e7eb"><h4 style="font-size:1.125rem;font-weight:600;margin:0 0 16px 0;color:#111827">Sidebar</h4><ul style="list-style:none;padding:0;margin:0"><li style="padding:8px 12px;margin-bottom:4px;border-radius:6px;background:#fff;border:1px solid #e5e7eb;color:#374151;font-size:0.875rem">Item One</li><li style="padding:8px 12px;margin-bottom:4px;border-radius:6px;background:#fff;border:1px solid #e5e7eb;color:#374151;font-size:0.875rem">Item Two</li><li style="padding:8px 12px;border-radius:6px;background:#fff;border:1px solid #e5e7eb;color:#374151;font-size:0.875rem">Item Three</li></ul></div><div style="padding:32px;border-radius:8px;background:#fff;border:1px solid #e5e7eb"><h3 style="font-size:1.5rem;font-weight:700;margin:0 0 16px 0;color:#111827">Main Content</h3><p style="color:#6b7280;margin:0;line-height:1.6">Your main content goes here.</p></div></div>`,
   
-  testimonial: `
-    <div style="border: 1px solid #e5e7eb; border-radius: 16px; padding: 40px; margin: 24px 0; background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);">
-      <div style="font-size: 4em; color: #3b82f6; line-height: 0.5; margin-bottom: 20px;">"</div>
-      <p style="font-size: 1.25em; font-style: italic; color: #374151; margin: 20px 0; line-height: 1.6;">This product has completely transformed how we work. The features are intuitive and powerful. Highly recommended!</p>
-      <div style="display: flex; align-items: center; margin-top: 32px;">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-right: 16px;"></div>
-        <div>
-          <div style="font-weight: 600; font-size: 1.1em; color: #111827;">Sarah Johnson</div>
-          <div style="color: #6b7280; font-size: 0.95em;">CEO, Tech Innovations Inc.</div>
-        </div>
-      </div>
-    </div>
-  `,
+  // CONTENT TEMPLATES  
+  hero: `<div style="text-align:center;padding:80px 32px;margin:48px 0;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:16px;color:#fff;box-shadow:0 10px 40px rgba(102,126,234,0.3)"><h1 style="font-size:3rem;font-weight:900;margin:0 0 20px 0;line-height:1.1;letter-spacing:-0.02em">Welcome to Your Page</h1><p style="font-size:1.25rem;margin:0 0 32px 0;opacity:0.95;max-width:600px;margin-left:auto;margin-right:auto">A beautiful hero section to capture attention and deliver your key message with impact.</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><a href="#" style="display:inline-block;padding:14px 32px;background:#fff;color:#667eea;text-decoration:none;border-radius:8px;font-weight:600;box-shadow:0 4px 6px rgba(0,0,0,0.1)">Get Started</a><a href="#" style="display:inline-block;padding:14px 32px;background:rgba(255,255,255,0.2);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;border:2px solid #fff">Learn More</a></div></div>`,
   
-  faq: `
-    <div style="margin: 24px 0;">
-      <details style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; margin-bottom: 16px; cursor: pointer;">
-        <summary style="font-weight: 600; font-size: 1.1em; cursor: pointer; user-select: none; list-style: none; display: flex; justify-content: space-between; align-items: center;">
-          How do I get started?
-          <span style="font-size: 1.5em; color: #6b7280;">+</span>
-        </summary>
-        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6; color: #6b7280; line-height: 1.6;">
-          Getting started is easy! Simply sign up for an account, choose your plan, and follow our interactive onboarding guide. You'll be up and running in minutes.
-        </div>
-      </details>
-      <details style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; margin-bottom: 16px; cursor: pointer;">
-        <summary style="font-weight: 600; font-size: 1.1em; cursor: pointer; user-select: none; list-style: none; display: flex; justify-content: space-between; align-items: center;">
-          What payment methods do you accept?
-          <span style="font-size: 1.5em; color: #6b7280;">+</span>
-        </summary>
-        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6; color: #6b7280; line-height: 1.6;">
-          We accept all major credit cards, PayPal, and bank transfers for annual plans. All payments are processed securely.
-        </div>
-      </details>
-      <details style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 20px; margin-bottom: 16px; cursor: pointer;">
-        <summary style="font-weight: 600; font-size: 1.1em; cursor: pointer; user-select: none; list-style: none; display: flex; justify-content: space-between; align-items: center;">
-          Can I cancel my subscription anytime?
-          <span style="font-size: 1.5em; color: #6b7280;">+</span>
-        </summary>
-        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6; color: #6b7280; line-height: 1.6;">
-          Yes! You can cancel your subscription at any time from your account settings. No questions asked, no hidden fees.
-        </div>
-      </details>
-    </div>
-  `,
+  features: `<div style="margin:48px 0"><div style="text-align:center;margin-bottom:48px"><h2 style="font-size:2.25rem;font-weight:800;margin:0 0 16px 0;color:#111827">Features</h2><p style="font-size:1.125rem;color:#6b7280;margin:0">Everything you need to succeed</p></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:32px"><div style="text-align:center;padding:24px"><div style="width:64px;height:64px;margin:0 auto 20px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:16px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.75rem;box-shadow:0 8px 16px rgba(102,126,234,0.3)">⚡</div><h3 style="font-size:1.25rem;font-weight:700;margin:0 0 12px 0;color:#111827">Lightning Fast</h3><p style="color:#6b7280;margin:0">Optimized for speed and performance.</p></div><div style="text-align:center;padding:24px"><div style="width:64px;height:64px;margin:0 auto 20px;background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);border-radius:16px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.75rem;box-shadow:0 8px 16px rgba(245,87,108,0.3)">🎨</div><h3 style="font-size:1.25rem;font-weight:700;margin:0 0 12px 0;color:#111827">Beautiful Design</h3><p style="color:#6b7280;margin:0">Carefully crafted interfaces.</p></div><div style="text-align:center;padding:24px"><div style="width:64px;height:64px;margin:0 auto 20px;background:linear-gradient(135deg,#4facfe 0%,#00f2fe 100%);border-radius:16px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.75rem;box-shadow:0 8px 16px rgba(0,242,254,0.3)">🔒</div><h3 style="font-size:1.25rem;font-weight:700;margin:0 0 12px 0;color:#111827">Secure & Reliable</h3><p style="color:#6b7280;margin:0">Built with security first.</p></div></div></div>`,
   
-  timeline: `
-    <div style="position: relative; padding-left: 40px; margin: 32px 0;">
-      <div style="position: absolute; left: 15px; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, #3b82f6 0%, #8b5cf6 100%);"></div>
-      <div style="position: relative; margin-bottom: 40px;">
-        <div style="position: absolute; left: -32px; width: 12px; height: 12px; border-radius: 50%; background: #3b82f6; border: 3px solid white; box-shadow: 0 0 0 3px #3b82f6;"></div>
-        <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-          <h4 style="color: #3b82f6; font-size: 1.1em; margin-bottom: 8px;">2024 - Present</h4>
-          <h3 style="margin-bottom: 12px;">Current Phase</h3>
-          <p style="color: #6b7280;">We're currently focused on expanding our platform and adding new innovative features based on customer feedback.</p>
-        </div>
-      </div>
-      <div style="position: relative; margin-bottom: 40px;">
-        <div style="position: absolute; left: -32px; width: 12px; height: 12px; border-radius: 50%; background: #8b5cf6; border: 3px solid white; box-shadow: 0 0 0 3px #8b5cf6;"></div>
-        <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-          <h4 style="color: #8b5cf6; font-size: 1.1em; margin-bottom: 8px;">2023</h4>
-          <h3 style="margin-bottom: 12px;">Major Launch</h3>
-          <p style="color: #6b7280;">Successfully launched version 2.0 with advanced features and improved user experience.</p>
-        </div>
-      </div>
-      <div style="position: relative;">
-        <div style="position: absolute; left: -32px; width: 12px; height: 12px; border-radius: 50%; background: #a855f7; border: 3px solid white; box-shadow: 0 0 0 3px #a855f7;"></div>
-        <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
-          <h4 style="color: #a855f7; font-size: 1.1em; margin-bottom: 8px;">2022</h4>
-          <h3 style="margin-bottom: 12px;">The Beginning</h3>
-          <p style="color: #6b7280;">Started our journey with a vision to revolutionize the industry and make a difference.</p>
-        </div>
-      </div>
-    </div>
-  `,
+  pricing: `<div style="margin:48px 0"><div style="text-align:center;margin-bottom:48px"><h2 style="font-size:2.25rem;font-weight:800;margin:0 0 16px 0;color:#111827">Simple Pricing</h2><p style="font-size:1.125rem;color:#6b7280;margin:0">Choose the plan that's right for you</p></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;max-width:1000px;margin:0 auto"><div style="padding:32px;border-radius:12px;border:2px solid #e5e7eb;background:#fff;text-align:center"><h3 style="font-size:1.5rem;font-weight:700;margin:0 0 8px 0;color:#111827">Starter</h3><div style="margin:20px 0"><span style="font-size:3rem;font-weight:900;color:#111827">$9</span><span style="color:#6b7280">/month</span></div><ul style="list-style:none;padding:0;margin:24px 0;text-align:left"><li style="padding:8px 0;color:#374151;font-size:0.875rem">✓ Feature one</li><li style="padding:8px 0;color:#374151;font-size:0.875rem">✓ Feature two</li><li style="padding:8px 0;color:#374151;font-size:0.875rem">✓ Feature three</li></ul><a href="#" style="display:block;padding:12px;background:#f3f4f6;color:#374151;text-decoration:none;border-radius:8px;font-weight:600">Get Started</a></div><div style="padding:32px;border-radius:12px;border:2px solid #667eea;background:#fff;text-align:center;position:relative;box-shadow:0 10px 25px rgba(102,126,234,0.2);transform:scale(1.05)"><div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:4px 16px;border-radius:20px;font-size:0.75rem;font-weight:700">POPULAR</div><h3 style="font-size:1.5rem;font-weight:700;margin:0 0 8px 0;color:#111827">Pro</h3><div style="margin:20px 0"><span style="font-size:3rem;font-weight:900;color:#111827">$29</span><span style="color:#6b7280">/month</span></div><ul style="list-style:none;padding:0;margin:24px 0;text-align:left"><li style="padding:8px 0;color:#374151;font-size:0.875rem">✓ Everything in Starter</li><li style="padding:8px 0;color:#374151;font-size:0.875rem">✓ Advanced features</li><li style="padding:8px 0;color:#374151;font-size:0.875rem">✓ Priority support</li></ul><a href="#" style="display:block;padding:12px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;text-decoration:none;border-radius:8px;font-weight:600;box-shadow:0 4px 6px rgba(102,126,234,0.3)">Get Started</a></div><div style="padding:32px;border-radius:12px;border:2px solid #e5e7eb;background:#fff;text-align:center"><h3 style="font-size:1.5rem;font-weight:700;margin:0 0 8px 0;color:#111827">Enterprise</h3><div style="margin:20px 0"><span style="font-size:3rem;font-weight:900;color:#111827">$99</span><span style="color:#6b7280">/month</span></div><ul style="list-style:none;padding:0;margin:24px 0;text-align:left"><li style="padding:8px 0;color:#374151;font-size:0.875rem">✓ Everything in Pro</li><li style="padding:8px 0;color:#374151;font-size:0.875rem">✓ Custom solutions</li><li style="padding:8px 0;color:#374151;font-size:0.875rem">✓ Dedicated support</li></ul><a href="#" style="display:block;padding:12px;background:#f3f4f6;color:#374151;text-decoration:none;border-radius:8px;font-weight:600">Contact Sales</a></div></div></div>`,
   
-  'callout-info': `
-    <div style="border-left: 4px solid #3b82f6; background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%); padding: 20px 24px; margin: 20px 0; border-radius: 8px;">
-      <div style="display: flex; align-items: flex-start; gap: 12px;">
-        <div style="font-size: 1.5em; margin-top: 2px;">ℹ️</div>
-        <div>
-          <h4 style="color: #1e40af; margin-bottom: 8px; font-size: 1.1em;">Information</h4>
-          <p style="color: #374151; margin: 0; line-height: 1.6;">Add your informational content here. This callout is perfect for helpful tips and guidance.</p>
-        </div>
-      </div>
-    </div>
-  `,
+  testimonial: `<div style="max-width:800px;margin:48px auto;padding:48px 32px;background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);border-radius:16px;text-align:center;box-shadow:0 10px 25px rgba(0,0,0,0.1)"><div style="width:80px;height:80px;margin:0 auto 24px;border-radius:50%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);display:flex;align-items:center;justify-content:center;color:#fff;font-size:2rem;font-weight:700;box-shadow:0 4px 12px rgba(102,126,234,0.3)">JD</div><blockquote style="margin:0 0 24px 0;font-size:1.25rem;font-style:italic;color:#374151;line-height:1.6">"This product has completely transformed how we work. The attention to detail is outstanding."</blockquote><div style="font-weight:700;color:#111827;margin-bottom:4px;font-size:1.125rem">John Doe</div><div style="color:#6b7280;font-size:0.875rem">CEO at TechCorp</div></div>`,
   
-  'callout-warning': `
-    <div style="border-left: 4px solid #f59e0b; background: linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%); padding: 20px 24px; margin: 20px 0; border-radius: 8px;">
-      <div style="display: flex; align-items: flex-start; gap: 12px;">
-        <div style="font-size: 1.5em; margin-top: 2px;">⚠️</div>
-        <div>
-          <h4 style="color: #92400e; margin-bottom: 8px; font-size: 1.1em;">Warning</h4>
-          <p style="color: #374151; margin: 0; line-height: 1.6;">Add your warning message here. Use this to highlight important considerations or potential issues.</p>
-        </div>
-      </div>
-    </div>
-  `,
+  faq: `<div style="max-width:800px;margin:48px auto"><h2 style="font-size:2.25rem;font-weight:800;margin:0 0 40px 0;color:#111827;text-align:center">Frequently Asked Questions</h2><details style="padding:24px;border-radius:12px;background:#fff;border:1px solid #e5e7eb;margin-bottom:16px"><summary style="font-size:1.125rem;font-weight:600;color:#111827;cursor:pointer;list-style:none">How does it work?</summary><p style="margin:16px 0 0 0;color:#6b7280;line-height:1.6">Our solution is designed to be intuitive and easy to use. Simply sign up and you're ready to go.</p></details><details style="padding:24px;border-radius:12px;background:#fff;border:1px solid #e5e7eb;margin-bottom:16px"><summary style="font-size:1.125rem;font-weight:600;color:#111827;cursor:pointer;list-style:none">What's included in the plan?</summary><p style="margin:16px 0 0 0;color:#6b7280;line-height:1.6">Each plan includes access to all core features, with higher tiers offering additional benefits.</p></details><details style="padding:24px;border-radius:12px;background:#fff;border:1px solid #e5e7eb"><summary style="font-size:1.125rem;font-weight:600;color:#111827;cursor:pointer;list-style:none">Can I cancel anytime?</summary><p style="margin:16px 0 0 0;color:#6b7280;line-height:1.6">Yes! You can cancel your subscription at any time with no hidden fees.</p></details></div>`,
+
+  accordion: `<div style="max-width:800px;margin:32px auto"><h3 style="font-size:1.75rem;font-weight:700;margin:0 0 24px 0;color:#111827">Accordion Section</h3><details style="padding:20px 24px;border-radius:10px;background:#fff;border:1px solid #e5e7eb;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all 0.2s"><summary style="font-size:1.0625rem;font-weight:600;color:#111827;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between">Section One<span style="color:#9ca3af;font-size:1.25rem">▼</span></summary><div style="margin-top:16px;padding-top:16px;border-top:1px solid #f3f4f6"><p style="margin:0;color:#6b7280;line-height:1.6">Content for the first section. Add your detailed information here.</p></div></details><details style="padding:20px 24px;border-radius:10px;background:#fff;border:1px solid #e5e7eb;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all 0.2s"><summary style="font-size:1.0625rem;font-weight:600;color:#111827;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between">Section Two<span style="color:#9ca3af;font-size:1.25rem">▼</span></summary><div style="margin-top:16px;padding-top:16px;border-top:1px solid #f3f4f6"><p style="margin:0;color:#6b7280;line-height:1.6">Content for the second section. Add your detailed information here.</p></div></details><details style="padding:20px 24px;border-radius:10px;background:#fff;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all 0.2s"><summary style="font-size:1.0625rem;font-weight:600;color:#111827;cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between">Section Three<span style="color:#9ca3af;font-size:1.25rem">▼</span></summary><div style="margin-top:16px;padding-top:16px;border-top:1px solid #f3f4f6"><p style="margin:0;color:#6b7280;line-height:1.6">Content for the third section. Add your detailed information here.</p></div></details></div>`,
   
-  'callout-success': `
-    <div style="border-left: 4px solid #10b981; background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%); padding: 20px 24px; margin: 20px 0; border-radius: 8px;">
-      <div style="display: flex; align-items: flex-start; gap: 12px;">
-        <div style="font-size: 1.5em; margin-top: 2px;">✅</div>
-        <div>
-          <h4 style="color: #065f46; margin-bottom: 8px; font-size: 1.1em;">Success</h4>
-          <p style="color: #374151; margin: 0; line-height: 1.6;">Add your success message here. Perfect for confirming completed actions or positive outcomes.</p>
-        </div>
-      </div>
-    </div>
-  `,
+  timeline: `<div style="max-width:800px;margin:48px auto"><h2 style="font-size:2.25rem;font-weight:800;margin:0 0 48px 0;color:#111827;text-align:center">Our Journey</h2><div style="position:relative;padding-left:40px"><div style="position:absolute;left:12px;top:8px;bottom:8px;width:2px;background:linear-gradient(to bottom,#667eea,#764ba2)"></div><div style="position:relative;margin-bottom:40px"><div style="position:absolute;left:-34px;width:24px;height:24px;background:#667eea;border:4px solid #fff;border-radius:50%;box-shadow:0 0 0 2px #667eea"></div><div style="padding:20px;border-radius:12px;background:#fff;border:1px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,0.05)"><div style="font-weight:700;color:#667eea;margin-bottom:4px;font-size:0.875rem">2020</div><h4 style="font-size:1.125rem;font-weight:600;margin:0 0 8px 0;color:#111827">Company Founded</h4><p style="color:#6b7280;margin:0">Started with a vision to revolutionize the industry.</p></div></div><div style="position:relative;margin-bottom:40px"><div style="position:absolute;left:-34px;width:24px;height:24px;background:#764ba2;border:4px solid #fff;border-radius:50%;box-shadow:0 0 0 2px #764ba2"></div><div style="padding:20px;border-radius:12px;background:#fff;border:1px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,0.05)"><div style="font-weight:700;color:#764ba2;margin-bottom:4px;font-size:0.875rem">2022</div><h4 style="font-size:1.125rem;font-weight:600;margin:0 0 8px 0;color:#111827">Major Milestone</h4><p style="color:#6b7280;margin:0">Reached 100,000 satisfied customers worldwide.</p></div></div><div style="position:relative"><div style="position:absolute;left:-34px;width:24px;height:24px;background:#667eea;border:4px solid #fff;border-radius:50%;box-shadow:0 0 0 2px #667eea"></div><div style="padding:20px;border-radius:12px;background:#fff;border:1px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,0.05)"><div style="font-weight:700;color:#667eea;margin-bottom:4px;font-size:0.875rem">2024</div><h4 style="font-size:1.125rem;font-weight:600;margin:0 0 8px 0;color:#111827">New Chapter</h4><p style="color:#6b7280;margin:0">Launched next-generation platform with AI capabilities.</p></div></div></div></div>`,
   
-  'callout-error': `
-    <div style="border-left: 4px solid #ef4444; background: linear-gradient(90deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%); padding: 20px 24px; margin: 20px 0; border-radius: 8px;">
-      <div style="display: flex; align-items: flex-start; gap: 12px;">
-        <div style="font-size: 1.5em; margin-top: 2px;">❌</div>
-        <div>
-          <h4 style="color: #991b1b; margin-bottom: 8px; font-size: 1.1em;">Error</h4>
-          <p style="color: #374151; margin: 0; line-height: 1.6;">Add your error message here. Use this to highlight critical issues that need immediate attention.</p>
-        </div>
-      </div>
-    </div>
-  `,
+  stats: `<div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);padding:64px 32px;margin:48px 0;border-radius:16px;box-shadow:0 10px 40px rgba(102,126,234,0.3)"><h2 style="font-size:2.25rem;font-weight:800;margin:0 0 48px 0;color:#fff;text-align:center">By the Numbers</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:32px"><div style="text-align:center"><div style="font-size:3.5rem;font-weight:900;color:#fff;margin-bottom:8px">10K+</div><div style="color:rgba(255,255,255,0.9);font-size:1.125rem">Active Users</div></div><div style="text-align:center"><div style="font-size:3.5rem;font-weight:900;color:#fff;margin-bottom:8px">98%</div><div style="color:rgba(255,255,255,0.9);font-size:1.125rem">Satisfaction Rate</div></div><div style="text-align:center"><div style="font-size:3.5rem;font-weight:900;color:#fff;margin-bottom:8px">50+</div><div style="color:rgba(255,255,255,0.9);font-size:1.125rem">Countries</div></div><div style="text-align:center"><div style="font-size:3.5rem;font-weight:900;color:#fff;margin-bottom:8px">24/7</div><div style="color:rgba(255,255,255,0.9);font-size:1.125rem">Support</div></div></div></div>`,
+  
+  team: `<div style="margin:48px 0"><div style="text-align:center;margin-bottom:48px"><h2 style="font-size:2.25rem;font-weight:800;margin:0 0 16px 0;color:#111827">Meet Our Team</h2><p style="font-size:1.125rem;color:#6b7280;margin:0">The people behind our success</p></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:32px"><div style="text-align:center;padding:24px"><div style="width:120px;height:120px;margin:0 auto 20px;border-radius:50%;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);display:flex;align-items:center;justify-content:center;color:#fff;font-size:2.5rem;font-weight:700;box-shadow:0 8px 16px rgba(102,126,234,0.3)">AS</div><h4 style="font-size:1.125rem;font-weight:700;margin:0 0 4px 0;color:#111827">Alex Smith</h4><div style="color:#667eea;font-size:0.875rem;margin-bottom:12px;font-weight:500">CEO & Founder</div><p style="color:#6b7280;font-size:0.875rem;margin:0">Passionate about building products that make a difference.</p></div><div style="text-align:center;padding:24px"><div style="width:120px;height:120px;margin:0 auto 20px;border-radius:50%;background:linear-gradient(135deg,#f093fb 0%,#f5576c 100%);display:flex;align-items:center;justify-content:center;color:#fff;font-size:2.5rem;font-weight:700;box-shadow:0 8px 16px rgba(245,87,108,0.3)">SJ</div><h4 style="font-size:1.125rem;font-weight:700;margin:0 0 4px 0;color:#111827">Sarah Johnson</h4><div style="color:#f5576c;font-size:0.875rem;margin-bottom:12px;font-weight:500">Head of Design</div><p style="color:#6b7280;font-size:0.875rem;margin:0">Creating beautiful experiences that users love.</p></div><div style="text-align:center;padding:24px"><div style="width:120px;height:120px;margin:0 auto 20px;border-radius:50%;background:linear-gradient(135deg,#4facfe 0%,#00f2fe 100%);display:flex;align-items:center;justify-content:center;color:#fff;font-size:2.5rem;font-weight:700;box-shadow:0 8px 16px rgba(0,242,254,0.3)">MC</div><h4 style="font-size:1.125rem;font-weight:700;margin:0 0 4px 0;color:#111827">Mike Chen</h4><div style="color:#00f2fe;font-size:0.875rem;margin-bottom:12px;font-weight:500">CTO</div><p style="color:#6b7280;font-size:0.875rem;margin:0">Building scalable systems with cutting-edge technology.</p></div></div></div>`,
+  
+  newsletter: `<div style="max-width:600px;margin:48px auto;padding:48px 32px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:16px;text-align:center;box-shadow:0 10px 40px rgba(102,126,234,0.3)"><h3 style="font-size:2rem;font-weight:800;margin:0 0 16px 0;color:#fff">Stay Updated</h3><p style="font-size:1.125rem;margin:0 0 32px 0;color:rgba(255,255,255,0.9)">Subscribe to our newsletter for the latest updates.</p><div style="display:flex;gap:12px;max-width:400px;margin:0 auto;flex-wrap:wrap"><input type="email" placeholder="your@email.com" style="flex:1;min-width:200px;padding:14px 16px;border-radius:8px;border:none;font-size:1rem"/><button style="padding:14px 24px;background:#111827;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer">Subscribe</button></div><p style="margin:16px 0 0 0;font-size:0.75rem;color:rgba(255,255,255,0.8)">We respect your privacy. Unsubscribe anytime.</p></div>`,
+  
+  cta: `<div style="max-width:800px;margin:48px auto;padding:48px 32px;background:#111827;border-radius:16px;text-align:center;position:relative;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,0.3)"><div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#667eea 0%,#764ba2 100%)"></div><h2 style="font-size:2.5rem;font-weight:900;margin:0 0 16px 0;color:#fff">Ready to Get Started?</h2><p style="font-size:1.25rem;margin:0 0 32px 0;color:#9ca3af">Join thousands of satisfied customers today.</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><a href="#" style="display:inline-block;padding:16px 40px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;text-decoration:none;border-radius:8px;font-weight:700;font-size:1.125rem;box-shadow:0 4px 6px rgba(102,126,234,0.3)">Start Free Trial</a><a href="#" style="display:inline-block;padding:16px 40px;background:transparent;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;border:2px solid #374151;font-size:1.125rem">View Demo</a></div></div>`,
+  
+  // CALLOUT TEMPLATES
+  'callout-info': `<div style="padding:20px 24px;margin:24px 0;background:#eff6ff;border-left:4px solid #3b82f6;border-radius:8px"><div style="display:flex;align-items:start;gap:12px"><div style="flex-shrink:0;width:24px;height:24px;background:#3b82f6;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.875rem">i</div><div style="flex:1"><h5 style="font-size:1rem;font-weight:600;margin:0 0 8px 0;color:#1e40af">Information</h5><p style="margin:0;color:#1e3a8a;line-height:1.6">This is an informational callout. Use it to highlight helpful information.</p></div></div></div>`,
+  
+  'callout-warning': `<div style="padding:20px 24px;margin:24px 0;background:#fffbeb;border-left:4px solid #f59e0b;border-radius:8px"><div style="display:flex;align-items:start;gap:12px"><div style="flex-shrink:0;width:24px;height:24px;background:#f59e0b;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1rem">!</div><div style="flex:1"><h5 style="font-size:1rem;font-weight:600;margin:0 0 8px 0;color:#b45309">Warning</h5><p style="margin:0;color:#92400e;line-height:1.6">This is a warning callout. Use it to draw attention to important considerations.</p></div></div></div>`,
+  
+  'callout-success': `<div style="padding:20px 24px;margin:24px 0;background:#f0fdf4;border-left:4px solid #10b981;border-radius:8px"><div style="display:flex;align-items:start;gap:12px"><div style="flex-shrink:0;width:24px;height:24px;background:#10b981;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1rem">✓</div><div style="flex:1"><h5 style="font-size:1rem;font-weight:600;margin:0 0 8px 0;color:#047857">Success</h5><p style="margin:0;color:#065f46;line-height:1.6">This is a success callout. Use it to confirm positive outcomes.</p></div></div></div>`,
+  
+  'callout-error': `<div style="padding:20px 24px;margin:24px 0;background:#fef2f2;border-left:4px solid #ef4444;border-radius:8px"><div style="display:flex;align-items:start;gap:12px"><div style="flex-shrink:0;width:24px;height:24px;background:#ef4444;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1rem">✕</div><div style="flex:1"><h5 style="font-size:1rem;font-weight:600;margin:0 0 8px 0;color:#b91c1c">Error</h5><p style="margin:0;color:#991b1b;line-height:1.6">This is an error callout. Use it to highlight critical issues.</p></div></div></div>`,
+  
+  'callout-tip': `<div style="padding:20px 24px;margin:24px 0;background:#faf5ff;border-left:4px solid #a855f7;border-radius:8px"><div style="display:flex;align-items:start;gap:12px"><div style="flex-shrink:0;width:24px;height:24px;background:#a855f7;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1rem">💡</div><div style="flex:1"><h5 style="font-size:1rem;font-weight:600;margin:0 0 8px 0;color:#7e22ce">Pro Tip</h5><p style="margin:0;color:#6b21a8;line-height:1.6">This is a tip callout. Use it to share helpful hints and best practices.</p></div></div></div>`,
+  
+  // LIST TEMPLATES
+  checkList: `<div style="margin:24px 0"><h4 style="font-size:1.25rem;font-weight:700;margin:0 0 20px 0;color:#111827">Checklist</h4><div style="display:flex;align-items:start;gap:12px;padding:12px;border-radius:8px;background:#f9fafb;margin-bottom:8px;border:1px solid #e5e7eb"><div style="flex-shrink:0;width:20px;height:20px;border:2px solid #10b981;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#10b981;font-weight:700;font-size:0.75rem;background:#f0fdf4">✓</div><span style="color:#374151">First item completed</span></div><div style="display:flex;align-items:start;gap:12px;padding:12px;border-radius:8px;background:#f9fafb;margin-bottom:8px;border:1px solid #e5e7eb"><div style="flex-shrink:0;width:20px;height:20px;border:2px solid #10b981;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#10b981;font-weight:700;font-size:0.75rem;background:#f0fdf4">✓</div><span style="color:#374151">Second item completed</span></div><div style="display:flex;align-items:start;gap:12px;padding:12px;border-radius:8px;background:#f9fafb;border:1px solid #e5e7eb"><div style="flex-shrink:0;width:20px;height:20px;border:2px solid #d1d5db;border-radius:4px;background:#fff"></div><span style="color:#6b7280">Third item pending</span></div></div>`,
+  
+  stepList: `<div style="margin:24px 0"><h4 style="font-size:1.25rem;font-weight:700;margin:0 0 24px 0;color:#111827">Step-by-Step Guide</h4><div style="display:flex;gap:16px;margin-bottom:24px"><div style="flex-shrink:0;width:36px;height:36px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;box-shadow:0 4px 8px rgba(102,126,234,0.3)">1</div><div style="flex:1"><h5 style="font-size:1.125rem;font-weight:600;margin:0 0 6px 0;color:#111827">First Step</h5><p style="margin:0;color:#6b7280">Description of the first step in the process.</p></div></div><div style="display:flex;gap:16px;margin-bottom:24px"><div style="flex-shrink:0;width:36px;height:36px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;box-shadow:0 4px 8px rgba(102,126,234,0.3)">2</div><div style="flex:1"><h5 style="font-size:1.125rem;font-weight:600;margin:0 0 6px 0;color:#111827">Second Step</h5><p style="margin:0;color:#6b7280">Description of the second step in the process.</p></div></div><div style="display:flex;gap:16px"><div style="flex-shrink:0;width:36px;height:36px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;box-shadow:0 4px 8px rgba(102,126,234,0.3)">3</div><div style="flex:1"><h5 style="font-size:1.125rem;font-weight:600;margin:0 0 6px 0;color:#111827">Third Step</h5><p style="margin:0;color:#6b7280">Description of the third step in the process.</p></div></div></div>`,
+  
+  iconList: `<div style="margin:24px 0"><h4 style="font-size:1.25rem;font-weight:700;margin:0 0 20px 0;color:#111827">Key Features</h4><div style="display:flex;gap:12px;align-items:start;margin-bottom:16px"><div style="flex-shrink:0;width:32px;height:32px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:1.125rem">✓</div><div><h5 style="font-weight:600;margin:0 0 4px 0;color:#111827;font-size:0.9375rem">Feature One</h5><p style="margin:0;color:#6b7280;font-size:0.875rem">Brief description of this feature.</p></div></div><div style="display:flex;gap:12px;align-items:start;margin-bottom:16px"><div style="flex-shrink:0;width:32px;height:32px;background:#f0fdf4;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#10b981;font-size:1.125rem">✓</div><div><h5 style="font-weight:600;margin:0 0 4px 0;color:#111827;font-size:0.9375rem">Feature Two</h5><p style="margin:0;color:#6b7280;font-size:0.875rem">Brief description of this feature.</p></div></div><div style="display:flex;gap:12px;align-items:start"><div style="flex-shrink:0;width:32px;height:32px;background:#faf5ff;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#a855f7;font-size:1.125rem">✓</div><div><h5 style="font-weight:600;margin:0 0 4px 0;color:#111827;font-size:0.9375rem">Feature Three</h5><p style="margin:0;color:#6b7280;font-size:0.875rem">Brief description of this feature.</p></div></div></div>`,
+  
+  comparisonTable: `<div style="margin:32px 0;overflow-x:auto"><h4 style="font-size:1.25rem;font-weight:700;margin:0 0 24px 0;color:#111827;text-align:center">Feature Comparison</h4><table style="width:100%;border-collapse:collapse;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);min-width:600px"><thead><tr style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)"><th style="padding:16px;text-align:left;color:#fff;font-weight:600">Feature</th><th style="padding:16px;text-align:center;color:#fff;font-weight:600">Basic</th><th style="padding:16px;text-align:center;color:#fff;font-weight:600">Pro</th><th style="padding:16px;text-align:center;color:#fff;font-weight:600">Enterprise</th></tr></thead><tbody style="background:#fff"><tr style="border-bottom:1px solid #e5e7eb"><td style="padding:16px;color:#374151;font-weight:500">Feature One</td><td style="padding:16px;text-align:center;color:#10b981;font-size:1.25rem">✓</td><td style="padding:16px;text-align:center;color:#10b981;font-size:1.25rem">✓</td><td style="padding:16px;text-align:center;color:#10b981;font-size:1.25rem">✓</td></tr><tr style="border-bottom:1px solid #e5e7eb;background:#f9fafb"><td style="padding:16px;color:#374151;font-weight:500">Feature Two</td><td style="padding:16px;text-align:center;color:#d1d5db;font-size:1.25rem">—</td><td style="padding:16px;text-align:center;color:#10b981;font-size:1.25rem">✓</td><td style="padding:16px;text-align:center;color:#10b981;font-size:1.25rem">✓</td></tr><tr style="border-bottom:1px solid #e5e7eb"><td style="padding:16px;color:#374151;font-weight:500">Feature Three</td><td style="padding:16px;text-align:center;color:#d1d5db;font-size:1.25rem">—</td><td style="padding:16px;text-align:center;color:#d1d5db;font-size:1.25rem">—</td><td style="padding:16px;text-align:center;color:#10b981;font-size:1.25rem">✓</td></tr></tbody></table></div>`,
 };
 
 /**
@@ -258,7 +100,7 @@ export const generateTable = (rows: number, cols: number): string => {
  * Get template by type
  */
 export const getTemplate = (type: TemplateType): string => {
-  return templateContent[type] || '';
+  return TEMPLATES[type] || '';
 };
 
 /**

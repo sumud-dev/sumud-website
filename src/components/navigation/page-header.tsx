@@ -270,6 +270,7 @@ export function ArticlePageHeader({
   category,
   actions,
   showBackButton = true,
+  locale = 'en',
 }: {
   title: string;
   description?: string;
@@ -279,6 +280,7 @@ export function ArticlePageHeader({
   category?: string;
   actions?: React.ReactNode;
   showBackButton?: boolean;
+  locale?: string;
 }) {
   return (
     <PageHeader
@@ -305,7 +307,7 @@ export function ArticlePageHeader({
           )}
           {publishedDate && (
             <div suppressHydrationWarning>
-              {new Date(publishedDate).toLocaleDateString("en-US", {
+              {new Date(publishedDate).toLocaleDateString(locale === 'fi' ? 'fi-FI' : 'en-US', {
                 year: "numeric",
                 month: "long",
                 day: "numeric",

@@ -12,6 +12,8 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { requirePermission } from '@/src/lib/auth/server-auth';
+import { db } from '@/src/lib/db';
+import { campaigns } from '@/src/lib/db/schema/campaigns';
 import {
   createCampaign as createCampaignQuery,
   updateCampaign,
@@ -46,7 +48,7 @@ const campaignBaseSchema = z.object({
 const translationSchema = z.object({
   locale: z.enum(['en', 'fi']),
   title: z.string().min(1).max(200),
-  description: z.any().optional(),
+  description: z.string().optional(), // HTML string from TipTap editor
   demands: z.any().optional(),
   callToAction: z.any().optional(),
   howToParticipate: z.any().optional(),
@@ -269,16 +271,26 @@ export async function createCampaignAction(
 }
 
 /**
- * Update campaign base fields
+ * Update campaign - handles all fields (base + content) in single table approach
+ * Optionally translates and updates the other locale's campaign
  */
 export async function updateCampaignAction(
   campaignId: string,
   slug: string,
-  data: Partial<z.infer<typeof campaignBaseSchema>>,
-  locale: string = 'en'
+  data: Partial<z.infer<typeof campaignBaseSchema>> & Partial<z.infer<typeof translationSchema>>,
+  locale: string = 'en',
+  autoTranslate: boolean = false
 ): Promise<ActionResult> {
   try {
-    const updated = await updateCampaign(campaignId, data);
+    // Ensure slug has locale suffix
+    const baseSlug = slug.replace(/-(?:en|fi)$/, ''); // Remove locale suffix if present
+    const currentSlug = `${baseSlug}-${locale}`;
+    
+    // Update campaign with all provided fields
+    const updated = await updateCampaign(campaignId, {
+      ...data,
+      slug: currentSlug, // Ensure slug has locale suffix
+    });
 
     if (!updated) {
       return {
@@ -287,14 +299,91 @@ export async function updateCampaignAction(
       };
     }
 
-    // Revalidate
-    revalidatePath(`/${locale}/campaigns/${slug}`);
+    // Auto-translate and update/create the other locale if enabled
+    if (autoTranslate) {
+      const sourceLocale = locale as SupportedLocale;
+      const targetLocale: SupportedLocale = sourceLocale === 'en' ? 'fi' : 'en';
+      const targetSlug = `${baseSlug}-${targetLocale}`;
+      
+      try {
+        // Check if translation already exists
+        const existingTranslation = await getCampaignBySlug(targetSlug, targetLocale);
+        
+        // Prepare content for translation (only translatable fields)
+        const contentToTranslate = {
+          title: data.title || '',
+          description: typeof data.description === 'string' ? data.description : '',
+          seoTitle: data.seoTitle || '',
+          seoDescription: data.seoDescription || '',
+          demands: data.demands || [],
+          howToParticipate: data.howToParticipate || [],
+          targets: data.targets || [],
+          callToAction: data.callToAction || {},
+        };
+        
+        const { content: translatedContent } = await translateContent(
+          contentToTranslate,
+          sourceLocale,
+          targetLocale,
+          CAMPAIGN_TRANSLATION_CONFIG
+        );
+        
+        const translatedData = {
+          // Base fields (not translated, shared across locales)
+          status: data.status,
+          category: data.category,
+          campaignType: data.campaignType,
+          isFeatured: data.isFeatured,
+          // Translated content fields
+          title: translatedContent.title,
+          description: translatedContent.description,
+          callToAction: translatedContent.callToAction,
+          demands: translatedContent.demands,
+          howToParticipate: translatedContent.howToParticipate,
+          targets: translatedContent.targets,
+          seoTitle: translatedContent.seoTitle,
+          seoDescription: translatedContent.seoDescription,
+          slug: targetSlug,
+          language: targetLocale,
+        };
+        
+        if (existingTranslation) {
+          // Update existing translation
+          await updateCampaign(existingTranslation.id, translatedData);
+        } else {
+          // Create new translation with parentId linking to current campaign
+          const parentId = updated.parentId || updated.id; // If current is translation, use its parent, else use its own id
+          
+          await db.insert(campaigns).values({
+            ...translatedData,
+            parentId,
+            // Copy non-content fields from updated campaign
+            iconName: updated.iconName,
+            featuredImage: updated.featuredImage,
+            metadata: updated.metadata,
+            isActive: updated.isActive,
+          });
+        }
+      } catch (translationError) {
+        console.warn('Translation failed, but campaign was updated:', translationError);
+        // Don't fail the entire operation if translation fails
+      }
+    }
+
+    // Revalidate paths for both locales
+    revalidatePath(`/${locale}/campaigns/${currentSlug}`);
     revalidatePath(`/${locale}/campaigns`);
+    if (autoTranslate) {
+      const otherLocale = locale === 'en' ? 'fi' : 'en';
+      revalidatePath(`/${otherLocale}/campaigns`);
+    }
 
     return {
       success: true,
       data: updated,
-      message: 'Campaign updated successfully',
+      message: autoTranslate 
+        ? 'Campaign updated and translated successfully'
+        : 'Campaign updated successfully',
     };
   } catch (error) {
     console.error('Error updating campaign:', error);
@@ -473,13 +562,13 @@ export async function duplicateCampaignAction(
         {
           locale,
           title: `${source.title} (Copy)`,
-          description: source.description,
-          demands: source.demands,
-          callToAction: source.callToAction,
-          howToParticipate: source.howToParticipate,
-          resources: source.resources,
-          successStories: source.successStories,
-          targets: source.targets,
+          description: source.description ?? undefined,
+          demands: source.demands ?? undefined,
+          callToAction: source.callToAction ?? undefined,
+          howToParticipate: source.howToParticipate ?? undefined,
+          resources: source.resources ?? undefined,
+          successStories: source.successStories ?? undefined,
+          targets: source.targets ?? undefined,
         },
       ]
     );

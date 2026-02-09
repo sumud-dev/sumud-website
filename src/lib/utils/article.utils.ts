@@ -58,7 +58,7 @@ export function truncateText(text: string, maxLength: number = 150): string {
 /**
  * Format article date
  */
-export function formatArticleDate(date?: string | Date): string {
+export function formatArticleDate(date?: string | Date, locale: string = 'en'): string {
   if (!date) return '';
   
   const dateObj = typeof date === 'string' ? new Date(date) : date;
@@ -67,7 +67,10 @@ export function formatArticleDate(date?: string | Date): string {
     return '';
   }
 
-  return dateObj.toLocaleDateString('en-US', {
+  // Map locale to browser locale format
+  const browserLocale = locale === 'fi' ? 'fi-FI' : 'en-US';
+
+  return dateObj.toLocaleDateString(browserLocale, {
     year: 'numeric',
     month: 'long',
     day: 'numeric',

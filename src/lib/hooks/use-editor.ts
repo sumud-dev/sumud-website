@@ -12,6 +12,7 @@ export const useEditorDialogs = () => {
     table: { isOpen: false, rows: 3, cols: 3 },
     video: { isOpen: false, url: '' },
     template: { isOpen: false },
+    templateEditor: { isOpen: false, templateType: null },
   });
 
   const openDialog = useCallback((dialog: keyof DialogState) => {
@@ -45,6 +46,7 @@ export const useEditorDialogs = () => {
       table: { isOpen: false, rows: 3, cols: 3 },
       video: { isOpen: false, url: '' },
       template: { isOpen: false },
+      templateEditor: { isOpen: false, templateType: null },
     };
     
     setDialogs(prev => ({
@@ -110,15 +112,12 @@ export const useEditorHistory = (initialValue: string) => {
  * Hook for template insertion
  */
 export const useTemplateInsertion = () => {
-  const insertTemplate = useCallback((
-    type: TemplateType,
-    insertHtml: (html: string) => void
-  ) => {
-    const template = getTemplate(type);
-    if (template) {
-      insertHtml(template);
+  const insertTemplate = (type: TemplateType, insertHTML: (html: string) => void) => {
+    const html = getTemplate(type);
+    if (html) {
+      insertHTML(html);
     }
-  }, []);
+  };
 
   const insertTable = useCallback((
     rows: number,

@@ -234,7 +234,7 @@ export default function CampaignFilter({
     <div className="space-y-4">
       {/* Desktop Filters */}
       <div className="hidden lg:block">
-        <div className="bg-white rounded-lg border border-[#55613C]/10 p-6">
+        <div className="bg-white rounded-3xl border border-[#55613C]/10 p-6">
           <div className="flex items-center gap-2 mb-4">
             <Filter className="h-5 w-5 text-[#3E442B]" />
             <h3 className="font-semibold text-[#3E442B]">Filter Campaigns</h3>
@@ -245,7 +245,7 @@ export default function CampaignFilter({
 
       {/* Mobile Filter Toggle */}
       <div className="lg:hidden">
-        <div className="flex items-center justify-between bg-white rounded-lg border border-[#55613C]/10 p-4">
+        <div className="flex items-center justify-between bg-white rounded-3xl border border-[#55613C]/10 p-4">
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">
               {totalResults} campaigns
@@ -293,7 +293,7 @@ export default function CampaignFilter({
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-white rounded-lg border border-[#55613C]/10 p-4"
+            className="bg-white rounded-3xl border border-[#55613C]/10 p-4"
           >
             <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium text-[#3E442B]">

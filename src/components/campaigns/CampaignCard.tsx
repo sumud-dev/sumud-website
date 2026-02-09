@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { Link } from "@/src/i18n/navigation";
 import { motion } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Calendar,
   Clock,
@@ -31,6 +31,7 @@ export default function CampaignCard({
   size = "default",
 }: CampaignCardProps) {
   const tCommon = useTranslations("common");
+  const locale = useLocale();
   const getCampaignTypeColor = (type: string) => {
     const colors = {
       awareness: "#3E442B",
@@ -259,7 +260,7 @@ export default function CampaignCard({
                   <span>
                     Started{" "}
                     {campaign.startDate || campaign.createdAt
-                      ? new Date(campaign.startDate || campaign.createdAt!).toLocaleDateString()
+                      ? new Date(campaign.startDate || campaign.createdAt!).toLocaleDateString(locale === 'fi' ? 'fi-FI' : 'en-US')
                       : 'N/A'}
                   </span>
                 </div>

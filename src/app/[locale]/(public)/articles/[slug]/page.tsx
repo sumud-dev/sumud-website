@@ -20,6 +20,7 @@ import { Progress } from "@/src/components/ui/progress";
 import ArticleCard from "@/src/components/articles/ArticleCard";
 import { usePostBySlug, usePosts } from "@/src/lib/hooks/use-posts";
 import { formatArticleDate, getCategoryConfig } from "@/src/lib/types/article";
+import { markdownToHtml } from "@/src/lib/utils/markdown";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -171,69 +172,8 @@ export default function ArticlePage() {
   const formatArticleContent = (content: string | undefined) => {
     if (!content) return "";
     
-    // Convert markdown to HTML (handles both markdown and mixed markdown+HTML)
-    let html = content
-      // Headers (must be done before other replacements)
-      .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-      // Code blocks (must be before inline code)
-      .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-      // Bold
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      // Italic
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      // Strikethrough
-      .replace(/~~(.*?)~~/g, '<del>$1</del>')
-      // Highlight
-      .replace(/==(.*?)==/g, '<mark>$1</mark>')
-      // Images
-      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />')
-      // Links
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
-      // Inline code
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
-      // Horizontal rule
-      .replace(/^---$/gim, '<hr />')
-      // Blockquote
-      .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
-      // Task lists
-      .replace(/^- \[ \] (.*$)/gim, '<li class="task-list-item"><input type="checkbox" disabled /> $1</li>')
-      .replace(/^- \[x\] (.*$)/gim, '<li class="task-list-item"><input type="checkbox" checked disabled /> $1</li>')
-      // Bullet lists
-      .replace(/^- (.*$)/gim, '<li>$1</li>')
-      // Numbered lists
-      .replace(/^\d+\. (.*$)/gim, '<li>$1</li>')
-      // Line breaks (convert double newlines to paragraph breaks)
-      .split('\n\n')
-      .map(block => {
-        block = block.trim();
-        // Don't wrap if already a block element
-        if (block.match(/^<(h[1-6]|p|div|blockquote|pre|ul|ol|li|hr|table)/i)) {
-          return block;
-        }
-        // Don't wrap empty blocks
-        if (!block) {
-          return '';
-        }
-        // Wrap text in paragraph
-        return `<p>${block.replace(/\n/g, '<br />')}</p>`;
-      })
-      .join('\n');
-
-    // Wrap consecutive list items in ul/ol tags
-    html = html.replace(/(<li>.*?<\/li>\s*)+/gs, (match) => {
-      if (match.includes('class="task-list-item"')) {
-        return `<ul class="task-list">${match}</ul>`;
-      }
-      return `<ul>${match}</ul>`;
-    });
-    
-    html = html.replace(/(<li class="task-list-item">.*?<\/li>\s*)+/gs, (match) => {
-      return `<ul class="task-list">${match}</ul>`;
-    });
-
-    return html;
+    // Use the centralized markdown to HTML converter which includes TipTap cleaning
+    return markdownToHtml(content);
   };
 
   if (articleLoading) {

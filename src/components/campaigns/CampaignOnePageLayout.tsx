@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import type { Variants } from "framer-motion";
 import {
   ChevronUp,
@@ -61,6 +61,7 @@ export function CampaignOnePageLayout({
 }: CampaignOnePageLayoutProps) {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const tCommon = useTranslations("common");
+  const locale = useLocale();
 
   // Handle scroll for back-to-top button
   useEffect(() => {
@@ -76,9 +77,9 @@ export function CampaignOnePageLayout({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const formatDate = (date: Date | string | null | undefined) => {
+  const formatDate = (date: Date | string | null | undefined, locale: string) => {
     if (!date) return null;
-    return new Date(date).toLocaleDateString("en-US", {
+    return new Date(date).toLocaleDateString(locale === 'fi' ? 'fi-FI' : 'en-US', {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -146,8 +147,8 @@ export function CampaignOnePageLayout({
             >
               <Calendar className="w-5 h-5" />
               <span>
-                {formatDate(campaign.startDate)}
-                {campaign.endDate && ` - ${formatDate(campaign.endDate)}`}
+                {formatDate(campaign.startDate, locale)}
+                {campaign.endDate && ` - ${formatDate(campaign.endDate, locale)}`}
               </span>
             </motion.div>
           )}

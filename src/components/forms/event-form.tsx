@@ -29,6 +29,7 @@ import {
 } from "@/src/components/ui/select";
 import { Switch } from "@/src/components/ui/switch";
 import { ImageUpload } from "@/src/components/ui/image-upload";
+import { RichTextEditor } from "@/src/lib/tipTap-editor/RichTextEditor";
 import type { Event } from "@/src/lib/db/schema";
 
 type EventStatus = "draft" | "published" | "archived";
@@ -147,10 +148,11 @@ export function EventForm({
                     <FormItem>
                       <FormLabel>{tForm("content.label")}</FormLabel>
                       <FormControl>
-                        <Textarea
+                        <RichTextEditor
+                          value={field.value}
+                          onChange={field.onChange}
                           placeholder={tForm("content.placeholder")}
                           className="min-h-[300px]"
-                          {...field}
                         />
                       </FormControl>
                       <FormMessage />

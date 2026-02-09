@@ -5,6 +5,7 @@ import {
   listPostsPaginated,
   findPostBySlug,
   findPostBySlugAndLanguage,
+  findPostBySlugAndLanguageWithFallback,
   getPostStatisticsByLanguage,
   postSlugExists,
   type PostQueryFilters,
@@ -88,7 +89,7 @@ export async function getPostBySlug(
 > {
   try {
     const foundPost = articleLanguage
-      ? await findPostBySlugAndLanguage(postSlug, articleLanguage)
+      ? await findPostBySlugAndLanguageWithFallback(postSlug, articleLanguage)
       : await findPostBySlug(postSlug);
 
     if (!foundPost) {
@@ -300,9 +301,10 @@ export async function updatePost(
     autoTranslate?: boolean;
     categories?: string[];
   },
-  language: string 
+  language: string,
+  targetLanguages?: string[]
 ): Promise<
-  | { success: true; updatedPost: PostRecord; message: string }
+  | { success: true; updatedPost: PostRecord; createdTranslations: PostRecord[]; message: string }
   | { success: false; error: string }
 > {
   try {
@@ -336,15 +338,83 @@ export async function updatePost(
       return { success: false, error: "Failed to update post" };
     }
 
+    const createdTranslations: PostRecord[] = [];
+
+    // Auto-translate if requested
+    if (updateData.autoTranslate && targetLanguages?.length) {
+      const sourceLocale = language as SupportedLocale;
+      const contentToTranslate = {
+        title: updateData.title || updatedPost.title,
+        content: updateData.content || updatedPost.content,
+        excerpt: updateData.excerpt || updatedPost.excerpt,
+      };
+
+      for (const targetLang of targetLanguages) {
+        try {
+          const { content: translatedContent, error: translationError } = await translateContent(
+            contentToTranslate,
+            sourceLocale,
+            targetLang as SupportedLocale,
+            ARTICLE_TRANSLATION_CONFIG
+          );
+
+          if (translationError) {
+            console.warn(`Translation error for ${targetLang}:`, translationError);
+            continue;
+          }
+
+          if (!translatedContent.title || !translatedContent.content || !translatedContent.excerpt) {
+            console.warn(`Incomplete translation for ${targetLang}, skipping`);
+            continue;
+          }
+
+          // Generate unique slug from translated title
+          const translatedSlug = generateSlug(translatedContent.title as string);
+          
+          // Check if this slug already exists
+          const slugExists = await postSlugExists(translatedSlug);
+          if (slugExists) {
+            console.warn(`Slug ${translatedSlug} already exists for ${targetLang}, skipping`);
+            continue;
+          }
+
+          const translation = await createTranslationForPost({
+            parentPostId: updatedPost.id,
+            slug: translatedSlug,
+            title: translatedContent.title as string,
+            excerpt: translatedContent.excerpt as string,
+            content: translatedContent.content as string,
+            language: targetLang,
+            translatedFromLanguage: sourceLocale,
+            type: updatedPost.type,
+            status: updateData.status || updatedPost.status,
+            featuredImage: updateData.featured_image || updatedPost.featuredImage,
+            categories: updateData.categories || updatedPost.categories || [],
+            publishedAt: updateData.status === 'published' ? new Date() : null,
+          });
+
+          createdTranslations.push(translation);
+        } catch (error) {
+          console.error(`Failed to create translation for ${targetLang}:`, error);
+        }
+      }
+    }
+
     // Revalidate paths
     revalidatePath("/[locale]/articles", "page");
     revalidatePath("/[locale]/admin/articles", "page");
     revalidatePath(`/[locale]/articles/${postSlug}`, "page");
 
+    const successMessage =
+      createdTranslations.length > 0
+        ? `Post updated with ${createdTranslations.length} translation(s)`
+        : "Post updated successfully";
+
     return {
       success: true,
       updatedPost,
-      message: "Post updated successfully",
+      createdTranslations,
+      message: successMessage,
     };
   } catch (error) {
     console.error("Error updating post:", error);

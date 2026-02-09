@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { 
-  listPagesPaginated, 
-  findPageBySlugAndLanguage 
-} from "@/src/lib/db/queries/pages.queries";
+  getAllPages,
+  getPageWithContent
+} from "@/src/actions/pages.actions";
 
 /**
  * GET /api/pages
@@ -18,7 +18,9 @@ export async function GET(request: NextRequest) {
 
     // If requesting a specific page
     if (slug) {
-      const page = await findPageBySlugAndLanguage(slug, language);
+      // Get all pages and find by slug
+      const allPages = await getAllPages();
+      const page = allPages.find(p => p.slug === slug);
       
       if (!page) {
         return NextResponse.json(
@@ -36,22 +38,23 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      return NextResponse.json({ success: true, data: page });
+      // Get page content for the requested language
+      const pageWithContent = await getPageWithContent(page.id, language);
+
+      return NextResponse.json({ success: true, data: pageWithContent });
     }
 
     // List all pages from database
     const { userId } = await auth();
-    const filters = status ? { status: status as 'draft' | 'published' | 'archived', isActive: true } : { isActive: true };
+    let pages = await getAllPages();
     
-    // If not authenticated, only show published pages
-    if (!userId && !status) {
-      filters.status = 'published';
+    // Apply filters based on status and authentication
+    if (status) {
+      pages = pages.filter(p => p.status === status);
+    } else if (!userId) {
+      // If not authenticated, only show published pages
+      pages = pages.filter(p => p.status === 'published');
     }
-    
-    const { pages } = await listPagesPaginated(
-      filters,
-      { limit: 1000, sortBy: 'createdAt', sortOrder: 'desc' }
-    );
 
     return NextResponse.json({ success: true, data: pages });
   } catch (error) {

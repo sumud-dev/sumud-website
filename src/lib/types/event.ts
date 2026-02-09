@@ -81,14 +81,17 @@ export function getLocationModeLabel(mode?: string): string {
 /**
  * Format event date range
  */
-export function formatEventDateRange(startDate?: string, endDate?: string): string {
+export function formatEventDateRange(startDate?: string, endDate?: string, locale: string = 'en'): string {
   if (!startDate) return '';
   
   const start = new Date(startDate);
   if (isNaN(start.getTime())) return '';
 
+  // Map locale to browser locale format
+  const browserLocale = locale === 'fi' ? 'fi-FI' : 'en-US';
+
   if (!endDate) {
-    return start.toLocaleDateString('en-US', {
+    return start.toLocaleDateString(browserLocale, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -97,7 +100,7 @@ export function formatEventDateRange(startDate?: string, endDate?: string): stri
 
   const end = new Date(endDate);
   if (isNaN(end.getTime())) {
-    return start.toLocaleDateString('en-US', {
+    return start.toLocaleDateString(browserLocale, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -110,7 +113,7 @@ export function formatEventDateRange(startDate?: string, endDate?: string): stri
   const sameYear = start.getFullYear() === end.getFullYear();
 
   if (sameDay) {
-    return start.toLocaleDateString('en-US', {
+    return start.toLocaleDateString(browserLocale, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -118,31 +121,31 @@ export function formatEventDateRange(startDate?: string, endDate?: string): stri
   }
 
   if (sameMonth) {
-    return `${start.toLocaleDateString('en-US', {
+    return `${start.toLocaleDateString(browserLocale, {
       month: 'short',
       day: 'numeric',
-    })} - ${end.toLocaleDateString('en-US', {
+    })} - ${end.toLocaleDateString(browserLocale, {
       day: 'numeric',
       year: 'numeric',
     })}`;
   }
 
   if (sameYear) {
-    return `${start.toLocaleDateString('en-US', {
+    return `${start.toLocaleDateString(browserLocale, {
       month: 'short',
       day: 'numeric',
-    })} - ${end.toLocaleDateString('en-US', {
+    })} - ${end.toLocaleDateString(browserLocale, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
     })}`;
   }
 
-  return `${start.toLocaleDateString('en-US', {
+  return `${start.toLocaleDateString(browserLocale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
-  })} - ${end.toLocaleDateString('en-US', {
+  })} - ${end.toLocaleDateString(browserLocale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -187,13 +190,16 @@ export function isEventUpcoming(startDate?: string): boolean {
 /**
  * Format event date (single date)
  */
-export function formatEventDate(date?: string): string {
+export function formatEventDate(date?: string, locale: string = 'en'): string {
   if (!date) return '';
   
   const d = new Date(date);
   if (isNaN(d.getTime())) return '';
 
-  return d.toLocaleDateString('en-US', {
+  // Map locale to browser locale format
+  const browserLocale = locale === 'fi' ? 'fi-FI' : 'en-US';
+
+  return d.toLocaleDateString(browserLocale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',

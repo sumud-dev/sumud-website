@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useRef, useCallback } from 'react';
-import { EditorProps, TemplateType } from '../types/editor';
+import React, { useRef, useCallback, useEffect } from 'react';
+import { EditorProps, TemplateType } from '@/src/lib/types/editor';
 import { WYSIWYGEditor } from '@/src/lib/tipTap-editor/WYSIWYGEditor';
 import { EditorToolbar } from '@/src/lib/tipTap-editor/EditorToolbar';
 import { LinkDialog, ImageDialog, VideoDialog, TableDialog } from '@/src/lib/tipTap-editor/dialogs/editor-dialogs';
 import { TemplateGallery } from './TemplateGallery';
+import { TemplateEditorDialog } from '@/src/lib/tipTap-editor/dialogs/TemplateEditorDialog';
 import { useEditorDialogs, useEditorHistory, useTemplateInsertion } from '@/src/lib/hooks/use-editor';
 import { getTemplate } from '@/src/lib/tipTap-editor/templates/editor-templates';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
@@ -18,143 +19,131 @@ export const RichTextEditor: React.FC<EditorProps> = ({
   disabled,
   className,
 }) => {
-  const editorRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = React.useState<'edit' | 'preview'>('edit');
   const t = useTranslations('common');
   const { dialogs, openDialog, closeDialog, updateDialog, resetDialog } = useEditorDialogs();
-  const { addToHistory, undo, redo, canUndo, canRedo } = useEditorHistory(value);
-  const { insertTemplate, insertTable } = useTemplateInsertion();
+  const { addToHistory, undo, redo, canUndo, canRedo } = useEditorHistory(value);  
+  // Get TipTap editor instance from window
+  const getEditor = useCallback(() => {
+    return (window as any).__tiptapEditor;
+  }, []);
 
-  // Execute document command
-  const execCommand = useCallback((command: string, value: string | boolean = false) => {
-    document.execCommand(command, false, value as string);
-    if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
-      addToHistory(editorRef.current.innerHTML);
+  // Add to history when content changes
+  useEffect(() => {
+    if (value) {
+      addToHistory(value);
     }
-  }, [onChange, addToHistory]);
+  }, [value]);
 
-  // Insert HTML at cursor
-  const insertHTML = useCallback((html: string) => {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
+  // Toolbar handlers using TipTap commands
+  const handleBold = useCallback(() => {
+    getEditor()?.chain().focus().toggleBold().run();
+  }, [getEditor]);
 
-    const range = selection.getRangeAt(0);
-    range.deleteContents();
+  const handleItalic = useCallback(() => {
+    getEditor()?.chain().focus().toggleItalic().run();
+  }, [getEditor]);
 
-    const div = document.createElement('div');
-    div.innerHTML = html;
+  const handleUnderline = useCallback(() => {
+    getEditor()?.chain().focus().toggleUnderline().run();
+  }, [getEditor]);
 
-    const fragment = document.createDocumentFragment();
-    let node;
-    while ((node = div.firstChild)) {
-      fragment.appendChild(node);
-    }
+  const handleStrikethrough = useCallback(() => {
+    getEditor()?.chain().focus().toggleStrike().run();
+  }, [getEditor]);
 
-    range.insertNode(fragment);
-    range.collapse(false);
-    selection.removeAllRanges();
-    selection.addRange(range);
-
-    if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
-      addToHistory(editorRef.current.innerHTML);
-    }
-  }, [onChange, addToHistory]);
-
-  // Toolbar handlers
-  const handleBold = () => execCommand('bold');
-  const handleItalic = () => execCommand('italic');
-  const handleUnderline = () => execCommand('underline');
-  const handleStrikethrough = () => execCommand('strikeThrough');
-  const handleCode = () => {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0) return;
-    
-    const range = selection.getRangeAt(0);
-    const selectedText = range.toString();
-    
-    const code = document.createElement('code');
-    code.textContent = selectedText;
-    code.style.backgroundColor = '#f3f4f6';
-    code.style.padding = '2px 6px';
-    code.style.borderRadius = '4px';
-    code.style.fontFamily = 'monospace';
-    code.style.fontSize = '0.9em';
-    
-    range.deleteContents();
-    range.insertNode(code);
-    
-    if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
-      addToHistory(editorRef.current.innerHTML);
-    }
-  };
+  const handleCode = useCallback(() => {
+    getEditor()?.chain().focus().toggleCode().run();
+  }, [getEditor]);
   
-  const handleHighlight = () => {
-    execCommand('hiliteColor', '#fef08a');
-  };
+  const handleHighlight = useCallback(() => {
+    getEditor()?.chain().focus().toggleHighlight({ color: '#fef08a' }).run();
+  }, [getEditor]);
   
-  const handleTextColor = (color: string) => {
-    execCommand('foreColor', color);
-  };
+  const handleTextColor = useCallback((color: string) => {
+    getEditor()?.chain().focus().setColor(color).run();
+  }, [getEditor]);
   
-  const handleBackgroundColor = (color: string) => {
-    execCommand('hiliteColor', color);
-  };
+  const handleBackgroundColor = useCallback((color: string) => {
+    getEditor()?.chain().focus().toggleHighlight({ color }).run();
+  }, [getEditor]);
 
-  const handleHeading = (level: 1 | 2 | 3) => {
-    execCommand('formatBlock', `<h${level}>`);
-  };
+  const handleHeading = useCallback((level: 1 | 2 | 3) => {
+    getEditor()?.chain().focus().toggleHeading({ level }).run();
+  }, [getEditor]);
 
-  const handleAlignLeft = () => execCommand('justifyLeft');
-  const handleAlignCenter = () => execCommand('justifyCenter');
-  const handleAlignRight = () => execCommand('justifyRight');
-  const handleAlignJustify = () => execCommand('justifyFull');
+  const handleAlignLeft = useCallback(() => {
+    getEditor()?.chain().focus().setTextAlign('left').run();
+  }, [getEditor]);
 
-  const handleBulletList = () => execCommand('insertUnorderedList');
-  const handleNumberedList = () => execCommand('insertOrderedList');
+  const handleAlignCenter = useCallback(() => {
+    getEditor()?.chain().focus().setTextAlign('center').run();
+  }, [getEditor]);
+
+  const handleAlignRight = useCallback(() => {
+    getEditor()?.chain().focus().setTextAlign('right').run();
+  }, [getEditor]);
+
+  const handleAlignJustify = useCallback(() => {
+    getEditor()?.chain().focus().setTextAlign('justify').run();
+  }, [getEditor]);
+
+  const handleBulletList = useCallback(() => {
+    getEditor()?.chain().focus().toggleBulletList().run();
+  }, [getEditor]);
+
+  const handleNumberedList = useCallback(() => {
+    getEditor()?.chain().focus().toggleOrderedList().run();
+  }, [getEditor]);
   
-  const handleTaskList = () => {
-    const html = `
-      <ul style="list-style: none; padding-left: 0;">
-        <li style="display: flex; align-items: center; gap: 8px;">
-          <input type="checkbox" style="margin: 0;" />
-          <span>Task item</span>
-        </li>
-      </ul>
-    `;
-    insertHTML(html);
-  };
+  const handleTaskList = useCallback(() => {
+    getEditor()?.chain().focus().toggleTaskList().run();
+  }, [getEditor]);
 
-  const handleIndent = () => execCommand('indent');
-  const handleOutdent = () => execCommand('outdent');
+  const handleIndent = useCallback(() => {
+    getEditor()?.chain().focus().sinkListItem('listItem').run();
+  }, [getEditor]);
 
-  const handleLinkOpen = () => {
-    const selection = window.getSelection();
-    if (selection && selection.toString()) {
-      updateDialog('link', { text: selection.toString() });
-    }
+  const handleOutdent = useCallback(() => {
+    getEditor()?.chain().focus().liftListItem('listItem').run();
+  }, [getEditor]);
+
+  const handleLinkOpen = useCallback(() => {
+    const editor = getEditor();
+    if (!editor) return;
+    
+    const { from, to } = editor.state.selection;
+    const text = editor.state.doc.textBetween(from, to);
+    const href = editor.getAttributes('link').href;
+    
+    updateDialog('link', { text, url: href || '' });
     openDialog('link');
-  };
+  }, [getEditor, updateDialog, openDialog]);
 
-  const handleLinkInsert = () => {
-    const { text, url } = dialogs.link;
-    const html = `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #3b82f6; text-decoration: underline; font-weight: 500;">${text}</a>`;
-    insertHTML(html);
+  const handleLinkInsert = useCallback(() => {
+    const { url } = dialogs.link;
+    const editor = getEditor();
+    
+    if (!editor) return;
+    
+    if (url) {
+      editor.chain().focus().setLink({ href: url }).run();
+    } else {
+      editor.chain().focus().unsetLink().run();
+    }
+    
     resetDialog('link');
     closeDialog('link');
-  };
+  }, [dialogs.link, getEditor, resetDialog, closeDialog]);
 
-  const handleImageInsert = () => {
+  const handleImageInsert = useCallback(() => {
     const { url, alt } = dialogs.image;
-    const html = `<img src="${url}" alt="${alt}" style="max-width: 100%; height: auto; border-radius: 8px; margin: 16px 0;" />`;
-    insertHTML(html);
+    getEditor()?.chain().focus().setImage({ src: url, alt }).run();
     resetDialog('image');
     closeDialog('image');
-  };
+  }, [dialogs.image, getEditor, resetDialog, closeDialog]);
 
-  const handleVideoInsert = () => {
+  const handleVideoInsert = useCallback(() => {
     const { url } = dialogs.video;
     let embedUrl = url;
     
@@ -181,47 +170,102 @@ export const RichTextEditor: React.FC<EditorProps> = ({
         ></iframe>
       </div>
     `;
-    insertHTML(html);
+    
+    // Insert as raw HTML to preserve iframe functionality
+    getEditor()?.chain().focus().insertContent({
+      type: 'rawHtml',
+      attrs: {
+        html: html,
+      },
+    }).run();
+    
     resetDialog('video');
     closeDialog('video');
-  };
+  }, [dialogs.video, getEditor, resetDialog, closeDialog]);
 
-  const handleTableInsert = () => {
+  const handleTableInsert = useCallback(() => {
     const { rows, cols } = dialogs.table;
-    insertTable(rows, cols, insertHTML);
+    getEditor()?.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
     resetDialog('table');
     closeDialog('table');
-  };
+  }, [dialogs.table, getEditor, resetDialog, closeDialog]);
 
-  const handleQuote = () => {
-    execCommand('formatBlock', '<blockquote>');
-  };
+  const handleQuote = useCallback(() => {
+    getEditor()?.chain().focus().toggleBlockquote().run();
+  }, [getEditor]);
 
-  const handleDivider = () => {
-    insertHTML('<hr style="margin: 24px 0; border: none; border-top: 2px solid #e5e7eb;" />');
-  };
+  const handleDivider = useCallback(() => {
+      getEditor()?.chain().focus().setHorizontalRule().run();
+    }, [getEditor]);
 
-  const handleTemplateSelect = (type: TemplateType) => {
-    insertTemplate(type, insertHTML);
-  };
+    const handleTemplateSelect = useCallback((type: TemplateType) => {
+    // Open the template editor dialog with the selected type
+    updateDialog('templateEditor', { templateType: type });
+    openDialog('templateEditor');
+    closeDialog('template');
+  }, [updateDialog, openDialog, closeDialog]);
 
-  const handleUndo = () => {
-    const previousValue = undo();
-    if (previousValue !== null) {
-      onChange(previousValue);
+  const handleTemplateInsert = useCallback((html: string) => {
+    const editor = getEditor();
+    
+    if (editor && html) {
+      // Always focus the editor first and insert at the end if no selection
+      const { selection } = editor.state;
+      const doc = editor.state.doc;
+      const isEmpty = editor.isEmpty;
+      
+      // Focus the editor
+      editor.commands.focus();
+      
+      // If editor is empty or no clear cursor position, go to end
+      if (isEmpty) {
+        editor.commands.focus('end');
+      }
+      
+      // Insert as raw HTML node to preserve template styling and functionality
+      editor.chain()
+        .insertContent({
+          type: 'rawHtml',
+          attrs: {
+            html: html,
+          },
+        })
+        .run();
+      
+      // Keep focus after insertion
+      setTimeout(() => {
+        editor.commands.focus('end');
+      }, 50);
     }
-  };
+  }, [getEditor]);
 
-  const handleRedo = () => {
-    const nextValue = redo();
-    if (nextValue !== null) {
-      onChange(nextValue);
+  const handleUndo = useCallback(() => {
+    const editor = getEditor();
+    if (editor) {
+      editor.chain().focus().undo().run();
+    } else {
+      const previousValue = undo();
+      if (previousValue !== null) {
+        onChange(previousValue);
+      }
     }
-  };
+  }, [getEditor, undo, onChange]);
 
-  const handleClearFormatting = () => {
-    execCommand('removeFormat');
-  };
+  const handleRedo = useCallback(() => {
+    const editor = getEditor();
+    if (editor) {
+      editor.chain().focus().redo().run();
+    } else {
+      const nextValue = redo();
+      if (nextValue !== null) {
+        onChange(nextValue);
+      }
+    }
+  }, [getEditor, redo, onChange]);
+
+  const handleClearFormatting = useCallback(() => {
+    getEditor()?.chain().focus().clearNodes().unsetAllMarks().run();
+  }, [getEditor]);
 
   return (
     <div className={`flex flex-col h-full ${className}`}>
@@ -275,7 +319,7 @@ export const RichTextEditor: React.FC<EditorProps> = ({
           value="edit" 
           className="flex-1 m-4 mt-2 overflow-hidden border rounded-lg data-[state=active]:flex data-[state=active]:flex-col"
         >
-          <div ref={editorRef} className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto">
             <WYSIWYGEditor
               value={value}
               onChange={onChange}
@@ -290,25 +334,7 @@ export const RichTextEditor: React.FC<EditorProps> = ({
           className="flex-1 m-4 mt-2 overflow-auto border rounded-lg p-6 data-[state=active]:block bg-white"
         >
           <div
-            className="
-              [&>*]:block
-              [&_h1]:block [&_h1]:text-4xl [&_h1]:font-bold [&_h1]:mb-4 [&_h1]:mt-6
-              [&_h2]:block [&_h2]:text-3xl [&_h2]:font-bold [&_h2]:mb-4 [&_h2]:mt-5
-              [&_h3]:block [&_h3]:text-2xl [&_h3]:font-semibold [&_h3]:mb-3 [&_h3]:mt-4
-              [&_p]:block [&_p]:mb-4 [&_p]:leading-7 [&_p]:whitespace-pre-wrap
-              [&_div]:block
-              [&_strong]:font-semibold
-              [&_em]:italic
-              [&_ul]:block [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:mb-4
-              [&_ol]:block [&_ol]:list-decimal [&_ol]:ml-6 [&_ol]:mb-4
-              [&_li]:block [&_li]:mb-1
-              [&_a]:text-blue-600 [&_a]:underline hover:[&_a]:text-blue-800
-              [&_img]:block [&_img]:max-w-full [&_img]:h-auto [&_img]:rounded-lg [&_img]:my-4
-              [&_hr]:block [&_hr]:my-8 [&_hr]:border-t-2
-              [&_table]:block [&_table]:w-full [&_table]:border-collapse [&_table]:my-4
-              [&_th]:table-cell [&_th]:bg-gray-100 [&_th]:border [&_th]:border-gray-300 [&_th]:px-4 [&_th]:py-2
-              [&_td]:table-cell [&_td]:border [&_td]:border-gray-300 [&_td]:px-4 [&_td]:py-2
-            "
+            className="prose prose-sm max-w-none"
             dangerouslySetInnerHTML={{ 
               __html: value || `<p class="text-gray-400">${t('editor.emptyPlaceholder')}</p>` 
             }}
@@ -359,6 +385,13 @@ export const RichTextEditor: React.FC<EditorProps> = ({
         isOpen={dialogs.template.isOpen}
         onSelect={handleTemplateSelect}
         onClose={() => closeDialog('template')}
+      />
+
+      <TemplateEditorDialog
+        isOpen={dialogs.templateEditor.isOpen}
+        templateType={dialogs.templateEditor.templateType}
+        onInsert={handleTemplateInsert}
+        onClose={() => closeDialog('templateEditor')}
       />
     </div>
   );

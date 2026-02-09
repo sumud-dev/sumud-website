@@ -239,12 +239,22 @@ export async function updateTranslation(
  * Delete original post (cascade deletes translations)
  */
 export async function deleteOriginalPost(postId: string): Promise<number> {
+  // First, count the translations that will be deleted
+  const translations = await db
+    .select()
+    .from(postTranslations)
+    .where(eq(postTranslations.postId, postId));
+  
+  const translationCount = translations.length;
+  
+  // Delete the original post (this will cascade delete all translations)
   const deletedPosts = await db
     .delete(posts)
     .where(eq(posts.id, postId))
     .returning();
 
-  return deletedPosts.length;
+  // Return total count: original post + its translations
+  return deletedPosts.length + translationCount;
 }
 
 /**

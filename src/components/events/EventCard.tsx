@@ -1,7 +1,7 @@
 "use client";
 
 import { Link } from "@/src/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -41,6 +41,7 @@ import {
   EVENT_TYPES,
   EVENT_LOCATION_MODES,
 } from "@/src/lib/types/event";
+import { markdownToHtml } from "@/src/lib/utils/markdown";
 
 interface EventCardProps {
   event: BaseEvent;
@@ -60,6 +61,7 @@ export function EventCard({
   className = "",
 }: EventCardProps) {
   const t = useTranslations("events");
+  const locale = useLocale();
   const [isLiked, setIsLiked] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -167,8 +169,9 @@ export function EventCard({
   };
 
   const handleShare = async (platform: string) => {
+    const locale = useLocale();
     const eventUrl = `${window.location.origin}/events/${event.slug}`;
-    const text = `Join us for ${event.title} - ${formatEventDate(event.start_date)}`;
+    const text = `Join us for ${event.title} - ${formatEventDate(event.start_date, locale)}`;
     
     switch (platform) {
       case "twitter":
@@ -344,7 +347,19 @@ export function EventCard({
                 </div>
               </div>
               <p className="text-gray-600 text-sm line-clamp-3 leading-relaxed">
-                {event.content}
+                {/* Strip HTML tags for preview text */}
+                {event.content ? 
+                  event.content
+                    .replace(/<div data-raw-html="true"[^>]*>.*?<\/div>/gs, '')
+                    .replace(/<div data-raw-html="true"[^>]*\/>/g, '')
+                    .replace(/<[^>]+>/g, '')
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>')
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#39;/g, "'")
+                    .replace(/&amp;/g, '&')
+                  : ''
+                }
               </p>
             </div>
 
@@ -352,7 +367,7 @@ export function EventCard({
               <div className="flex items-center gap-3 p-2 rounded-lg bg-[#f4f3f0] border border-[#55613C]/10">
                 <Calendar className="h-4 w-4 shrink-0 text-[#781D32]" />
                 <span className="font-medium text-[#3E442B]">
-                  {formatEventDate(event.start_date)}
+                  {formatEventDate(event.start_date, locale)}
                 </span>
               </div>
 

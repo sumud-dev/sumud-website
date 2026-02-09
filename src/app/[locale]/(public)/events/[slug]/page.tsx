@@ -327,7 +327,7 @@ export default function EventDetailPage() {
                   </div>
                   <div>
                     <p className="text-sm text-white/60">{t("quickInfo.date")}</p>
-                    <p className="font-medium">{formatEventDate(event.start_date || event.date || event.startAt)}</p>
+                    <p className="font-medium">{formatEventDate(event.start_date || event.date || event.startAt, locale)}</p>
                   </div>
                 </div>
                 
@@ -495,7 +495,7 @@ export default function EventDetailPage() {
                           </h3>
                           <div className="space-y-1">
                             <p className="text-[#3E442B] font-semibold text-base">
-                              {formatEventDate(event.start_date || event.date || event.startAt)}
+                              {formatEventDate(event.start_date || event.date || event.startAt, locale)}
                             </p>
                             {event.start_time && (
                               <p className="text-[#55613C] text-sm flex items-center gap-2">
@@ -506,7 +506,7 @@ export default function EventDetailPage() {
                             )}
                             {event.end_date && event.end_date !== event.start_date && (
                               <p className="text-sm text-[#55613C]">
-                                {t("sections.until")} {formatEventDate(event.end_date)}
+                                {t("sections.until")} {formatEventDate(event.end_date, locale)}
                               </p>
                             )}
                           </div>
@@ -659,7 +659,7 @@ export default function EventDetailPage() {
                       </Button>
                       {event.registration_deadline && isEventUpcoming(event.start_date || event.date || event.startAt) && (
                         <p className="text-xs text-[#55613C]">
-                          {t("registration.registrationClosedOn")} {formatEventDate(event.registration_deadline)}
+                          {t("registration.registrationClosedOn")} {formatEventDate(event.registration_deadline, locale)}
                         </p>
                       )}
                     </div>
@@ -668,7 +668,7 @@ export default function EventDetailPage() {
                   {/* Registration Info */}
                   {event.registration_required && event.registration_deadline && isEventUpcoming(event.registration_deadline) && (
                     <p className="text-sm text-[#55613C] text-center">
-                      {t("registration.registerBy")} {formatEventDate(event.registration_deadline)}
+                      {t("registration.registerBy")} {formatEventDate(event.registration_deadline, locale)}
                     </p>
                   )}
                 </CardContent>

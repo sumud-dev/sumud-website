@@ -65,4 +65,14 @@ export const queryKeys = {
     details: () => [...queryKeys.events.all, "detail"] as const,
     detail: (slug: string) => [...queryKeys.events.details(), slug] as const,
   },
+
+  // Pages (Page Builder)
+  pages: {
+    all: ["pages"] as const,
+    lists: () => [...queryKeys.pages.all, "list"] as const,
+    list: () => [...queryKeys.pages.lists()] as const,
+    details: () => [...queryKeys.pages.all, "detail"] as const,
+    detail: (slug: string, language?: string) => 
+      [...queryKeys.pages.details(), slug, language ?? 'en'] as const,
+  },
 } as const;

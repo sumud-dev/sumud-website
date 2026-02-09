@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Link, useRouter } from "@/src/i18n/navigation";
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import {
   ArrowLeft,
   Edit,
@@ -45,6 +45,7 @@ interface EventDetailPageProps {
 const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
   const router = useRouter();
   const t = useTranslations("admin.events.detail");
+  const locale = useLocale();
   const [event, setEvent] = React.useState<Event | EventTranslation | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -107,7 +108,8 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
   const formatDate = (dateValue: Date | string | null | undefined) => {
     if (!dateValue) return t("placeholders.notAvailable");
     const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
-    return date.toLocaleDateString("en-US", {
+    const browserLocale = locale === 'fi' ? 'fi-FI' : 'en-US';
+    return date.toLocaleDateString(browserLocale, {
       weekday: "long",
       year: "numeric",
       month: "long",
@@ -118,12 +120,33 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
   // Helper to display jsonb fields as string
   const displayValue = (value: unknown): string => {
     if (!value) return "";
-    if (typeof value === "string") return value;
-    if (Array.isArray(value)) {
+    
+    let text = '';
+    if (typeof value === "string") {
+      text = value;
+    } else if (Array.isArray(value)) {
       if (value.length === 0) return "";
-      return value.join(", ");
+      text = value.join(", ");
+    } else {
+      text = JSON.stringify(value);
     }
-    return JSON.stringify(value);
+    
+    // Strip TipTap HTML wrapper tags
+    text = text.replace(/<div data-raw-html="true"[^>]*>.*?<\/div>/gs, '');
+    text = text.replace(/<div data-raw-html="true"[^>]*\/>/g, '');
+    
+    // Decode HTML entities
+    text = text
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&amp;/g, '&');
+    
+    // Strip ALL remaining HTML tags to show only text
+    text = text.replace(/<[^>]+>/g, '');
+    
+    return text.trim();
   };
 
   if (isLoading) {
@@ -241,7 +264,7 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
                 <h3 className="text-sm font-medium text-gray-500 mb-2">
                   {t("sections.description")}
                 </h3>
-                <p className="text-gray-700 whitespace-pre-wrap">{event.content}</p>
+                <p className="text-gray-700 whitespace-pre-wrap">{displayValue(event.content)}</p>
               </div>
             )}
 

@@ -63,7 +63,7 @@ export default function NewsletterSignup({
       </p>
 
       {status === "success" ? (
-        <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 max-w-md mx-auto">
+        <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-6 max-w-md mx-auto">
           <p className="text-white font-medium">
             {t("success")}
           </p>

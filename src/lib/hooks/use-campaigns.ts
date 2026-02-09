@@ -45,25 +45,42 @@ export interface Campaign {
 
 /**
  * Helper function to extract text from JSONB description field
+ * Strips HTML tags to return plain text
  */
 export function getDescriptionText(description: CampaignDescription): string {
   if (!description) return '';
   
-  // If it's already a string, return it
-  if (typeof description === 'string') return description;
+  let text = '';
   
+  // If it's already a string, use it
+  if (typeof description === 'string') {
+    text = description;
+  }
   // If it's a JSONB object with data property
-  if (typeof description === 'object' && 'data' in description) {
+  else if (typeof description === 'object' && 'data' in description) {
     if (typeof description.data === 'string') {
-      return description.data;
+      text = description.data;
     }
     // For blocks type, try to extract text from blocks
-    if (description.type === 'blocks' && Array.isArray(description.data)) {
-      return description.data.map((block: { text?: string }) => block.text || '').join(' ');
+    else if (description.type === 'blocks' && Array.isArray(description.data)) {
+      text = description.data.map((block: { text?: string }) => block.text || '').join(' ');
     }
   }
   
-  return '';
+  // Strip HTML tags including TipTap raw HTML wrappers
+  text = text.replace(/<div data-raw-html="true"[^>]*>.*?<\/div>/gs, '');
+  text = text.replace(/<div data-raw-html="true"[^>]*\/>/g, '');
+  text = text.replace(/<[^>]+>/g, '');
+  
+  // Decode HTML entities
+  text = text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&');
+  
+  return text.trim();
 }
 
 /**
@@ -154,14 +171,16 @@ export function useUpdateCampaign() {
       campaignId, 
       slug, 
       data,
-      language 
+      language,
+      autoTranslate 
     }: { 
       campaignId: string; 
       slug: string; 
       data: any;
       language?: string;
+      autoTranslate?: boolean;
     }) => {
-      const result = await updateCampaignAction(campaignId, slug, data, language || locale);
+      const result = await updateCampaignAction(campaignId, slug, data, language || locale, autoTranslate);
       if (!result.success) {
         throw new Error(result.error);
       }
