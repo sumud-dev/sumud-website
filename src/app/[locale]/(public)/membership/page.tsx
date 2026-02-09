@@ -11,7 +11,7 @@ export default function MembershipPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4] py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <header className="mb-12 text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-[#3E442B] mb-4">
@@ -81,7 +81,7 @@ export default function MembershipPage() {
             {t("cta.title")}
           </h2>
           <p className="text-lg mb-8 opacity-90">
-            Complete your registration through our secure membership portal.
+            {t("cta.description")}
           </p>
           <a
             href={flomembersUrl}
@@ -89,19 +89,19 @@ export default function MembershipPage() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-3 bg-white text-[#781D32] font-semibold px-8 py-4 rounded-lg hover:bg-gray-100 transition-colors shadow-md"
           >
-            Open Registration Form <ExternalLink className="w-5 h-5" />
+            {t("cta.button")} <ExternalLink className="w-5 h-5" />
           </a>
           <p className="text-sm mt-6 opacity-75">
-            The form will open in a new tab for secure registration.
+            {t("cta.notice")}
           </p>
         </div>
 
         {/* Additional Info */}
         <div className="mt-8 text-center text-sm text-gray-600">
           <p>
-            Questions about membership?{" "}
+            {t("contact.question")}{" "}
             <a href="/contact" className="text-[#781D32] hover:underline font-medium">
-              Contact us
+              {t("contact.link")}
             </a>
           </p>
         </div>

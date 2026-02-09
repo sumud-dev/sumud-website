@@ -364,7 +364,15 @@ const ArticlesPage: React.FC = () => {
                         </div>
                         {post.excerpt && (
                           <p className="text-sm text-gray-500 truncate max-w-md">
-                            {post.excerpt}
+                            {post.excerpt
+                              .replace(/<div data-raw-html="true"[^>]*>.*?<\/div>/gs, '')
+                              .replace(/<[^>]+>/g, '')
+                              .replace(/&lt;/g, '<')
+                              .replace(/&gt;/g, '>')
+                              .replace(/&quot;/g, '"')
+                              .replace(/&#39;/g, "'")
+                              .replace(/&amp;/g, '&')
+                              .trim()}
                           </p>
                         )}
                       </div>

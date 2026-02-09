@@ -286,7 +286,18 @@ const EventsPage: React.FC = () => {
                           </Link>
                           {event.content && (
                             <p className="text-sm text-gray-500 mt-1 truncate">
-                              {truncateText(event.content, 10)}
+                              {truncateText(
+                                event.content
+                                  .replace(/<div data-raw-html="true"[^>]*>.*?<\/div>/gs, '')
+                                  .replace(/<[^>]+>/g, '')
+                                  .replace(/&lt;/g, '<')
+                                  .replace(/&gt;/g, '>')
+                                  .replace(/&quot;/g, '"')
+                                  .replace(/&#39;/g, "'")
+                                  .replace(/&amp;/g, '&')
+                                  .trim(),
+                                10
+                              )}
                             </p>
                           )}
                         </TableCell>

@@ -44,29 +44,45 @@ export interface DialogState {
   template: {
     isOpen: boolean;
   };
+  templateEditor: {
+    isOpen: boolean;
+    templateType: TemplateType | null;
+  };
 }
 
 export type TemplateType = 
   | 'card'
   | 'twoColumn'
   | 'threeColumn'
+  | 'gridLayout'
+  | 'sidebarLayout'
   | 'hero'
   | 'features'
   | 'pricing'
   | 'testimonial'
   | 'faq'
   | 'timeline'
+  | 'stats'
+  | 'team'
+  | 'newsletter'
+  | 'cta'
+  | 'accordion'
   | 'callout-info'
   | 'callout-warning'
   | 'callout-success'
-  | 'callout-error';
+  | 'callout-error'
+  | 'callout-tip'
+  | 'checkList'
+  | 'stepList'
+  | 'iconList'
+  | 'comparisonTable';
 
 export interface Template {
   id: TemplateType;
   name: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
-  category: 'layout' | 'content' | 'callout';
+  category: 'layout' | 'content' | 'callout' | 'list';
 }
 
 export interface ColorOption {

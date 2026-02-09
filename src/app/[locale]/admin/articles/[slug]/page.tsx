@@ -192,7 +192,17 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
                 <CardTitle className="text-lg">{t("sections.excerpt")}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">{article.excerpt}</p>
+                <p className="text-muted-foreground">
+                  {article.excerpt
+                    .replace(/<div data-raw-html="true"[^>]*>.*?<\/div>/gs, '')
+                    .replace(/<[^>]+>/g, '')
+                    .replace(/&lt;/g, '<')
+                    .replace(/&gt;/g, '>')
+                    .replace(/&quot;/g, '"')
+                    .replace(/&#39;/g, "'")
+                    .replace(/&amp;/g, '&')
+                    .trim()}
+                </p>
               </CardContent>
             </Card>
           )}

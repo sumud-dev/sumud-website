@@ -104,6 +104,7 @@ export default function EditEventPage({ params }: EditEventPageProps) {
         organizers: parseJsonbField(data.organizers),
         language: (data.language as "en" | "fi") || "en",
         authorName: cleanValue(data.authorName),
+        autoTranslate: data.autoTranslate ?? false,
       });
 
       if (result.success) {

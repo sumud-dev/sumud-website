@@ -502,71 +502,6 @@ export async function createEventAction(
         language: validated.language!,
       });
       createdEvents.push({ language: validated.language!, slug: validated.slug });
-
-      // Also create Finnish version in eventTranslations (placeholder or translated)
-      let finnishContent = {
-        title: `[FI] ${validated.title}`,
-        description: validated.description || undefined,
-        content: validated.content || undefined,
-        location: validated.location || undefined,
-      };
-      // IMPORTANT: Use the same slug for all language versions to enable cross-language operations
-      const finnishSlug = validated.slug;
-
-      // If auto-translate is enabled, get Finnish translation
-      if (validated.autoTranslate) {
-        try {
-          const contentToTranslate: Record<string, unknown> = {
-            title: validated.title,
-          };
-          if (validated.description) contentToTranslate.description = validated.description;
-          if (validated.content) contentToTranslate.content = validated.content;
-          if (validated.location) contentToTranslate.location = validated.location;
-
-          console.log('[Event Creation] Translating to Finnish from', sourceLocale, contentToTranslate);
-          const { translations, error: translationError } = await translateContentToAllLocales(
-            contentToTranslate,
-            sourceLocale,
-            EVENT_TRANSLATION_CONFIG
-          );
-          
-          if (translationError) {
-            console.warn('[Event Creation] Translation error for Finnish:', translationError);
-          }
-          
-          console.log('[Event Creation] Finnish translation result:', translations.fi);
-          if (translations.fi?.title) {
-            finnishContent = {
-              title: translations.fi.title as string,
-              description: (translations.fi.description as string) || undefined,
-              content: (translations.fi.content as string) || undefined,
-              location: (translations.fi.location as string) || undefined,
-            };
-            // Note: Using same slug for all languages to enable cross-language operations
-            console.log('[Event Creation] Using shared slug for Finnish:', finnishSlug);
-          } else {
-            console.warn('[Event Creation] No Finnish translation available in result');
-          }
-        } catch (e) {
-          console.error('[Event Creation] Failed to translate to Finnish:', e);
-        }
-      }
-
-      // Check if Finnish version already exists before creating
-      const finnishExists = await slugExistsForLanguage(finnishSlug, 'fi');
-      if (!finnishExists) {
-        await upsertEventTranslation({
-          ...baseEventData,
-          slug: finnishSlug,
-          eventId: undefined,
-          language: 'fi',
-          title: finnishContent.title,
-          description: finnishContent.description,
-          content: finnishContent.content,
-          location: finnishContent.location,
-        });
-        createdEvents.push({ language: 'fi', slug: finnishSlug });
-      }
     }
 
     // Auto-translate to remaining languages if enabled
@@ -593,15 +528,8 @@ export async function createEventAction(
         console.log('[Event Creation] All translations:', { en: !!translations.en?.title, fi: !!translations.fi?.title });
 
         // Insert translated versions for other locales
-        // Skip source locale and Finnish if already created above
         const allLocales: SupportedLocale[] = ['en', 'fi'];
-        const targetLocales = allLocales.filter((locale) => {
-          // Skip source locale
-          if (locale === sourceLocale) return false;
-          // Skip Finnish if already created (when source is EN)
-          if (locale === 'fi' && sourceLocale !== 'fi') return false;
-          return true;
-        });
+        const targetLocales = allLocales.filter((locale) => locale !== sourceLocale);
         
         console.log('[Event Creation] Target locales for translation:', targetLocales);
 
@@ -612,7 +540,7 @@ export async function createEventAction(
             continue;
           }
 
-          // IMPORTANT: Use the same slug for all language versions to enable cross-language operations
+          // Use the same slug for all language versions
           const translatedSlug = validated.slug;
           console.log(`[Event Creation] Using shared slug for ${targetLocale}:`, translatedSlug);
           
@@ -626,8 +554,6 @@ export async function createEventAction(
           const translatedEventData = {
             ...baseEventData,
             slug: translatedSlug,
-            eventId: undefined,
-            language: targetLocale,
             title: translatedContent.title as string,
             description: (translatedContent.description as string) || undefined,
             content: (translatedContent.content as string) || undefined,
@@ -635,8 +561,21 @@ export async function createEventAction(
           };
 
           console.log(`[Event Creation] Creating ${targetLocale} translation`);
-          // All translations go to eventTranslations table
-          await upsertEventTranslation(translatedEventData);
+          
+          // Finnish events go to events table, others go to eventTranslations table
+          if (targetLocale === 'fi') {
+            await createEvent({
+              ...translatedEventData,
+              language: 'fi',
+            });
+          } else {
+            await upsertEventTranslation({
+              ...translatedEventData,
+              eventId: undefined,
+              language: targetLocale,
+            });
+          }
+          
           createdEvents.push({ language: targetLocale, slug: translatedSlug });
         }
       } catch (translationError) {
@@ -685,7 +624,7 @@ export async function createEventAction(
  */
 export async function updateEventAction(
   id: string,
-  input: z.infer<typeof eventBaseSchema>
+  input: z.infer<typeof eventBaseSchema> & { autoTranslate?: boolean }
 ): Promise<ActionResult> {
   try {
     // Check permissions
@@ -700,6 +639,16 @@ export async function updateEventAction(
 
     // Validate input
     const validated = eventBaseSchema.parse(input);
+    const autoTranslate = input.autoTranslate ?? false;
+
+    // Get the current event to know its language and slug
+    const currentEvent = await getEventById(id);
+    if (!currentEvent) {
+      return {
+        success: false,
+        error: 'Event not found',
+      };
+    }
 
     // Remove null and undefined values to match updateEvent's expected type
     const updates = Object.fromEntries(
@@ -708,6 +657,134 @@ export async function updateEventAction(
 
     // Update event
     const event = await updateEvent(id, updates);
+
+    // Auto-translate to other language if enabled
+    if (autoTranslate && event) {
+      try {
+        const sourceLocale = (currentEvent.language || 'fi') as SupportedLocale;
+        const contentToTranslate: Record<string, unknown> = {};
+        
+        // Build content to translate from updated values
+        if (validated.title) contentToTranslate.title = validated.title;
+        if (validated.description) contentToTranslate.description = validated.description;
+        if (validated.content) contentToTranslate.content = validated.content;
+        if (validated.location) contentToTranslate.location = validated.location;
+
+        // Only translate if there's content to translate
+        if (Object.keys(contentToTranslate).length > 0) {
+          console.log('[Event Update] Auto-translating from', sourceLocale, contentToTranslate);
+          const { translations, error: translationError } = await translateContentToAllLocales(
+            contentToTranslate,
+            sourceLocale,
+            EVENT_TRANSLATION_CONFIG
+          );
+
+          if (translationError) {
+            console.warn('[Event Update] Translation warning:', translationError);
+          }
+
+          // Translate to the other locale (fi <-> en)
+          const targetLocale: SupportedLocale = sourceLocale === 'fi' ? 'en' : 'fi';
+          const translatedContent = translations[targetLocale];
+
+          if (translatedContent && translatedContent.title && event.slug) {
+            const translatedSlug = event.slug;
+            console.log(`[Event Update] Creating/updating ${targetLocale} translation with slug:`, translatedSlug);
+
+            // Check if translation already exists
+            const translationExists = await slugExistsForLanguage(translatedSlug, targetLocale);
+            
+            const translatedEventData = {
+              slug: translatedSlug,
+              title: translatedContent.title as string,
+              description: (translatedContent.description as string) || validated.description || undefined,
+              content: (translatedContent.content as string) || validated.content || undefined,
+              location: (translatedContent.location as string) || validated.location || undefined,
+              status: validated.status || currentEvent.status || undefined,
+              author: validated.author || currentEvent.author || undefined,
+              authorName: validated.authorName || currentEvent.authorName || undefined,
+              date: validated.date || currentEvent.date || undefined,
+              startAt: validated.startAt || currentEvent.startAt || undefined,
+              endAt: validated.endAt || currentEvent.endAt || undefined,
+              publishedAt: validated.publishedAt || currentEvent.publishedAt || undefined,
+              featuredImage: validated.featuredImage || currentEvent.featuredImage || undefined,
+              altTexts: validated.altTexts || currentEvent.altTexts || undefined,
+              categories: validated.categories || currentEvent.categories || undefined,
+              locations: validated.locations || currentEvent.locations || undefined,
+              organizers: validated.organizers || currentEvent.organizers || undefined,
+            };
+
+            // Finnish events go to events table, others go to eventTranslations table
+            if (targetLocale === 'fi') {
+              if (translationExists) {
+                // Update existing Finnish event
+                const existingEvent = await db
+                  .select()
+                  .from(events)
+                  .where(eq(events.slug, translatedSlug))
+                  .limit(1);
+                
+                if (existingEvent[0]) {
+                  await db
+                    .update(events)
+                    .set({
+                      ...translatedEventData,
+                      language: 'fi',
+                      updatedAt: new Date(),
+                    })
+                    .where(eq(events.id, existingEvent[0].id));
+                  console.log(`[Event Update] Updated existing Finnish event`);
+                }
+              } else {
+                // Create new Finnish event
+                await createEvent({
+                  ...translatedEventData,
+                  language: 'fi',
+                });
+                console.log(`[Event Update] Created new Finnish event`);
+              }
+            } else {
+              if (translationExists) {
+                // Update existing translation
+                const existingTranslation = await db
+                  .select()
+                  .from(eventTranslations)
+                  .where(
+                    and(
+                      eq(eventTranslations.slug, translatedSlug),
+                      eq(eventTranslations.language, targetLocale)
+                    )
+                  )
+                  .limit(1);
+                
+                if (existingTranslation[0]) {
+                  await db
+                    .update(eventTranslations)
+                    .set({
+                      ...translatedEventData,
+                      language: targetLocale,
+                      updatedAt: new Date(),
+                    })
+                    .where(eq(eventTranslations.id, existingTranslation[0].id));
+                  console.log(`[Event Update] Updated existing ${targetLocale} translation`);
+                }
+              } else {
+                // Create new translation
+                await upsertEventTranslation({
+                  ...translatedEventData,
+                  eventId: undefined,
+                  language: targetLocale,
+                });
+                console.log(`[Event Update] Created new ${targetLocale} translation`);
+              }
+            }
+          }
+        }
+      } catch (translationError) {
+        console.error('[Event Update] Auto-translation failed:', translationError);
+        // Continue without translation - don't fail the entire operation
+      }
+    }
 
     // Revalidate cache
     revalidatePath('/[locale]/admin/events', 'page');
@@ -719,7 +796,7 @@ export async function updateEventAction(
     return {
       success: true,
       data: event,
-      message: 'Event updated successfully',
+      message: autoTranslate ? 'Event updated and translated successfully' : 'Event updated successfully',
     };
   } catch (error) {
     console.error('Error updating event:', error);

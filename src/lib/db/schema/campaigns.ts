@@ -17,11 +17,8 @@ export const campaigns = pgTable('campaigns', {
   // Core content (translatable fields stored here for primary language)
   title: text('title'),
   
-  // Rich content (renamed from 'content')
-  description: jsonb('description').$type<{
-    type: 'blocks' | 'markdown' | 'html';
-    data: unknown;
-  }>(),
+  // Rich content - HTML from TipTap editor (changed from jsonb to text per TipTap docs)
+  description: text('description'),
   
   demands: jsonb('demands').$type<Array<{
     id: string;
@@ -128,11 +125,8 @@ export const campaignTranslations = pgTable('campaign_translations', {
   slug: text('slug'),
   title: text('title').notNull(),
   
-  // Rich content (renamed from 'content')
-  description: jsonb('description').$type<{
-    type: 'blocks' | 'markdown' | 'html';
-    data: unknown;
-  }>(),
+  // Rich content - HTML from TipTap editor (changed from jsonb to text per TipTap docs)
+  description: text('description'),
   
   demands: jsonb('demands').$type<Array<{
     id: string;

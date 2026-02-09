@@ -1,4 +1,42 @@
 /**
+ * Clean TipTap editor raw HTML wrapper tags and decode HTML entities
+ */
+function cleanTipTapHtml(html: string): string {
+  if (!html) return '';
+  
+  // Remove TipTap raw HTML wrapper tags and extract the actual HTML content
+  let cleaned = html.replace(
+    /<div data-raw-html="true" data-html="([^"]+)"[^>]*>.*?<\/div>/gs,
+    (_, encodedHtml) => {
+      // Decode HTML entities
+      const decoded = encodedHtml
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&amp;/g, '&');
+      return decoded;
+    }
+  );
+  
+  // Also handle self-closing raw HTML tags
+  cleaned = cleaned.replace(
+    /<div data-raw-html="true" data-html="([^"]+)"[^>]*\/>/g,
+    (_, encodedHtml) => {
+      const decoded = encodedHtml
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&amp;/g, '&');
+      return decoded;
+    }
+  );
+  
+  return cleaned;
+}
+
+/**
  * Convert markdown to HTML with tailwind classes
  */
 export function markdownToHtml(markdown: string): string {
@@ -51,6 +89,9 @@ export function markdownToHtml(markdown: string): string {
     html = html.replace(/(<tr>.*?<\/tr>)/gs, '<table class="border-collapse border my-2">$1</table>');
   }
 
+  // Clean TipTap raw HTML wrapper tags
+  html = cleanTipTapHtml(html);
+
   return html;
 }
 
@@ -63,7 +104,7 @@ export function getDescriptionHtml(description: string | { type: 'blocks' | 'mar
   
   // If it's already a string, convert markdown to HTML
   if (typeof description === 'string') {
-    return markdownToHtml(description);
+    return cleanTipTapHtml(markdownToHtml(description));
   }
   
   // If it's a JSONB object with data property
@@ -71,19 +112,19 @@ export function getDescriptionHtml(description: string | { type: 'blocks' | 'mar
     if (typeof description.data === 'string') {
       // For markdown type, convert to HTML
       if (description.type === 'markdown') {
-        return markdownToHtml(description.data);
+        return cleanTipTapHtml(markdownToHtml(description.data));
       }
-      // For HTML type, return as is
+      // For HTML type, clean and return
       if (description.type === 'html') {
-        return description.data;
+        return cleanTipTapHtml(description.data);
       }
       // Default: treat as markdown
-      return markdownToHtml(description.data);
+      return cleanTipTapHtml(markdownToHtml(description.data));
     }
     // For blocks type, try to extract text from blocks and convert
     if (description.type === 'blocks' && Array.isArray(description.data)) {
       const text = description.data.map((block: { text?: string }) => block.text || '').join('\n');
-      return markdownToHtml(text);
+      return cleanTipTapHtml(markdownToHtml(text));
     }
   }
   

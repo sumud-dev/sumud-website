@@ -22,8 +22,6 @@ import {
   type SocialLink as SchemaSocialLink,
   type LegacyNavLink,
 } from '@/src/lib/db/schema/navigation';
-import { listPublishedPagesAction } from '@/src/actions/pages.actions';
-import type { PageSummary } from '@/src/lib/types/page';
 
 // Re-export types for compatibility
 export type Locale = DbLocale;
@@ -175,47 +173,37 @@ export interface AvailablePage {
 }
 
 /**
- * Get available pages for navigation menus
- * Returns published pages from the database
+ * Get available pages for navigation configuration
  */
 export async function getAvailablePages(): Promise<ActionResult<AvailablePage[]>> {
   try {
-    const result = await listPublishedPagesAction();
+    const { getPublishedPages } = await import('@/src/actions/pages.actions');
     
-    if (!result.success) {
-      return {
-        success: false,
-        error: result.error,
-      };
-    }
+    // Get published pages for all languages
+    const enPages = await getPublishedPages('en');
+    const fiPages = await getPublishedPages('fi');
     
-    const publishedPages = result.data as PageSummary[];
+    // Combine and deduplicate by slug
+    const pageMap = new Map<string, AvailablePage>();
     
-    // Deduplicate by slug (pages exist in multiple languages)
-    const uniquePagesMap = new Map<string, AvailablePage>();
-    
-    publishedPages.forEach(page => {
-      if (!uniquePagesMap.has(page.slug)) {
-        uniquePagesMap.set(page.slug, {
+    for (const page of [...enPages, ...fiPages]) {
+      if (!pageMap.has(page.slug)) {
+        pageMap.set(page.slug, {
           slug: page.slug,
           path: page.path,
           title: page.title,
         });
       }
-    });
+    }
     
-    // Convert to array and sort alphabetically by title
-    const pages = Array.from(uniquePagesMap.values());
+    const availablePages = Array.from(pageMap.values());
     
-    return { 
-      success: true, 
-      data: pages.sort((a, b) => a.title.localeCompare(b.title)) 
-    };
+    return { success: true, data: availablePages };
   } catch (error) {
-    console.error('Error getting available pages:', error);
+    console.error('Error fetching available pages:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to get available pages',
+      error: error instanceof Error ? error.message : 'Failed to fetch available pages',
     };
   }
 }

@@ -1,1187 +1,577 @@
-/**
- * Server Actions for Pages
- * 
- * Server actions for CRUD operations on database-backed pages.
- */
-
 'use server';
 
+import { db } from '@/src/lib/db/index';
+import { pages, pageContent } from '@/src/lib/db/schema/page-builder';
+import { eq, and, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
-import { z } from 'zod';
-import { auth } from '@clerk/nextjs/server';
+import type { SerializedNodes } from '@craftjs/core';
 import {
-  listPagesPaginated,
-  findPageBySlugAndLanguage,
-  findTranslationsForPage,
-  createPage,
-  createPageTranslation,
-  updatePage,
-  deletePage,
-  pageSlugExists,
-  pagePathExists,
-  type PageRecord,
-} from '@/src/lib/db/queries/pages.queries';
-import type { PageData } from '@/src/lib/types/page';
-import { PAGE_BLOCK_TYPES, type PageBlock, type PageBlockType } from '@/src/lib/types/page';
-import {
-  translateBatch,
-  type SupportedLocale,
-} from '@/src/lib/services/translation.service';
+  validateContentStructure,
+  prepareContentForSync,
+  logSyncOperation,
+  hasStructuralChanges,
+  DEFAULT_SYNC_OPTIONS,
+  type SyncStrategy,
+} from '@/src/services/page-content-sync.service';
 
-// ============================================
-// VALIDATION SCHEMAS
-// ============================================
+type Language = 'en' | 'fi';
+type PageStatus = 'draft' | 'published';
 
-const blockMetaSchema = z.object({
-  defaultLang: z.enum(['en', 'fi']),
-  autoTranslated: z.array(z.enum(['en', 'fi'])).optional(),
-  manuallyReviewed: z.array(z.enum(['en', 'fi'])).optional(),
-  lastTranslated: z.string().optional(),
-  lastModified: z.string().optional(),
-}).optional();
+const ALL_LANGUAGES: Language[] = ['en', 'fi'];
 
-const blockSchema = z.object({
-  id: z.string(),
-  type: z.enum(PAGE_BLOCK_TYPES),
-  content: z.any(),
-  meta: blockMetaSchema,
-});
+// ============================================================================
+// QUERIES
+// ============================================================================
 
-const translationSchema = z.object({
-  title: z.string(),
-  description: z.string(),
-  blocks: z.array(blockSchema),
-});
-
-const createPageSchema = z.object({
-  slug: z.string()
-    .min(1, 'Slug is required')
-    .max(100, 'Slug must be 100 characters or less')
-    .regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens'),
-  path: z.string().min(1, 'Path is required'),
-  status: z.enum(['draft', 'published']).default('draft'),
-  translations: z.object({
-    en: translationSchema.optional(),
-    fi: translationSchema.optional(),
-  }),
-});
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const updatePageSchema = createPageSchema.partial().extend({
-  slug: z.string().min(1),
-});
-
-// ============================================
-// RESULT TYPE
-// ============================================
-
-type ActionResult<T = unknown> =
-  | { success: true; data: T; message?: string }
-  | { success: false; error: string; errors?: Record<string, string[]> };
-
-// ============================================
-// HELPER: Check authentication
-// ============================================
-
-async function requireAuth(): Promise<string> {
-  const { userId } = await auth();
-  if (!userId) {
-    throw new Error('Unauthorized');
-  }
-  return userId;
-}
-
-// ============================================
-// CONVERSION HELPERS: DB <-> PageData
-// ============================================
-
-/**
- * Convert database PageRecord to a single translation object
- */
-function pageRecordToTranslation(record: PageRecord) {
-  // Handle UI translations pages - check metadata for ui-translations marker
-  const isUITranslationsPage = record.metadata?.customFields?.uiTranslations === true;
-  const namespace = record.metadata?.customFields?.uiTranslationsNamespace as string | undefined;
-  
-  if (isUITranslationsPage && namespace) {
-    // For UI translations pages, return empty blocks
-    // The actual UI will be rendered by the UI translations editor
-    return {
-      title: record.title,
-      description: record.metadata?.description || '',
-      blocks: [],
-    };
-  }
-
-  // Fallback: Check old content structure for backwards compatibility
-  // This handles cases where migration hasn't run yet
-  const content = record.content as any;
-  const isOldUITranslations = 
-    content?.type === 'ui-translations' || 
-    content?.data?.[0]?.content?.type === 'ui-translations';
-    
-  if (isOldUITranslations) {
-    return {
-      title: record.title,
-      description: record.metadata?.description || '',
-      blocks: [],
-    };
-  }
-
-  return {
-    title: record.title,
-    description: record.metadata?.description || '',
-    blocks: (record.content?.type === 'blocks' && Array.isArray(record.content.data))
-      ? record.content.data as PageBlock[]
-      : [],
-  };
-}
-
-/**
- * Convert database PageRecord to PageData format with a single locale
- */
-function pageRecordToPageData(record: PageRecord, locale: 'en' | 'fi'): PageData {
-  return {
-    slug: record.slug,
-    path: record.path,
-    status: record.status as 'draft' | 'published',
-    createdAt: record.createdAt.toISOString(),
-    updatedAt: record.updatedAt.toISOString(),
-    translations: {
-      [locale]: pageRecordToTranslation(record),
-    },
-  };
-}
-
-/**
- * Convert primary page and its translations to full PageData
- */
-function pageRecordsToPageData(
-  primaryPage: PageRecord,
-  translations: PageRecord[]
-): PageData {
-  const pageData: PageData = {
-    slug: primaryPage.slug,
-    path: primaryPage.path,
-    status: primaryPage.status as 'draft' | 'published',
-    createdAt: primaryPage.createdAt.toISOString(),
-    updatedAt: primaryPage.updatedAt.toISOString(),
-    translations: {},
-    metadata: {},
-  };
-
-  // Add primary page translation (should be Finnish)
-  const primaryLocale = (primaryPage.language as 'en' | 'fi') || 'fi'; // Default to 'fi' not 'en'
-  pageData.translations[primaryLocale] = pageRecordToTranslation(primaryPage);
-  
-  // Add primary page metadata
-  if (primaryPage.metadata?.customFields) {
-    if (!pageData.metadata) pageData.metadata = {};
-    pageData.metadata[primaryLocale] = primaryPage.metadata.customFields as any;
-  }
-
-  // Add other translations
-  translations.forEach(translation => {
-    const locale = (translation.language as 'en' | 'fi') || 'en';
-    if (locale !== primaryLocale) {
-      pageData.translations[locale] = pageRecordToTranslation(translation);
-      
-      // Add translation metadata
-      if (translation.metadata?.customFields) {
-        if (!pageData.metadata) pageData.metadata = {};
-        pageData.metadata[locale] = translation.metadata.customFields as any;
-      }
-    }
-  });
-
-  return pageData;
-}
-
-/**
- * Convert database PageRecord to PageSummary format (for listings)
- */
-function pageRecordToPageSummary(record: PageRecord): import('@/src/lib/types/page').PageSummary {
-  return {
-    slug: record.slug,
-    path: record.path,
-    status: record.status as 'draft' | 'published' | 'archived',
-    createdAt: record.createdAt.toISOString(),
-    updatedAt: record.updatedAt.toISOString(),
-    title: record.title,
-  };
-}
-
-/**
- * Extract blocks from PageData content
- */
-function extractBlocks(content: PageRecord['content']): PageBlock[] {
-  if (!content || content.type !== 'blocks') return [];
-  if (Array.isArray(content.data)) {
-    return content.data as PageBlock[];
-  }
-  return [];
-}
-
-
-
-// Lines 177-205 (Add helper to sync block structures)
-/**
- * Sync block structure between languages (keeps same blocks/IDs but different content)
- */
-function syncBlockStructure(
-  sourceBlocks: PageBlock[],
-  targetBlocks: PageBlock[]
-): PageBlock[] {
-  // Create a map of target blocks by ID for quick lookup
-  const targetMap = new Map(targetBlocks.map(b => [b.id, b]));
-  
-  // Use source structure but preserve target content where it exists
-  return sourceBlocks.map(sourceBlock => {
-    const targetBlock = targetMap.get(sourceBlock.id);
-    
-    if (targetBlock) {
-      // Block exists in target, keep its content but sync metadata
-      return {
-        ...sourceBlock,
-        content: targetBlock.content, // Keep target's content
-        meta: sourceBlock.meta, // Sync metadata from source
-      };
-    } else {
-      // New block in source, add to target (will need translation)
-      return sourceBlock;
-    }
-  });
-}
-
-/**
- * Revalidate all language versions of a page path
- */
-function revalidatePagePaths(path: string, additionalPath?: string) {
-  revalidatePath('/admin/page-builder');
-  revalidatePath(`/fi${path}`);
-  revalidatePath(`/en${path}`);
-  revalidatePath(path);
-  
-  if (additionalPath && additionalPath !== path) {
-    revalidatePath(`/fi${additionalPath}`);
-    revalidatePath(`/en${additionalPath}`);
-    revalidatePath(additionalPath);
-  }
-}
-
-// ============================================
-// PAGE ACTIONS
-// ============================================
-
-/**
- * List all pages
- */
-export async function listPagesAction(locale?: string): Promise<ActionResult> {
-  try {
-    await requireAuth();
-    
-    // If no locale specified, default to Finnish (primary pages)
-    const language = locale || 'fi';
-    
-    // Get all pages from database, filtered by language
-    const { pages } = await listPagesPaginated(
-      { isActive: true, language },
-      { limit: 1000, sortBy: 'createdAt', sortOrder: 'desc' }
-    );
-    
-    // Convert to PageSummary format for listings
-    const pagesSummary = pages.map(pageRecordToPageSummary);
-    
-    return { success: true, data: pagesSummary };
-  } catch (error) {
-    console.error('Error listing pages:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to list pages',
-    };
-  }
-}
-
-/**
- * List all published pages (public - no auth required)
- * Used for generating static paths
- */
-export async function listPublishedPagesAction(): Promise<ActionResult> {
-  try {
-    // Get published Finnish pages
-    const { pages: fiPages } = await listPagesPaginated(
-      { isActive: true, status: 'published', language: 'fi' },
-      { limit: 1000, sortBy: 'createdAt', sortOrder: 'desc' }
-    );
-    
-    // Get published English pages (translations)
-    const { pages: enPages } = await listPagesPaginated(
-      { isActive: true, status: 'published', language: 'en' },
-      { limit: 1000, sortBy: 'createdAt', sortOrder: 'desc' }
-    );
-    
-    // Combine and convert to PageSummary format
-    const pagesSummary = [...fiPages, ...enPages].map(pageRecordToPageSummary);
-    
-    return { success: true, data: pagesSummary };
-  } catch (error) {
-    console.error('Error listing published pages:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to list published pages',
-    };
-  }
-}
-
-/**
- * Get a single page by slug with all translations
- */
-export async function getPageAction(
-  slug: string,
-  locale?: 'en' | 'fi'
-): Promise<ActionResult<PageData | null>> {
-  try {
-    await requireAuth();
-    
-    // Default to Finnish if no locale specified
-    const language = locale || 'fi';
-    
-    // Find primary page (always Finnish)
-    const primaryPage = await findPageBySlugAndLanguage(slug, language);
-    
-    if (!primaryPage) {
-      return { success: true, data: null };
-    }
-    
-    // Get all translations for this page
-    const translations = await findTranslationsForPage(primaryPage.id);
-    
-    // Convert to PageData format with all translations
-    const pageData = pageRecordsToPageData(primaryPage, translations);
-
-    // Temporary debug - remove after verifying
-    console.log('PageData structure:', {
-      slug: pageData.slug,
-      availableLanguages: Object.keys(pageData.translations),
-      fiTitle: pageData.translations.fi?.title,
-      enTitle: pageData.translations.en?.title,
-    });
-    
-    return { success: true, data: pageData };
-  } catch (error) {
-    console.error('Error getting page:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to get page',
-    };
-  }
-}
-
-/**
- * Get a page by slug and language (public - no auth required)
- * Used for public page rendering
- */
-export async function getPublicPageAction(
-  slug: string,
-  language: 'en' | 'fi'
-): Promise<ActionResult<PageData | null>> {
-  try {
-    // Find the requested language version
-    const page = await findPageBySlugAndLanguage(slug, language);
-    
-    if (!page || page.status !== 'published') {
-      return { success: true, data: null };
-    }
-    
-    // Determine the primary page ID
-    // If this page is a translation (has parentId), use that ID
-    // Otherwise, this is the primary page, use its ID
-    const primaryPageId = page.parentId || page.id;
-    
-    // Fetch all translations for this page using the primary ID
-    const translations = await findTranslationsForPage(primaryPageId);
-    
-    // Find the primary page record (it should have parentId === null)
-    // It could be either the current page or one of the translations
-    let primaryPage = page.parentId ? null : page;
-    if (!primaryPage) {
-      // If current page is a translation, find the primary page
-      // Primary page has no parentId and matches the primaryPageId
-      const possiblePrimaries = [page, ...translations];
-      primaryPage = possiblePrimaries.find(p => p.id === primaryPageId && !p.parentId) || null;
-    }
-    
-    if (!primaryPage) {
-      // Fallback to just returning the requested language
-      const pageData = pageRecordToPageData(page, language);
-      return { success: true, data: pageData };
-    }
-    
-    // Convert to PageData format with all translations
-    const pageData = pageRecordsToPageData(primaryPage, translations);
-    
-    return { success: true, data: pageData };
-  } catch (error) {
-    console.error('Error getting public page:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to get page',
-    };
-  }
-}
-
-/**
- * Create a new page
- */
-export async function createPageAction(
-  data: z.infer<typeof createPageSchema>
-): Promise<ActionResult<PageData>> {
-  try {
-    const userId = await requireAuth();
-
-    // Validate input
-    const validated = createPageSchema.parse(data);
-
-    // Check if slug already exists
-    if (await pageSlugExists(validated.slug)) {
-      return {
-        success: false,
-        error: `Page with slug "${validated.slug}" already exists`,
-      };
-    }
-
-    // Check if path already exists
-    if (await pagePathExists(validated.path)) {
-      return {
-        success: false,
-        error: `Page with path "${validated.path}" already exists`,
-      };
-    }
-
-    const now = new Date();
-    
-    // Determine primary locale (prefer fi, fallback to en if fi not provided)
-    const primaryLocale: 'en' | 'fi' = validated.translations.fi ? 'fi' : 'en';
-    const primaryTranslation = validated.translations[primaryLocale];
-    
-    if (!primaryTranslation) {
-      return {
-        success: false,
-        error: 'At least one translation (en or fi) is required',
-      };
-    }
-
-    // Create primary page record
-    const newPage = await createPage({
-      slug: validated.slug,
-      path: validated.path,
-      language: primaryLocale,
-      title: primaryTranslation.title,
+export async function getPageWithContent(pageId: string, language: Language = 'en') {
+  return db.query.pages.findFirst({
+    where: eq(pages.id, pageId),
+    with: {
       content: {
-        type: 'blocks',
-        data: primaryTranslation.blocks,
+        where: eq(pageContent.language, language),
       },
-      metadata: {
-        description: primaryTranslation.description,
-      },
-      status: validated.status,
-      publishedAt: validated.status === 'published' ? now : null,
-      isActive: true,
-      isFeatured: false,
-      showInMenu: false,
-    });
+    },
+  });
+}
 
-    // Create translation for the other locale if provided
-    const otherLocale: 'en' | 'fi' = primaryLocale === 'fi' ? 'en' : 'fi';
-    const otherTranslation = validated.translations[otherLocale];
-    
-    if (otherTranslation) {
-      await createPageTranslation({
-        parentId: newPage.id,
-        language: otherLocale,
-        slug: validated.slug,
-        path: validated.path,
-        title: otherTranslation.title,
-        content: {
-          type: 'blocks',
-          data: otherTranslation.blocks,
-        },
-        metadata: {
-          description: otherTranslation.description,
-        },
-        status: validated.status,
-        publishedAt: validated.status === 'published' ? now : null,
-      });
-    }
+export async function getPageById(pageId: string) {
+  return db.query.pages.findFirst({
+    where: eq(pages.id, pageId),
+  });
+}
 
-    // Convert to PageData format
-    const pageData = pageRecordToPageData(newPage, primaryLocale);
+export async function getPageWithAllContent(pageId: string) {
+  return db.query.pages.findFirst({
+    where: eq(pages.id, pageId),
+    with: {
+      content: true,
+    },
+  });
+}
 
-    revalidatePath('/admin/page-builder');
-    revalidatePath(validated.path);
+export async function getPublishedPage(slug: string, language: Language) {
+  const [page] = await db
+    .select()
+    .from(pages)
+    .where(and(
+      eq(pages.slug, slug),
+      eq(pages.status, 'published')
+    ))
+    .limit(1);
 
-    return {
-      success: true,
-      data: pageData,
-      message: 'Page created successfully',
-    };
-  } catch (error) {
-    console.error('Error creating page:', error);
-    if (error instanceof z.ZodError) {
+  if (!page) return null;
+
+  const [content] = await db
+    .select()
+    .from(pageContent)
+    .where(and(
+      eq(pageContent.pageId, page.id),
+      eq(pageContent.language, language)
+    ))
+    .limit(1);
+
+  if (!content) return null;
+
+  return { page, content: content.content };
+}
+
+export async function getAllPages() {
+  return db
+    .select()
+    .from(pages)
+    .orderBy(desc(pages.updatedAt));
+}
+
+export async function getPublishedPages(language: Language) {
+  const publishedPages = await db
+    .select({
+      slug: pages.slug,
+      title: pages.title,
+      id: pages.id,
+    })
+    .from(pages)
+    .where(eq(pages.status, 'published'));
+
+  // For each page, get the content in the requested language
+  const pagesWithContent = await Promise.all(
+    publishedPages.map(async (page) => {
+      const [content] = await db
+        .select({ title: pageContent.id })
+        .from(pageContent)
+        .where(and(
+          eq(pageContent.pageId, page.id),
+          eq(pageContent.language, language)
+        ))
+        .limit(1);
+
+      // Only include pages that have content in the requested language
+      if (!content) return null;
+
       return {
-        success: false,
-        error: 'Validation failed',
-        errors: error.flatten().fieldErrors as Record<string, string[]>,
+        slug: page.slug,
+        title: page.title,
+        path: `/${page.slug}`,
       };
-    }
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to create page',
-    };
+    })
+  );
+
+  // Filter out null values (pages without content in the requested language)
+  return pagesWithContent.filter((page): page is NonNullable<typeof page> => page !== null);
+}
+
+export async function getPageLanguages(pageId: string): Promise<Language[]> {
+  const contents = await db
+    .select({ language: pageContent.language })
+    .from(pageContent)
+    .where(eq(pageContent.pageId, pageId));
+
+  return contents.map(c => c.language);
+}
+
+export async function slugExists(slug: string, excludePageId?: string) {
+  const [existing] = await db
+    .select({ id: pages.id })
+    .from(pages)
+    .where(eq(pages.slug, slug))
+    .limit(1);
+
+  if (!existing) return false;
+  if (excludePageId && existing.id === excludePageId) return false;
+
+  return true;
+}
+
+// ============================================================================
+// MUTATIONS
+// ============================================================================
+
+/**
+ * Create page with default content for all languages
+ */
+export async function createPage(slug: string, title: string) {
+  if (await slugExists(slug)) {
+    throw new Error('Slug already exists');
   }
+
+  const [page] = await db
+    .insert(pages)
+    .values({
+      slug,
+      title,
+      status: 'draft',
+    })
+    .returning();
+
+  // Create empty content for all languages
+  const defaultContent = {} as SerializedNodes;
+  
+  await Promise.all(
+    ALL_LANGUAGES.map(language =>
+      db.insert(pageContent).values({
+        pageId: page.id,
+        language,
+        content: defaultContent,
+      })
+    )
+  );
+
+  revalidatePath('/admin/pages');
+  return page;
 }
 
 /**
- * Update an existing page
- * Updates both primary page and translations if provided
+ * Update page metadata (title, slug, status)
  */
-export async function updatePageAction(
-  slug: string,
-  data: Partial<z.infer<typeof updatePageSchema>>,
-  language: 'en' | 'fi' = 'fi'
-): Promise<ActionResult<PageData>> {
+export async function updatePage(
+  pageId: string,
+  data: { title?: string; slug?: string; status?: PageStatus }
+) {
+  if (data.slug && await slugExists(data.slug, pageId)) {
+    throw new Error('Slug already exists');
+  }
+
+  const [updated] = await db
+    .update(pages)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(pages.id, pageId))
+    .returning();
+
+  revalidatePath('/admin/pages');
+  revalidatePath(`/editor/${pageId}`);
+  return updated;
+}
+
+/**
+ * Update page content with structure-only sync
+ * 
+ * CRITICAL: By default, syncs structure while preserving text content per language
+ * This prevents overwriting translations when editing in one language
+ */
+export async function updatePageContent(
+  pageId: string,
+  language: Language,
+  content: SerializedNodes,
+  options: { 
+    syncAcrossLanguages?: boolean;
+    syncStrategy?: SyncStrategy;
+  } = {}
+) {
+  // DEFAULT: Structure-only sync to preserve translations
+  const { 
+    syncAcrossLanguages = true, 
+    syncStrategy = 'structure-only'  // CRITICAL: Default to structure-only
+  } = options;
+
   try {
-    await requireAuth();
+    console.log('[updatePageContent] Starting update:', {
+      pageId,
+      language,
+      syncAcrossLanguages,
+      syncStrategy,
+      contentKeys: Object.keys(content || {}),
+      hasRootNode: 'ROOT' in (content || {}),
+    });
 
-    // Find the page being edited in the current language
-    const editingPage = await findPageBySlugAndLanguage(slug, language);
-    if (!editingPage) {
-      return { success: false, error: `Page with slug "${slug}" not found` };
+    // Validate content structure
+    const validation = validateContentStructure(content);
+    if (!validation.valid) {
+      throw new Error(`Invalid content: ${validation.errors.join(', ')}`);
     }
 
-    // Find primary page (Finnish) - needed for translations lookup
-    const primaryPage = editingPage.isTranslation && editingPage.parentId
-      ? await findPageBySlugAndLanguage(slug, 'fi')
-      : editingPage;
-    
-    if (!primaryPage) {
-      return { success: false, error: 'Primary page not found' };
-    }
+    // Save to current language
+    const result = await upsertPageContent(pageId, language, content);
 
-    const translations = await findTranslationsForPage(primaryPage.id);
-
-    // Build common update fields
-    const commonFields: Record<string, unknown> = {};
-    if (data.path) commonFields.path = data.path;
-    if (data.status) {
-      commonFields.status = data.status;
-      if (data.status === 'published') commonFields.publishedAt = new Date();
-    }
-
-    // Update the page being edited
-    const translationData = data.translations?.[language];
-    if (translationData) {
-      const updateData = {
-        ...commonFields,
-        ...(translationData.title && { title: translationData.title }),
-        ...(translationData.description && { 
-          metadata: { ...editingPage.metadata, description: translationData.description }
-        }),
-        ...(translationData.blocks && { 
-          content: { type: 'blocks' as const, data: translationData.blocks }
-        }),
-      };
-      await updatePage(editingPage.id, updateData);
-    } else if (Object.keys(commonFields).length > 0) {
-      await updatePage(editingPage.id, commonFields);
-    }
-
-    // If editing Finnish and English translation data provided, update English too
-    if (language === 'fi' && data.translations?.en) {
-      const enPage = translations.find(t => t.language === 'en');
-      const en = data.translations.en;
+    // Sync to other languages with structure-only strategy
+    if (syncAcrossLanguages) {
+      const otherLanguages = ALL_LANGUAGES.filter(lang => lang !== language);
       
-      if (enPage) {
-        await updatePage(enPage.id, {
-          ...commonFields,
-          ...(en.title && { title: en.title }),
-          ...(en.description && { metadata: { description: en.description } }),
-          ...(en.blocks && { content: { type: 'blocks', data: en.blocks } }),
-        });
-      } else if (en.title || en.blocks) {
-        await createPageTranslation({
-          parentId: primaryPage.id,
-          language: 'en',
-          slug: primaryPage.slug,
-          path: data.path || primaryPage.path,
-          title: en.title || primaryPage.title,
-          content: en.blocks ? { type: 'blocks', data: en.blocks } : primaryPage.content,
-          metadata: en.description ? { description: en.description } : primaryPage.metadata,
-          status: data.status || primaryPage.status,
-          publishedAt: data.status === 'published' ? new Date() : null,
-        });
-      }
-    }
+      logSyncOperation(
+        pageId,
+        language,
+        otherLanguages,
+        Object.keys(content).length,
+        syncStrategy === 'structure-only'
+      );
 
-    // Fetch updated data
-    const updated = await findPageBySlugAndLanguage(slug, 'fi');
-    if (!updated) {
-      return { success: false, error: 'Failed to retrieve updated page' };
+      await syncContentToLanguages(pageId, content, otherLanguages, syncStrategy);
     }
-
-    const updatedTranslations = await findTranslationsForPage(updated.id);
-    const pageData = pageRecordsToPageData(updated, updatedTranslations);
 
     // Revalidate paths
-    revalidatePath('/admin/page-builder');
-    revalidatePath(`/fi${editingPage.path}`);
-    revalidatePath(`/en${editingPage.path}`);
-    revalidatePath(editingPage.path);
-    if (data.path && data.path !== editingPage.path) {
-      revalidatePath(`/fi${data.path}`);
-      revalidatePath(`/en${data.path}`);
-      revalidatePath(data.path);
-    }
+    await revalidatePagePaths(pageId);
 
-    return { success: true, data: pageData, message: 'Page updated successfully' };
+    console.log('[updatePageContent] Update completed successfully');
+    return result;
   } catch (error) {
-    console.error('Error updating page:', error);
-    if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        error: 'Validation failed',
-        errors: error.flatten().fieldErrors as Record<string, string[]>,
-      };
-    }
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to update page',
-    };
+    console.error('[updatePageContent] Error:', {
+      pageId,
+      language,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    throw error;
   }
 }
 
 /**
- * Delete a page
+ * Sync content to multiple languages
+ * 
+ * CRITICAL: Uses structure-only sync by default to preserve translations
  */
-export async function deletePageAction(
-  slug: string,
-  language: 'en' | 'fi' = 'fi' // Add language parameter
-): Promise<ActionResult<boolean>> {
+async function syncContentToLanguages(
+  pageId: string,
+  sourceContent: SerializedNodes,
+  targetLanguages: Language[],
+  syncStrategy: SyncStrategy
+) {
   try {
-    await requireAuth();
+    console.log('[syncContentToLanguages] Starting sync:', {
+      pageId,
+      targetLanguages,
+      syncStrategy,
+      nodeCount: Object.keys(sourceContent).length,
+    });
 
-    const page = await findPageBySlugAndLanguage(slug, language);
-    if (!page) {
-      return {
-        success: false,
-        error: `Page with slug "${slug}" and language "${language}" not found`,
-      };
+    // Get existing content for each target language
+    const existingContents = await Promise.all(
+      targetLanguages.map(async (lang) => {
+        const [existing] = await db
+          .select()
+          .from(pageContent)
+          .where(and(
+            eq(pageContent.pageId, pageId),
+            eq(pageContent.language, lang)
+          ))
+          .limit(1);
+        
+        return { 
+          language: lang, 
+          content: existing?.content || null 
+        };
+      })
+    );
+
+    // Check if structural changes exist
+    const hasChanges = existingContents.some(({ content: existingContent }) => {
+      if (!existingContent) return true;
+      return hasStructuralChanges(sourceContent, existingContent as SerializedNodes);
+    });
+
+    if (!hasChanges) {
+      console.log('[syncContentToLanguages] No structural changes detected, skipping sync');
+      return;
     }
 
-    let deleted: boolean;
+    // Prepare and upsert content for each language
+    const updates = existingContents.map(({ language, content: existingContent }) => {
+      // CRITICAL: Preserve text content when syncing structure
+      const preparedContent = prepareContentForSync(
+        sourceContent,
+        existingContent as SerializedNodes | null,
+        { 
+          strategy: syncStrategy, 
+          preserveTextContent: syncStrategy === 'structure-only' 
+        }
+      );
+
+      console.log(`[syncContentToLanguages] Syncing to ${language}:`, {
+        sourceNodes: Object.keys(sourceContent).length,
+        existingNodes: existingContent ? Object.keys(existingContent).length : 0,
+        resultNodes: Object.keys(preparedContent).length,
+      });
+
+      return upsertPageContent(pageId, language, preparedContent);
+    });
+
+    await Promise.all(updates);
+
+    console.log('[syncContentToLanguages] Sync completed for languages:', targetLanguages);
+  } catch (error) {
+    console.error('[syncContentToLanguages] Sync failed:', error);
+    // Don't throw - we want the primary save to succeed even if sync fails
+  }
+}
+
+/**
+ * Upsert page content (internal helper)
+ */
+async function upsertPageContent(
+  pageId: string,
+  language: Language,
+  content: SerializedNodes
+) {
+  const [existing] = await db
+    .select()
+    .from(pageContent)
+    .where(and(
+      eq(pageContent.pageId, pageId),
+      eq(pageContent.language, language)
+    ))
+    .limit(1);
+
+  if (existing) {
+    const [updated] = await db
+      .update(pageContent)
+      .set({ content, updatedAt: new Date() })
+      .where(and(
+        eq(pageContent.pageId, pageId),
+        eq(pageContent.language, language)
+      ))
+      .returning();
+
+    if (!updated) {
+      throw new Error(`Failed to update content for ${language}`);
+    }
+
+    console.log(`[upsertPageContent] Updated ${language}:`, {
+      id: updated.id,
+      nodeCount: Object.keys(content).length,
+    });
+    return updated;
+  }
+
+  const [created] = await db
+    .insert(pageContent)
+    .values({
+      pageId,
+      language,
+      content,
+    })
+    .returning();
+
+  if (!created) {
+    throw new Error(`Failed to create content for ${language}`);
+  }
+
+  console.log(`[upsertPageContent] Created ${language}:`, {
+    id: created.id,
+    nodeCount: Object.keys(content).length,
+  });
+  return created;
+}
+
+/**
+ * Revalidate all paths for a page
+ */
+async function revalidatePagePaths(pageId: string) {
+  try {
+    revalidatePath(`/editor/${pageId}`);
     
-    if (page.isTranslation && page.parentId) {
-      // Delete only the translation
-      const { deletePageTranslation } = await import('@/src/lib/db/queries/pages.queries');
-      deleted = await deletePageTranslation(page.id);
+    const [page] = await db
+      .select({ slug: pages.slug })
+      .from(pages)
+      .where(eq(pages.id, pageId))
+      .limit(1);
+    
+    if (page) {
+      ALL_LANGUAGES.forEach(lang => {
+        if (page.slug === '/') {
+          revalidatePath(`/${lang}`);
+        } else {
+          revalidatePath(`/${lang}/${page.slug}`);
+        }
+      });
+      
+      console.log('[revalidatePagePaths] Paths revalidated for slug:', page.slug);
+    }
+  } catch (error) {
+    console.warn('[revalidatePagePaths] Revalidation failed:', error);
+  }
+}
+
+/**
+ * Publish page
+ */
+export async function publishPage(pageId: string) {
+  const [updated] = await db
+    .update(pages)
+    .set({
+      status: 'published',
+      updatedAt: new Date()
+    })
+    .where(eq(pages.id, pageId))
+    .returning();
+
+  ALL_LANGUAGES.forEach(lang => {
+    if (updated.slug === '/') {
+      revalidatePath(`/${lang}`);
     } else {
-      // Delete primary page and all its translations
-      deleted = await deletePage(page.id);
+      revalidatePath(`/${lang}/${updated.slug}`);
     }
-
-    if (!deleted) {
-      return {
-        success: false,
-        error: 'Failed to delete page',
-      };
-    }
-
-    revalidatePath('/admin/page-builder');
-    revalidatePath(page.path);
-
-    return {
-      success: true,
-      data: true,
-      message: 'Page deleted successfully',
-    };
-  } catch (error) {
-    console.error('Error deleting page:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to delete page',
-    };
-  }
+  });
+  
+  revalidatePath('/');
+  revalidatePath(`/editor/${pageId}`);
+  
+  return updated;
 }
 
 /**
- * Publish a page (change status to published)
+ * Unpublish page
  */
-export async function publishPageAction(
-  slug: string,
-  language: 'en' | 'fi' = 'fi'
-): Promise<ActionResult<PageData>> {
-  return updatePageAction(slug, { status: 'published' }, language);
-}
-
-export async function unpublishPageAction(
-  slug: string,
-  language: 'en' | 'fi' = 'fi'
-): Promise<ActionResult<PageData>> {
-  return updatePageAction(slug, { status: 'draft' }, language);
-}
-
-/**
- * Duplicate a page
- */
-export async function duplicatePageAction(slug: string): Promise<ActionResult<PageData>> {
-  try {
-    const userId = await requireAuth();
-
-    const originalPage = await findPageBySlugAndLanguage(slug, 'fi');
-    if (!originalPage) {
-      return {
-        success: false,
-        error: `Page with slug "${slug}" not found`,
-      };
-    }
-
-    // Generate new slug
-    let newSlug = `${slug}-copy`;
-    let counter = 1;
-    while (await pageSlugExists(newSlug)) {
-      newSlug = `${slug}-copy-${counter}`;
-      counter++;
-    }
-
-    const newPath = `${originalPage.path}-copy`;
-    const now = new Date();
-
-    // Get original blocks
-    const originalBlocks = extractBlocks(originalPage.content);
-    
-    // Update title to indicate it's a copy
-    const copyTitle = originalPage.language === 'fi' 
-      ? `${originalPage.title} (Kopio)`
-      : `${originalPage.title} (Copy)`;
-
-    // Create new page
-    const newPage = await createPage({
-      slug: newSlug,
-      path: newPath,
-      language: originalPage.language,
-      title: copyTitle,
-      content: {
-        type: 'blocks',
-        data: originalBlocks,
-      },
-      metadata: originalPage.metadata,
+export async function unpublishPage(pageId: string) {
+  const [updated] = await db
+    .update(pages)
+    .set({
       status: 'draft',
-      isActive: true,
-      isFeatured: false,
-      showInMenu: false,
-    });
+      updatedAt: new Date()
+    })
+    .where(eq(pages.id, pageId))
+    .returning();
 
-    // Convert to PageData format
-    const pageData = pageRecordToPageData(newPage, (newPage.language as 'en' | 'fi') || 'en');
-
-    revalidatePath('/admin/page-builder');
-
-    return {
-      success: true,
-      data: pageData,
-      message: 'Page duplicated successfully',
-    };
-  } catch (error) {
-    console.error('Error duplicating page:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to duplicate page',
-    };
-  }
-}
-
-// ============================================
-// BLOCK TRANSLATION HELPERS
-// ============================================
-
-/**
- * Extract all translatable string values from a nested object
- * Returns array of { path, value } for each string found
- */
-function extractStrings(
-  obj: Record<string, unknown>,
-  prefix = ''
-): { path: string; value: string }[] {
-  const results: { path: string; value: string }[] = [];
-
-  for (const [key, value] of Object.entries(obj)) {
-    const path = prefix ? `${prefix}.${key}` : key;
-
-    if (typeof value === 'string' && value.trim() !== '') {
-      results.push({ path, value });
-    } else if (Array.isArray(value)) {
-      value.forEach((item, index) => {
-        if (typeof item === 'object' && item !== null) {
-          results.push(...extractStrings(item as Record<string, unknown>, `${path}[${index}]`));
-        }
-      });
-    } else if (typeof value === 'object' && value !== null) {
-      results.push(...extractStrings(value as Record<string, unknown>, path));
-    }
-  }
-
-  return results;
-}
-
-/**
- * Set a value at a path in a nested object (supports array notation)
- */
-function setAtPath(obj: Record<string, unknown>, path: string, value: unknown): void {
-  const parts = path.split(/\.(?![^[]*])/).map(part => {
-    const arrayMatch = part.match(/^(.+)\[(\d+)\]$/);
-    if (arrayMatch) {
-      return [arrayMatch[1], parseInt(arrayMatch[2], 10)] as const;
-    }
-    return part;
-  }).flat();
-
-  let current: unknown = obj;
-  for (let i = 0; i < parts.length - 1; i++) {
-    const part = parts[i];
-    if (typeof part === 'number') {
-      current = (current as unknown[])[part];
+  ALL_LANGUAGES.forEach(lang => {
+    if (updated.slug === '/') {
+      revalidatePath(`/${lang}`);
     } else {
-      const currentObj = current as Record<string, unknown>;
-      if (!currentObj[part]) {
-        currentObj[part] = typeof parts[i + 1] === 'number' ? [] : {};
-      }
-      current = currentObj[part];
+      revalidatePath(`/${lang}/${updated.slug}`);
     }
-  }
-
-  const lastPart = parts[parts.length - 1];
-  if (typeof lastPart === 'number') {
-    (current as unknown[])[lastPart] = value;
-  } else {
-    (current as Record<string, unknown>)[lastPart] = value;
-  }
+  });
+  
+  revalidatePath('/');
+  revalidatePath(`/editor/${pageId}`);
+  
+  return updated;
 }
 
 /**
- * Translate locale-nested block content using DeepL
+ * Delete page (cascade deletes all pageContent)
  */
-async function translateBlockContent(
-  blockContent: Record<string, unknown>,
-  sourceLang: SupportedLocale,
-  targetLocales: SupportedLocale[]
-): Promise<{ content: Record<string, unknown>; error: string | null }> {
-  // Check if this is a locale-nested content structure
-  const contentWrapper = blockContent.content as Record<string, unknown> | undefined;
-  if (!contentWrapper || typeof contentWrapper !== 'object') {
-    return { content: blockContent, error: 'Block does not have locale-nested content' };
+export async function deletePage(pageId: string) {
+  await db
+    .delete(pages)
+    .where(eq(pages.id, pageId));
+
+  revalidatePath('/admin/pages');
+  revalidatePath('/');
+}
+
+/**
+ * Delete specific language content
+ */
+export async function deletePageLanguage(pageId: string, language: Language) {
+  const languages = await getPageLanguages(pageId);
+  
+  if (languages.length <= 1) {
+    throw new Error('Cannot delete the last language');
   }
 
-  const sourceContent = contentWrapper[sourceLang] as Record<string, unknown> | undefined;
+  await db
+    .delete(pageContent)
+    .where(and(
+      eq(pageContent.pageId, pageId),
+      eq(pageContent.language, language)
+    ));
+
+  revalidatePath(`/editor/${pageId}`);
+}
+
+/**
+ * Manually sync content from one language to another
+ * Uses structure-only sync to preserve target language text
+ */
+export async function syncLanguageContent(
+  pageId: string,
+  fromLanguage: Language,
+  toLanguage: Language,
+  options: { preserveText?: boolean } = {}
+) {
+  const { preserveText = true } = options;
+
+  const [sourceContent] = await db
+    .select()
+    .from(pageContent)
+    .where(and(
+      eq(pageContent.pageId, pageId),
+      eq(pageContent.language, fromLanguage)
+    ))
+    .limit(1);
+
   if (!sourceContent) {
-    return { content: blockContent, error: `No source content found for ${sourceLang}` };
+    throw new Error(`Source content not found for language: ${fromLanguage}`);
   }
 
-  // Extract all strings from source content
-  const strings = extractStrings(sourceContent);
-  if (strings.length === 0) {
-    return { content: blockContent, error: null };
-  }
+  const [targetContent] = await db
+    .select()
+    .from(pageContent)
+    .where(and(
+      eq(pageContent.pageId, pageId),
+      eq(pageContent.language, toLanguage)
+    ))
+    .limit(1);
 
-  const errors: string[] = [];
-  const updatedContent = JSON.parse(JSON.stringify(blockContent)) as Record<string, unknown>;
-
-  // Translate to each target locale
-  for (const targetLocale of targetLocales) {
-    if (targetLocale === sourceLang) continue;
-
-    const { texts, error } = await translateBatch(
-      strings.map(s => s.value),
-      sourceLang,
-      targetLocale
-    );
-
-    if (error) {
-      errors.push(`${targetLocale}: ${error}`);
-      continue;
+  // Prepare content with appropriate strategy
+  const preparedContent = prepareContentForSync(
+    sourceContent.content as SerializedNodes,
+    (targetContent?.content as SerializedNodes) || null,
+    {
+      strategy: preserveText ? 'structure-only' : 'full-override',
+      preserveTextContent: preserveText,
     }
+  );
 
-    // Create translated content structure
-    const translatedContent = JSON.parse(JSON.stringify(sourceContent)) as Record<string, unknown>;
-    strings.forEach((s, index) => {
-      if (texts[index]) {
-        setAtPath(translatedContent, s.path, texts[index]);
-      }
-    });
+  await upsertPageContent(pageId, toLanguage, preparedContent);
+  await revalidatePagePaths(pageId);
 
-    // Update the content wrapper with translated content
-    (updatedContent.content as Record<string, unknown>)[targetLocale] = translatedContent;
-  }
-
-  return {
-    content: updatedContent,
-    error: errors.length > 0 ? errors.join('; ') : null,
-  };
-}
-
-/**
- * Translate items array in blocks like features-section, values-section
- * These have items with individual locale-nested content
- */
-async function translateBlockItems(
-  blockContent: Record<string, unknown>,
-  sourceLang: SupportedLocale,
-  targetLocales: SupportedLocale[]
-): Promise<{ content: Record<string, unknown>; error: string | null }> {
-  const items = blockContent.items as Array<Record<string, unknown>> | undefined;
-  if (!items || !Array.isArray(items)) {
-    return { content: blockContent, error: null };
-  }
-
-  const errors: string[] = [];
-  const updatedContent = JSON.parse(JSON.stringify(blockContent)) as Record<string, unknown>;
-  const updatedItems = updatedContent.items as Array<Record<string, unknown>>;
-
-  for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    const itemContent = item.content as Record<string, unknown> | undefined;
-    if (!itemContent) continue;
-
-    const sourceItemContent = itemContent[sourceLang] as Record<string, unknown> | undefined;
-    if (!sourceItemContent) continue;
-
-    const strings = extractStrings(sourceItemContent);
-    if (strings.length === 0) continue;
-
-    for (const targetLocale of targetLocales) {
-      if (targetLocale === sourceLang) continue;
-
-      const { texts, error } = await translateBatch(
-        strings.map(s => s.value),
-        sourceLang,
-        targetLocale
-      );
-
-      if (error) {
-        errors.push(`item[${i}] ${targetLocale}: ${error}`);
-        continue;
-      }
-
-      const translatedItemContent = JSON.parse(JSON.stringify(sourceItemContent)) as Record<string, unknown>;
-      strings.forEach((s, index) => {
-        if (texts[index]) {
-          setAtPath(translatedItemContent, s.path, texts[index]);
-        }
-      });
-
-      (updatedItems[i].content as Record<string, unknown>)[targetLocale] = translatedItemContent;
-    }
-  }
-
-  return {
-    content: updatedContent,
-    error: errors.length > 0 ? errors.join('; ') : null,
-  };
-}
-
-// ============================================
-// BLOCK TRANSLATION ACTIONS
-// ============================================
-
-/**
- * Trigger auto-translation for a specific block's content using DeepL
- * Translates locale-nested content and updates meta tracking
- */
-export async function triggerBlockTranslationAction(
-  slug: string,
-  blockId: string,
-  targetLocales: ('en' | 'fi')[],
-  sourceLang: 'en' | 'fi' = 'en'
-): Promise<ActionResult<PageData>> {
-  try {
-    const userId = await requireAuth();
-
-    const page = await findPageBySlugAndLanguage(slug, sourceLang);
-    if (!page) {
-      return { success: false, error: `Page "${slug}" not found` };
-    }
-
-    // Get blocks from content
-    const blocks = extractBlocks(page.content);
-    const blockIndex = blocks.findIndex(b => b.id === blockId);
-    
-    if (blockIndex === -1) {
-      return { success: false, error: `Block "${blockId}" not found` };
-    }
-
-    const block = blocks[blockIndex];
-    const blockContent = block.content as unknown as Record<string, unknown>;
-
-    // Translate main content (for blocks like page-hero, mission-section, cta-section)
-    const { content: translatedContent, error: contentError } = await translateBlockContent(
-      blockContent,
-      sourceLang,
-      targetLocales
-    );
-
-    // Also translate items if present (for blocks like features-section, values-section, engagement-section)
-    const { content: finalContent, error: itemsError } = await translateBlockItems(
-      translatedContent,
-      sourceLang,
-      targetLocales
-    );
-
-    // Translate header if present (for section blocks)
-    let headerError: string | null = null;
-    if ((finalContent as Record<string, unknown>).header) {
-      const headerWrapper = { content: (finalContent as Record<string, unknown>).header };
-      const { content: translatedHeader, error } = await translateBlockContent(
-        headerWrapper,
-        sourceLang,
-        targetLocales
-      );
-      if (!error) {
-        (finalContent as Record<string, unknown>).header = translatedHeader.content;
-      }
-      headerError = error;
-    }
-
-    const now = new Date().toISOString();
-    const existingAutoTranslated = block.meta?.autoTranslated || [];
-    const newAutoTranslated = Array.from(new Set([...existingAutoTranslated, ...targetLocales]));
-
-    // Update the block with translated content and meta
-    blocks[blockIndex] = {
-      ...block,
-      content: finalContent as unknown as PageBlock['content'],
-      meta: {
-        defaultLang: sourceLang,
-        autoTranslated: newAutoTranslated,
-        manuallyReviewed: block.meta?.manuallyReviewed,
-        lastTranslated: now,
-        lastModified: block.meta?.lastModified,
-      },
-    };
-
-    // Update page in database
-    const updatedPage = await updatePage(page.id, {
-      content: {
-        type: 'blocks',
-        data: blocks,
-      },
-    });
-
-    if (!updatedPage) {
-      return { success: false, error: 'Failed to update page' };
-    }
-
-    // Convert to PageData format
-    const pageData = pageRecordToPageData(updatedPage, (updatedPage.language as 'en' | 'fi') || 'en');
-
-    revalidatePath('/admin/page-builder');
-    revalidatePath(page.path);
-
-    // Collect any translation errors for the response message
-    const allErrors = [contentError, itemsError, headerError].filter(Boolean);
-    const message = allErrors.length > 0
-      ? `Translated to ${targetLocales.join(', ')} with warnings: ${allErrors.join('; ')}`
-      : `Successfully translated to ${targetLocales.join(', ')}`;
-
-    return {
-      success: true,
-      data: pageData,
-      message,
-    };
-  } catch (error) {
-    console.error('Error triggering translation:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to trigger translation',
-    };
-  }
-}
-
-/**
- * Mark a block translation as manually reviewed
- */
-export async function markBlockAsReviewedAction(
-  slug: string,
-  blockId: string,
-  locale: 'en' | 'fi'
-): Promise<ActionResult<PageData>> {
-  try {
-    const userId = await requireAuth();
-
-    const page = await findPageBySlugAndLanguage(slug, locale);
-    if (!page) {
-      return { success: false, error: `Page "${slug}" not found` };
-    }
-
-    // Get blocks from content
-    const blocks = extractBlocks(page.content);
-    const blockIndex = blocks.findIndex(b => b.id === blockId);
-    
-    if (blockIndex === -1) {
-      return { success: false, error: `Block "${blockId}" not found` };
-    }
-
-    const block = blocks[blockIndex];
-    const existingReviewed = block.meta?.manuallyReviewed || [];
-
-    if (!existingReviewed.includes(locale)) {
-      blocks[blockIndex] = {
-        ...block,
-        meta: {
-          defaultLang: block.meta?.defaultLang || 'en',
-          manuallyReviewed: [...existingReviewed, locale],
-          // Remove from autoTranslated if present (human-reviewed takes precedence)
-          autoTranslated: (block.meta?.autoTranslated || []).filter(l => l !== locale),
-          lastTranslated: block.meta?.lastTranslated,
-          lastModified: block.meta?.lastModified,
-        },
-      };
-
-      // Update page in database
-      const updatedPage = await updatePage(page.id, {
-        content: {
-          type: 'blocks',
-          data: blocks,
-        },
-      });
-
-      if (!updatedPage) {
-        return { success: false, error: 'Failed to update page' };
-      }
-
-      // Convert to PageData format
-      const pageData = pageRecordToPageData(updatedPage, (updatedPage.language as 'en' | 'fi') || 'en');
-
-      revalidatePath('/admin/page-builder');
-      revalidatePath(page.path);
-
-      return {
-        success: true,
-        data: pageData,
-        message: `Block marked as reviewed for ${locale}`,
-      };
-    }
-
-    // If already reviewed, just return the page
-    const pageData = pageRecordToPageData(page, (page.language as 'en' | 'fi') || 'en');
-    return {
-      success: true,
-      data: pageData,
-      message: `Block already marked as reviewed for ${locale}`,
-    };
-  } catch (error) {
-    console.error('Error marking block as reviewed:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to mark as reviewed',
-    };
-  }
+  console.log(`[syncLanguageContent] Synced ${fromLanguage} → ${toLanguage}`, {
+    preserveText,
+  });
 }

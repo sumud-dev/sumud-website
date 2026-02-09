@@ -1,5 +1,12 @@
-import { PageBuilderEditor } from "@/src/components/admin/page-builder";
+import { redirect } from 'next/navigation';
 
-export default function NewPagePage() {
-  return <PageBuilderEditor isNew />;
+interface NewPagePageProps {
+  params: Promise<{ locale: string }>;
+}
+
+export default async function NewPagePage({ params }: NewPagePageProps) {
+  const { locale } = await params;
+  
+  // Redirect to page builder list - pages are now created via dialog
+  redirect(`/${locale}/admin/page-builder`);
 }

@@ -32,7 +32,27 @@ export default function LanguageSwitcher({ variant = "default" }: LanguageSwitch
 
   const handleLanguageChange = (newLocale: string) => {
     startTransition(() => {
-      router.replace(pathname, { locale: newLocale as "en" | "fi" });
+      // Check if we're on a campaign page (both public and admin)
+      const campaignPageMatch = pathname.match(/^\/campaigns\/([^\/]+)$/);
+      const adminCampaignPageMatch = pathname.match(/^\/admin\/campaigns\/([^\/]+)(?:\/edit)?$/);
+      
+      if (campaignPageMatch || adminCampaignPageMatch) {
+        const currentSlug = campaignPageMatch ? campaignPageMatch[1] : adminCampaignPageMatch![1];
+        
+        // Remove current locale suffix from slug (e.g., "bds-fi" -> "bds")
+        const baseSlug = currentSlug.replace(/-(?:en|fi)$/, '');
+        
+        // Create new slug with new locale suffix (e.g., "bds" + "en" -> "bds-en")
+        const newSlug = `${baseSlug}-${newLocale}`;
+        
+        // Reconstruct the new path with the updated slug
+        let newPath = pathname.replace(currentSlug, newSlug);
+        
+        router.replace(newPath, { locale: newLocale as "en" | "fi" });
+      } else {
+        // For non-campaign pages, just change the locale normally
+        router.replace(pathname, { locale: newLocale as "en" | "fi" });
+      }
     });
   };
 

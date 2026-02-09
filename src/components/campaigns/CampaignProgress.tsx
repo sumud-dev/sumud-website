@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
@@ -32,6 +33,7 @@ interface ProgressMetric {
 }
 
 export function CampaignProgress({ campaign }: CampaignProgressProps) {
+  const locale = useLocale();
   const progressData =
     (campaign.stats as Record<string, any>) || {};
   const targetData = (campaign.stats as Record<string, any>) || {};
@@ -233,8 +235,8 @@ export function CampaignProgress({ campaign }: CampaignProgressProps) {
                 style={{ backgroundColor: "#E5E7EB" }}
               />
               <div className="flex justify-between text-xs text-gray-500">
-                <span>{startDate.toLocaleDateString()}</span>
-                <span>{endDate.toLocaleDateString()}</span>
+                <span>{startDate.toLocaleDateString(locale === 'fi' ? 'fi-FI' : 'en-US')}</span>
+                <span>{endDate.toLocaleDateString(locale === 'fi' ? 'fi-FI' : 'en-US')}</span>
               </div>
             </div>
           )}
@@ -356,7 +358,7 @@ export function CampaignProgress({ campaign }: CampaignProgressProps) {
                     </p>
                     {milestone.date && (
                       <p className="text-xs text-green-500">
-                        {new Date(milestone.date).toLocaleDateString()}
+                        {new Date(milestone.date).toLocaleDateString(locale === 'fi' ? 'fi-FI' : 'en-US')}
                       </p>
                     )}
                   </div>

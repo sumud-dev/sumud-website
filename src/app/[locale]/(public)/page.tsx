@@ -1,6 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
-import { getPublicPageAction } from "@/src/actions/pages.actions";
-import { PageRenderer } from "@/src/components/blocks";
+import { getPublishedPage } from "@/src/actions/pages.actions";
+import { PageRenderer } from '@/src/components/renderer/PageRenderer';
 import type { PageLocale } from "@/src/lib/types/page";
 
 interface HomePageProps {
@@ -14,20 +14,16 @@ export async function generateMetadata({ params }: HomePageProps) {
   const { locale } = await params;
 
   try {
-    const result = await getPublicPageAction("home", locale as 'en' | 'fi');
+    const data = await getPublishedPage("home", locale as 'en' | 'fi');
     
-    if (!result.success || !result.data) {
+    if (!data) {
       return {
         title: "Home - Sumud",
       };
     }
 
-    const page = result.data;
-    const translation = page.translations[locale as PageLocale] || page.translations.en;
-
     return {
-      title: translation?.title || "Home - Sumud",
-      description: translation?.description || "",
+      title: data.page.title || "Home - Sumud",
     };
   } catch {
     return {
@@ -43,20 +39,17 @@ export default async function Home({ params }: HomePageProps) {
   setRequestLocale(locale);
 
   // Read homepage content from database
-  const result = await getPublicPageAction("home", locale as 'en' | 'fi');
+  const data = await getPublishedPage("/", locale as 'en' | 'fi');
 
-  // Get translation for current locale, fallback to English
-  const page = result.success ? result.data : null;
-  const translation = page?.translations[locale as PageLocale] || page?.translations.en;
-
-  // If no page or translation, render empty page
-  if (!page || !translation) {
+  // If no page, render empty page
+  if (!data) {
     return <main />;
   }
 
   return (
     <main>
-      <PageRenderer blocks={translation.blocks || []} locale={locale} />
+      <h1 className="sr-only">{data.page.title}</h1>
+      <PageRenderer content={data.content as any} />
     </main>
   );
 }

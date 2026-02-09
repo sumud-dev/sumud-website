@@ -106,7 +106,7 @@ interface Campaign {
   id: string;
   slug: string;
   title: string | null;
-  description: any | null; // JSONB field with type/data structure
+  description: string | null; // HTML string from TipTap editor
   shortDescription?: string | null;
   status: CampaignStatus;
   campaignType: string | null;
@@ -161,27 +161,52 @@ const CAMPAIGN_TYPE_KEYS = [
 function renderContent(content: any): string {
   if (!content) return '';
   
+  let text = '';
+  
   // If content is a structured object with data property
   if (typeof content === 'object' && content !== null && 'data' in content) {
     // Handle different content types
     if (content.type === 'markdown' || content.type === 'html') {
-      return String(content.data || '');
+      text = String(content.data || '');
     }
     // For blocks or other types, try to extract text
-    if (content.type === 'blocks' && Array.isArray(content.data)) {
-      return content.data.map((block: any) => block.text || '').join('\n');
+    else if (content.type === 'blocks' && Array.isArray(content.data)) {
+      text = content.data.map((block: any) => block.text || '').join('\n');
     }
     // Fallback: try to stringify data
-    return typeof content.data === 'string' ? content.data : JSON.stringify(content.data, null, 2);
+    else {
+      text = typeof content.data === 'string' ? content.data : JSON.stringify(content.data, null, 2);
+    }
   }
-  
   // If content is already a string
-  if (typeof content === 'string') {
-    return content;
+  else if (typeof content === 'string') {
+    text = content;
+  }
+  // Fallback for other types
+  else {
+    text = String(content);
   }
   
-  // Fallback for other types
-  return String(content);
+  // Strip TipTap raw HTML wrapper tags
+  text = text.replace(/<div data-raw-html="true" data-html="([^"]+)"[^>]*>.*?<\/div>/gs, (_, encodedHtml) => {
+    // Decode HTML entities in the data-html attribute
+    return encodedHtml
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&amp;/g, '&');
+  });
+  text = text.replace(/<div data-raw-html="true" data-html="([^"]+)"[^>]*\/>/g, (_, encodedHtml) => {
+    return encodedHtml
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&amp;/g, '&');
+  });
+  
+  return text;
 }
 
 // ============================================

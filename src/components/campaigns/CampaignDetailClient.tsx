@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useLocale } from "next-intl";
 import { motion, useScroll, useTransform } from "framer-motion";
 import {
   Home,
@@ -359,9 +360,7 @@ export default function CampaignDetailClient({
                           <h4 className="text-lg font-semibold text-gray-900">
                             {update.title}
                           </h4>
-                          <span className="text-sm text-gray-500">
-                            {update.date.toLocaleDateString()}
-                          </span>
+                          <CampaignDetailClientUpdateDate date={update.date} />
                         </div>
                         <p className="text-gray-700 leading-relaxed mb-2">
                           {update.content}
@@ -472,5 +471,15 @@ export default function CampaignDetailClient({
         </section>
       )}
     </div>
+  );
+}
+
+// Helper component for update date that uses locale
+function CampaignDetailClientUpdateDate({ date }: { date: Date }) {
+  const locale = useLocale();
+  return (
+    <span className="text-sm text-gray-500">
+      {date.toLocaleDateString(locale === 'fi' ? 'fi-FI' : 'en-US')}
+    </span>
   );
 }

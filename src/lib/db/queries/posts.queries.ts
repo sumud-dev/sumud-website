@@ -243,6 +243,56 @@ export async function findPostBySlugAndLanguage(
 }
 
 /**
+ * Find post by slug and language, checking translations if direct match not found
+ * This handles the case where user views a translated article with the original slug
+ */
+export async function findPostBySlugAndLanguageWithFallback(
+  postSlug: string,
+  postLanguage: string
+): Promise<PostRecord | null> {
+  // First, try to find the exact match (slug + language)
+  const directMatch = await findPostBySlugAndLanguage(postSlug, postLanguage);
+  if (directMatch) {
+    return directMatch;
+  }
+
+  // If no direct match, find the original post with this slug (any language)
+  const originalPost = await findPostBySlug(postSlug);
+  if (!originalPost) {
+    return null;
+  }
+
+  // If the original post is in the requested language, return it
+  if (originalPost.language === postLanguage) {
+    return originalPost;
+  }
+
+  // If the original post is a translation, get its parent first
+  let parentPostId = originalPost.isTranslation 
+    ? originalPost.parentPostId 
+    : originalPost.id;
+
+  if (!parentPostId) {
+    // No parent found, return null
+    return null;
+  }
+
+  // Now find the translation in the requested language
+  const [translationResult] = await db
+    .select()
+    .from(postsUnifiedView)
+    .where(
+      and(
+        eq(postsUnifiedView.postParentPostId, parentPostId),
+        eq(postsUnifiedView.postLanguage, postLanguage)
+      )
+    )
+    .limit(1);
+
+  return translationResult ? normalizePostFromView(translationResult) : null;
+}
+
+/**
  * Get featured articles (by view count)
  */
 export async function getFeaturedPosts(

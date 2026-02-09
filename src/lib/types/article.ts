@@ -55,7 +55,7 @@ export function getCategoryConfig(category?: string): CategoryConfig {
 /**
  * Format article date
  */
-export function formatArticleDate(date: string | Date | undefined): string {
+export function formatArticleDate(date: string | Date | undefined, locale: string = 'en'): string {
   if (!date) return '';
   
   const dateObj = typeof date === 'string' ? new Date(date) : date;
@@ -71,19 +71,22 @@ export function formatArticleDate(date: string | Date | undefined): string {
   const isToday = dateObj.toDateString() === today.toDateString();
   const isYesterday = dateObj.toDateString() === yesterday.toDateString();
 
+  // Map locale to browser locale format
+  const browserLocale = locale === 'fi' ? 'fi-FI' : 'en-US';
+
   if (isToday) {
-    return dateObj.toLocaleTimeString('en-US', {
+    return dateObj.toLocaleTimeString(browserLocale, {
       hour: 'numeric',
       minute: '2-digit',
-      hour12: true,
+      hour12: locale === 'en',
     });
   }
 
   if (isYesterday) {
-    return 'Yesterday';
+    return locale === 'fi' ? 'Eilen' : 'Yesterday';
   }
 
-  return dateObj.toLocaleDateString('en-US', {
+  return dateObj.toLocaleDateString(browserLocale, {
     month: 'short',
     day: 'numeric',
     year: dateObj.getFullYear() !== today.getFullYear() ? 'numeric' : undefined,
