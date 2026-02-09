@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import { useNode } from "@craftjs/core";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
@@ -24,6 +25,7 @@ const defaultProps: NewsSectionProps = {
 
 export const NewsSection = (props: NewsSectionProps) => {
   const { title, showCount } = props;
+  const t = useTranslations('common');
 
   const {
     connectors: { connect, drag },
@@ -126,7 +128,7 @@ export const NewsSection = (props: NewsSectionProps) => {
             href="/articles"
             className="inline-flex items-center gap-2 text-[#781D32] hover:text-[#5C1625] font-semibold group"
           >
-            View All Articles
+            {t('viewAllArticles')}
             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </motion.div>

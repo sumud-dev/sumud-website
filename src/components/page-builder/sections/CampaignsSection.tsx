@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import { useNode } from "@craftjs/core";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
@@ -27,6 +28,7 @@ const defaultProps: CampaignsSectionProps = {
 
 export const CampaignsSection = (props: CampaignsSectionProps) => {
   const { title, subtitle, showCount } = props;
+  const t = useTranslations('common');
 
   const {
     connectors: { connect, drag },
@@ -129,7 +131,7 @@ export const CampaignsSection = (props: CampaignsSectionProps) => {
             href="/campaigns"
             className="inline-flex items-center gap-2 text-[#781D32] hover:text-[#5C1625] font-semibold group"
           >
-            View All Campaigns
+            {t('viewAllCampaigns')}
             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </motion.div>

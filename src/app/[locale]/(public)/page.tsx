@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: HomePageProps) {
   const { locale } = await params;
 
   try {
-    const data = await getPublishedPage("home", locale as 'en' | 'fi');
+    const data = await getPublishedPage("/", locale as 'en' | 'fi');
     
     if (!data) {
       return {
