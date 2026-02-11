@@ -7,7 +7,7 @@ import {
   Carousel, Table, List, TextArea, Badge, Alert, Separator, CardBlock,
   CTABlock, HeroSection, AboutSection, ContactSection, FeaturesSection, StatsSection,
   TestimonialsSection, TeamSection, TimelineSection, PricingSection, GallerySection,
-  FAQSection, NewsletterSection, PartnersSection
+  FAQSection, NewsletterSection, PartnersSection, DonationSection, InfoListCard
 } from '@/src/components/blocks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { ScrollArea } from '@/src/components/ui/scroll-area';
@@ -17,7 +17,7 @@ import {
   Type, RectangleHorizontal, LayoutGrid, Columns, Rows3, AlignHorizontalJustifyStart, 
   ImageIcon, ChevronDown, Images, TableIcon, ListIcon, FileText, Tag, AlertCircle, 
   Minus, CreditCard, Megaphone, Sparkles, Users, Mail, Grid3x3, BarChart3, MessageSquareQuote,
-  UsersRound, Clock, DollarSign, ImagePlus, HelpCircle, Send, Handshake
+  UsersRound, Clock, DollarSign, ImagePlus, HelpCircle, Send, Handshake, Heart, ListChecks
 } from 'lucide-react';
 
 export function Toolbox() {
@@ -44,20 +44,22 @@ export function Toolbox() {
   ];
 
   const pageTemplates = [
-    { name: 'CTA Block', component: CTABlock, icon: Megaphone, key: 'ctaBlock', description: 'Call-to-action section with buttons' },
-    { name: 'Hero Section', component: HeroSection, icon: Sparkles, key: 'heroSection', description: 'Full-width hero banner with background' },
-    { name: 'About Section', component: AboutSection, icon: Users, key: 'aboutSection', description: 'About section with image and stats' },
-    { name: 'Contact Section', component: ContactSection, icon: Mail, key: 'contactSection', description: 'Contact form with info cards' },
-    { name: 'Features Section', component: FeaturesSection, icon: Grid3x3, key: 'featuresSection', description: 'Grid of feature cards' },
-    { name: 'Stats Section', component: StatsSection, icon: BarChart3, key: 'statsSection', description: 'Statistics display section' },
-    { name: 'Testimonials Section', component: TestimonialsSection, icon: MessageSquareQuote, key: 'testimonialsSection', description: 'Customer testimonials and reviews' },
-    { name: 'Team Section', component: TeamSection, icon: UsersRound, key: 'teamSection', description: 'Team members with photos and bios' },
-    { name: 'Timeline Section', component: TimelineSection, icon: Clock, key: 'timelineSection', description: 'Chronological timeline of events' },
-    { name: 'Pricing Section', component: PricingSection, icon: DollarSign, key: 'pricingSection', description: 'Pricing tiers and packages' },
-    { name: 'Gallery Section', component: GallerySection, icon: ImagePlus, key: 'gallerySection', description: 'Image gallery with lightbox' },
-    { name: 'FAQ Section', component: FAQSection, icon: HelpCircle, key: 'faqSection', description: 'Frequently asked questions accordion' },
-    { name: 'Newsletter Section', component: NewsletterSection, icon: Send, key: 'newsletterSection', description: 'Email newsletter signup form' },
-    { name: 'Partners Section', component: PartnersSection, icon: Handshake, key: 'partnersSection', description: 'Partner and sponsor logos' },
+    { name: t('blockNames.ctaBlock'), component: CTABlock, icon: Megaphone, key: 'ctaBlock', description: t('blockDescriptions.ctaBlock') },
+    { name: t('blockNames.heroSection'), component: HeroSection, icon: Sparkles, key: 'heroSection', description: t('blockDescriptions.heroSection') },
+    { name: t('blockNames.aboutSection'), component: AboutSection, icon: Users, key: 'aboutSection', description: t('blockDescriptions.aboutSection') },
+    { name: t('blockNames.contactSection'), component: ContactSection, icon: Mail, key: 'contactSection', description: t('blockDescriptions.contactSection') },
+    { name: t('blockNames.featuresSection'), component: FeaturesSection, icon: Grid3x3, key: 'featuresSection', description: t('blockDescriptions.featuresSection') },
+    { name: t('blockNames.statsSection'), component: StatsSection, icon: BarChart3, key: 'statsSection', description: t('blockDescriptions.statsSection') },
+    { name: t('blockNames.testimonialsSection'), component: TestimonialsSection, icon: MessageSquareQuote, key: 'testimonialsSection', description: t('blockDescriptions.testimonialsSection') },
+    { name: t('blockNames.teamSection'), component: TeamSection, icon: UsersRound, key: 'teamSection', description: t('blockDescriptions.teamSection') },
+    { name: t('blockNames.timelineSection'), component: TimelineSection, icon: Clock, key: 'timelineSection', description: t('blockDescriptions.timelineSection') },
+    { name: t('blockNames.pricingSection'), component: PricingSection, icon: DollarSign, key: 'pricingSection', description: t('blockDescriptions.pricingSection') },
+    { name: t('blockNames.gallerySection'), component: GallerySection, icon: ImagePlus, key: 'gallerySection', description: t('blockDescriptions.gallerySection') },
+    { name: t('blockNames.faqSection'), component: FAQSection, icon: HelpCircle, key: 'faqSection', description: t('blockDescriptions.faqSection') },
+    { name: t('blockNames.newsletterSection'), component: NewsletterSection, icon: Send, key: 'newsletterSection', description: t('blockDescriptions.newsletterSection') },
+    { name: t('blockNames.partnersSection'), component: PartnersSection, icon: Handshake, key: 'partnersSection', description: t('blockDescriptions.partnersSection') },
+    { name: t('blockNames.donationSection'), component: DonationSection, icon: Heart, key: 'donationSection', description: t('blockDescriptions.donationSection') },
+    { name: t('blockNames.infoListCard'), component: InfoListCard, icon: ListChecks, key: 'infoListCard', description: t('blockDescriptions.infoListCard') },
   ];
 
   const renderBlockButton = (block: { name: string; component: any; icon: any; key: string; description: string; isCanvas?: boolean }) => {
@@ -102,7 +104,7 @@ export function Toolbox() {
             <div>
               <h3 className="text-sm font-semibold text-[#781D32] mb-3 flex items-center gap-2">
                 <Sparkles className="h-4 w-4" />
-                Page Templates
+                {t('toolbox.pageTemplates')}
               </h3>
               <div className="space-y-2">
                 {pageTemplates.map(renderBlockButton)}
@@ -114,7 +116,7 @@ export function Toolbox() {
             {/* Basic Blocks Section */}
             <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                Basic Blocks
+                {t('toolbox.basicBlocks')}
               </h3>
               <div className="space-y-2">
                 {basicBlocks.map(renderBlockButton)}

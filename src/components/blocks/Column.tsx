@@ -63,6 +63,7 @@ export const Column = ({
 
 Column.craft = {
   displayName: 'Column',
+  isCanvas: true,
   props: {
     width: '50%',
     background: 'transparent',

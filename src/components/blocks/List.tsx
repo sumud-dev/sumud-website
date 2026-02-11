@@ -1,11 +1,12 @@
 import { useNode } from '@craftjs/core';
+import { stylePropsToCSS, type StyleProps } from '@/src/lib/types/block-props';
 
 interface ListItem {
   id: string;
   text: string;
 }
 
-interface ListProps {
+interface ListProps extends StyleProps {
   items: ListItem[];
   ordered: boolean;
   style: 'default' | 'none' | 'circle' | 'square' | 'decimal' | 'roman';
@@ -18,7 +19,8 @@ export const List = ({
     { id: '3', text: 'List item 3' },
   ],
   ordered = false,
-  style = 'default'
+  style = 'default',
+  ...styleProps
 }: Partial<ListProps>) => {
   const {
     connectors: { connect, drag },
@@ -35,8 +37,14 @@ export const List = ({
 
   const Component = ordered ? 'ol' : 'ul';
 
+  const styles = stylePropsToCSS({
+    marginBottom: 16,
+    maxWidth: '80rem',
+    ...styleProps,
+  });
+
   return (
-    <div ref={(ref) => { if (ref) connect(drag(ref)); }} className="mb-4">
+    <div ref={(ref) => { if (ref) connect(drag(ref)); }} style={styles} className="mx-auto w-full">
       <Component
         style={{ listStyleType: listStyleMap[style] }}
         className="space-y-2 pl-6"
@@ -61,6 +69,11 @@ List.craft = {
     ],
     ordered: false,
     style: 'default',
+    marginTop: 0,
+    marginBottom: 16,
+    marginLeft: 0,
+    marginRight: 0,
+    maxWidth: '80rem',
   },
   related: {
     settings: ListSettings,

@@ -64,7 +64,7 @@ const iconMap: Record<string, React.ElementType> = {
 // Default fallback navigation items
 const defaultNavigationItems: NavigationItem[] = [
   { labelKey: "campaigns", label: "Campaigns", href: "/campaigns", icon: Target },
-  { labelKey: "petitions", label: "Petitions", href: "#", icon: PenTool, badge: "Active" },
+  { labelKey: "petitions", label: "Petitions", href: "/petition", icon: PenTool, badge: "Active" },
   { labelKey: "articles", label: "Articles", href: "/articles", icon: FileText },
   {
     labelKey: "about",

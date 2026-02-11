@@ -2,11 +2,11 @@
 
 import { useNode } from '@craftjs/core';
 import { ReactNode } from 'react';
-import { Column } from './Column';
+import { stylePropsToCSS, type StyleProps } from '@/src/lib/types/block-props';
 
 type LayoutPreset = '1' | '2' | '3' | '4';
 
-interface RowProps {
+interface RowProps extends StyleProps {
   layout: LayoutPreset;
   gap: number;
   children?: ReactNode;
@@ -15,10 +15,17 @@ interface RowProps {
 export const Row = ({
   gap = 16,
   children,
+  ...styleProps
 }: Partial<RowProps>) => {
   const {
     connectors: { connect, drag },
   } = useNode();
+
+  const styles = stylePropsToCSS({
+    marginBottom: 16,
+    maxWidth: styleProps.maxWidth || '80rem',
+    ...styleProps,
+  });
 
   return (
     <div
@@ -26,13 +33,15 @@ export const Row = ({
         if (ref) connect(drag(ref));
       }}
       style={{
+        ...styles,
         display: 'flex',
+        flexDirection: 'row',
         flexWrap: 'wrap',
         gap: `${gap}px`,
         width: '100%',
         minHeight: '80px',
       }}
-      className="mb-4 p-2 border border-dashed border-gray-300 rounded"
+      className="p-2 border border-dashed border-gray-300 rounded mx-auto"
     >
       {children}
     </div>
@@ -41,17 +50,19 @@ export const Row = ({
 
 Row.craft = {
   displayName: 'Row',
+  isCanvas: true,
   props: {
     layout: '2',
     gap: 16,
+    marginTop: 0,
+    marginBottom: 16,
+    marginLeft: 0,
+    marginRight: 0,
+    maxWidth: '80rem',
   },
   rules: {
     canDrag: () => true,
-    canMoveIn: (incomingNodes: { data: { type: unknown; displayName?: string } }[]) => {
-      return incomingNodes.every(
-        (node) => node.data.type === Column || node.data.displayName === 'Column'
-      );
-    },
+    canDrop: () => true,
   },
   related: {
     settings: RowSettings,

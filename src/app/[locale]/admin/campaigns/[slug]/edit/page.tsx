@@ -90,7 +90,6 @@ export default function EditCampaignPage({ params }: EditCampaignPageProps) {
           seoDescription: data.seoDescription,
         },
         language: locale,
-        autoTranslate: data.autoTranslate, // Use form value to determine if translation to other locale is needed
       });
 
       toast.success(t("successMessage"));

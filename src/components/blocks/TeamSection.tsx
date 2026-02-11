@@ -2,9 +2,12 @@
 
 import React from 'react';
 import { useNode } from '@craftjs/core';
+import { useTranslations } from 'next-intl';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/src/components/ui/tooltip';
+import { ImageUpload } from '@/src/components/ui/image-upload';
 import { Mail, Linkedin } from 'lucide-react';
 
 interface TeamMember {
@@ -131,9 +134,16 @@ export const TeamSection = (props: TeamSectionProps) => {
                 <p className="text-sm font-semibold mb-2 line-clamp-2 h-[2.5rem]" style={{ color: accentColor }}>
                   {member.role}
                 </p>
-                <p className="text-sm leading-relaxed line-clamp-4 flex-1" style={{ color: textColor }}>
-                  {member.bio}
-                </p>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="text-sm leading-relaxed line-clamp-4 flex-1 cursor-help" style={{ color: textColor }}>
+                      {member.bio}
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    {member.bio}
+                  </TooltipContent>
+                </Tooltip>
               </div>
 
               {/* Contact Icons - Fixed position at bottom */}
@@ -176,6 +186,8 @@ TeamSection.craft = {
 };
 
 export function TeamSectionSettings() {
+  const t = useTranslations('adminSettings.pageBuilder');
+  
   const {
     actions: { setProp },
     props,
@@ -183,10 +195,34 @@ export function TeamSectionSettings() {
     props: node.data?.props as TeamSectionProps,
   }));
 
+  const addTeamMember = () => {
+    setProp((props: TeamSectionProps) => {
+      if (!props.teamMembers) {
+        props.teamMembers = [];
+      }
+      props.teamMembers.push({
+        name: `Team Member ${props.teamMembers.length + 1}`,
+        role: 'Role',
+        bio: 'Bio information here',
+        email: '',
+        linkedin: '',
+        imageUrl: '',
+      });
+    });
+  };
+
+  const removeTeamMember = (index: number) => {
+    setProp((props: TeamSectionProps) => {
+      if (props.teamMembers) {
+        props.teamMembers.splice(index, 1);
+      }
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div>
-        <Label>Title</Label>
+        <Label>{t('labels.title') || 'Title'}</Label>
         <Input
           value={props.title || ''}
           onChange={(e) => setProp((props: TeamSectionProps) => (props.title = e.target.value))}
@@ -194,7 +230,7 @@ export function TeamSectionSettings() {
       </div>
 
       <div>
-        <Label>Subtitle</Label>
+        <Label>{t('labels.subtitle') || 'Subtitle'}</Label>
         <Input
           value={props.subtitle || ''}
           onChange={(e) => setProp((props: TeamSectionProps) => (props.subtitle = e.target.value))}
@@ -202,7 +238,7 @@ export function TeamSectionSettings() {
       </div>
 
       <div>
-        <Label>Description</Label>
+        <Label>{t('labels.description') || 'Description'}</Label>
         <Textarea
           value={props.description || ''}
           onChange={(e) => setProp((props: TeamSectionProps) => (props.description = e.target.value))}
@@ -210,7 +246,7 @@ export function TeamSectionSettings() {
       </div>
 
       <div>
-        <Label>Background Color</Label>
+        <Label>{t('labels.backgroundColor') || 'Background Color'}</Label>
         <Input
           type="color"
           value={props.backgroundColor || '#ffffff'}
@@ -219,7 +255,7 @@ export function TeamSectionSettings() {
       </div>
 
       <div>
-        <Label>Title Color</Label>
+        <Label>{t('labels.titleColor') || 'Title Color'}</Label>
         <Input
           type="color"
           value={props.titleColor || '#3E442B'}
@@ -228,7 +264,7 @@ export function TeamSectionSettings() {
       </div>
 
       <div>
-        <Label>Accent Color</Label>
+        <Label>{t('labels.accentColor') || 'Accent Color'}</Label>
         <Input
           type="color"
           value={props.accentColor || '#781D32'}
@@ -237,11 +273,28 @@ export function TeamSectionSettings() {
       </div>
 
       <div className="pt-4 border-t">
-        <Label className="mb-3 block">Team Members</Label>
+        <div className="flex justify-between items-center mb-3">
+          <Label>{t('labels.items') || 'Team Members'}</Label>
+          <button
+            onClick={addTeamMember}
+            className="text-sm px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            {t('actions.addMember') || 'Add Member'}
+          </button>
+        </div>
         {props.teamMembers?.map((member, index) => (
           <div key={index} className="mb-4 p-4 border rounded space-y-2">
+            <div className="flex justify-between items-center">
+              <Label>{t('dynamicLabels.member', { index: index + 1 }) || `Member ${index + 1}`}</Label>
+              <button
+                onClick={() => removeTeamMember(index)}
+                className="text-sm text-red-600 hover:text-red-800"
+              >
+                {t('actions.remove') || 'Remove'}
+              </button>
+            </div>
             <div>
-              <Label>Name {index + 1}</Label>
+              <Label>{t('labels.name') || 'Name'}</Label>
               <Input
                 value={member.name}
                 onChange={(e) =>
@@ -254,7 +307,7 @@ export function TeamSectionSettings() {
               />
             </div>
             <div>
-              <Label>Role</Label>
+              <Label>{t('labels.role') || 'Role'}</Label>
               <Input
                 value={member.role}
                 onChange={(e) =>
@@ -267,7 +320,7 @@ export function TeamSectionSettings() {
               />
             </div>
             <div>
-              <Label>Bio</Label>
+              <Label>{t('labels.bio') || 'Bio'}</Label>
               <Textarea
                 value={member.bio}
                 onChange={(e) =>
@@ -280,13 +333,43 @@ export function TeamSectionSettings() {
               />
             </div>
             <div>
-              <Label>Email</Label>
+              <Label>{t('labels.avatarImage') || 'Avatar Image'}</Label>
+              <ImageUpload
+                value={member.imageUrl || ''}
+                onChange={(url) =>
+                  setProp((props: TeamSectionProps) => {
+                    if (props.teamMembers) {
+                      props.teamMembers[index].imageUrl = url;
+                    }
+                  })
+                }
+                folder="page-builder/team"
+                maxSize={2}
+              />
+            </div>
+            <div>
+              <Label>{t('labels.email') || 'Email'}</Label>
               <Input
                 value={member.email || ''}
+                placeholder={t('placeholders.email') || 'email@example.com'}
                 onChange={(e) =>
                   setProp((props: TeamSectionProps) => {
                     if (props.teamMembers) {
                       props.teamMembers[index].email = e.target.value;
+                    }
+                  })
+                }
+              />
+            </div>
+            <div>
+              <Label>{t('labels.linkedinUrl') || 'LinkedIn URL'}</Label>
+              <Input
+                value={member.linkedin || ''}
+                placeholder={t('placeholders.linkedinUrl') || 'https://linkedin.com/in/username'}
+                onChange={(e) =>
+                  setProp((props: TeamSectionProps) => {
+                    if (props.teamMembers) {
+                      props.teamMembers[index].linkedin = e.target.value;
                     }
                   })
                 }

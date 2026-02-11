@@ -22,6 +22,7 @@ import {TaskItem} from '@tiptap/extension-task-item';
 import { RawHtml } from './extensions/html-block';
 import { EditorProps } from '../types/editor';
 import { cn } from '@/src/lib/utils/utils';
+import { useTranslations } from 'next-intl';
 
 interface WYSIWYGEditorProps extends EditorProps {
   onFocus?: () => void;
@@ -60,12 +61,14 @@ function normalizeContentToHTML(content: string): string {
 export const WYSIWYGEditor: React.FC<WYSIWYGEditorProps> = ({
   value,
   onChange,
-  placeholder = 'Start typing...',
+  placeholder,
   disabled = false,
   className,
   onFocus,
   onBlur,
 }) => {
+  const t = useTranslations('common');
+  const translatedPlaceholder = placeholder || t('editor.startTyping');
   // Ensure value is always defined to prevent controlled/uncontrolled warning
   const controlledValue = value ?? '';
   
@@ -194,7 +197,7 @@ export const WYSIWYGEditor: React.FC<WYSIWYGEditorProps> = ({
     <div className="relative w-full">
       {editor.isEmpty && (
         <div className="absolute top-4 left-4 text-muted-foreground pointer-events-none select-none">
-          {placeholder}
+          {translatedPlaceholder}
         </div>
       )}
       <EditorContent editor={editor} />

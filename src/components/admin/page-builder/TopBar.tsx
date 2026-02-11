@@ -20,6 +20,9 @@ import { useQuery } from '@tanstack/react-query';
 interface TopBarProps {
   pageId: string;
   language: Language;
+  status: 'draft' | 'published';
+  pageTitle?: string;
+  pageSlug?: string;
 }
 
 /**
@@ -27,7 +30,7 @@ interface TopBarProps {
  * Editor toolbar with save, publish, undo/redo actions
  * Uses usePageEditor hook for clean state management
  */
-export function TopBar({ pageId, language }: TopBarProps) {
+export function TopBar({ pageId, language, status, pageTitle, pageSlug }: TopBarProps) {
   const t = useTranslations('adminSettings.pageBuilder');
   const router = useRouter();
   
@@ -53,6 +56,9 @@ export function TopBar({ pageId, language }: TopBarProps) {
   } = usePageEditor({
     pageId,
     language,
+    status,
+    pageTitle,
+    pageSlug,
     onSaveSuccess: () => {
       console.log('[TopBar] Save successful');
     },
@@ -138,58 +144,40 @@ export function TopBar({ pageId, language }: TopBarProps) {
         
         <Separator orientation="vertical" className="h-6 mx-1" />
         
-        {/* Save Button */}
+        {/* Save/Publish Button */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
               variant="default"
               size="sm"
-              onClick={save}
+              onClick={status === 'published' ? publish : save}
               disabled={isSaving || isPublishing}
+              className={status === 'published' ? "bg-green-600 hover:bg-green-700" : ""}
             >
-              {isSaving ? (
+              {(status === 'published' ? isPublishing : isSaving) ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  {t('toolbar.saving')}
+                  {status === 'published' ? t('toolbar.publishing') : t('toolbar.saving')}
                 </>
               ) : (
                 <>
-                  <Save className="h-4 w-4 mr-1" />
-                  {t('toolbar.save')}
+                  {status === 'published' ? (
+                    <>
+                      <Globe className="h-4 w-4 mr-1" />
+                      {t('toolbar.publish')}
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-1" />
+                      {t('toolbar.save')}
+                    </>
+                  )}
                 </>
               )}
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            {t('toolbar.saveTooltip')}
-          </TooltipContent>
-        </Tooltip>
-        
-        {/* Publish Button */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={publish}
-              disabled={isSaving || isPublishing}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              {isPublishing ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  {t('toolbar.publishing')}
-                </>
-              ) : (
-                <>
-                  <Globe className="h-4 w-4 mr-1" />
-                  {t('toolbar.publish')}
-                </>
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            {t('toolbar.publishTooltip')}
+            {status === 'published' ? t('toolbar.publishTooltip') : t('toolbar.saveTooltip')}
           </TooltipContent>
         </Tooltip>
       </div>

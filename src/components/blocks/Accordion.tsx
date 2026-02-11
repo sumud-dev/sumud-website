@@ -5,6 +5,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/src/components/ui/accordion';
+import { stylePropsToCSS, type StyleProps } from '@/src/lib/types/block-props';
 
 interface AccordionItemData {
   id: string;
@@ -12,7 +13,7 @@ interface AccordionItemData {
   content: string;
 }
 
-interface AccordionProps {
+interface AccordionProps extends StyleProps {
   items: AccordionItemData[];
   type: 'single' | 'multiple';
 }
@@ -22,14 +23,21 @@ export const Accordion = ({
     { id: '1', title: 'Item 1', content: 'Content 1' },
     { id: '2', title: 'Item 2', content: 'Content 2' },
   ],
-  type = 'single'
+  type = 'single',
+  ...styleProps
 }: Partial<AccordionProps>) => {
   const {
     connectors: { connect, drag },
   } = useNode();
 
+  const styles = stylePropsToCSS({
+    marginBottom: 16,
+    maxWidth: '80rem',
+    ...styleProps,
+  });
+
   return (
-    <div ref={(ref) => { if (ref) connect(drag(ref)); }} className="mb-4">
+    <div ref={(ref) => { if (ref) connect(drag(ref)); }} style={styles} className="mx-auto w-full">
       <ShadcnAccordion type={type} collapsible={type === 'single'}>
         {items.map((item) => (
           <AccordionItem key={item.id} value={item.id}>
@@ -50,6 +58,11 @@ Accordion.craft = {
       { id: '2', title: 'Item 2', content: 'Content 2' },
     ],
     type: 'single',
+    marginTop: 0,
+    marginBottom: 16,
+    marginLeft: 0,
+    marginRight: 0,
+    maxWidth: '80rem',
   },
   related: {
     settings: AccordionSettings,

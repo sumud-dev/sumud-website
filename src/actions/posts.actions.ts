@@ -4,28 +4,23 @@ import { revalidatePath } from "next/cache";
 import {
   listPostsPaginated,
   findPostBySlug,
-  findPostBySlugAndLanguage,
   findPostBySlugAndLanguageWithFallback,
-  getPostStatisticsByLanguage,
   postSlugExists,
+} from "@/src/lib/db/queries/posts.queries";
+import {   
   type PostQueryFilters,
   type PostPaginationOptions,
   type PaginatedPostResult,
-  type PostRecord,
-} from "@/src/lib/db/queries/posts.queries";
+  type PostRecord } from "@/src/lib/types/article";
 import {
   createOriginalPost,
   updateOriginalPost,
   deleteOriginalPost,
   deleteTranslation,
-  createTranslationForPost,
 } from "@/src/lib/db/queries/posts.mutations";
-import {
-  translateContent,
-  ARTICLE_TRANSLATION_CONFIG,
-  type SupportedLocale,
-} from "@/src/lib/services/translation.service";
-import { generateSlug } from "@/src/lib/utils/utils";
+import { getOptimizedPostStatistics } from "@/src/lib/db/queries/posts.optimized";
+import { validatePostCreation, validatePostUpdate, shouldApplyAutoTranslation, PostBusinessLogic } from "@/src/lib/services/post.business";
+import { PostTranslationService } from "@/src/lib/services/post-translation.service";
 
 // ============================================================================
 // QUERY ACTIONS
@@ -123,7 +118,7 @@ export async function getPostStatistics(
   | { success: false; error: string }
 > {
   try {
-    const postStatistics = await getPostStatisticsByLanguage(
+    const postStatistics = await getOptimizedPostStatistics(
       statisticsLanguage
     );
 
@@ -179,6 +174,15 @@ export async function createPost(
   | { success: false; error: string }
 > {
   try {
+    // Validate business rules
+    const validation = validatePostCreation(postInput);
+    if (!validation.isValid) {
+      return {
+        success: false,
+        error: validation.errors.join("; "),
+      };
+    }
+
     // Check if slug exists
     const slugAlreadyExists = await postSlugExists(postInput.slug);
     if (slugAlreadyExists) {
@@ -203,76 +207,38 @@ export async function createPost(
       authorName: postInput.authorName,
     });
 
-    const createdTranslations: PostRecord[] = [];
-
-    // Auto-translate if requested
-    if (postInput.autoTranslate && postInput.targetLanguages?.length) {
-      const sourceLocale = postInput.language as SupportedLocale;
-      const contentToTranslate = {
-        title: postInput.title,
-        content: postInput.content,
-        excerpt: postInput.excerpt,
-      };
-
-      for (const targetLang of postInput.targetLanguages) {
-        try {
-          const { content: translatedContent, error: translationError } = await translateContent(
-            contentToTranslate,
-            sourceLocale,
-            targetLang as SupportedLocale,
-            ARTICLE_TRANSLATION_CONFIG
-          );
-
-          if (translationError) {
-            console.warn(`Translation error for ${targetLang}:`, translationError);
-            continue;
-          }
-
-          if (!translatedContent.title || !translatedContent.content || !translatedContent.excerpt) {
-            console.warn(`Incomplete translation for ${targetLang}, skipping`);
-            continue;
-          }
-
-          // Generate unique slug from translated title
-          const translatedSlug = generateSlug(translatedContent.title as string);
-          
-          // Check if this slug already exists
-          const slugExists = await postSlugExists(translatedSlug);
-          if (slugExists) {
-            console.warn(`Slug ${translatedSlug} already exists for ${targetLang}, skipping`);
-            continue;
-          }
-
-          const translation = await createTranslationForPost({
-            parentPostId: createdOriginal.id,
-            slug: translatedSlug,
-            title: translatedContent.title as string,
-            excerpt: translatedContent.excerpt as string,
-            content: translatedContent.content as string,
-            language: targetLang,
-            translatedFromLanguage: sourceLocale,
-            type: postInput.type || 'article',
-            status: postInput.status || 'draft',
-            featuredImage: postInput.featuredImage,
-            categories: postInput.categories || [],
-            publishedAt: postInput.status === 'published' ? new Date() : null,
-          });
-
-          createdTranslations.push(translation);
-        } catch (error) {
-          console.error(`Failed to create translation for ${targetLang}:`, error);
-        }
-      }
-    }
-
-    // Revalidate paths
+    // Revalidate paths immediately for fast UI feedback
     revalidatePath("/[locale]/articles", "page");
     revalidatePath("/[locale]/admin/articles", "page");
 
-    const successMessage =
-      createdTranslations.length > 0
-        ? `Post created with ${createdTranslations.length} translation(s)`
-        : "Post created successfully";
+    let createdTranslations: PostRecord[] = [];
+    let successMessage = "Post created successfully";
+
+    // Handle auto-translation using business logic (non-blocking)
+    const translationConfig = shouldApplyAutoTranslation(postInput);
+    if (translationConfig.shouldTranslate) {
+      // Run translations in background without blocking response
+      PostTranslationService.createTranslations({
+        originalPost: createdOriginal,
+        targetLanguages: translationConfig.targetLanguages,
+        sourceLanguage: postInput.language,
+      }).then((translationResult) => {
+        if (translationResult.success) {
+          // Revalidate again after translations complete
+          revalidatePath("/[locale]/articles", "page");
+          revalidatePath("/[locale]/admin/articles", "page");
+        }
+        
+        // Log any translation errors
+        if (translationResult.errors.length > 0) {
+          console.warn("Translation errors:", translationResult.errors);
+        }
+      }).catch((error) => {
+        console.error("Background translation failed:", error);
+      });
+      
+      successMessage = "Post created successfully (translations processing in background)";
+    }
 
     return {
       success: true,
@@ -298,13 +264,11 @@ export async function updatePost(
     status?: "draft" | "published" | "archived";
     featured_image?: string | null;
     meta_description?: string | null;
-    autoTranslate?: boolean;
     categories?: string[];
   },
-  language: string,
-  targetLanguages?: string[]
+  language: string 
 ): Promise<
-  | { success: true; updatedPost: PostRecord; createdTranslations: PostRecord[]; message: string }
+  | { success: true; updatedPost: PostRecord; message: string }
   | { success: false; error: string }
 > {
   try {
@@ -313,24 +277,33 @@ export async function updatePost(
       return { success: false, error: "Post not found" };
     }
 
-    // Only allow updating originals, not translations
-    if (existingPost.isTranslation) {
+    // Validate business rules
+    const validation = validatePostUpdate(existingPost, updateData);
+    if (!validation.isValid) {
       return {
         success: false,
-        error: "Cannot update translations directly. Edit the original post instead.",
+        error: validation.errors.join("; "),
       };
     }
+
+    // Use business logic to prepare update data
+    const { updateData: processedUpdateData, publishedAt } = PostBusinessLogic.prepareForUpdate({
+      postSlug,
+      updateData,
+      language,
+    });
 
     const updatedPost = await updateOriginalPost(
       existingPost.id,
       {
-        title: updateData.title,
-        excerpt: updateData.excerpt,
-        content: updateData.content,
-        status: updateData.status,
+        title: processedUpdateData.title,
+        excerpt: processedUpdateData.excerpt,
+        content: processedUpdateData.content,
+        status: processedUpdateData.status,
         language: language,
-        featuredImage: updateData.featured_image,
-        categories: updateData.categories,
+        featuredImage: processedUpdateData.featuredImage,
+        categories: processedUpdateData.categories,
+        publishedAt,
       }
     );
 
@@ -338,83 +311,15 @@ export async function updatePost(
       return { success: false, error: "Failed to update post" };
     }
 
-    const createdTranslations: PostRecord[] = [];
-
-    // Auto-translate if requested
-    if (updateData.autoTranslate && targetLanguages?.length) {
-      const sourceLocale = language as SupportedLocale;
-      const contentToTranslate = {
-        title: updateData.title || updatedPost.title,
-        content: updateData.content || updatedPost.content,
-        excerpt: updateData.excerpt || updatedPost.excerpt,
-      };
-
-      for (const targetLang of targetLanguages) {
-        try {
-          const { content: translatedContent, error: translationError } = await translateContent(
-            contentToTranslate,
-            sourceLocale,
-            targetLang as SupportedLocale,
-            ARTICLE_TRANSLATION_CONFIG
-          );
-
-          if (translationError) {
-            console.warn(`Translation error for ${targetLang}:`, translationError);
-            continue;
-          }
-
-          if (!translatedContent.title || !translatedContent.content || !translatedContent.excerpt) {
-            console.warn(`Incomplete translation for ${targetLang}, skipping`);
-            continue;
-          }
-
-          // Generate unique slug from translated title
-          const translatedSlug = generateSlug(translatedContent.title as string);
-          
-          // Check if this slug already exists
-          const slugExists = await postSlugExists(translatedSlug);
-          if (slugExists) {
-            console.warn(`Slug ${translatedSlug} already exists for ${targetLang}, skipping`);
-            continue;
-          }
-
-          const translation = await createTranslationForPost({
-            parentPostId: updatedPost.id,
-            slug: translatedSlug,
-            title: translatedContent.title as string,
-            excerpt: translatedContent.excerpt as string,
-            content: translatedContent.content as string,
-            language: targetLang,
-            translatedFromLanguage: sourceLocale,
-            type: updatedPost.type,
-            status: updateData.status || updatedPost.status,
-            featuredImage: updateData.featured_image || updatedPost.featuredImage,
-            categories: updateData.categories || updatedPost.categories || [],
-            publishedAt: updateData.status === 'published' ? new Date() : null,
-          });
-
-          createdTranslations.push(translation);
-        } catch (error) {
-          console.error(`Failed to create translation for ${targetLang}:`, error);
-        }
-      }
-    }
-
     // Revalidate paths
     revalidatePath("/[locale]/articles", "page");
     revalidatePath("/[locale]/admin/articles", "page");
     revalidatePath(`/[locale]/articles/${postSlug}`, "page");
 
-    const successMessage =
-      createdTranslations.length > 0
-        ? `Post updated with ${createdTranslations.length} translation(s)`
-        : "Post updated successfully";
-
     return {
       success: true,
       updatedPost,
-      createdTranslations,
-      message: successMessage,
+      message: "Post updated successfully",
     };
   } catch (error) {
     console.error("Error updating post:", error);

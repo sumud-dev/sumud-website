@@ -272,14 +272,12 @@ export async function createCampaignAction(
 
 /**
  * Update campaign - handles all fields (base + content) in single table approach
- * Optionally translates and updates the other locale's campaign
  */
 export async function updateCampaignAction(
   campaignId: string,
   slug: string,
   data: Partial<z.infer<typeof campaignBaseSchema>> & Partial<z.infer<typeof translationSchema>>,
-  locale: string = 'en',
-  autoTranslate: boolean = false
+  locale: string = 'en'
 ): Promise<ActionResult> {
   try {
     // Ensure slug has locale suffix
@@ -299,91 +297,14 @@ export async function updateCampaignAction(
       };
     }
 
-    // Auto-translate and update/create the other locale if enabled
-    if (autoTranslate) {
-      const sourceLocale = locale as SupportedLocale;
-      const targetLocale: SupportedLocale = sourceLocale === 'en' ? 'fi' : 'en';
-      const targetSlug = `${baseSlug}-${targetLocale}`;
-      
-      try {
-        // Check if translation already exists
-        const existingTranslation = await getCampaignBySlug(targetSlug, targetLocale);
-        
-        // Prepare content for translation (only translatable fields)
-        const contentToTranslate = {
-          title: data.title || '',
-          description: typeof data.description === 'string' ? data.description : '',
-          seoTitle: data.seoTitle || '',
-          seoDescription: data.seoDescription || '',
-          demands: data.demands || [],
-          howToParticipate: data.howToParticipate || [],
-          targets: data.targets || [],
-          callToAction: data.callToAction || {},
-        };
-        
-        const { content: translatedContent } = await translateContent(
-          contentToTranslate,
-          sourceLocale,
-          targetLocale,
-          CAMPAIGN_TRANSLATION_CONFIG
-        );
-        
-        const translatedData = {
-          // Base fields (not translated, shared across locales)
-          status: data.status,
-          category: data.category,
-          campaignType: data.campaignType,
-          isFeatured: data.isFeatured,
-          // Translated content fields
-          title: translatedContent.title,
-          description: translatedContent.description,
-          callToAction: translatedContent.callToAction,
-          demands: translatedContent.demands,
-          howToParticipate: translatedContent.howToParticipate,
-          targets: translatedContent.targets,
-          seoTitle: translatedContent.seoTitle,
-          seoDescription: translatedContent.seoDescription,
-          slug: targetSlug,
-          language: targetLocale,
-        };
-        
-        if (existingTranslation) {
-          // Update existing translation
-          await updateCampaign(existingTranslation.id, translatedData);
-        } else {
-          // Create new translation with parentId linking to current campaign
-          const parentId = updated.parentId || updated.id; // If current is translation, use its parent, else use its own id
-          
-          await db.insert(campaigns).values({
-            ...translatedData,
-            parentId,
-            // Copy non-content fields from updated campaign
-            iconName: updated.iconName,
-            featuredImage: updated.featuredImage,
-            metadata: updated.metadata,
-            isActive: updated.isActive,
-          });
-        }
-      } catch (translationError) {
-        console.warn('Translation failed, but campaign was updated:', translationError);
-        // Don't fail the entire operation if translation fails
-      }
-    }
-
-    // Revalidate paths for both locales
+    // Revalidate paths
     revalidatePath(`/${locale}/campaigns/${currentSlug}`);
     revalidatePath(`/${locale}/campaigns`);
-    if (autoTranslate) {
-      const otherLocale = locale === 'en' ? 'fi' : 'en';
-      revalidatePath(`/${otherLocale}/campaigns`);
-    }
 
     return {
       success: true,
       data: updated,
-      message: autoTranslate 
-        ? 'Campaign updated and translated successfully'
-        : 'Campaign updated successfully',
+      message: 'Campaign updated successfully',
     };
   } catch (error) {
     console.error('Error updating campaign:', error);

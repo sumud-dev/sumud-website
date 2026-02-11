@@ -42,7 +42,7 @@ const campaignSchema = z.object({
   goal: z.number().optional(),
   isFeatured: z.boolean().optional(),
   language: z.enum(["en", "fi"]),
-  autoTranslate: z.boolean(),
+  autoTranslate: z.boolean().optional(),
   callToAction: z.object({
     primary: z.object({
       text: z.string().optional(),
@@ -151,7 +151,7 @@ export function CampaignForm({
       goal: campaign?.goal || undefined,
       isFeatured: campaign?.isFeatured || false,
       language: "en",
-      autoTranslate: true,
+      autoTranslate: !campaign ? true : undefined,
       callToAction: campaign?.callToAction || { primary: undefined, secondary: undefined },
       targets: campaign?.targets || [],
       demands: campaign?.demands || [],
@@ -176,7 +176,7 @@ export function CampaignForm({
         goal: campaign.goal || undefined,
         isFeatured: campaign.isFeatured || false,
         language: "en",
-        autoTranslate: true,
+        autoTranslate: !campaign ? true : undefined,
         callToAction: campaign.callToAction || { primary: undefined, secondary: undefined },
         targets: campaign.targets || [],
         demands: campaign.demands || [],
@@ -798,29 +798,31 @@ export function CampaignForm({
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="autoTranslate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                      <div className="space-y-0.5">
-                        <FormLabel className="flex items-center gap-2">
-                          <Languages className="h-4 w-4" />
-                          {t("autoTranslate")}
-                        </FormLabel>
-                        <FormDescription className="text-xs">
-                          {t("autoTranslateDescription", { language: form.watch("language") === "en" ? t("finnish") : t("english") })}
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                {!campaign && (
+                  <FormField
+                    control={form.control}
+                    name="autoTranslate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                        <div className="space-y-0.5">
+                          <FormLabel className="flex items-center gap-2">
+                            <Languages className="h-4 w-4" />
+                            {t("autoTranslate")}
+                          </FormLabel>
+                          <FormDescription className="text-xs">
+                            {t("autoTranslateDescription", { language: form.watch("language") === "en" ? t("finnish") : t("english") })}
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <FormField
                   control={form.control}
@@ -887,7 +889,7 @@ export function CampaignForm({
                     )}
                     {isSubmitting ? submittingLabel : submitLabel}
                   </Button>
-                  {form.watch("autoTranslate") && (
+                  {!campaign && form.watch("autoTranslate") && (
                     <p className="text-xs text-muted-foreground text-center">
                       {t("createBothLanguages")}
                     </p>

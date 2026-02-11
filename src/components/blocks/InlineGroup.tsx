@@ -2,8 +2,9 @@
 
 import { useNode } from '@craftjs/core';
 import { ReactNode } from 'react';
+import { stylePropsToCSS, type StyleProps } from '@/src/lib/types/block-props';
 
-interface InlineGroupProps {
+interface InlineGroupProps extends StyleProps {
   justifyContent: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around';
   alignItems: 'flex-start' | 'center' | 'flex-end' | 'baseline';
   gap: number;
@@ -17,10 +18,17 @@ export const InlineGroup = ({
   gap = 8,
   wrap = true,
   children,
+  ...styleProps
 }: Partial<InlineGroupProps>) => {
   const {
     connectors: { connect, drag },
   } = useNode();
+
+  const styles = stylePropsToCSS({
+    marginBottom: 16,
+    maxWidth: '80rem',
+    ...styleProps,
+  });
 
   return (
     <div
@@ -28,6 +36,7 @@ export const InlineGroup = ({
         if (ref) connect(drag(ref));
       }}
       style={{
+        ...styles,
         display: 'flex',
         flexDirection: 'row',
         justifyContent,
@@ -37,7 +46,7 @@ export const InlineGroup = ({
         minHeight: '40px',
         width: '100%',
       }}
-      className="mb-4 p-2 border border-dashed border-blue-300 rounded"
+      className="p-2 border border-dashed border-blue-300 rounded mx-auto"
     >
       {children || (
         <span className="text-gray-400 text-sm">
@@ -50,11 +59,17 @@ export const InlineGroup = ({
 
 InlineGroup.craft = {
   displayName: 'Inline Group',
+  isCanvas: true,
   props: {
     justifyContent: 'flex-start',
     alignItems: 'center',
     gap: 8,
     wrap: true,
+    marginTop: 0,
+    marginBottom: 16,
+    marginLeft: 0,
+    marginRight: 0,
+    maxWidth: '80rem',
   },
   rules: {
     canDrag: () => true,

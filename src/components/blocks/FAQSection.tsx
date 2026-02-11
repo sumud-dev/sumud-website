@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useNode } from '@craftjs/core';
+import { useTranslations } from 'next-intl';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
@@ -73,6 +74,7 @@ export const FAQSection = (props: FAQSectionProps) => {
     connectors: { connect, drag },
   } = useNode();
 
+  const t = useTranslations('adminSettings.pageBuilder');
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
@@ -135,13 +137,13 @@ export const FAQSection = (props: FAQSectionProps) => {
         {/* Contact CTA */}
         <div className="mt-12 text-center">
           <p className="text-lg" style={{ color: textColor }}>
-            Still have questions?{' '}
+            {t('faq.stillHaveQuestions')}{' '}
             <Link 
               href="/contact" 
               className="font-bold hover:underline"
               style={{ color: accentColor }}
             >
-              Contact us
+              {t('faq.contactUs')}
             </Link>
           </p>
         </div>
@@ -165,6 +167,26 @@ export function FAQSectionSettings() {
   } = useNode((node) => ({
     props: node.data?.props as FAQSectionProps,
   }));
+
+  const addFAQ = () => {
+    setProp((props: FAQSectionProps) => {
+      if (!props.faqs) {
+        props.faqs = [];
+      }
+      props.faqs.push({
+        question: `Question ${props.faqs.length + 1}`,
+        answer: 'Your answer here',
+      });
+    });
+  };
+
+  const removeFAQ = (index: number) => {
+    setProp((props: FAQSectionProps) => {
+      if (props.faqs) {
+        props.faqs.splice(index, 1);
+      }
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -212,11 +234,27 @@ export function FAQSectionSettings() {
       </div>
 
       <div className="pt-4 border-t">
-        <Label className="mb-3 block">FAQ Items</Label>
+        <div className="flex justify-between items-center mb-3">
+          <Label>FAQ Items</Label>
+          <button
+            onClick={addFAQ}
+            className="text-sm px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Add FAQ
+          </button>
+        </div>
         {props.faqs?.map((faq, index) => (
           <div key={index} className="mb-4 p-4 border rounded space-y-2">
-            <div>
+            <div className="flex justify-between items-center">
               <Label>Question {index + 1}</Label>
+              <button
+                onClick={() => removeFAQ(index)}
+                className="text-sm text-red-600 hover:text-red-800"
+              >
+                Remove
+              </button>
+            </div>
+            <div>
               <Input
                 value={faq.question}
                 onChange={(e) =>

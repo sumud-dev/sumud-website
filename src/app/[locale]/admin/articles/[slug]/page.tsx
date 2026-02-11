@@ -14,8 +14,6 @@ import {
   Tag,
   Globe,
   Clock,
-  MapPin,
-  Users,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
@@ -26,13 +24,21 @@ import {
   CardTitle,
 } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/src/components/ui/alert-dialog";
 import { Separator } from "@/src/components/ui/separator";
-import { getPostBySlug, deletePost } from "@/src/actions/posts.actions";
-import { getCategoryName, type PostWithCategory } from "@/src/lib/utils/article.utils";
+import { usePostBySlug } from "@/src/lib/hooks/use-posts";
+import { useDeletePost } from "@/src/lib/hooks/use-posts";
+import { getCategoryName } from "@/src/lib/utils/article.utils";
 import { markdownToHtml } from "@/src/lib/utils/markdown";
-
-// Allow flexible article structure for compatibility with different data sources
-type Article = PostWithCategory & Record<string, any>;
 
 const statusColors: Record<string, string> = {
   draft: "bg-yellow-100 text-yellow-800",
@@ -49,54 +55,53 @@ interface ArticleDetailPageProps {
 export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
   const router = useRouter();
   const t = useTranslations("admin.articles.detail");
-  const [article, setArticle] = React.useState<Article | null>(null);
-  const [loading, setLoading] = React.useState(true);
-  const [deleting, setDeleting] = React.useState(false);
-
+  const [deleteConfirm, setDeleteConfirm] = React.useState<{ slug: string; title: string } | null>(null);
+  const [resolvedSlug, setResolvedSlug] = React.useState<string>("");
+  
+  // Resolve params
   React.useEffect(() => {
-    const fetchArticle = async () => {
-      try {
-        setLoading(true);
-        const resolvedParams = await params;
-        const result = await getPostBySlug(resolvedParams.slug);
-        console.log(result)
-        if (result.success && result.post) {
-          setArticle(result.post as any);
-        } else if (!result.success) {
-          toast.error(result.error || t("toast.loadError"));
-        }
-      } catch (error) {
-        console.error("Error fetching article:", error);
-        toast.error(t("toast.loadError"));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchArticle();
+    params.then(({ slug }) => setResolvedSlug(slug));
   }, [params]);
 
-  const handleDelete = async () => {
-    if (!article) return;
-    if (!confirm(t("delete.confirm", { title: article.title }))) return;
+  // Use React Query hooks
+  const { 
+    data: article, 
+    isLoading: loading,
+    error: articleError 
+  } = usePostBySlug(resolvedSlug);
+  const deletePostMutation = useDeletePost();
 
-    setDeleting(true);
-    
-    try {
-      const resolvedParams = await params;
-      await deletePost(resolvedParams.slug);
-      toast.success(t("toast.deleteSuccess"));
-      router.push("/admin/articles");
-    } catch (error) {
-      console.error("Error deleting article:", error);
-      toast.error(t("toast.deleteError"));
-      setDeleting(false);
+  // Show error toast if article fails to load
+  React.useEffect(() => {
+    if (articleError) {
+      toast.error(articleError.message || t("toast.loadError"));
     }
+  }, [articleError, t]);
+
+  const handleDelete = async () => {
+    if (!deleteConfirm) return;
+
+    deletePostMutation.mutate(deleteConfirm.slug, {
+      onSuccess: () => {
+        toast.success(t("toast.deleteSuccess"));
+        setDeleteConfirm(null);
+        router.push("/admin/articles");
+      },
+      onError: (mutationError) => {
+        toast.error(mutationError.message || t("toast.deleteError"));
+      },
+    });
   };
 
-  const formatDate = (dateString: string | null) => {
+  const handleDeleteClick = () => {
+    if (!article) return;
+    setDeleteConfirm({ slug: article.slug, title: article.title || "Untitled" });
+  };
+
+  const formatDate = (dateString: string | Date | null) => {
     if (!dateString) return t("placeholders.notSet");
-    return new Date(dateString).toLocaleDateString("en-US", {
+    const date = dateString instanceof Date ? dateString : new Date(dateString);
+    return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -151,10 +156,10 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
           </Button>
           <Button
             variant="destructive"
-            onClick={handleDelete}
-            disabled={deleting}
+            onClick={handleDeleteClick}
+            disabled={deletePostMutation.isPending}
           >
-            {deleting ? (
+            {deletePostMutation.isPending ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
               <Trash2 className="mr-2 h-4 w-4" />
@@ -248,7 +253,7 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
                   <div>
                     <p className="text-sm font-medium">{t("labels.author")}</p>
                     <p className="text-sm text-muted-foreground">
-                      {article.author_name || t("placeholders.unknown")}
+                      {article.authorName || t("placeholders.unknown")}
                     </p>
                   </div>
                 </div>
@@ -287,7 +292,7 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
                 <div>
                   <p className="text-sm font-medium">{t("labels.published")}</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatDate(article.published_at)}
+                    {formatDate(article.publishedAt)}
                   </p>
                 </div>
               </div>
@@ -297,7 +302,7 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
                 <div>
                   <p className="text-sm font-medium">{t("labels.created")}</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatDate(article.created_at)}
+                    {formatDate(article.createdAt)}
                   </p>
                 </div>
               </div>
@@ -307,62 +312,60 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
                 <div>
                   <p className="text-sm font-medium">{t("labels.lastUpdated")}</p>
                   <p className="text-sm text-muted-foreground">
-                    {formatDate(article.updated_at)}
+                    {formatDate(article.updatedAt)}
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Categories (from array field) */}
-          {article.categories && article.categories.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">{t("sections.categories")}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {article.categories.map((category: string, index: number) => (
-                    <Badge key={index} variant="secondary">
-                      {category}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+              {/* Categories (from array field) */}
+              {article.categories && article.categories.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{t("sections.categories")}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-wrap gap-2">
+                      {article.categories.map((category: string, index: number) => (
+                        <Badge key={index} variant="secondary">
+                          {category}
+                        </Badge>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </div>
 
-          {/* Locations */}
-          {article.locations && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">{t("sections.locations")}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{article.locations}</span>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Organizers */}
-          {article.organizers && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">{t("sections.organizers")}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{article.organizers}</span>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={!!deleteConfirm}
+        onOpenChange={() => setDeleteConfirm(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("delete.confirm", { title: "" })}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("delete.message", { title: deleteConfirm?.title ?? "" })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("delete.cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deletePostMutation.isPending}
+            >
+              {deletePostMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              {t("actions.delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -91,7 +91,6 @@ export function EventForm({
       organizers: jsonbToString(event?.organizers),
       language: event?.language || "en",
       authorName: event?.authorName || "",
-      autoTranslate: false,
     },
   });
 
@@ -305,30 +304,32 @@ export function EventForm({
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="autoTranslate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                      <div className="space-y-0.5">
-                        <FormLabel className="flex items-center gap-2">
-                          <Languages className="h-4 w-4" />
-                          {tForm("autoTranslate.label")}
-                        </FormLabel>
-                        <FormDescription className="text-xs">
-                          {tForm("autoTranslate.description")}
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={isSubmitting}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
+                {!event && (
+                  <FormField
+                    control={form.control}
+                    name="autoTranslate"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                        <div className="space-y-0.5">
+                          <FormLabel className="flex items-center gap-2">
+                            <Languages className="h-4 w-4" />
+                            {tForm("autoTranslate.label")}
+                          </FormLabel>
+                          <FormDescription className="text-xs">
+                            {tForm("autoTranslate.description")}
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            disabled={isSubmitting}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <div className="flex flex-col space-y-2">
                   <Button

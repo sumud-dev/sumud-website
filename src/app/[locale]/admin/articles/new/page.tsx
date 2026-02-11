@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter, Link } from "@/src/i18n/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { createPost } from "@/src/actions/posts.actions";
 import { useQueryClient } from "@tanstack/react-query";
 import { postQueryKeys } from "@/src/lib/hooks/use-posts";
+import { ArticleUIService } from "@/src/lib/services/article-ui.service";
 
 const articleSchema = z.object({
   title: z.string().min(1, "Title is required").max(200, "Title too long"),
@@ -58,6 +59,7 @@ export default function NewArticlePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const t = useTranslations("admin.articles.new");
+  const locale = useLocale() as "en" | "fi";
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isTranslating, setIsTranslating] = React.useState(false);
 
@@ -68,7 +70,7 @@ export default function NewArticlePage() {
       excerpt: "",
       content: "",
       status: "published",
-      language: "en",
+      language: locale,
       featuredImageUrl: "",
       tags: "",
       metaDescription: "",
@@ -136,19 +138,26 @@ export default function NewArticlePage() {
         return;
       }
 
+      // Use business logic service for success handling
       const translationsCount = result.createdTranslations?.length || 0;
-      toast.success(
-        translationsCount > 0
-          ? `Article created with ${translationsCount} translation(s)!`
-          : "Article created successfully!"
-      );
+      const navigationStrategy = ArticleUIService.getNavigationStrategy('create', true, {
+        hasTranslations: translationsCount > 0
+      });
+      const successMessage = ArticleUIService.getSuccessMessage('create', {
+        translationsCount
+      });
+
+      toast.success(successMessage);
       
       // Invalidate React Query cache to refresh the articles list
-      queryClient.invalidateQueries({ queryKey: postQueryKeys.allPosts });
+      if (navigationStrategy.shouldInvalidateCache) {
+        queryClient.invalidateQueries({ queryKey: postQueryKeys.allPosts });
+      }
       
-      // Small delay to ensure the success toast appears before navigation
-      await new Promise(resolve => setTimeout(resolve, 100));
-      router.push("/admin/articles");
+      // Navigate using business logic strategy
+      if (navigationStrategy.shouldRedirect) {
+        router.push(navigationStrategy.redirectPath);
+      }
     } catch (error) {
       console.error("Error creating article:", error);
       toast.error(

@@ -171,16 +171,14 @@ export function useUpdateCampaign() {
       campaignId, 
       slug, 
       data,
-      language,
-      autoTranslate 
+      language
     }: { 
       campaignId: string; 
       slug: string; 
       data: any;
       language?: string;
-      autoTranslate?: boolean;
     }) => {
-      const result = await updateCampaignAction(campaignId, slug, data, language || locale, autoTranslate);
+      const result = await updateCampaignAction(campaignId, slug, data, language || locale);
       if (!result.success) {
         throw new Error(result.error);
       }

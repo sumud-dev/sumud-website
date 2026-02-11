@@ -4,61 +4,12 @@ import {
   type PostUnifiedView 
 } from "@/src/lib/db/schema/posts";
 import { eq, and, or, like, desc, asc, sql, count, SQL } from "drizzle-orm";
-
-// ============================================================================
-// TYPES
-// ============================================================================
-
-export interface PostRecord {
-  id: string;
-  slug: string;
-  title: string;
-  excerpt: string;
-  content: string;
-  language: string;
-  type: string;
-  status: string;
-  featuredImage: string | null;
-  categories: string[];
-  authorId: string | null;
-  authorName: string | null;
-  publishedAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-  viewCount: number;
-  isTranslation: boolean;
-  parentPostId: string | null;
-  translatedFromLanguage: string | null;
-  translationQuality: string | null;
-}
-
-export interface PostQueryFilters {
-  status?: 'draft' | 'published' | 'archived';
-  type?: 'article' | 'news';
-  language?: string;
-  search?: string;
-  originalsOnly?: boolean; // Only user-created articles
-  translationsOnly?: boolean; // Only AI translations
-}
-
-export interface PostPaginationOptions {
-  page?: number;
-  limit?: number;
-  sortBy?: 'createdAt' | 'publishedAt' | 'title' | 'viewCount';
-  sortOrder?: 'asc' | 'desc';
-}
-
-export interface PaginatedPostResult {
-  posts: PostRecord[];
-  pagination: {
-    currentPage: number;
-    pageSize: number;
-    totalItems: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-  };
-}
+import type { 
+  PostRecord, 
+  PostQueryFilters, 
+  PostPaginationOptions, 
+  PaginatedPostResult 
+} from "@/src/lib/types/article";
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -268,7 +219,7 @@ export async function findPostBySlugAndLanguageWithFallback(
   }
 
   // If the original post is a translation, get its parent first
-  let parentPostId = originalPost.isTranslation 
+  const parentPostId = originalPost.isTranslation 
     ? originalPost.parentPostId 
     : originalPost.id;
 

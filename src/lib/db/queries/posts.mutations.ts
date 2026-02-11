@@ -1,24 +1,17 @@
 import { db } from "@/src/lib/db";
 import { posts, postTranslations } from "@/src/lib/db/schema/posts";
 import { eq } from "drizzle-orm";
-import type { PostRecord } from "./posts.queries";
+import type { 
+  PostRecord, 
+  CreateOriginalPostInput, 
+  CreateTranslationPostInput, 
+  UpdateOriginalPostInput 
+} from "@/src/lib/types/article";
 
 /**
  * Create original post (user-created article)
  */
-export async function createOriginalPost(articleData: {
-  slug: string;
-  title: string;
-  excerpt: string;
-  content: string;
-  language: string;
-  type?: string;
-  status?: string;
-  featuredImage?: string | null;
-  categories?: string[];
-  authorId?: string | null;
-  authorName?: string | null;
-}): Promise<PostRecord> {
+export async function createOriginalPost(articleData: CreateOriginalPostInput): Promise<PostRecord> {
   const currentTimestamp = new Date();
 
   const [createdPost] = await db
@@ -69,20 +62,7 @@ export async function createOriginalPost(articleData: {
 /**
  * Create translation (AI-generated article)
  */
-export async function createTranslationForPost(translationData: {
-  parentPostId: string;
-  slug: string;
-  title: string;
-  excerpt: string;
-  content: string;
-  language: string;
-  translatedFromLanguage: string;
-  type: string;
-  status: string;
-  featuredImage?: string | null;
-  categories: string[];
-  publishedAt?: Date | null;
-}): Promise<PostRecord> {
+export async function createTranslationForPost(translationData: CreateTranslationPostInput): Promise<PostRecord> {
   const currentTimestamp = new Date();
 
   const [createdTranslation] = await db
@@ -137,16 +117,7 @@ export async function createTranslationForPost(translationData: {
  */
 export async function updateOriginalPost(
   postId: string,
-  updateData: Partial<{
-    title: string;
-    excerpt: string;
-    content: string;
-    status: string;
-    language: string;
-    featuredImage: string | null;
-    categories: string[];
-    publishedAt: Date | null;
-  }>
+  updateData: UpdateOriginalPostInput
 ): Promise<PostRecord | null> {
   const currentTimestamp = new Date();
 
@@ -182,56 +153,6 @@ export async function updateOriginalPost(
     parentPostId: null,
     translatedFromLanguage: null,
     translationQuality: null,
-  };
-}
-
-/**
- * Update translation
- */
-export async function updateTranslation(
-  translationId: string,
-  updateData: Partial<{
-    title: string;
-    excerpt: string;
-    content: string;
-    status: string;
-    translationQuality: string;
-  }>
-): Promise<PostRecord | null> {
-  const currentTimestamp = new Date();
-
-  const [updatedTranslation] = await db
-    .update(postTranslations)
-    .set({
-      ...updateData,
-      updatedAt: currentTimestamp,
-    })
-    .where(eq(postTranslations.id, translationId))
-    .returning();
-
-  if (!updatedTranslation) return null;
-
-  return {
-    id: updatedTranslation.id,
-    slug: updatedTranslation.slug,
-    title: updatedTranslation.title,
-    excerpt: updatedTranslation.excerpt,
-    content: updatedTranslation.content,
-    language: updatedTranslation.language,
-    type: updatedTranslation.type,
-    status: updatedTranslation.status,
-    featuredImage: updatedTranslation.featuredImage,
-    categories: updatedTranslation.categories,
-    authorId: null,
-    authorName: null,
-    publishedAt: updatedTranslation.publishedAt,
-    createdAt: updatedTranslation.createdAt,
-    updatedAt: updatedTranslation.updatedAt,
-    viewCount: updatedTranslation.viewCount,
-    isTranslation: true,
-    parentPostId: updatedTranslation.postId,
-    translatedFromLanguage: updatedTranslation.translatedFrom,
-    translationQuality: updatedTranslation.translationQuality,
   };
 }
 

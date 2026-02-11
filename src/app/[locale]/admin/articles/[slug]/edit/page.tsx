@@ -136,21 +136,12 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
           status: data.status,
           featured_image: data.featuredImageUrl || null,
           meta_description: data.metaDescription || null,
-          autoTranslate: data.autoTranslate,
         },
-        data.language,
-        data.autoTranslate
-          ? ["en", "fi"].filter((lang) => lang !== data.language)
-          : undefined
+        data.language
       );
 
       if (result.success) {
-        const translationsCount = result.createdTranslations?.length || 0;
-        toast.success(
-          translationsCount > 0
-            ? `Article updated with ${translationsCount} translation(s)!`
-            : t("updateSuccess")
-        );
+        toast.success(t("updateSuccess"));
         
         // Generate new slug from title if title changed
         const newSlug = data.title

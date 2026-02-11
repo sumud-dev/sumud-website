@@ -1,15 +1,15 @@
 import { useNode } from '@craftjs/core';
 import ContentEditable from 'react-contenteditable';
 import { useRef } from 'react';
+import { stylePropsToCSS, type StyleProps } from '@/src/lib/types/block-props';
 
-interface TextProps {
+interface TextProps extends StyleProps {
   text: string;
   fontSize: number;
   textAlign: 'left' | 'center' | 'right';
   color: string;
   bold: boolean;
   italic: boolean;
-  display: 'block' | 'inline';
 }
 
 export const Text = ({ 
@@ -19,7 +19,7 @@ export const Text = ({
   color = '#000000',
   bold = false,
   italic = false,
-  display = 'block'
+  ...styleProps
 }: Partial<TextProps>) => {
   const {
     connectors: { connect, drag },
@@ -28,7 +28,13 @@ export const Text = ({
 
   const contentRef = useRef<HTMLElement>(null!);
 
-  const isInline = display === 'inline';
+  const isInline = styleProps.display === 'inline-block';
+
+  const styles = stylePropsToCSS({
+    marginBottom: isInline ? 0 : 16,
+    maxWidth: styleProps.maxWidth || '80rem',
+    ...styleProps,
+  });
 
   return (
     <div
@@ -38,6 +44,7 @@ export const Text = ({
         }
       }}
       style={{ 
+        ...styles,
         fontSize: `${fontSize}px`, 
         textAlign: isInline ? undefined : textAlign,
         color,
@@ -45,7 +52,7 @@ export const Text = ({
         fontStyle: italic ? 'italic' : 'normal',
         display: isInline ? 'inline-block' : 'block',
       }}
-      className={isInline ? '' : 'mb-4'}
+      className="mx-auto"
     >
       <ContentEditable
         innerRef={contentRef}
@@ -68,7 +75,11 @@ Text.craft = {
     color: '#000000',
     bold: false,
     italic: false,
-    display: 'block',
+    marginTop: 0,
+    marginBottom: 16,
+    marginLeft: 0,
+    marginRight: 0,
+    maxWidth: '80rem',
   },
   related: {
     settings: TextSettings,
@@ -98,12 +109,12 @@ function TextSettings() {
       <div>
         <label className="block text-sm font-medium mb-2">Display</label>
         <select
-          value={display}
-          onChange={(e) => setProp((props: TextProps) => (props.display = e.target.value as 'block' | 'inline'))}
+          value={display || 'block'}
+          onChange={(e) => setProp((props: any) => (props.display = e.target.value as StyleProps['display']))}
           className="w-full px-3 py-2 border rounded"
         >
           <option value="block">Block (full width)</option>
-          <option value="inline">Inline (side by side)</option>
+          <option value="inline-block">Inline Block (side by side)</option>
         </select>
       </div>
       <div>

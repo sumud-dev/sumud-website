@@ -116,15 +116,14 @@ const ArticlesPage: React.FC = () => {
 
     deletePostMutation.mutate(deleteConfirm.slug, {
       onSuccess: () => {
-        toast.success(t("deleteSuccess"));
         setDeleteConfirm(null);
-        refetchPosts();
+        // Removed refetchPosts() - optimistic updates handle this
       },
       onError: (mutationError) => {
         toast.error(mutationError.message || t("deleteFailed"));
       },
     });
-  }, [deletePostMutation, t, refetchPosts, deleteConfirm]);
+  }, [deletePostMutation, t, deleteConfirm]);
 
   /**
    * Handle status update (publish/unpublish/archive)
@@ -140,21 +139,15 @@ const ArticlesPage: React.FC = () => {
       },
       {
         onSuccess: () => {
-          const statusMessage = newStatus === "published" 
-            ? t("publishSuccess")
-            : newStatus === "archived"
-            ? t("archiveSuccess")
-            : t("unpublishSuccess");
-          
-          toast.success(statusMessage);
-          refetchPosts();
+          // Success toast is handled by the mutation hook
+          // Removed refetchPosts() - optimistic updates handle this
         },
         onError: (mutationError) => {
           toast.error(mutationError.message || t("statusUpdateFailed"));
         },
       }
     );
-  }, [updatePostMutation, t, refetchPosts]);
+  }, [updatePostMutation, t]);
 
   /**
    * Format date for display
