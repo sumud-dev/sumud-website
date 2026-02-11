@@ -46,7 +46,7 @@ export const InlineGroup = ({
         minHeight: '40px',
         width: '100%',
       }}
-      className="p-2 border border-dashed border-blue-300 rounded mx-auto"
+      className="craftjs-flex-container p-2 border border-dashed border-blue-300 rounded mx-auto"
     >
       {children || (
         <span className="text-gray-400 text-sm">

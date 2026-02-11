@@ -937,3 +937,24 @@
     border-radius: 0;
   }
 }
+
+/* ============================================
+   CRAFT.JS PAGE BUILDER STYLES
+   Ensures flex layouts work correctly
+   ============================================ */
+
+/* For flex container blocks (Row, InlineGroup), make child wrappers transparent to layout
+   so they don't interfere with flex layout. Craft.js wraps each node in a div. */
+.craftjs-flex-container > div {
+  /* Keep the wrapper but make it not affect flex layout */
+  display: flex;
+  flex-direction: inherit;
+  flex-wrap: inherit;
+  align-items: inherit;
+  justify-content: inherit;
+}
+
+/* Direct children of flex containers that are actual components should flex properly */
+.craftjs-flex-container > div > * {
+  flex-shrink: 0;
+}

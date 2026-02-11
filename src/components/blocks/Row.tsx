@@ -41,7 +41,7 @@ export const Row = ({
         width: '100%',
         minHeight: '80px',
       }}
-      className="p-2 border border-dashed border-gray-300 rounded mx-auto"
+      className="craftjs-flex-container p-2 border border-dashed border-gray-300 rounded mx-auto"
     >
       {children}
     </div>
