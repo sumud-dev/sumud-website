@@ -1,8 +1,7 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   updateCampaignAction, 
   updateCampaignTranslationAction,
@@ -12,13 +11,16 @@ import { queryKeys } from '@/src/lib/react-query/query-keys';
 import type { CampaignFilters } from '@/src/lib/react-query/query-keys';
 import type { CampaignType, CampaignParticipationStep, CampaignResource, CampaignSuccessStory } from '@/src/types/Campaigns';
 
-// Description can be a string or JSONB object from the database
+// ============================================
+// TYPES
+// ============================================
+
 export type CampaignDescription = string | { type: 'blocks' | 'markdown' | 'html'; data: unknown } | null;
 
 export interface Campaign {
   id: string;
-  campaignId?: string; // For translations, this is the parent campaign ID
-  parentId?: string; // Legacy field for checking if it's a translation
+  campaignId?: string;
+  parentId?: string;
   title: string;
   slug: string;
   description: CampaignDescription;
@@ -43,84 +45,134 @@ export interface Campaign {
   seoDescription?: string;
 }
 
+// ============================================
+// HELPER FUNCTIONS (eliminates duplication)
+// ============================================
+
 /**
- * Helper function to extract text from JSONB description field
- * Strips HTML tags to return plain text
+ * Fetch data from API and handle errors consistently
  */
-export function getDescriptionText(description: CampaignDescription): string {
+async function fetchFromAPI<T>(url: string): Promise<T> {
+  const response = await fetch(url, { cache: 'no-store' });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch: ${response.statusText}`);
+  }
+  
+  const result = await response.json();
+  
+  if (!result.success) {
+    throw new Error(result.error || 'Request failed');
+  }
+  
+  return result.data || result;
+}
+
+/**
+ * Build URL with query parameters
+ */
+function buildCampaignURL(path: string, params: Record<string, string | number | boolean | undefined>): string {
+  const searchParams = new URLSearchParams();
+  
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined) {
+      searchParams.append(key, String(value));
+    }
+  });
+  
+  const queryString = searchParams.toString();
+  return queryString ? `${path}?${queryString}` : path;
+}
+
+/**
+ * Invalidate campaign cache after mutations
+ */
+function invalidateCampaignCache(queryClient: ReturnType<typeof useQueryClient>, slug?: string) {
+  if (slug) {
+    queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.detail(slug) });
+  }
+  queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.lists() });
+}
+
+/**
+ * Extract text from JSONB description field
+ */
+function extractTextFromDescription(description: CampaignDescription): string {
   if (!description) return '';
   
   let text = '';
   
-  // If it's already a string, use it
   if (typeof description === 'string') {
     text = description;
-  }
-  // If it's a JSONB object with data property
-  else if (typeof description === 'object' && 'data' in description) {
+  } else if (typeof description === 'object' && 'data' in description) {
     if (typeof description.data === 'string') {
       text = description.data;
-    }
-    // For blocks type, try to extract text from blocks
-    else if (description.type === 'blocks' && Array.isArray(description.data)) {
+    } else if (description.type === 'blocks' && Array.isArray(description.data)) {
       text = description.data.map((block: { text?: string }) => block.text || '').join(' ');
     }
   }
   
-  // Strip HTML tags including TipTap raw HTML wrappers
-  text = text.replace(/<div data-raw-html="true"[^>]*>.*?<\/div>/gs, '');
-  text = text.replace(/<div data-raw-html="true"[^>]*\/>/g, '');
-  text = text.replace(/<[^>]+>/g, '');
-  
-  // Decode HTML entities
-  text = text
+  return text;
+}
+
+/**
+ * Strip HTML tags and decode entities
+ */
+function cleanHTML(html: string): string {
+  return html
+    // Remove TipTap raw HTML wrappers
+    .replace(/<div data-raw-html="true"[^>]*>.*?<\/div>/gs, '')
+    .replace(/<div data-raw-html="true"[^>]*\/>/g, '')
+    // Remove all HTML tags
+    .replace(/<[^>]+>/g, '')
+    // Decode HTML entities
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
-    .replace(/&amp;/g, '&');
-  
-  return text.trim();
+    .replace(/&amp;/g, '&')
+    .trim();
 }
 
 /**
+ * Get plain text from description (main exported utility)
+ */
+export function getDescriptionText(description: CampaignDescription): string {
+  const text = extractTextFromDescription(description);
+  return cleanHTML(text);
+}
+
+// ============================================
+// QUERY HOOKS
+// ============================================
+
+/**
  * Hook to fetch campaigns with filters
- * Automatically includes the current locale in the request
  */
 export function useCampaigns(filters?: CampaignFilters) {
   const locale = useLocale();
   
   const { data, isLoading, error, isError } = useQuery({
     queryKey: queryKeys.campaigns.list({ ...filters, language: filters?.language || locale }),
-    queryFn: async () => {
-      // Build query parameters
-      const params = new URLSearchParams();
+    queryFn: () => {
+      const url = buildCampaignURL('/api/campaigns', {
+        search: filters?.search,
+        category: filters?.category,
+        campaignType: filters?.campaignType,
+        status: filters?.status,
+        language: filters?.language || locale,
+        isFeatured: filters?.isFeatured,
+        page: filters?.page,
+        limit: filters?.limit,
+      });
       
-      if (filters?.search) params.append('search', filters.search);
-      if (filters?.category) params.append('category', filters.category);
-      if (filters?.campaignType) params.append('campaignType', filters.campaignType);
-      if (filters?.status) params.append('status', filters.status);
-      // Use the locale if no language filter is specified
-      const language = filters?.language || locale;
-      params.append('language', language);
-      if (filters?.isFeatured) params.append('isFeatured', String(filters.isFeatured));
-      if (filters?.page) params.append('page', String(filters.page));
-      if (filters?.limit) params.append('limit', String(filters.limit));
-
-      const response = await fetch(`/api/campaigns?${params.toString()}`, { cache: 'no-store' });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch campaigns');
-      }
-      
-      const result = await response.json();
-      return result.success ? result : { data: [] };
+      return fetchFromAPI<Campaign[]>(url);
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
   return {
-    data: (data ?? { data: [] }) as { data: Campaign[] },
+    data: data ?? [],
     isLoading,
     error: isError ? error : null,
   };
@@ -128,36 +180,33 @@ export function useCampaigns(filters?: CampaignFilters) {
 
 /**
  * Hook to fetch a single campaign by slug
- * Automatically includes the current locale in the request
  */
 export function useCampaign(slug: string) {
   const locale = useLocale();
   
   const { data, isLoading, error, isError } = useQuery({
     queryKey: queryKeys.campaigns.detail(slug),
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      params.append('language', locale);
+    queryFn: () => {
+      const url = buildCampaignURL(`/api/campaigns/${slug}`, {
+        language: locale,
+      });
       
-      const response = await fetch(`/api/campaigns/${slug}?${params.toString()}`, { cache: 'no-store' });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch campaign');
-      }
-      
-      const result = await response.json();
-      return result.success ? result.data : null;
+      return fetchFromAPI<Campaign>(url);
     },
     enabled: !!slug,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
   });
 
   return {
-    data: data as Campaign | null,
+    data: data ?? null,
     isLoading,
     error: isError ? error : null,
   };
 }
+
+// ============================================
+// MUTATION HOOKS
+// ============================================
 
 /**
  * Hook to update campaign base fields
@@ -175,18 +224,19 @@ export function useUpdateCampaign() {
     }: { 
       campaignId: string; 
       slug: string; 
-      data: any;
+      data: Record<string, unknown>;
       language?: string;
     }) => {
       const result = await updateCampaignAction(campaignId, slug, data, language || locale);
+      
       if (!result.success) {
         throw new Error(result.error);
       }
+      
       return result.data;
     },
     onSuccess: (_, { slug }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.detail(slug) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.lists() });
+      invalidateCampaignCache(queryClient, slug);
     },
   });
 }
@@ -207,17 +257,18 @@ export function useUpdateCampaignTranslation() {
       campaignId: string; 
       slug: string; 
       locale: string; 
-      data: any;
+      data: Record<string, unknown>;
     }) => {
       const result = await updateCampaignTranslationAction(campaignId, slug, locale, data);
+      
       if (!result.success) {
         throw new Error(result.error);
       }
+      
       return result.data;
     },
     onSuccess: (_, { slug }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.detail(slug) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.lists() });
+      invalidateCampaignCache(queryClient, slug);
     },
   });
 }
@@ -232,13 +283,15 @@ export function useDeleteCampaign() {
   return useMutation({
     mutationFn: async ({ slug, language }: { slug: string; language?: string }) => {
       const result = await deleteCampaignAction(slug, language || locale);
+      
       if (!result.success) {
         throw new Error(result.error);
       }
+      
       return result.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.lists() });
+      invalidateCampaignCache(queryClient);
     },
   });
 }

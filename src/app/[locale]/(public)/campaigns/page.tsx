@@ -107,7 +107,7 @@ export default function CampaignsPage() {
   const { data: campaignsResponse, isLoading, error } = useCampaigns();
 
   // Get campaigns from API response (already typed correctly)
-  const campaigns = campaignsResponse?.data ?? [];
+  const campaigns = campaignsResponse ?? [];
 
   // Filter and sort campaigns
   const filteredCampaigns = useMemo(() => {

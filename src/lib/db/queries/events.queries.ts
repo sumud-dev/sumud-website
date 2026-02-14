@@ -156,6 +156,13 @@ export async function getAllEvents(filters?: {
   status?: string;
   language?: string;
   locale?: string;
+  search?: string;
+  eventType?: string;
+  locationMode?: string;
+  upcoming?: boolean;
+  featured?: boolean;
+  startDate?: string;
+  endDate?: string;
 }) {
   const language = filters?.locale || filters?.language || 'en';
   const limit = filters?.limit || 16;
@@ -357,20 +364,33 @@ export async function createEvent(data: {
   const language = data.language || 'fi';
   
   try {
-    // Check if slug already exists in either table
-    const [existingEvent, existingTranslation] = await Promise.all([
-      db.select({ slug: events.slug })
-        .from(events)
-        .where(eq(events.slug, data.slug))
-        .limit(1),
-      db.select({ slug: eventTranslations.slug })
-        .from(eventTranslations)
-        .where(eq(eventTranslations.slug, data.slug))
-        .limit(1),
-    ]);
+    // Check if slug already exists for this specific language
+    // Same slug is allowed for different languages (translations)
+    if (language === 'fi') {
+      const [existingEvent, existingTranslation] = await Promise.all([
+        db.select({ slug: events.slug })
+          .from(events)
+          .where(and(eq(events.slug, data.slug), eq(events.language, 'fi')))
+          .limit(1),
+        db.select({ slug: eventTranslations.slug })
+          .from(eventTranslations)
+          .where(and(eq(eventTranslations.slug, data.slug), eq(eventTranslations.language, 'fi')))
+          .limit(1),
+      ]);
 
-    if (existingEvent[0] || existingTranslation[0]) {
-      throw new Error('An event with this slug already exists');
+      if (existingEvent[0] || existingTranslation[0]) {
+        throw new Error('An event with this slug already exists for this language');
+      }
+    } else {
+      const existingTranslation = await db
+        .select({ slug: eventTranslations.slug })
+        .from(eventTranslations)
+        .where(and(eq(eventTranslations.slug, data.slug), eq(eventTranslations.language, language)))
+        .limit(1);
+
+      if (existingTranslation[0]) {
+        throw new Error('An event with this slug already exists for this language');
+      }
     }
 
     const targetTable = language === 'fi' ? events : eventTranslations;
@@ -383,7 +403,7 @@ export async function createEvent(data: {
     console.error('Error creating event:', error);
     if (error instanceof Error) {
       if (error.message.includes('unique') || error.message.includes('duplicate')) {
-        throw new Error('An event with this slug already exists');
+        throw new Error('An event with this slug already exists for this language');
       }
       throw new Error(`Failed to create event: ${error.message}`);
     }

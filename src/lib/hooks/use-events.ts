@@ -1,14 +1,35 @@
+/**
+ * React Query Hooks for Events
+ * FILE: src/lib/hooks/use-events.ts
+ */
+
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
-import { queryKeys } from '@/src/lib/react-query/query-keys';
-import type { EventFilters } from '@/src/lib/react-query/query-keys';
+import { toast } from 'sonner';
+import {
+  fetchAllEventsAdminAction,
+  fetchPublishedEventsAction,
+  fetchUpcomingEventsAction,
+  fetchEventBySlugAction,
+  fetchEventByIdAction,
+  fetchEventsByCategoryAction,
+  searchEventsAction,
+  getEventCountAction,
+  createEventAction,
+  updateEventAction,
+  deleteEventAction,
+} from '@/src/actions/events.actions';
 import type { BaseEvent } from '@/src/lib/types/event';
 
+// ============================================================================
+// TYPE DEFINITIONS
+// ============================================================================
+
 interface EventsResponse {
-  data: BaseEvent[];
-  pagination?: {
+  events: BaseEvent[];
+  pagination: {
     page: number;
     limit: number;
     total: number;
@@ -16,99 +37,393 @@ interface EventsResponse {
   };
 }
 
-/**
- * Hook to fetch events with filters
- * Automatically includes the current locale in the request
- */
-export function useEvents(filters?: EventFilters) {
-  const locale = useLocale();
+// ============================================================================
+// QUERY KEYS
+// ============================================================================
+
+export const eventQueryKeys = {
+  allEvents: ['events'] as const,
+  eventLists: () => [...eventQueryKeys.allEvents, 'list'] as const,
+  eventList: (filters?: unknown) => [...eventQueryKeys.eventLists(), filters || {}] as const,
+  eventDetails: () => [...eventQueryKeys.allEvents, 'detail'] as const,
+  eventDetail: (eventSlug: string) => [...eventQueryKeys.eventDetails(), eventSlug] as const,
+  eventDetailById: (eventId: string) => [...eventQueryKeys.eventDetails(), 'id', eventId] as const,
+  eventStatistics: () => [...eventQueryKeys.allEvents, 'statistics'] as const,
+  eventCount: (status?: string, language?: string) =>
+    [...eventQueryKeys.eventStatistics(), 'count', status || 'all', language || 'all'] as const,
+};
+
+// ============================================================================
+// CACHE HELPERS (extracted duplication)
+// ============================================================================
+
+function updateEventList(oldData: any, updater: (events: any[]) => any[]) {
+  if (!oldData) return oldData;
   
-  const { data, isLoading, error, isError } = useQuery<EventsResponse>({
-    queryKey: queryKeys.events.list({ ...filters, language: filters?.language || locale }),
+  // Handle regular paginated data
+  if (oldData.events && Array.isArray(oldData.events)) {
+    return {
+      ...oldData,
+      events: updater(oldData.events),
+    };
+  }
+  
+  // Handle infinite query data
+  if (oldData.pages && Array.isArray(oldData.pages)) {
+    return {
+      ...oldData,
+      pages: oldData.pages.map((page: any) => ({
+        ...page,
+        events: Array.isArray(page.events) ? updater(page.events) : page.events,
+      })),
+    };
+  }
+  
+  return oldData;
+}
+
+function addEventOptimistically(queryClient: any, newEvent: any) {
+  queryClient.setQueriesData(
+    { queryKey: eventQueryKeys.eventLists() },
+    (oldData: any) => updateEventList(oldData, (events) => [newEvent, ...events])
+  );
+}
+
+function updateEventOptimistically(queryClient: any, eventId: string, updates: any) {
+  queryClient.setQueriesData(
+    { queryKey: eventQueryKeys.eventLists() },
+    (oldData: any) => updateEventList(oldData, (events) =>
+      events.map((event: any) =>
+        event.id === eventId ? { ...event, ...updates, updatedAt: new Date() } : event
+      )
+    )
+  );
+}
+
+function removeEventOptimistically(queryClient: any, eventId: string) {
+  queryClient.setQueriesData(
+    { queryKey: eventQueryKeys.eventLists() },
+    (oldData: any) => updateEventList(oldData, (events) =>
+      events.filter((event: any) => event.id !== eventId)
+    )
+  );
+}
+
+// ============================================================================
+// QUERY HOOKS
+// ============================================================================
+
+export function useEvents(filters?: {
+  limit?: number;
+  offset?: number;
+  page?: number;
+  status?: string;
+  language?: string;
+  locale?: string;
+  search?: string;
+  eventType?: string;
+  locationMode?: string;
+  upcoming?: boolean;
+  featured?: boolean;
+  startDate?: string;
+  endDate?: string;
+}) {
+  const currentLocale = useLocale();
+  const language = filters?.language || filters?.locale || currentLocale;
+
+  return useQuery<EventsResponse>({
+    queryKey: eventQueryKeys.eventList({ ...filters, language }),
     queryFn: async () => {
-      // Build query parameters
-      const params = new URLSearchParams();
-      
-      if (filters?.search) params.append('search', filters.search);
-      if (filters?.eventType) params.append('eventType', filters.eventType);
-      if (filters?.locationMode) params.append('locationMode', filters.locationMode);
-      if (filters?.status) params.append('status', filters.status);
-      // Use the locale if no language filter is specified
-      const language = filters?.language || locale;
-      params.append('language', language);
-      if (filters?.upcoming) params.append('upcoming', String(filters.upcoming));
-      if (filters?.featured) params.append('featured', String(filters.featured));
-      if (filters?.startDate) params.append('startDate', filters.startDate);
-      if (filters?.endDate) params.append('endDate', filters.endDate);
-      if (filters?.page) params.append('page', String(filters.page));
-      if (filters?.limit) params.append('limit', String(filters.limit));
-
-      const response = await fetch(`/api/events?${params.toString()}`, { cache: 'no-store' });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch events');
-      }
-      
-      const result = await response.json();
-      
-      // Handle API response - normalize to consistent structure
-      // API returns { events: [...], total, page, limit, pages }
-      if (result.events) {
-        return {
-          data: result.events as BaseEvent[],
-          pagination: {
-            page: result.page,
-            limit: result.limit,
-            total: result.total,
-            pages: result.pages,
-          },
-        };
-      }
-      
-      // Fallback for array response (shouldn't happen but handle gracefully)
-      return {
-        data: Array.isArray(result) ? result : [],
-        pagination: undefined,
-      };
+      const result = await fetchAllEventsAdminAction({ ...filters, language });
+      if (!result.success) throw new Error(result.error);
+      return result.data as EventsResponse;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
   });
+}
 
-  return {
-    data: data ?? { data: [], pagination: undefined },
-    isLoading,
-    error: isError ? error : null,
+export function usePublishedEvents(filters?: {
+  limit?: number;
+  offset?: number;
+  language?: string;
+}) {
+  const currentLocale = useLocale();
+  const language = filters?.language || currentLocale;
+
+  return useQuery({
+    queryKey: eventQueryKeys.eventList({ ...filters, status: 'published', language }),
+    queryFn: async () => {
+      const result = await fetchPublishedEventsAction({ ...filters, language });
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+  });
+}
+
+export function useUpcomingEvents(filters?: {
+  limit?: number;
+  language?: string;
+}) {
+  const currentLocale = useLocale();
+  const language = filters?.language || currentLocale;
+
+  return useQuery({
+    queryKey: eventQueryKeys.eventList({ ...filters, upcoming: true, language }),
+    queryFn: async () => {
+      const result = await fetchUpcomingEventsAction({ ...filters, language });
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+  });
+}
+
+export function useEventBySlug(eventSlug: string) {
+  return useQuery({
+    queryKey: eventQueryKeys.eventDetail(eventSlug),
+    queryFn: async () => {
+      const result = await fetchEventBySlugAction(eventSlug);
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+    enabled: Boolean(eventSlug),
+  });
+}
+
+export function useEventById(eventId: string) {
+  return useQuery({
+    queryKey: eventQueryKeys.eventDetailById(eventId),
+    queryFn: async () => {
+      const result = await fetchEventByIdAction(eventId);
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+    enabled: Boolean(eventId),
+  });
+}
+
+export function useEventsByCategory(
+  category: string,
+  filters?: {
+    limit?: number;
+    offset?: number;
+    language?: string;
+  }
+) {
+  const currentLocale = useLocale();
+  const language = filters?.language || currentLocale;
+
+  return useQuery({
+    queryKey: eventQueryKeys.eventList({ ...filters, category, language }),
+    queryFn: async () => {
+      const result = await fetchEventsByCategoryAction(category, { ...filters, language });
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+    enabled: Boolean(category),
+  });
+}
+
+export function useSearchEvents(
+  query: string,
+  filters?: {
+    limit?: number;
+    language?: string;
+  }
+) {
+  const currentLocale = useLocale();
+  const language = filters?.language || currentLocale;
+
+  return useQuery({
+    queryKey: eventQueryKeys.eventList({ ...filters, search: query, language }),
+    queryFn: async () => {
+      const result = await searchEventsAction(query, { ...filters, language });
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+    enabled: Boolean(query?.trim()),
+  });
+}
+
+export function useEventCount(status?: string, language?: string) {
+  const currentLocale = useLocale();
+  const eventLanguage = language || currentLocale;
+
+  return useQuery({
+    queryKey: eventQueryKeys.eventCount(status, eventLanguage),
+    queryFn: async () => {
+      const result = await getEventCountAction(status, eventLanguage);
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+  });
+}
+
+export function useInfiniteEvents(filters?: {
+  limit?: number;
+  offset?: number;
+  status?: string;
+  language?: string;
+  locale?: string;
+}) {
+  const currentLocale = useLocale();
+  const language = filters?.language || filters?.locale || currentLocale;
+
+  return useInfiniteQuery({
+    queryKey: eventQueryKeys.eventList({ ...filters, language }),
+    queryFn: async ({ pageParam = 1 }) => {
+      const result = await fetchAllEventsAdminAction({
+        ...filters,
+        language,
+        page: pageParam,
+      });
+      if (!result.success) throw new Error(result.error);
+      return result.data;
+    },
+    getNextPageParam: (lastPage: any) => {
+      return lastPage.pagination && lastPage.pagination.page < lastPage.pagination.pages
+        ? lastPage.pagination.page + 1
+        : undefined;
+    },
+    initialPageParam: 1,
+    staleTime: 30 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}
+
+// ============================================================================
+// MUTATION HOOKS
+// ============================================================================
+
+export function useCreateEvent() {
+  const queryClient = useQueryClient();
+  const currentLocale = useLocale();
+
+  return useMutation({
+    mutationFn: async (eventInput: Parameters<typeof createEventAction>[0]) => {
+      const result = await createEventAction(eventInput);
+      if (!result.success) throw new Error(result.error);
+      return result;
+    },
+    onMutate: async (eventInput) => {
+      await queryClient.cancelQueries({ queryKey: eventQueryKeys.allEvents });
+
+      const optimisticEvent = {
+        id: `temp-${Date.now()}`,
+        ...eventInput,
+        language: eventInput.language || currentLocale,
+        status: eventInput.status || 'draft',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      addEventOptimistically(queryClient, optimisticEvent);
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: eventQueryKeys.allEvents });
+      toast.success(result.message || 'Event created successfully');
+    },
+    onError: (error: Error) => {
+      queryClient.invalidateQueries({ queryKey: eventQueryKeys.allEvents });
+      toast.error(error.message);
+    },
+  });
+}
+
+export function useUpdateEvent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      eventId,
+      updateData,
+    }: {
+      eventId: string;
+      updateData: Parameters<typeof updateEventAction>[1];
+    }) => {
+      const result = await updateEventAction(eventId, updateData);
+      if (!result.success) throw new Error(result.error);
+      return { ...result, eventId };
+    },
+    onMutate: async ({ eventId, updateData }) => {
+      await queryClient.cancelQueries({ queryKey: eventQueryKeys.allEvents });
+      updateEventOptimistically(queryClient, eventId, updateData);
+    },
+    onSuccess: (result) => {
+      const statusMessages: Record<string, string> = {
+        published: 'Event published successfully',
+        draft: 'Event unpublished successfully',
+        archived: 'Event archived successfully',
+      };
+
+      const event = result.data as { status?: string } | undefined;
+      const message = event?.status && statusMessages[event.status]
+        ? statusMessages[event.status]
+        : result.message || 'Event updated successfully';
+
+      queryClient.invalidateQueries({ queryKey: eventQueryKeys.allEvents });
+      toast.success(message);
+    },
+    onError: (error: Error) => {
+      queryClient.invalidateQueries({ queryKey: eventQueryKeys.allEvents });
+      toast.error(error.message);
+    },
+  });
+}
+
+export function useDeleteEvent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (eventId: string) => {
+      const result = await deleteEventAction(eventId);
+      if (!result.success) throw new Error(result.error);
+      return result;
+    },
+    onMutate: async (eventId: string) => {
+      await queryClient.cancelQueries({ queryKey: eventQueryKeys.allEvents });
+      removeEventOptimistically(queryClient, eventId);
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: eventQueryKeys.allEvents });
+      toast.success(result.message || 'Event deleted successfully');
+    },
+    onError: (error: Error) => {
+      queryClient.invalidateQueries({ queryKey: eventQueryKeys.allEvents });
+      toast.error(error.message);
+    },
+  });
+}
+
+// ============================================================================
+// UTILITY HOOKS
+// ============================================================================
+
+export function usePrefetchEvent() {
+  const queryClient = useQueryClient();
+
+  return (eventSlug: string) => {
+    queryClient.prefetchQuery({
+      queryKey: eventQueryKeys.eventDetail(eventSlug),
+      queryFn: async () => {
+        const result = await fetchEventBySlugAction(eventSlug);
+        if (!result.success) throw new Error('Event not found');
+        return result.data;
+      },
+    });
   };
 }
 
-/**
- * Hook to fetch a single event by slug
- * Automatically includes the current locale in the request
- */
-export function useEvent(slug: string) {
-  const locale = useLocale();
-  
-  const { data, isLoading, error, isError } = useQuery({
-    queryKey: queryKeys.events.detail(slug),
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      params.append('language', locale);
-      
-      const response = await fetch(`/api/events/${slug}?${params.toString()}`, { cache: 'no-store' });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch event');
-      }
-      
-      return response.json() as Promise<BaseEvent>;
-    },
-    enabled: !!slug,
-    staleTime: 10 * 60 * 1000, // 10 minutes
-  });
+export function useInvalidateEventCache() {
+  const queryClient = useQueryClient();
 
   return {
-    data: data || null,
-    isLoading,
-    error: isError ? error : null,
+    invalidateAllEvents: () => {
+      queryClient.invalidateQueries({ queryKey: eventQueryKeys.allEvents });
+    },
+    invalidateEventLists: () => {
+      queryClient.invalidateQueries({ queryKey: eventQueryKeys.eventLists() });
+    },
+    invalidateEventDetail: (eventSlug: string) => {
+      queryClient.invalidateQueries({ queryKey: eventQueryKeys.eventDetail(eventSlug) });
+    },
   };
 }

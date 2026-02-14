@@ -10,6 +10,7 @@ import { useEventFilters } from "@/src/lib/hooks/use-event-filters";
 import { useCelebration } from "@/src/components/ui/celebration";
 import { usePage } from "@/src/lib/hooks/use-pages";
 import { fadeInUp, staggerContainer } from "@/src/lib/utils/animations";
+import type { BaseEvent } from "@/src/lib/types/event";
 
 // Lazy load components for better performance
 const EventCard = lazy(() =>
@@ -129,7 +130,7 @@ export default function EventsPage() {
     limit: 100, // Get more events for calendar display
   });
 
-  const calendarEvents = calendarEventsResponse?.data || [];
+  const calendarEvents = (calendarEventsResponse?.events || []) as BaseEvent[];
 
   // Fetch events with current filters
   const {
@@ -148,7 +149,7 @@ export default function EventsPage() {
       : undefined,
   });
 
-  const events = eventsResponse?.data || [];
+  const events = (eventsResponse?.events || []) as BaseEvent[];
   const pagination = eventsResponse?.pagination;
 
   // Error state
@@ -202,7 +203,7 @@ export default function EventsPage() {
               isLoading={isLoading}
               onMobileCalendarChange={filterState.setShowMobileCalendar}
               onMobileFiltersChange={filterState.setShowMobileFilters}
-              onFilterChange={filterState.handleFilterChange as any}
+              onFilterChange={filterState.handleFilterChange}
               onSearchChange={filterState.setSearchInput}
               onSearch={filterState.handleSearch}
               onUpcomingToggle={() =>
@@ -221,7 +222,7 @@ export default function EventsPage() {
               showUpcomingOnly={filterState.showUpcomingOnly}
               selectedDate={filterState.selectedDate}
               activeFiltersCount={filterState.activeFiltersCount}
-              onFilterChange={filterState.handleFilterChange as any}
+              onFilterChange={filterState.handleFilterChange}
               onSearchChange={filterState.setSearchInput}
               onSearch={filterState.handleSearch}
               onUpcomingToggle={() =>
@@ -306,7 +307,7 @@ export default function EventsPage() {
                         animate="animate"
                         className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"
                       >
-                        {events.map((event) => (
+                        {events.map((event: BaseEvent) => (
                           <motion.div
                             key={event.id}
                             variants={fadeInUp}

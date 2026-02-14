@@ -39,7 +39,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { Separator } from "@/src/components/ui/separator";
 import { Progress } from "@/src/components/ui/progress";
 import {
-  fetchCampaigns,
+  fetchCampaignsAction,
   deleteCampaignAction,
   updateCampaignAction,
 } from "@/src/actions/campaigns.actions";
@@ -323,9 +323,9 @@ export default function CampaignDetailsPage({ params }: PageProps) {
         setError(null);
         
         // Try fetching with the requested locale first, then fallback to 'fi'
-        let result = await fetchCampaigns(resolved.slug, resolved.locale);
+        let result = await fetchCampaignsAction(resolved.slug, resolved.locale);
         if (!result.success && resolved.locale !== 'fi') {
-          result = await fetchCampaigns(resolved.slug, 'fi');
+          result = await fetchCampaignsAction(resolved.slug, 'fi');
         }
         
         if (result.success && result.data) {
@@ -611,7 +611,31 @@ export default function CampaignDetailsPage({ params }: PageProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <RichText content={renderContent(campaign.description)} />
+            {/* Force prose styles globally within this container */}
+            <style dangerouslySetInnerHTML={{ __html: `
+              #campaign-content-admin h1 { font-size: 2.25rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; color: #3E442B; }
+              #campaign-content-admin h2 { font-size: 1.875rem; font-weight: 700; margin-top: 1.75rem; margin-bottom: 0.875rem; color: #3E442B; }
+              #campaign-content-admin h3 { font-size: 1.5rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #3E442B; }
+              #campaign-content-admin p { margin-top: 1rem; margin-bottom: 1rem; line-height: 1.75; color: #374151; }
+              #campaign-content-admin ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 1rem; margin-bottom: 1rem; }
+              #campaign-content-admin ol { list-style-type: decimal; padding-left: 1.5rem; margin-top: 1rem; margin-bottom: 1rem; }
+              #campaign-content-admin li { margin-top: 0.5rem; margin-bottom: 0.5rem; }
+              #campaign-content-admin a { color: #781D32; text-decoration: underline; }
+              #campaign-content-admin strong { font-weight: 600; color: #3E442B; }
+              #campaign-content-admin blockquote { border-left: 4px solid #781D32; padding-left: 1.5rem; font-style: italic; color: #6B7280; margin: 1.5rem 0; }
+              #campaign-content-admin code { background-color: #F3F4F6; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.875rem; }
+              #campaign-content-admin pre { background-color: #1F2937; color: #F9FAFB; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1.5rem 0; }
+            ` }} />
+            
+            <div
+              id="campaign-content-admin"
+              style={{
+                backgroundColor: 'white',
+                padding: '1rem',
+                borderRadius: '0.5rem'
+              }}
+              dangerouslySetInnerHTML={{ __html: renderContent(campaign.description) }}
+            />
           </CardContent>
         </Card>
       )}

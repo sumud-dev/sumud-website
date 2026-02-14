@@ -57,7 +57,7 @@ interface EditorToolbarProps {
   onHighlight: () => void;
   onTextColor: (color: string) => void;
   onBackgroundColor: (color: string) => void;
-  onHeading: (level: 1 | 2 | 3) => void;
+  onHeading: (level: number) => void;
   onAlignLeft: () => void;
   onAlignCenter: () => void;
   onAlignRight: () => void;

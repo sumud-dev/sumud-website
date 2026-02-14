@@ -22,7 +22,7 @@ import {
   updateEvent,
   deleteEvent,
   upsertEventTranslation,
-} from '@/src/lib/db/queries/events';
+} from '@/src/lib/db/queries/events.queries';
 import {
   translateContentToAllLocales,
   EVENT_TRANSLATION_CONFIG,
@@ -119,7 +119,7 @@ const eventBaseSchema = z.object({
 });
 
 const createEventSchema = z.object({
-  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens'),
+  slug: z.string().max(200).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens').optional(),
   title: z.string().min(1).max(500),
   description: z.string().max(2000).optional(),
   content: z.string().optional(),
@@ -164,6 +164,13 @@ export async function fetchAllEventsAdminAction(
     status?: string;
     language?: string;
     locale?: string;
+    search?: string;
+    eventType?: string;
+    locationMode?: string;
+    upcoming?: boolean;
+    featured?: boolean;
+    startDate?: string;
+    endDate?: string;
   }
 ): Promise<ActionResult> {
   try {
@@ -452,9 +459,19 @@ export async function createEventAction(
     const sourceLocale = (validated.language || 'fi') as SupportedLocale;
     const createdEvents: { language: string; slug: string }[] = [];
 
+    // Generate slug from title if not provided
+    let finalSlug = validated.slug?.toLowerCase() || generateSlug(validated.title);
+    
+    // Ensure slug is unique by adding suffix if needed
+    let slugSuffix = 1;
+    while (await slugExistsForLanguage(finalSlug, validated.language || 'fi')) {
+      finalSlug = `${validated.slug?.toLowerCase() || generateSlug(validated.title)}-${slugSuffix}`;
+      slugSuffix++;
+    }
+
     // Base event data for insertion
     const baseEventData = {
-      slug: validated.slug.toLowerCase(),
+      slug: finalSlug,
       title: validated.title,
       description: validated.description || undefined,
       content: validated.content || undefined,
@@ -476,32 +493,20 @@ export async function createEventAction(
     // Finnish events go to events table
     // English/Arabic events go to eventTranslations table
     if (validated.language === 'fi') {
-      // Check if Finnish event already exists
-      const exists = await slugExistsForLanguage(validated.slug, 'fi');
-      if (exists) {
-        return { success: false, error: 'An event with this slug already exists' };
-      }
-      
       // Create Finnish event in events table
       await createEvent({
         ...baseEventData,
         language: 'fi',
       });
-      createdEvents.push({ language: 'fi', slug: validated.slug });
+      createdEvents.push({ language: 'fi', slug: finalSlug });
     } else {
-      // Check if event already exists for this language
-      const exists = await slugExistsForLanguage(validated.slug, validated.language!);
-      if (exists) {
-        return { success: false, error: 'An event with this slug already exists' };
-      }
-      
       // Create English/Arabic event in eventTranslations table
       await upsertEventTranslation({
         ...baseEventData,
         eventId: undefined,
         language: validated.language!,
       });
-      createdEvents.push({ language: validated.language!, slug: validated.slug });
+      createdEvents.push({ language: validated.language!, slug: finalSlug });
     }
 
     // Auto-translate to remaining languages if enabled
@@ -541,7 +546,7 @@ export async function createEventAction(
           }
 
           // Use the same slug for all language versions
-          const translatedSlug = validated.slug;
+          const translatedSlug = finalSlug;
           console.log(`[Event Creation] Using shared slug for ${targetLocale}:`, translatedSlug);
           
           // Check if this translation already exists
@@ -590,7 +595,7 @@ export async function createEventAction(
 
     return {
       success: true,
-      data: { slug: validated.slug, createdEvents },
+      data: { slug: finalSlug, createdEvents },
       message: createdEvents.length > 1
         ? `Event created with ${createdEvents.length} language versions`
         : 'Event created successfully',
@@ -649,9 +654,15 @@ export async function updateEventAction(
       };
     }
 
-    // Remove null and undefined values to match updateEvent's expected type
+    // Remove null, undefined values, and immutable fields (slug, language)
+    // These fields are already filtered in updateEvent, but we remove them here for clarity
     const updates = Object.fromEntries(
-      Object.entries(validated).filter(([, value]) => value !== null && value !== undefined)
+      Object.entries(validated).filter(([key, value]) => 
+        value !== null && 
+        value !== undefined && 
+        key !== 'slug' && 
+        key !== 'language'
+      )
     );
 
     // Update event

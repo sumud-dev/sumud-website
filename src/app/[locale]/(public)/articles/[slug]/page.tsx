@@ -19,8 +19,8 @@ import { Badge } from "@/src/components/ui/badge";
 import { Progress } from "@/src/components/ui/progress";
 import ArticleCard from "@/src/components/articles/ArticleCard";
 import { usePostBySlug, usePosts } from "@/src/lib/hooks/use-posts";
-import { formatArticleDate, getCategoryConfig } from "@/src/lib/types/article";
-import { markdownToHtml } from "@/src/lib/utils/markdown";
+import { getCategoryConfig } from "@/src/lib/types/article";
+import { cn } from "@/src/lib/utils/utils";
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -52,11 +52,11 @@ export default function ArticlePage() {
     isLoading: articleLoading,
     error: articleError,
   } = usePostBySlug(slug);
-
+  
   // Fetch related articles - get recent published articles and filter by category client-side
   const { data: relatedArticlesData } = usePosts({
     status: 'published',
-    limit: 10, // Fetch more to have options after filtering
+    limit: 10,
   });
   
   // Filter to same category and exclude current article
@@ -67,7 +67,6 @@ export default function ArticlePage() {
       .filter(post => {
         if (post.slug === slug) return false;
         const postCategories = post.categories || [];
-        // Check if post has any category in common with the article
         return postCategories.some(cat => articleCategories.includes(cat));
       })
       .slice(0, 3)
@@ -101,7 +100,6 @@ export default function ArticlePage() {
       const windowHeight = window.innerHeight;
       const scrollTop = window.scrollY;
 
-      // Calculate reading progress
       const progress = Math.min(
         Math.max(
           ((scrollTop + windowHeight - articleTop) / articleHeight) * 100,
@@ -156,24 +154,14 @@ export default function ArticlePage() {
 
   const handleBookmark = () => {
     setIsBookmarked(!isBookmarked);
-    // TODO: Implement actual bookmarking
   };
 
   const handleLike = () => {
     setIsLiked(!isLiked);
-    // TODO: Implement actual liking
   };
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  // Format article content for better display
-  const formatArticleContent = (content: string | undefined) => {
-    if (!content) return "";
-    
-    // Use the centralized markdown to HTML converter which includes TipTap cleaning
-    return markdownToHtml(content);
   };
 
   if (articleLoading) {
@@ -222,7 +210,7 @@ export default function ArticlePage() {
     color: "text-gray-600",
   };
 
-  // Calculate read time based on content (200 words per minute)
+  // Calculate read time based on content
   const wordCount = article.content ? article.content.split(/\s+/).length : 0;
   const readTime = Math.max(1, Math.round(wordCount / 200));
 
@@ -241,7 +229,6 @@ export default function ArticlePage() {
       {/* Article Header */}
       <section className="relative overflow-hidden bg-white border-b border-[#55613C]/10">
         <div className="max-w-7xl mx-auto px-4 py-8">
-          {/* Navigation */}
           <motion.div
             variants={fadeInLeft}
             initial="initial"
@@ -257,7 +244,6 @@ export default function ArticlePage() {
             </Link>
           </motion.div>
 
-          {/* Article Meta */}
           <motion.div
             variants={fadeInUp}
             initial="initial"
@@ -329,57 +315,38 @@ export default function ArticlePage() {
       {/* Article Content */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="grid lg:grid-cols-4 gap-8">
-            {/* Sidebar */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-24 space-y-6">
-                {/* Tags - Currently not implemented in Article interface */}
-                {/* 
-                {article.tags && article.tags.length > 0 && (
-                  <Card className="border border-[#55613C]/20">
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold text-[#3E442B] mb-3">
-                        Tags
-                      </h3>
-                      <div className="flex flex-wrap gap-2">
-                        {article.tags.map((tag: string, index: number) => (
-                          <Badge
-                            key={index}
-                            variant="secondary"
-                            className="text-xs bg-[#55613C]/10 text-[#55613C] hover:bg-[#55613C]/20"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-                */}
-              </div>
-            </div>
-
-            {/* Main Content */}
+          <div className="">
             <div className="lg:col-span-3">
-              <motion.div
-                id="article-content"
-                variants={fadeInUp}
-                initial="initial"
-                animate="animate"
-                className="prose prose-lg max-w-none 
-                  prose-headings:text-[#3E442B] prose-headings:font-bold prose-headings:mb-4 prose-headings:mt-8 first:prose-headings:mt-0
-                  prose-h1:text-4xl prose-h2:text-3xl prose-h3:text-2xl prose-h4:text-xl
-                  prose-p:text-gray-700 prose-p:leading-relaxed prose-p:mb-6
-                  prose-a:text-[#781D32] prose-a:no-underline hover:prose-a:underline
-                  prose-strong:text-[#3E442B] prose-strong:font-semibold
-                  prose-ul:my-6 prose-ol:my-6 prose-li:my-2 prose-li:text-gray-700
-                  prose-blockquote:border-l-4 prose-blockquote:border-[#781D32] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600
-                  prose-img:rounded-lg prose-img:shadow-md prose-img:my-8
-                  prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
-                  prose-pre:bg-gray-900 prose-pre:text-gray-100
-                  whitespace-pre-wrap break-words"
-                dangerouslySetInnerHTML={{ __html: formatArticleContent(article.content) }}
-              />
+              <>
+                {/* Force prose styles globally within this container */}
+                <style dangerouslySetInnerHTML={{ __html: `
+                  #article-content h1 { font-size: 2.25rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; color: #3E442B; }
+                  #article-content h2 { font-size: 1.875rem; font-weight: 700; margin-top: 1.75rem; margin-bottom: 0.875rem; color: #3E442B; }
+                  #article-content h3 { font-size: 1.5rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #3E442B; }
+                  #article-content p { margin-top: 1rem; margin-bottom: 1rem; line-height: 1.75; color: #374151; }
+                  #article-content ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 1rem; margin-bottom: 1rem; }
+                  #article-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-top: 1rem; margin-bottom: 1rem; }
+                  #article-content li { margin-top: 0.5rem; margin-bottom: 0.5rem; }
+                  #article-content a { color: #781D32; text-decoration: underline; }
+                  #article-content strong { font-weight: 600; color: #3E442B; }
+                  #article-content blockquote { border-left: 4px solid #781D32; padding-left: 1.5rem; font-style: italic; color: #6B7280; margin: 1.5rem 0; }
+                  #article-content code { background-color: #F3F4F6; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.875rem; }
+                  #article-content pre { background-color: #1F2937; color: #F9FAFB; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1.5rem 0; }
+                ` }} />
+                
+                <article
+                  id="article-content"
+                  style={{
+                    backgroundColor: 'white',
+                    padding: '2rem',
+                    borderRadius: '0.5rem',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                  }}
+                  dangerouslySetInnerHTML={{ 
+                    __html: article.content || '<p style="color: #9CA3AF;">No content available</p>' 
+                  }}
+                />
+              </>
 
               {/* Article Footer */}
               <div className="mt-12 pt-8 border-t border-[#55613C]/20">

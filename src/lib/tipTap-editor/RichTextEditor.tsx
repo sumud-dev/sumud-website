@@ -68,8 +68,17 @@ export const RichTextEditor: React.FC<EditorProps> = ({
     getEditor()?.chain().focus().toggleHighlight({ color }).run();
   }, [getEditor]);
 
-  const handleHeading = useCallback((level: 1 | 2 | 3) => {
-    getEditor()?.chain().focus().toggleHeading({ level }).run();
+  const handleHeading = useCallback((level: number) => {
+    const editor = getEditor();
+    if (!editor) return;
+    
+    if (level === 0) {
+      // If level is 0, clear heading formatting and set as paragraph
+      editor.chain().focus().setParagraph().run();
+    } else {
+      // Otherwise, set the heading level
+      editor.chain().focus().setHeading({ level: level as 1 | 2 | 3 }).run();
+    }
   }, [getEditor]);
 
   const handleAlignLeft = useCallback(() => {
@@ -334,7 +343,14 @@ export const RichTextEditor: React.FC<EditorProps> = ({
           className="flex-1 m-4 mt-2 overflow-auto border rounded-lg p-6 data-[state=active]:block bg-white"
         >
           <div
-            className="prose prose-sm max-w-none"
+            className="prose prose-sm max-w-none 
+              [&>h1]:text-3xl [&>h1]:font-bold [&>h1]:mt-6 [&>h1]:mb-4
+              [&>h2]:text-2xl [&>h2]:font-bold [&>h2]:mt-5 [&>h2]:mb-3
+              [&>h3]:text-xl [&>h3]:font-semibold [&>h3]:mt-4 [&>h3]:mb-2
+              [&>p]:my-3 [&>p]:leading-7
+              [&>ul]:list-disc [&>ul]:pl-6 [&>ul]:my-3
+              [&>ol]:list-decimal [&>ol]:pl-6 [&>ol]:my-3
+              [&>blockquote]:border-l-4 [&>blockquote]:border-primary [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:my-4"
             dangerouslySetInnerHTML={{ 
               __html: value || `<p class="text-gray-400">${t('editor.emptyPlaceholder')}</p>` 
             }}

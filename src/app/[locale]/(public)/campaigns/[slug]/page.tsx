@@ -230,8 +230,30 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                 </div>
                 {t("detail.aboutTitle")}
               </h2>
-              <div 
-                className="prose prose-lg max-w-none text-gray-700 leading-relaxed"
+              
+              {/* Force prose styles globally within this container */}
+              <style dangerouslySetInnerHTML={{ __html: `
+                #campaign-content h1 { font-size: 2.25rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; color: #3E442B; }
+                #campaign-content h2 { font-size: 1.875rem; font-weight: 700; margin-top: 1.75rem; margin-bottom: 0.875rem; color: #3E442B; }
+                #campaign-content h3 { font-size: 1.5rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #3E442B; }
+                #campaign-content p { margin-top: 1rem; margin-bottom: 1rem; line-height: 1.75; color: #374151; }
+                #campaign-content ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 1rem; margin-bottom: 1rem; }
+                #campaign-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-top: 1rem; margin-bottom: 1rem; }
+                #campaign-content li { margin-top: 0.5rem; margin-bottom: 0.5rem; }
+                #campaign-content a { color: #781D32; text-decoration: underline; }
+                #campaign-content strong { font-weight: 600; color: #3E442B; }
+                #campaign-content blockquote { border-left: 4px solid #781D32; padding-left: 1.5rem; font-style: italic; color: #6B7280; margin: 1.5rem 0; }
+                #campaign-content code { background-color: #F3F4F6; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.875rem; }
+                #campaign-content pre { background-color: #1F2937; color: #F9FAFB; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1.5rem 0; }
+              ` }} />
+              
+              <div
+                id="campaign-content"
+                style={{
+                  backgroundColor: 'white',
+                  padding: '1.5rem',
+                  borderRadius: '0.5rem'
+                }}
                 dangerouslySetInnerHTML={{ __html: getDescriptionHtml(campaign.description) }}
               />
             </motion.div>

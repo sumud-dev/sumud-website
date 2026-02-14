@@ -8,7 +8,7 @@ import {
   campaigns,
   type NewCampaign,
 } from '@/src/lib/db/schema/campaigns';
-import { eq, and, desc, like, or, sql, isNull } from 'drizzle-orm';
+import { eq, and, desc, like, or, isNull } from 'drizzle-orm';
 
 // ============================================
 // CAMPAIGN - SELECT Queries
@@ -16,9 +16,12 @@ import { eq, and, desc, like, or, sql, isNull } from 'drizzle-orm';
 
 /**
  * Get all campaigns for a specific locale
+ * Returns all campaigns regardless of isActive status by default (for admin)
  */
 export async function getActiveCampaigns(locale: string = 'fi', activeOnly: boolean = false) {
-  const conditions: any[] = [eq(campaigns.language, locale)];
+  const conditions: any[] = [
+    eq(campaigns.language, locale)
+  ];
   
   if (activeOnly) {
     conditions.push(eq(campaigns.isActive, true));
@@ -51,9 +54,11 @@ export async function getFeaturedCampaigns(locale: string = 'fi') {
 
 /**
  * Get campaign by slug and language
+ * Handles both locale-suffixed slugs (campaign-fi) and non-suffixed slugs (campaign)
  */
 export async function getCampaignBySlug(slug: string, locale: string = 'fi') {
-  const [campaign] = await db
+  // Try exact slug match first
+  let [campaign] = await db
     .select()
     .from(campaigns)
     .where(
@@ -64,58 +69,37 @@ export async function getCampaignBySlug(slug: string, locale: string = 'fi') {
     )
     .limit(1);
 
-  return campaign ?? null;
-}
-
-/**
- * Get primary campaign (Finnish) by slug
- */
-export async function getPrimaryCampaignBySlug(slug: string) {
-  const [campaign] = await db
-    .select()
-    .from(campaigns)
-    .where(
-      and(
-        eq(campaigns.slug, slug),
-        isNull(campaigns.parentId) // Only primary campaigns (any language)
+  // If not found and slug doesn't end with locale, try with locale suffix
+  if (!campaign && !slug.endsWith(`-${locale}`)) {
+    const slugWithLocale = `${slug}-${locale}`;
+    [campaign] = await db
+      .select()
+      .from(campaigns)
+      .where(
+        and(
+          eq(campaigns.slug, slugWithLocale),
+          eq(campaigns.language, locale)
+        )
       )
-    )
-    .limit(1);
+      .limit(1);
+  }
+
+  // If still not found and slug ends with locale, try without locale suffix
+  if (!campaign && slug.endsWith(`-${locale}`)) {
+    const baseSlug = slug.replace(new RegExp(`-${locale}$`), '');
+    [campaign] = await db
+      .select()
+      .from(campaigns)
+      .where(
+        and(
+          eq(campaigns.slug, baseSlug),
+          eq(campaigns.language, locale)
+        )
+      )
+      .limit(1);
+  }
 
   return campaign ?? null;
-}
-
-/**
- * Get all translations for a campaign
- */
-export async function getCampaignTranslations(primaryCampaignId: string) {
-  return await db
-    .select()
-    .from(campaigns)
-    .where(eq(campaigns.parentId, primaryCampaignId));
-}
-
-/**
- * Get campaign with all translations (for admin)
- */
-export async function getCampaignWithAllTranslations(slug: string) {
-  const primary = await getPrimaryCampaignBySlug(slug); // Gets primary in any language
-  
-  if (!primary) return null;
-
-  const translations = await getCampaignTranslations(primary.id);
-
-  return {
-    primary,
-    translations,
-  };
-}
-
-/**
- * Get complete campaign - alias for getCampaignBySlug
- */
-export async function getCompleteCampaign(slug: string, locale: string = 'fi') {
-  return getCampaignBySlug(slug, locale);
 }
 
 /**
@@ -259,11 +243,16 @@ export async function createCampaign(
 
 /**
  * Update campaign (works for both primary and translations)
+ * NOTE: slug is explicitly excluded from updates - slug should never change
  */
 export async function updateCampaign(id: string, data: Partial<NewCampaign>) {
+  // Exclude slug from updates - slug should never change
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { slug: _slug, ...dataToUpdate } = data;
+  
   const [updated] = await db
     .update(campaigns)
-    .set({ ...data, updatedAt: new Date() })
+    .set({ ...dataToUpdate, updatedAt: new Date() })
     .where(eq(campaigns.id, id))
     .returning();
   
@@ -272,15 +261,20 @@ export async function updateCampaign(id: string, data: Partial<NewCampaign>) {
 
 /**
  * Update campaign translation (alias for consistency)
+ * NOTE: slug is explicitly excluded from updates - slug should never change
  */
 export async function updateCampaignTranslation(
   campaignId: string,
   locale: string,
   data: Partial<NewCampaign>
 ) {
+  // Exclude slug from updates - slug should never change
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { slug: _slug, ...dataToUpdate } = data;
+  
   const [updated] = await db
     .update(campaigns)
-    .set({ ...data, updatedAt: new Date() })
+    .set({ ...dataToUpdate, updatedAt: new Date() })
     .where(
       and(
         eq(campaigns.id, campaignId),
@@ -315,39 +309,6 @@ export async function deleteCampaignTranslation(id: string) {
 // ============================================
 
 /**
- * Get available locales for a campaign
- */
-export async function getCampaignLocales(campaignId: string) {
-  // Get all campaigns with this ID or parentId
-  const result = await db
-    .select({ language: campaigns.language })
-    .from(campaigns)
-    .where(
-      or(
-        eq(campaigns.id, campaignId),
-        eq(campaigns.parentId, campaignId)
-      )
-    );
-  
-  return result.map(r => r.language).filter(Boolean);
-}
-
-/**
- * Count campaigns by status
- */
-export async function countCampaignsByStatus() {
-  const result = await db
-    .select({
-      status: campaigns.status,
-      count: sql<number>`count(*)`,
-    })
-    .from(campaigns)
-    .groupBy(campaigns.status);
-  
-  return result;
-}
-
-/**
  * Toggle campaign active status
  */
 export async function toggleCampaignActive(id: string) {
@@ -368,21 +329,4 @@ export async function toggleCampaignActive(id: string) {
     .returning();
 
   return updated;
-}
-
-/**
- * Check if campaign slug exists
- */
-export async function campaignSlugExists(slug: string, language?: string): Promise<boolean> {
-  const conditions = language
-    ? and(eq(campaigns.slug, slug), eq(campaigns.language, language))
-    : eq(campaigns.slug, slug);
-
-  const [exists] = await db
-    .select({ id: campaigns.id })
-    .from(campaigns)
-    .where(conditions)
-    .limit(1);
-
-  return !!exists;
 }

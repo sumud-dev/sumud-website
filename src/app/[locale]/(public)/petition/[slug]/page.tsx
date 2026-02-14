@@ -23,7 +23,7 @@ import { Card, CardContent } from "@/src/components/ui/card";
 import { Badge } from "@/src/components/ui/badge";
 import { Textarea } from "@/src/components/ui/textarea";
 import { Checkbox } from "@/src/components/ui/checkbox";
-import { fadeInUp, staggerContainer, defaultTransition } from "@/src/lib/utils/animations";
+import { fadeInUp } from "@/src/lib/utils/animations";
 
 // Mock petition data
 const MOCK_PETITIONS: Record<string, any> = {

@@ -1,5 +1,5 @@
 import { db } from "@/src/lib/db";
-import { posts, postTranslations } from "@/src/lib/db/schema/posts";
+import { posts } from "@/src/lib/db/schema/posts";
 import { eq } from "drizzle-orm";
 import type { 
   PostRecord, 
@@ -29,6 +29,8 @@ export async function createOriginalPost(articleData: CreateOriginalPostInput): 
       authorId: articleData.authorId || null,
       authorName: articleData.authorName || null,
       publishedAt: articleData.status === 'published' ? currentTimestamp : null,
+      parentPostId: null,
+      isTranslation: false,
       viewCount: 0,
       createdAt: currentTimestamp,
       updatedAt: currentTimestamp,
@@ -66,9 +68,9 @@ export async function createTranslationForPost(translationData: CreateTranslatio
   const currentTimestamp = new Date();
 
   const [createdTranslation] = await db
-    .insert(postTranslations)
+    .insert(posts)
     .values({
-      postId: translationData.parentPostId,
+      parentPostId: translationData.parentPostId,
       slug: translationData.slug,
       title: translationData.title,
       excerpt: translationData.excerpt,
@@ -80,8 +82,7 @@ export async function createTranslationForPost(translationData: CreateTranslatio
       featuredImage: translationData.featuredImage || null,
       categories: translationData.categories,
       publishedAt: translationData.publishedAt || null,
-      translatedAt: currentTimestamp,
-      translationQuality: 'auto',
+      isTranslation: true,
       viewCount: 0,
       createdAt: currentTimestamp,
       updatedAt: currentTimestamp,
@@ -99,16 +100,16 @@ export async function createTranslationForPost(translationData: CreateTranslatio
     status: createdTranslation.status,
     featuredImage: createdTranslation.featuredImage,
     categories: createdTranslation.categories,
-    authorId: null,
-    authorName: null,
+    authorId: createdTranslation.authorId,
+    authorName: createdTranslation.authorName,
     publishedAt: createdTranslation.publishedAt,
     createdAt: createdTranslation.createdAt,
     updatedAt: createdTranslation.updatedAt,
     viewCount: createdTranslation.viewCount,
     isTranslation: true,
-    parentPostId: createdTranslation.postId,
+    parentPostId: createdTranslation.parentPostId,
     translatedFromLanguage: createdTranslation.translatedFrom,
-    translationQuality: createdTranslation.translationQuality,
+    translationQuality: null,
   };
 }
 
@@ -120,6 +121,22 @@ export async function updateOriginalPost(
   updateData: UpdateOriginalPostInput
 ): Promise<PostRecord | null> {
   const currentTimestamp = new Date();
+  
+  // Fetch existing post to validate changes
+  const [existingPost] = await db.select().from(posts).where(eq(posts.id, postId)).limit(1);
+  if (!existingPost) return null;
+  
+  // Note: slug is not included in updateData type - slugs should never change
+  
+  // Prevent language change on translations
+  if (existingPost.isTranslation && updateData.language && updateData.language !== existingPost.language) {
+    throw new Error("Cannot change language on translation posts");
+  }
+  
+  // Prevent turning original into translation by setting parentPostId
+  if (!existingPost.isTranslation && (updateData as any).parentPostId) {
+    throw new Error("Cannot turn original post into translation");
+  }
 
   const [updatedPost] = await db
     .update(posts)
@@ -149,9 +166,9 @@ export async function updateOriginalPost(
     createdAt: updatedPost.createdAt,
     updatedAt: updatedPost.updatedAt,
     viewCount: updatedPost.viewCount,
-    isTranslation: false,
-    parentPostId: null,
-    translatedFromLanguage: null,
+    isTranslation: updatedPost.isTranslation,
+    parentPostId: updatedPost.parentPostId,
+    translatedFromLanguage: updatedPost.translatedFrom,
     translationQuality: null,
   };
 }
@@ -163,8 +180,8 @@ export async function deleteOriginalPost(postId: string): Promise<number> {
   // First, count the translations that will be deleted
   const translations = await db
     .select()
-    .from(postTranslations)
-    .where(eq(postTranslations.postId, postId));
+    .from(posts)
+    .where(eq(posts.parentPostId, postId));
   
   const translationCount = translations.length;
   
@@ -183,8 +200,8 @@ export async function deleteOriginalPost(postId: string): Promise<number> {
  */
 export async function deleteTranslation(translationId: string): Promise<number> {
   const deletedTranslations = await db
-    .delete(postTranslations)
-    .where(eq(postTranslations.id, translationId))
+    .delete(posts)
+    .where(eq(posts.id, translationId))
     .returning();
 
   return deletedTranslations.length;

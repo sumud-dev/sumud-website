@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import {
+  findPostBySlugAndLanguage,
   listPostsPaginated,
-  findPostBySlug,
-  findPostBySlugAndLanguageWithFallback,
+  getPostStatisticsByLanguage,
   postSlugExists,
 } from "@/src/lib/db/queries/posts.queries";
 import {   
@@ -18,7 +18,6 @@ import {
   deleteOriginalPost,
   deleteTranslation,
 } from "@/src/lib/db/queries/posts.mutations";
-import { getOptimizedPostStatistics } from "@/src/lib/db/queries/posts.optimized";
 import { validatePostCreation, validatePostUpdate, shouldApplyAutoTranslation, PostBusinessLogic } from "@/src/lib/services/post.business";
 import { PostTranslationService } from "@/src/lib/services/post-translation.service";
 
@@ -77,15 +76,13 @@ export async function getPosts(
 
 export async function getPostBySlug(
   postSlug: string,
-  articleLanguage?: string
+  articleLanguage: string
 ): Promise<
   | { success: true; post: PostRecord }
   | { success: false; error: string }
 > {
   try {
-    const foundPost = articleLanguage
-      ? await findPostBySlugAndLanguageWithFallback(postSlug, articleLanguage)
-      : await findPostBySlug(postSlug);
+    const foundPost = await findPostBySlugAndLanguage(postSlug, articleLanguage)
 
     if (!foundPost) {
       return { success: false, error: "Post not found" };
@@ -118,7 +115,7 @@ export async function getPostStatistics(
   | { success: false; error: string }
 > {
   try {
-    const postStatistics = await getOptimizedPostStatistics(
+    const postStatistics = await getPostStatisticsByLanguage(
       statisticsLanguage
     );
 
@@ -184,7 +181,7 @@ export async function createPost(
     }
 
     // Check if slug exists
-    const slugAlreadyExists = await postSlugExists(postInput.slug);
+    const slugAlreadyExists = await postSlugExists(postInput.slug, postInput.language);
     if (slugAlreadyExists) {
       return {
         success: false,
@@ -211,7 +208,7 @@ export async function createPost(
     revalidatePath("/[locale]/articles", "page");
     revalidatePath("/[locale]/admin/articles", "page");
 
-    let createdTranslations: PostRecord[] = [];
+    const createdTranslations: PostRecord[] = [];
     let successMessage = "Post created successfully";
 
     // Handle auto-translation using business logic (non-blocking)
@@ -272,7 +269,7 @@ export async function updatePost(
   | { success: false; error: string }
 > {
   try {
-    const existingPost = await findPostBySlug(postSlug);
+    const existingPost = await findPostBySlugAndLanguage(postSlug, language);
     if (!existingPost) {
       return { success: false, error: "Post not found" };
     }
@@ -331,13 +328,14 @@ export async function updatePost(
 }
 
 export async function deletePost(
-  postSlug: string
+  postSlug: string,
+  language: string
 ): Promise<
   | { success: true; deletedCount: number; message: string }
   | { success: false; error: string }
 > {
   try {
-    const existingPost = await findPostBySlug(postSlug);
+    const existingPost = await findPostBySlugAndLanguage(postSlug, language);
     if (!existingPost) {
       return { success: false, error: "Post not found" };
     }

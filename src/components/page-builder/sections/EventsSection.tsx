@@ -38,7 +38,7 @@ export const EventsSection = (props: EventsSectionProps) => {
     status: "published",
     limit: showCount,
   });
-  const events = data?.data || [];
+  const events = data?.events || [];
 
   return (
     <section

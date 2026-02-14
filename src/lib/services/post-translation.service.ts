@@ -113,10 +113,10 @@ export class PostTranslationService {
       // Generate unique slug from translated title
       const translatedSlug = generateSlug(translatedContent.title as string);
       
-      // Check if this slug already exists
-      const slugExists = await postSlugExists(translatedSlug);
+      // Check if this slug already exists for this language
+      const slugExists = await postSlugExists(translatedSlug, targetLanguage);
       if (slugExists) {
-        return { success: false, error: `Slug ${translatedSlug} already exists` };
+        return { success: false, error: `Slug ${translatedSlug} already exists for language ${targetLanguage}` };
       }
 
       // Create translation record

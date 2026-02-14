@@ -37,7 +37,7 @@ export const CampaignsSection = (props: CampaignsSectionProps) => {
   }));
 
   const { data, isLoading } = useCampaigns({ limit: showCount });
-  const campaigns = data?.data || [];
+  const campaigns = data || [];
 
   return (
     <section

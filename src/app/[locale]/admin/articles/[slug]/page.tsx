@@ -219,10 +219,33 @@ export default function ArticleDetailPage({ params }: ArticleDetailPageProps) {
             </CardHeader>
             <CardContent>
               {article.content ? (
-                <div
-                  className="prose prose-sm max-w-none dark:prose-invert"
-                  dangerouslySetInnerHTML={{ __html: markdownToHtml(article.content) }}
-                />
+                <>
+                  {/* Force prose styles globally within this container */}
+                  <style dangerouslySetInnerHTML={{ __html: `
+                    #article-content-admin h1 { font-size: 2.25rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; color: #3E442B; }
+                    #article-content-admin h2 { font-size: 1.875rem; font-weight: 700; margin-top: 1.75rem; margin-bottom: 0.875rem; color: #3E442B; }
+                    #article-content-admin h3 { font-size: 1.5rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #3E442B; }
+                    #article-content-admin p { margin-top: 1rem; margin-bottom: 1rem; line-height: 1.75; color: #374151; }
+                    #article-content-admin ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 1rem; margin-bottom: 1rem; }
+                    #article-content-admin ol { list-style-type: decimal; padding-left: 1.5rem; margin-top: 1rem; margin-bottom: 1rem; }
+                    #article-content-admin li { margin-top: 0.5rem; margin-bottom: 0.5rem; }
+                    #article-content-admin a { color: #781D32; text-decoration: underline; }
+                    #article-content-admin strong { font-weight: 600; color: #3E442B; }
+                    #article-content-admin blockquote { border-left: 4px solid #781D32; padding-left: 1.5rem; font-style: italic; color: #6B7280; margin: 1.5rem 0; }
+                    #article-content-admin code { background-color: #F3F4F6; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.875rem; }
+                    #article-content-admin pre { background-color: #1F2937; color: #F9FAFB; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1.5rem 0; }
+                  ` }} />
+                  
+                  <div
+                    id="article-content-admin"
+                    style={{
+                      backgroundColor: 'white',
+                      padding: '1rem',
+                      borderRadius: '0.5rem'
+                    }}
+                    dangerouslySetInnerHTML={{ __html: markdownToHtml(article.content) }}
+                  />
+                </>
               ) : (
                 <p className="text-muted-foreground italic">{t("placeholders.noContent")}</p>
               )}

@@ -1,12 +1,9 @@
 import { db } from "@/src/lib/db";
-import { 
-  postsUnifiedView,
-  type PostUnifiedView 
-} from "@/src/lib/db/schema/posts";
-import { eq, and, or, like, desc, asc, sql, count, SQL } from "drizzle-orm";
+import { eq, and, desc, asc, sql, count, or, ilike } from "drizzle-orm";
+import { posts } from "@/src/lib/db/schema/posts";
 import type { 
   PostRecord, 
-  PostQueryFilters, 
+  PostQueryFilters,
   PostPaginationOptions, 
   PaginatedPostResult 
 } from "@/src/lib/types/article";
@@ -16,87 +13,31 @@ import type {
 // ============================================================================
 
 /**
- * Convert database view record to PostRecord
+ * Convert database post record to PostRecord
  */
-function normalizePostFromView(viewRecord: PostUnifiedView): PostRecord {
+function normalizePost(post: typeof posts.$inferSelect): PostRecord {
   return {
-    id: viewRecord.postId,
-    slug: viewRecord.postSlug,
-    title: viewRecord.postTitle,
-    excerpt: viewRecord.postExcerpt,
-    content: viewRecord.postContent,
-    language: viewRecord.postLanguage,
-    type: viewRecord.postType,
-    status: viewRecord.postStatus,
-    featuredImage: viewRecord.postFeaturedImage,
-    categories: viewRecord.postCategories || [],
-    authorId: viewRecord.postAuthorId,
-    authorName: viewRecord.postAuthorName,
-    publishedAt: viewRecord.postPublishedAt,
-    createdAt: viewRecord.postCreatedAt,
-    updatedAt: viewRecord.postUpdatedAt,
-    viewCount: viewRecord.postViewCount,
-    isTranslation: viewRecord.postIsTranslation,
-    parentPostId: viewRecord.postParentPostId,
-    translatedFromLanguage: viewRecord.postTranslatedFromLanguage,
-    translationQuality: viewRecord.postTranslationQuality,
+    id: post.id,
+    slug: post.slug,
+    title: post.title,
+    excerpt: post.excerpt,
+    content: post.content,
+    language: post.language,
+    type: post.type,
+    status: post.status,
+    featuredImage: post.featuredImage,
+    categories: post.categories || [],
+    authorId: post.authorId,
+    authorName: post.authorName,
+    publishedAt: post.publishedAt,
+    createdAt: post.createdAt,
+    updatedAt: post.updatedAt,
+    viewCount: post.viewCount,
+    isTranslation: post.isTranslation,
+    parentPostId: post.parentPostId,
+    translatedFromLanguage: post.translatedFrom,
+    translationQuality: null,
   };
-}
-
-/**
- * Build WHERE clause from filters
- */
-function buildPostWhereClause(filters: PostQueryFilters): SQL | undefined {
-  const conditions: SQL[] = [];
-
-  if (filters.language) {
-    conditions.push(eq(postsUnifiedView.postLanguage, filters.language));
-  }
-
-  if (filters.status) {
-    conditions.push(eq(postsUnifiedView.postStatus, filters.status));
-  }
-
-  if (filters.type) {
-    conditions.push(eq(postsUnifiedView.postType, filters.type));
-  }
-
-  if (filters.search) {
-    conditions.push(
-      or(
-        like(postsUnifiedView.postTitle, `%${filters.search}%`),
-        like(postsUnifiedView.postExcerpt, `%${filters.search}%`)
-      )!
-    );
-  }
-
-  if (filters.originalsOnly) {
-    conditions.push(eq(postsUnifiedView.postIsTranslation, false));
-  }
-
-  if (filters.translationsOnly) {
-    conditions.push(eq(postsUnifiedView.postIsTranslation, true));
-  }
-
-  return conditions.length > 0 ? and(...conditions) : undefined;
-}
-
-/**
- * Get ORDER BY clause from pagination options
- */
-function buildPostOrderByClause(options: PostPaginationOptions): SQL {
-  const sortBy = options.sortBy || 'createdAt';
-  const sortOrder = options.sortOrder || 'desc';
-
-  const columnMap = {
-    createdAt: postsUnifiedView.postCreatedAt,
-    publishedAt: postsUnifiedView.postPublishedAt,
-    title: postsUnifiedView.postTitle,
-    viewCount: postsUnifiedView.postViewCount,
-  };
-
-  const sortColumn = columnMap[sortBy];
-  return sortOrder === 'desc' ? desc(sortColumn) : asc(sortColumn);
 }
 
 // ============================================================================
@@ -115,36 +56,68 @@ export async function listPostsPaginated(
   const pageSize = paginationOptions.limit || 50;
   const offset = (currentPage - 1) * pageSize;
 
-  const whereClause = buildPostWhereClause(filters);
-  const orderByClause = buildPostOrderByClause(paginationOptions);
+  // Build WHERE conditions
+  const conditions = [];
+  
+  if (filters.language) {
+    conditions.push(eq(posts.language, filters.language));
+  }
+  
+  if (filters.status) {
+    conditions.push(eq(posts.status, filters.status));
+  }
+  
+  if (filters.type) {
+    conditions.push(eq(posts.type, filters.type));
+  }
+  
+  if (filters.originalsOnly) {
+    conditions.push(eq(posts.isTranslation, false));
+  }
+  
+  if (filters.translationsOnly) {
+    conditions.push(eq(posts.isTranslation, true));
+  }
+  
+  if (filters.search) {
+    conditions.push(
+      or(
+        ilike(posts.title, `%${filters.search}%`),
+        ilike(posts.excerpt, `%${filters.search}%`)
+      )
+    );
+  }
 
-  // Get total count (efficient with indexes)
-  const countQuery = whereClause
-    ? db.select({ totalCount: count() }).from(postsUnifiedView).where(whereClause)
-    : db.select({ totalCount: count() }).from(postsUnifiedView);
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const [{ totalCount }] = await countQuery;
+  // Get total count with filters 
+  const [{ totalCount }] = await db
+    .select({ totalCount: count() })
+    .from(posts)
+    .where(whereClause);
+    
   const totalItems = Number(totalCount);
   const totalPages = Math.ceil(totalItems / pageSize);
 
-  // Get paginated results
-  const postsQuery = whereClause
-    ? db.select()
-        .from(postsUnifiedView)
-        .where(whereClause)
-        .orderBy(orderByClause)
-        .limit(pageSize)
-        .offset(offset)
-    : db.select()
-        .from(postsUnifiedView)
-        .orderBy(orderByClause)
-        .limit(pageSize)
-        .offset(offset);
+  // Determine sort column and order
+  const sortColumn = paginationOptions.sortBy || 'publishedAt';
+  const sortOrder = paginationOptions.sortOrder || 'desc';
+  
+  const orderByClause = sortOrder === 'asc' 
+    ? asc(posts[sortColumn]) 
+    : desc(posts[sortColumn]);
 
-  const postResults = await postsQuery;
+  // Get paginated results with filters
+  const postResults = await db
+    .select()
+    .from(posts)
+    .where(whereClause)
+    .orderBy(orderByClause)
+    .limit(pageSize)
+    .offset(offset);
 
   return {
-    posts: postResults.map(normalizePostFromView),
+    posts: postResults.map(normalizePost),
     pagination: {
       currentPage,
       pageSize,
@@ -157,22 +130,6 @@ export async function listPostsPaginated(
 }
 
 /**
- * Find single article by slug
- * Optimized single query using view
- */
-export async function findPostBySlug(
-  postSlug: string
-): Promise<PostRecord | null> {
-  const [postResult] = await db
-    .select()
-    .from(postsUnifiedView)
-    .where(eq(postsUnifiedView.postSlug, postSlug))
-    .limit(1);
-
-  return postResult ? normalizePostFromView(postResult) : null;
-}
-
-/**
  * Find post by slug and language
  */
 export async function findPostBySlugAndLanguage(
@@ -181,109 +138,16 @@ export async function findPostBySlugAndLanguage(
 ): Promise<PostRecord | null> {
   const [postResult] = await db
     .select()
-    .from(postsUnifiedView)
+    .from(posts)
     .where(
       and(
-        eq(postsUnifiedView.postSlug, postSlug),
-        eq(postsUnifiedView.postLanguage, postLanguage)
+        eq(posts.slug, postSlug),
+        eq(posts.language, postLanguage)
       )
     )
     .limit(1);
 
-  return postResult ? normalizePostFromView(postResult) : null;
-}
-
-/**
- * Find post by slug and language, checking translations if direct match not found
- * This handles the case where user views a translated article with the original slug
- */
-export async function findPostBySlugAndLanguageWithFallback(
-  postSlug: string,
-  postLanguage: string
-): Promise<PostRecord | null> {
-  // First, try to find the exact match (slug + language)
-  const directMatch = await findPostBySlugAndLanguage(postSlug, postLanguage);
-  if (directMatch) {
-    return directMatch;
-  }
-
-  // If no direct match, find the original post with this slug (any language)
-  const originalPost = await findPostBySlug(postSlug);
-  if (!originalPost) {
-    return null;
-  }
-
-  // If the original post is in the requested language, return it
-  if (originalPost.language === postLanguage) {
-    return originalPost;
-  }
-
-  // If the original post is a translation, get its parent first
-  const parentPostId = originalPost.isTranslation 
-    ? originalPost.parentPostId 
-    : originalPost.id;
-
-  if (!parentPostId) {
-    // No parent found, return null
-    return null;
-  }
-
-  // Now find the translation in the requested language
-  const [translationResult] = await db
-    .select()
-    .from(postsUnifiedView)
-    .where(
-      and(
-        eq(postsUnifiedView.postParentPostId, parentPostId),
-        eq(postsUnifiedView.postLanguage, postLanguage)
-      )
-    )
-    .limit(1);
-
-  return translationResult ? normalizePostFromView(translationResult) : null;
-}
-
-/**
- * Get featured articles (by view count)
- */
-export async function getFeaturedPosts(
-  postLanguage: string,
-  postLimit: number = 5
-): Promise<PostRecord[]> {
-  const featuredResults = await db
-    .select()
-    .from(postsUnifiedView)
-    .where(
-      and(
-        eq(postsUnifiedView.postLanguage, postLanguage),
-        eq(postsUnifiedView.postStatus, 'published')
-      )
-    )
-    .orderBy(desc(postsUnifiedView.postViewCount))
-    .limit(postLimit);
-  return featuredResults.map(normalizePostFromView);
-}
-
-/**
- * Get recent published posts
- */
-export async function getRecentPublishedPosts(
-  postLanguage: string,
-  postLimit: number = 10
-): Promise<PostRecord[]> {
-  const recentResults = await db
-    .select()
-    .from(postsUnifiedView)
-    .where(
-      and(
-        eq(postsUnifiedView.postLanguage, postLanguage),
-        eq(postsUnifiedView.postStatus, 'published')
-      )
-    )
-    .orderBy(desc(postsUnifiedView.postPublishedAt))
-    .limit(postLimit);
-
-  return recentResults.map(normalizePostFromView);
+  return postResult ? normalizePost(postResult) : null;
 }
 
 /**
@@ -297,19 +161,19 @@ export async function searchArticlesFullText(
 ): Promise<PostRecord[]> {
   const searchResults = await db
     .select()
-    .from(postsUnifiedView)
+    .from(posts)
     .where(
       and(
-        eq(postsUnifiedView.postLanguage, postLanguage),
-        eq(postsUnifiedView.postStatus, 'published'),
-        sql`to_tsvector('simple', ${postsUnifiedView.postTitle} || ' ' || ${postsUnifiedView.postExcerpt}) 
+        eq(posts.language, postLanguage),
+        eq(posts.status, 'published'),
+        sql`to_tsvector('simple', ${posts.title} || ' ' || ${posts.excerpt}) 
             @@ plainto_tsquery('simple', ${searchQuery})`
       )
     )
-    .orderBy(desc(postsUnifiedView.postPublishedAt))
+    .orderBy(desc(posts.publishedAt))
     .limit(searchLimit);
 
-  return searchResults.map(normalizePostFromView);
+  return searchResults.map(normalizePost);
 }
 
 /**
@@ -329,14 +193,14 @@ export async function getPostStatisticsByLanguage(
   const [statisticsResult] = await db
     .select({
       totalPosts: count(),
-      publishedPosts: sql<number>`COUNT(*) FILTER (WHERE ${postsUnifiedView.postStatus} = 'published')`,
-      draftPosts: sql<number>`COUNT(*) FILTER (WHERE ${postsUnifiedView.postStatus} = 'draft')`,
-      archivedPosts: sql<number>`COUNT(*) FILTER (WHERE ${postsUnifiedView.postStatus} = 'archived')`,
-      originalPosts: sql<number>`COUNT(*) FILTER (WHERE ${postsUnifiedView.postIsTranslation} = false)`,
-      translatedPosts: sql<number>`COUNT(*) FILTER (WHERE ${postsUnifiedView.postIsTranslation} = true)`,
+      publishedPosts: sql<number>`COUNT(*) FILTER (WHERE ${posts.status} = 'published')`,
+      draftPosts: sql<number>`COUNT(*) FILTER (WHERE ${posts.status} = 'draft')`,
+      archivedPosts: sql<number>`COUNT(*) FILTER (WHERE ${posts.status} = 'archived')`,
+      originalPosts: sql<number>`COUNT(*) FILTER (WHERE ${posts.isTranslation} = false)`,
+      translatedPosts: sql<number>`COUNT(*) FILTER (WHERE ${posts.isTranslation} = true)`,
     })
-    .from(postsUnifiedView)
-    .where(eq(postsUnifiedView.postLanguage, postLanguage));
+    .from(posts)
+    .where(eq(posts.language, postLanguage));
 
   return {
     totalPosts: Number(statisticsResult.totalPosts),
@@ -348,29 +212,19 @@ export async function getPostStatisticsByLanguage(
   };
 }
 
-/**
- * Get all translations for an original post
- */
-export async function findTranslationsForOriginalPost(
-  originalPostId: string
-): Promise<PostRecord[]> {
-  const translationResults = await db
-    .select()
-    .from(postsUnifiedView)
+export async function postSlugExists(
+  slug: string,
+  postLanguage: string
+): Promise<boolean> {
+  const [result] = await db
+    .select({ count: count() })
+    .from(posts)
     .where(
       and(
-        eq(postsUnifiedView.postParentPostId, originalPostId),
-        eq(postsUnifiedView.postIsTranslation, true)
+        eq(posts.slug, slug),
+        eq(posts.language, postLanguage)
       )
     );
 
-  return translationResults.map(normalizePostFromView);
-}
-
-/**
- * Check if article slug exists
- */
-export async function postSlugExists(postSlug: string): Promise<boolean> {
-  const existingPost = await findPostBySlug(postSlug);
-  return existingPost !== null;
+  return Number(result.count) > 0;
 }

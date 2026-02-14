@@ -345,10 +345,11 @@ export function useUpdatePost() {
  */
 export function useDeletePost() {
   const queryClient = useQueryClient();
+  const currentLocale = useLocale();
 
   return useMutation({
     mutationFn: async (postSlug: string) => {
-      const mutationResult = await deletePost(postSlug);
+      const mutationResult = await deletePost(postSlug, currentLocale);
       
       if (!mutationResult.success) {
         throw new Error(mutationResult.error);

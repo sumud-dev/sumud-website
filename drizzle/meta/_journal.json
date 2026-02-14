@@ -61,8 +61,85 @@
     {
       "idx": 8,
       "version": "7",
-      "when": 1769409080915,
-      "tag": "0008_goofy_expediter",
+      "when": 1736179200000,
+      "tag": "0008_sync_event_translations_with_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1736265600000,
+      "tag": "0009_update_campaigns_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1736352000000,
+      "tag": "0010_rename_content_to_description",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1736438400000,
+      "tag": "0012_update_posts_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1737907200000,
+      "tag": "0013_create_posts_unified_view",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1737993600000,
+      "tag": "0014_create_pages_unified_view",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1738080000000,
+      "tag": "0015_create_navigation_config",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1738166400000,
+      "tag": "0016_create_ui_translations_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1738252800000,
+      "tag": "0017_add_campaigns_parent_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1738339200000,
+      "tag": "0018_fix_ui_translations_unique_constraint",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1738425600000,
+      "tag": "0019_convert_campaigns_description_to_text",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1739318400000,
+      "tag": "0020_update_posts_indexes",
       "breakpoints": true
     }
   ]

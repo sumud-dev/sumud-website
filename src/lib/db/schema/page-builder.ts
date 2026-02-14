@@ -28,25 +28,6 @@ export const pageContent = pgTable('page_content', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-/**
- * Assets table - Currently not in use
- * 
- * This table was designed to store metadata about uploaded assets (images, etc.) 
- * but is currently not being used. The system stores images directly in Cloudinary
- * and references them by URL in the page content JSON.
- * 
- * Consider:
- * - Removing this table if not needed in the future
- * - Or implementing it to track all uploaded assets for better management,
- *   cleanup of unused images, and asset library functionality
- */
-export const assets = pgTable('assets', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  url: text('url').notNull(),
-  altText: text('alt_text'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-});
-
 // Relations
 export const pagesRelations = relations(pages, ({ many }) => ({
   content: many(pageContent),
