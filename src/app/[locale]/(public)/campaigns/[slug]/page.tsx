@@ -120,6 +120,22 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
   const typeColor = (campaign.campaignType && campaignTypeColors[campaign.campaignType]) || "#781D32";
   const CampaignIcon = campaignIconMap[campaign.iconName || "megaphone"] || Target;
 
+  // Determine which tabs should be visible
+  const hasParticipateContent = campaign.howToParticipate && Array.isArray(campaign.howToParticipate) && campaign.howToParticipate.length > 0;
+  const hasResourcesContent = campaign.resources && Array.isArray(campaign.resources) && campaign.resources.length > 0;
+  const hasImpactContent = campaign.successStories && Array.isArray(campaign.successStories) && campaign.successStories.length > 0;
+
+  // Calculate number of visible tabs for grid
+  const visibleTabs = [
+    'overview',
+    hasParticipateContent && 'participate',
+    hasResourcesContent && 'resources',
+    hasImpactContent && 'impact',
+    'action'
+  ].filter(Boolean);
+
+  const gridColsClass = `grid w-full grid-cols-${visibleTabs.length} mb-8`;
+
   return (
     <div className="min-h-screen bg-linear-to-b from-[#fbfbfd] via-white to-[#f5f5f7]">
       {/* Back Navigation */}
@@ -204,13 +220,19 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
       </section>
 
       {/* Main Content with Tabs */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-8">
+          <TabsList className={gridColsClass}>
             <TabsTrigger value="overview">{t("tabs.overview")}</TabsTrigger>
-            <TabsTrigger value="participate">{t("tabs.participate")}</TabsTrigger>
-            <TabsTrigger value="resources">{t("tabs.resources")}</TabsTrigger>
-            <TabsTrigger value="impact">{t("tabs.impact")}</TabsTrigger>
+            {hasParticipateContent && (
+              <TabsTrigger value="participate">{t("tabs.participate")}</TabsTrigger>
+            )}
+            {hasResourcesContent && (
+              <TabsTrigger value="resources">{t("tabs.resources")}</TabsTrigger>
+            )}
+            {hasImpactContent && (
+              <TabsTrigger value="impact">{t("tabs.impact")}</TabsTrigger>
+            )}
             <TabsTrigger value="action">{t("tabs.action")}</TabsTrigger>
           </TabsList>
 
@@ -260,24 +282,24 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
           </TabsContent>
 
           {/* How to Participate Tab */}
-          <TabsContent value="participate" className="space-y-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-lg p-8 sm:p-10"
-            >
-              <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <div
-                  className="p-3 rounded-2xl"
-                  style={{ backgroundColor: `${typeColor}15` }}
-                >
-                  <Users style={{ color: typeColor }} className="w-6 h-6" />
-                </div>
-                {t("detail.participateTitle")}
-              </h2>
-              <div className="space-y-4">
-                {campaign.howToParticipate && Array.isArray(campaign.howToParticipate) && campaign.howToParticipate.length > 0 ? (
-                  campaign.howToParticipate.map((step: CampaignParticipationStep | string, index: number) => (
+          {hasParticipateContent && (
+            <TabsContent value="participate" className="space-y-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-lg p-8 sm:p-10"
+              >
+                <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <div
+                    className="p-3 rounded-2xl"
+                    style={{ backgroundColor: `${typeColor}15` }}
+                  >
+                    <Users style={{ color: typeColor }} className="w-6 h-6" />
+                  </div>
+                  {t("detail.participateTitle")}
+                </h2>
+                <div className="space-y-4">
+                  {campaign.howToParticipate.map((step: CampaignParticipationStep | string, index: number) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0, x: -20 }}
@@ -298,31 +320,29 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                         {typeof step === 'string' ? step : step.title || step.description || 'Step details'}
                       </p>
                     </motion.div>
-                  ))
-                ) : (
-                  <p className="text-gray-600">{t("detail.participatePlaceholder")}</p>
-                )}
-              </div>
-            </motion.div>
-          </TabsContent>
+                  ))}
+                </div>
+              </motion.div>
+            </TabsContent>
+          )}
 
           {/* Resources Tab */}
-          <TabsContent value="resources" className="space-y-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-lg p-8 sm:p-10"
-            >
-              <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <div
-                  className="p-3 rounded-2xl"
-                  style={{ backgroundColor: `${typeColor}15` }}
-                >
-                  <Download style={{ color: typeColor }} className="w-6 h-6" />
-                </div>
-                {t("detail.resourcesTitle")}
-              </h2>
-              {campaign.resources && Array.isArray(campaign.resources) && campaign.resources.length > 0 ? (
+          {hasResourcesContent && (
+            <TabsContent value="resources" className="space-y-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-lg p-8 sm:p-10"
+              >
+                <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <div
+                    className="p-3 rounded-2xl"
+                    style={{ backgroundColor: `${typeColor}15` }}
+                  >
+                    <Download style={{ color: typeColor }} className="w-6 h-6" />
+                  </div>
+                  {t("detail.resourcesTitle")}
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {campaign.resources.map((resource: CampaignResource, index: number) => {
                     const Icon = resourceIcons[resource.type] || FileText;
@@ -360,29 +380,27 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                     );
                   })}
                 </div>
-              ) : (
-                <p className="text-gray-600">{t("detail.resourcesPlaceholder")}</p>
-              )}
-            </motion.div>
-          </TabsContent>
+              </motion.div>
+            </TabsContent>
+          )}
 
           {/* Impact Tab */}
-          <TabsContent value="impact" className="space-y-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-lg p-8 sm:p-10"
-            >
-              <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-                <div
-                  className="p-3 rounded-2xl"
-                  style={{ backgroundColor: `${typeColor}15` }}
-                >
-                  <TrendingUp style={{ color: typeColor }} className="w-6 h-6" />
-                </div>
-                {t("detail.impactTitle")}
-              </h2>
-              {campaign.successStories && Array.isArray(campaign.successStories) && campaign.successStories.length > 0 ? (
+          {hasImpactContent && (
+            <TabsContent value="impact" className="space-y-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white/80 backdrop-blur-xl rounded-3xl border border-gray-200/60 shadow-lg p-8 sm:p-10"
+              >
+                <h2 className="text-3xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <div
+                    className="p-3 rounded-2xl"
+                    style={{ backgroundColor: `${typeColor}15` }}
+                  >
+                    <TrendingUp style={{ color: typeColor }} className="w-6 h-6" />
+                  </div>
+                  {t("detail.impactTitle")}
+                </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {campaign.successStories.map((story: CampaignSuccessStory | string, index: number) => (
                     <motion.div
@@ -404,11 +422,9 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                     </motion.div>
                   ))}
                 </div>
-              ) : (
-                <p className="text-gray-600">{t("detail.impactPlaceholder")}</p>
-              )}
-            </motion.div>
-          </TabsContent>
+              </motion.div>
+            </TabsContent>
+          )}
 
           {/* Call to Action Tab */}
           <TabsContent value="action" className="space-y-8">
