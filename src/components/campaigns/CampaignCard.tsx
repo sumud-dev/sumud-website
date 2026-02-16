@@ -138,7 +138,7 @@ export default function CampaignCard({
       >
         {/* Featured Image */}
         <div
-          className={`relative ${isFeatured ? "h-64" : "h-48"} overflow-hidden`}
+          className={`relative ${isFeatured ? "h-64" : "h-48"} overflow-hidden rounded-t-xl`}
         >
           {campaign.featuredImage ? (
             <Image

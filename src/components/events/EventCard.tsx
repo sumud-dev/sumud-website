@@ -250,7 +250,7 @@ export function EventCard({
       <Card className="h-full border border-[#55613C]/20 hover:border-[#781D32]/30 hover:shadow-xl transition-all duration-300 overflow-hidden bg-linear-to-br from-white to-gray-50/30">
         <CardHeader className="p-0 relative">
           {event.featured_image && (
-            <div className="relative aspect-video overflow-hidden">
+            <div className="relative aspect-video overflow-hidden rounded-t-xl">
               <Image
                 src={event.featured_image}
                 alt={event.title}
