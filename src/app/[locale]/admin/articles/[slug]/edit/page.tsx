@@ -63,6 +63,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [resolvedSlug, setResolvedSlug] = React.useState<string>("");
+  const [originalLanguage, setOriginalLanguage] = React.useState<string>("");
 
   const form = useForm<ArticleFormData>({
     resolver: zodResolver(articleSchema),
@@ -102,6 +103,9 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
 
   React.useEffect(() => {
   if (article && articleData) {
+    // Store the original language when loading the article
+    setOriginalLanguage(articleData.language);
+    
     const formValues = {
       title: article.title || "",
       excerpt: article.excerpt || "",
@@ -113,7 +117,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
     };
     form.reset(formValues);
   }
-}, [article, articleData, form.reset]);
+}, [article, articleData, form]);
 
   const onSubmit = async (data: ArticleFormData) => {
     if (!article) {
@@ -133,12 +137,16 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
           status: data.status,
           featured_image: data.featuredImageUrl || null,
           meta_description: data.metaDescription || null,
+          language: data.language, // Include new language in update data
         },
-        data.language
+        originalLanguage || data.language // Use original language to find the post
       );
 
       if (result.success) {
         toast.success(t("updateSuccess"));
+        // Invalidate the specific article query
+        queryClient.invalidateQueries({ queryKey: ["article", resolvedSlug] });
+        // Invalidate all post lists
         queryClient.invalidateQueries({ queryKey: postQueryKeys.allPosts });
         router.push("/admin/articles");
       } else {

@@ -20,6 +20,7 @@ import {Highlight} from '@tiptap/extension-highlight';
 import {TaskList} from '@tiptap/extension-task-list';
 import {TaskItem} from '@tiptap/extension-task-item';
 import { RawHtml } from './extensions/html-block';
+import { Details, DetailsSummary } from './extensions/details';
 import { EditorProps } from '../types/editor';
 import { cn } from '@/src/lib/utils/utils';
 import { useTranslations } from 'next-intl';
@@ -169,6 +170,8 @@ export const WYSIWYGEditor: React.FC<WYSIWYGEditorProps> = ({
           class: 'flex items-start gap-2',
         },
       }),
+      Details,
+      DetailsSummary,
       RawHtml,
     ],
     content: normalizeContentToHTML(controlledValue), // ✅ Normalize content
@@ -373,12 +376,21 @@ export const WYSIWYGEditor: React.FC<WYSIWYGEditorProps> = ({
         
         /* Ensure details/summary elements work properly */
         .ProseMirror details {
-          cursor: pointer;
+          cursor: default;
         }
         
         .ProseMirror details summary {
           cursor: pointer;
-          user-select: none;
+          position: relative;
+        }
+        
+        /* Add chevron icon via CSS - not editable */
+        .ProseMirror details summary[data-has-chevron="true"]::after {
+          content: '▼';
+          margin-left: auto;
+          font-size: 1.25rem;
+          opacity: 0.6;
+          pointer-events: none;
         }
       `}</style>
     </div>

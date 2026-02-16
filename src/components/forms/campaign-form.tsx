@@ -93,6 +93,7 @@ interface Campaign {
   featuredImageUrl?: string;
   goal?: number;
   isFeatured?: boolean;
+  language?: string;
   callToAction?: {
     primary?: { text: string; url?: string; action?: string };
     secondary?: { text: string; url?: string; action?: string };
@@ -150,7 +151,7 @@ export function CampaignForm({
       featuredImageUrl: campaign?.featuredImageUrl || "",
       goal: campaign?.goal || undefined,
       isFeatured: campaign?.isFeatured || false,
-      language: "en",
+      language: (campaign?.language || "en") as "en" | "fi",
       autoTranslate: !campaign ? true : undefined,
       callToAction: campaign?.callToAction || { primary: undefined, secondary: undefined },
       targets: campaign?.targets || [],
@@ -175,7 +176,7 @@ export function CampaignForm({
         featuredImageUrl: campaign.featuredImageUrl || "",
         goal: campaign.goal || undefined,
         isFeatured: campaign.isFeatured || false,
-        language: "en",
+        language: (campaign.language || "en") as "en" | "fi",
         autoTranslate: !campaign ? true : undefined,
         callToAction: campaign.callToAction || { primary: undefined, secondary: undefined },
         targets: campaign.targets || [],
@@ -777,8 +778,10 @@ export function CampaignForm({
                     <FormItem>
                       <FormLabel>{t("language")}</FormLabel>
                       <Select
+                        key={`language-${campaign?.id || 'new'}`}
                         onValueChange={field.onChange}
                         value={field.value}
+                        defaultValue={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>

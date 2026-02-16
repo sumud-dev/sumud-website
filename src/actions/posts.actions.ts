@@ -262,14 +262,15 @@ export async function updatePost(
     featured_image?: string | null;
     meta_description?: string | null;
     categories?: string[];
+    language?: string; // Allow language to be updated
   },
-  language: string 
+  originalLanguage: string // Language to find the post with
 ): Promise<
   | { success: true; updatedPost: PostRecord; message: string }
   | { success: false; error: string }
 > {
   try {
-    const existingPost = await findPostBySlugAndLanguage(postSlug, language);
+    const existingPost = await findPostBySlugAndLanguage(postSlug, originalLanguage);
     if (!existingPost) {
       return { success: false, error: "Post not found" };
     }
@@ -287,7 +288,7 @@ export async function updatePost(
     const { updateData: processedUpdateData, publishedAt } = PostBusinessLogic.prepareForUpdate({
       postSlug,
       updateData,
-      language,
+      language: originalLanguage,
     });
 
     const updatedPost = await updateOriginalPost(
@@ -297,7 +298,7 @@ export async function updatePost(
         excerpt: processedUpdateData.excerpt,
         content: processedUpdateData.content,
         status: processedUpdateData.status,
-        language: language,
+        language: updateData.language || originalLanguage, // Use new language if provided
         featuredImage: processedUpdateData.featuredImage,
         categories: processedUpdateData.categories,
         publishedAt,

@@ -567,7 +567,7 @@ async function findEventById(id: string) {
 
 function categorizeFields(data: Record<string, unknown>) {
   const languageSpecificFields = ['title', 'description', 'content', 'location'];
-  const immutableFields = ['slug', 'language'];
+  const immutableFields = ['slug']; // Allow language to be updated
   const commonFields: Record<string, unknown> = {};
 
   const filteredData = Object.entries(data).reduce((acc, [key, value]) => {

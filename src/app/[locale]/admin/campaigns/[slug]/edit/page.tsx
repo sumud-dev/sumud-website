@@ -59,6 +59,7 @@ export default function EditCampaignPage({ params }: EditCampaignPageProps) {
       category: campaign.category || "",
       campaignType: campaign.campaignType || undefined,
       isFeatured: campaign.isFeatured ?? false,
+      language: campaign.language || "en",
     } as any; // Type assertion for form compatibility
   }, [campaign]);
 
@@ -79,6 +80,7 @@ export default function EditCampaignPage({ params }: EditCampaignPageProps) {
           category: data.category,
           campaignType: data.campaignType,
           isFeatured: data.isFeatured,
+          language: data.language,
           // Content fields (stored directly in the campaign record for current locale)
           title: data.title,
           description: data.description,

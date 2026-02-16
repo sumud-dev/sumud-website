@@ -218,33 +218,33 @@ export const RichTextEditor: React.FC<EditorProps> = ({
     const editor = getEditor();
     
     if (editor && html) {
-      // Always focus the editor first and insert at the end if no selection
-      const { selection } = editor.state;
-      const doc = editor.state.doc;
-      const isEmpty = editor.isEmpty;
+      // Store current scroll position
+      const editorElement = editor.view.dom.parentElement;
+      const scrollTop = editorElement?.scrollTop || 0;
+      
+      // Get current cursor position or end of document
+      const { from } = editor.state.selection;
       
       // Focus the editor
       editor.commands.focus();
       
-      // If editor is empty or no clear cursor position, go to end
-      if (isEmpty) {
+      // If editor is empty, go to end
+      if (editor.isEmpty) {
         editor.commands.focus('end');
       }
       
-      // Insert as raw HTML node to preserve template styling and functionality
+      // Insert as editable HTML content instead of atomic rawHtml
+      // This allows users to edit templates directly in the canvas
       editor.chain()
-        .insertContent({
-          type: 'rawHtml',
-          attrs: {
-            html: html,
-          },
-        })
+        .insertContent(html)
         .run();
       
-      // Keep focus after insertion
+      // Restore scroll position after a brief delay
       setTimeout(() => {
-        editor.commands.focus('end');
-      }, 50);
+        if (editorElement) {
+          editorElement.scrollTop = scrollTop;
+        }
+      }, 10);
     }
   }, [getEditor]);
 
@@ -277,7 +277,7 @@ export const RichTextEditor: React.FC<EditorProps> = ({
   }, [getEditor]);
 
   return (
-    <div className={`flex flex-col h-full ${className}`}>
+    <div className={`flex flex-col h-full relative ${className}`}>
       {/* Toolbar */}
       <EditorToolbar
         onBold={handleBold}
@@ -317,30 +317,28 @@ export const RichTextEditor: React.FC<EditorProps> = ({
       <Tabs 
         value={activeTab} 
         onValueChange={(v) => setActiveTab(v as 'edit' | 'preview')} 
-        className="flex-1 flex flex-col overflow-hidden"
+        className="flex-1 flex flex-col min-h-0"
       >
-        <TabsList className="mx-4 mt-2">
+        <TabsList className="mx-4 mt-2 flex-shrink-0">
           <TabsTrigger value="edit">{t('editorLabel')}</TabsTrigger>
           <TabsTrigger value="preview">{t('preview')}</TabsTrigger>
         </TabsList>
 
         <TabsContent 
           value="edit" 
-          className="flex-1 m-4 mt-2 overflow-hidden border rounded-lg data-[state=active]:flex data-[state=active]:flex-col"
+          className="flex-1 m-4 mt-2 overflow-auto border rounded-lg data-[state=active]:block min-h-0"
         >
-          <div className="flex-1 overflow-auto">
-            <WYSIWYGEditor
-              value={value}
-              onChange={onChange}
-              placeholder={placeholder}
-              disabled={disabled}
-            />
-          </div>
+          <WYSIWYGEditor
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            disabled={disabled}
+          />
         </TabsContent>
 
         <TabsContent 
           value="preview" 
-          className="flex-1 m-4 mt-2 overflow-auto border rounded-lg p-6 data-[state=active]:block bg-white"
+          className="flex-1 m-4 mt-2 overflow-auto border rounded-lg p-6 data-[state=active]:block bg-white min-h-0"
         >
           <div
             className="prose prose-sm max-w-none 

@@ -654,14 +654,13 @@ export async function updateEventAction(
       };
     }
 
-    // Remove null, undefined values, and immutable fields (slug, language)
-    // These fields are already filtered in updateEvent, but we remove them here for clarity
+    // Remove null, undefined values, and immutable fields (slug only)
+    // Language can be updated, slug cannot
     const updates = Object.fromEntries(
       Object.entries(validated).filter(([key, value]) => 
         value !== null && 
         value !== undefined && 
-        key !== 'slug' && 
-        key !== 'language'
+        key !== 'slug'
       )
     );
 
