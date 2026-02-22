@@ -22,6 +22,7 @@ interface PartnersSectionProps {
   textColor?: string;
   accentColor?: string;
   logoSize?: 'small' | 'medium' | 'large';
+  children?: React.ReactNode;
 }
 
 const defaultProps: PartnersSectionProps = {
@@ -61,6 +62,8 @@ export const PartnersSection = (props: PartnersSectionProps) => {
   const {
     connectors: { connect, drag },
   } = useNode();
+
+  const { children } = props;
 
   const getLogoSizeClass = () => {
     switch (logoSize) {
@@ -136,13 +139,19 @@ export const PartnersSection = (props: PartnersSectionProps) => {
           </p>
         </div>
       </div>
+      {children}
     </div>
   );
 };
 
 PartnersSection.craft = {
   displayName: 'Partners Section',
+  isCanvas: true,
   props: defaultProps,
+  rules: {
+    canDrag: () => true,
+    canDrop: () => true,
+  },
   related: {
     settings: PartnersSectionSettings,
   },

@@ -25,6 +25,7 @@ interface TeamSectionProps {
   titleColor?: string;
   textColor?: string;
   accentColor?: string;
+  children?: React.ReactNode;
 }
 
 const defaultProps: TeamSectionProps = {
@@ -74,6 +75,8 @@ export const TeamSection = (props: TeamSectionProps) => {
     textColor,
     accentColor,
   } = props;
+
+  const { children } = props;
 
   const {
     connectors: { connect, drag },
@@ -163,13 +166,19 @@ export const TeamSection = (props: TeamSectionProps) => {
           ))}
         </div>
       </div>
+      {children}
     </div>
   );
 };
 
 TeamSection.craft = {
   displayName: 'Team Section',
+  isCanvas: true,
   props: defaultProps,
+  rules: {
+    canDrag: () => true,
+    canDrop: () => true,
+  },
   related: {
     settings: TeamSectionSettings,
   },
@@ -237,7 +246,15 @@ export function TeamSectionSettings() {
       </div>
 
       <div className="pt-4 border-t">
-        <Label className="mb-3 block">Team Members</Label>
+        <div className="flex justify-between items-center mb-3">
+          <Label>{t('labels.items', { count: props.teamMembers?.length || 0 }) || 'Team Members'}</Label>
+          <button
+            onClick={addTeamMember}
+            className="text-sm px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            {t('actions.addMember') || 'Add Member'}
+          </button>
+        </div>
         {props.teamMembers?.map((member, index) => (
           <div key={index} className="mb-4 p-4 border rounded space-y-2">
             <div>

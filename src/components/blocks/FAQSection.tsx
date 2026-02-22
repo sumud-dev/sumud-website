@@ -21,6 +21,7 @@ interface FAQSectionProps {
   titleColor?: string;
   textColor?: string;
   accentColor?: string;
+  children?: React.ReactNode;
 }
 
 const defaultProps: FAQSectionProps = {
@@ -73,6 +74,8 @@ export const FAQSection = (props: FAQSectionProps) => {
     connectors: { connect, drag },
   } = useNode();
 
+  const { children } = props;
+  const t = useTranslations('adminSettings.pageBuilder');
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
@@ -146,13 +149,19 @@ export const FAQSection = (props: FAQSectionProps) => {
           </p>
         </div>
       </div>
+      {children}
     </div>
   );
 };
 
 FAQSection.craft = {
   displayName: 'FAQ Section',
+  isCanvas: true,
   props: defaultProps,
+  rules: {
+    canDrag: () => true,
+    canDrop: () => true,
+  },
   related: {
     settings: FAQSectionSettings,
   },

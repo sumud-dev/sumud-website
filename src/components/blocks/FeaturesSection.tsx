@@ -19,6 +19,7 @@ interface FeaturesSectionProps {
   features?: Feature[];
   titleColor?: string;
   textColor?: string;
+  children?: React.ReactNode;
 }
 
 const defaultProps: FeaturesSectionProps = {
@@ -59,6 +60,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export const FeaturesSection = (props: FeaturesSectionProps) => {
   const { title, subtitle, features, titleColor, textColor } = props;
+
+  const { children } = props;
 
   const {
     connectors: { connect, drag },
@@ -105,6 +108,7 @@ export const FeaturesSection = (props: FeaturesSectionProps) => {
           })}
         </div>
       </div>
+      {children}
     </div>
   );
 };
@@ -203,7 +207,12 @@ export const FeaturesSectionSettings = () => {
 
 FeaturesSection.craft = {
   displayName: 'Features Section',
+  isCanvas: true,
   props: defaultProps,
+  rules: {
+    canDrag: () => true,
+    canDrop: () => true,
+  },
   related: {
     settings: FeaturesSectionSettings,
   },

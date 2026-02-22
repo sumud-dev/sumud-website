@@ -28,6 +28,7 @@ interface HeroSectionProps {
   secondaryButtonColor?: string;
   secondaryButtonHoverColor?: string;
   secondaryButtonTextColor?: string;
+  children?: React.ReactNode;
 }
 
 const defaultProps: HeroSectionProps = {
@@ -70,6 +71,8 @@ export const HeroSection = (props: HeroSectionProps) => {
     secondaryButtonHoverColor,
     secondaryButtonTextColor,
   } = props;
+
+  const { children } = props;
 
   const {
     connectors: { connect, drag },
@@ -137,6 +140,7 @@ export const HeroSection = (props: HeroSectionProps) => {
           )}
         </div>
       </div>
+      {children}
     </div>
   );
 };
@@ -417,7 +421,12 @@ export const HeroSectionSettings = () => {
 
 HeroSection.craft = {
   displayName: 'Hero Section',
+  isCanvas: true,
   props: defaultProps,
+  rules: {
+    canDrag: () => true,
+    canDrop: () => true,
+  },
   related: {
     settings: HeroSectionSettings,
   },

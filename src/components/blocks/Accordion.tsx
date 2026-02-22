@@ -29,7 +29,7 @@ export const Accordion = ({
   } = useNode();
 
   return (
-    <div ref={(ref) => { if (ref) connect(drag(ref)); }} className="mb-4">
+    <div ref={(ref) => { if (ref) connect(drag(ref)); }} style={styles} className="mx-auto">
       <ShadcnAccordion type={type} collapsible={type === 'single'}>
         {items.map((item) => (
           <AccordionItem key={item.id} value={item.id}>

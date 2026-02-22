@@ -22,6 +22,7 @@ interface TestimonialsSectionProps {
   titleColor?: string;
   textColor?: string;
   accentColor?: string;
+  children?: React.ReactNode;
 }
 
 const defaultProps: TestimonialsSectionProps = {
@@ -60,6 +61,8 @@ export const TestimonialsSection = (props: TestimonialsSectionProps) => {
     textColor,
     accentColor,
   } = props;
+
+  const { children } = props;
 
   const {
     connectors: { connect, drag },
@@ -125,13 +128,19 @@ export const TestimonialsSection = (props: TestimonialsSectionProps) => {
           ))}
         </div>
       </div>
+      {children}
     </div>
   );
 };
 
 TestimonialsSection.craft = {
   displayName: 'Testimonials Section',
+  isCanvas: true,
   props: defaultProps,
+  rules: {
+    canDrag: () => true,
+    canDrop: () => true,
+  },
   related: {
     settings: TestimonialsSectionSettings,
   },

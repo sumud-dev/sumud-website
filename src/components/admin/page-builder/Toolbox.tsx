@@ -44,20 +44,22 @@ export function Toolbox() {
   ];
 
   const pageTemplates = [
-    { name: 'CTA Block', component: CTABlock, icon: Megaphone, key: 'ctaBlock', description: 'Call-to-action section with buttons' },
-    { name: 'Hero Section', component: HeroSection, icon: Sparkles, key: 'heroSection', description: 'Full-width hero banner with background' },
-    { name: 'About Section', component: AboutSection, icon: Users, key: 'aboutSection', description: 'About section with image and stats' },
-    { name: 'Contact Section', component: ContactSection, icon: Mail, key: 'contactSection', description: 'Contact form with info cards' },
-    { name: 'Features Section', component: FeaturesSection, icon: Grid3x3, key: 'featuresSection', description: 'Grid of feature cards' },
-    { name: 'Stats Section', component: StatsSection, icon: BarChart3, key: 'statsSection', description: 'Statistics display section' },
-    { name: 'Testimonials Section', component: TestimonialsSection, icon: MessageSquareQuote, key: 'testimonialsSection', description: 'Customer testimonials and reviews' },
-    { name: 'Team Section', component: TeamSection, icon: UsersRound, key: 'teamSection', description: 'Team members with photos and bios' },
-    { name: 'Timeline Section', component: TimelineSection, icon: Clock, key: 'timelineSection', description: 'Chronological timeline of events' },
-    { name: 'Pricing Section', component: PricingSection, icon: DollarSign, key: 'pricingSection', description: 'Pricing tiers and packages' },
-    { name: 'Gallery Section', component: GallerySection, icon: ImagePlus, key: 'gallerySection', description: 'Image gallery with lightbox' },
-    { name: 'FAQ Section', component: FAQSection, icon: HelpCircle, key: 'faqSection', description: 'Frequently asked questions accordion' },
-    { name: 'Newsletter Section', component: NewsletterSection, icon: Send, key: 'newsletterSection', description: 'Email newsletter signup form' },
-    { name: 'Partners Section', component: PartnersSection, icon: Handshake, key: 'partnersSection', description: 'Partner and sponsor logos' },
+    { name: t('blockNames.ctaBlock'), component: CTABlock, icon: Megaphone, key: 'ctaBlock', isCanvas: true, description: t('blockDescriptions.ctaBlock') },
+    { name: t('blockNames.heroSection'), component: HeroSection, icon: Sparkles, key: 'heroSection', isCanvas: true, description: t('blockDescriptions.heroSection') },
+    { name: t('blockNames.aboutSection'), component: AboutSection, icon: Users, key: 'aboutSection', isCanvas: true, description: t('blockDescriptions.aboutSection') },
+    { name: t('blockNames.contactSection'), component: ContactSection, icon: Mail, key: 'contactSection', isCanvas: true, description: t('blockDescriptions.contactSection') },
+    { name: t('blockNames.featuresSection'), component: FeaturesSection, icon: Grid3x3, key: 'featuresSection', isCanvas: true, description: t('blockDescriptions.featuresSection') },
+    { name: t('blockNames.statsSection'), component: StatsSection, icon: BarChart3, key: 'statsSection', isCanvas: true, description: t('blockDescriptions.statsSection') },
+    { name: t('blockNames.testimonialsSection'), component: TestimonialsSection, icon: MessageSquareQuote, key: 'testimonialsSection', isCanvas: true, description: t('blockDescriptions.testimonialsSection') },
+    { name: t('blockNames.teamSection'), component: TeamSection, icon: UsersRound, key: 'teamSection', isCanvas: true, description: t('blockDescriptions.teamSection') },
+    { name: t('blockNames.timelineSection'), component: TimelineSection, icon: Clock, key: 'timelineSection', isCanvas: true, description: t('blockDescriptions.timelineSection') },
+    { name: t('blockNames.pricingSection'), component: PricingSection, icon: DollarSign, key: 'pricingSection', isCanvas: true, description: t('blockDescriptions.pricingSection') },
+    { name: t('blockNames.gallerySection'), component: GallerySection, icon: ImagePlus, key: 'gallerySection', isCanvas: true, description: t('blockDescriptions.gallerySection') },
+    { name: t('blockNames.faqSection'), component: FAQSection, icon: HelpCircle, key: 'faqSection', isCanvas: true, description: t('blockDescriptions.faqSection') },
+    { name: t('blockNames.newsletterSection'), component: NewsletterSection, icon: Send, key: 'newsletterSection', isCanvas: true, description: t('blockDescriptions.newsletterSection') },
+    { name: t('blockNames.partnersSection'), component: PartnersSection, icon: Handshake, key: 'partnersSection', isCanvas: true, description: t('blockDescriptions.partnersSection') },
+    { name: t('blockNames.donationSection'), component: DonationSection, icon: Heart, key: 'donationSection', isCanvas: true, description: t('blockDescriptions.donationSection') },
+    { name: t('blockNames.infoListCard'), component: InfoListCard, icon: ListChecks, key: 'infoListCard', isCanvas: true, description: t('blockDescriptions.infoListCard') },
   ];
 
   const renderBlockButton = (block: { name: string; component: any; icon: any; key: string; description: string; isCanvas?: boolean }) => {

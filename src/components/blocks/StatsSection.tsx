@@ -21,6 +21,7 @@ interface StatsSectionProps {
   backgroundColor?: string;
   titleColor?: string;
   textColor?: string;
+  children?: React.ReactNode;
 }
 
 const defaultProps: StatsSectionProps = {
@@ -56,6 +57,8 @@ const defaultProps: StatsSectionProps = {
 
 export const StatsSection = (props: StatsSectionProps) => {
   const { title, subtitle, description, stats, backgroundColor, titleColor, textColor } = props;
+
+  const { children } = props;
 
   const {
     connectors: { connect, drag },
@@ -122,6 +125,7 @@ export const StatsSection = (props: StatsSectionProps) => {
           ))}
         </div>
       </div>
+      {children}
     </div>
   );
 };
@@ -261,7 +265,12 @@ export const StatsSectionSettings = () => {
 
 StatsSection.craft = {
   displayName: 'Stats Section',
+  isCanvas: true,
   props: defaultProps,
+  rules: {
+    canDrag: () => true,
+    canDrop: () => true,
+  },
   related: {
     settings: StatsSectionSettings,
   },

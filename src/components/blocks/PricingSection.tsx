@@ -27,6 +27,7 @@ interface PricingSectionProps {
   titleColor?: string;
   textColor?: string;
   accentColor?: string;
+  children?: React.ReactNode;
 }
 
 const defaultProps: PricingSectionProps = {
@@ -98,6 +99,8 @@ export const PricingSection = (props: PricingSectionProps) => {
     textColor,
     accentColor,
   } = props;
+
+  const { children } = props;
 
   const {
     connectors: { connect, drag },
@@ -186,13 +189,19 @@ export const PricingSection = (props: PricingSectionProps) => {
           ))}
         </div>
       </div>
+      {children}
     </div>
   );
 };
 
 PricingSection.craft = {
   displayName: 'Pricing Section',
+  isCanvas: true,
   props: defaultProps,
+  rules: {
+    canDrag: () => true,
+    canDrop: () => true,
+  },
   related: {
     settings: PricingSectionSettings,
   },

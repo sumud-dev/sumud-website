@@ -1,111 +1,50 @@
-"use client";
+import { setRequestLocale } from "next-intl/server";
+import { getPublishedPage } from "@/src/actions/pages.actions";
+import { PageRenderer } from '@/src/components/renderer/PageRenderer';
 
-import React from "react";
-import { useTranslations } from "next-intl";
-import { ExternalLink, CheckCircle, Users, Heart, Calendar } from "lucide-react";
+interface MembershipPageProps {
+  params: Promise<{
+    locale: string;
+  }>;
+}
 
-export default function MembershipPage() {
-  const t = useTranslations("membership");
-  const flomembersUrl =
-    "https://fork.flomembers.com/sumud-suomen-palestiina-verkosto/join";
+export async function generateMetadata({ params }: MembershipPageProps) {
+  const { locale } = await params;
+
+  try {
+    const data = await getPublishedPage("membership", locale as 'en' | 'fi');
+
+    if (!data) {
+      return {
+        title: "Membership - Sumud",
+      };
+    }
+
+    return {
+      title: data.page.title || "Membership - Sumud",
+    };
+  } catch {
+    return {
+      title: "Membership - Sumud",
+    };
+  }
+}
+
+export default async function MembershipPage({ params }: MembershipPageProps) {
+  const { locale } = await params;
+
+  setRequestLocale(locale);
+
+  const data = await getPublishedPage("membership", locale as 'en' | 'fi');
+
+  if (!data) {
+    return <main />;
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4] py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <header className="mb-12 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-[#3E442B] mb-4">
-            {t("title")}
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            {t("subtitle")}
-          </p>
-        </header>
-
-        {/* Benefits Section */}
-        <div className="bg-white shadow-lg rounded-2xl p-8 mb-8">
-          <h2 className="text-2xl font-semibold text-[#3E442B] mb-6 text-center">
-            {t("benefits.title")}
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="flex gap-4">
-              <Users className="w-6 h-6 text-[#781D32] flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-1">
-                  {t("benefits.community.title")}
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  {t("benefits.community.desc")}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <Heart className="w-6 h-6 text-[#781D32] flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-1">
-                  {t("benefits.campaigns.title")}
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  {t("benefits.campaigns.desc")}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <Calendar className="w-6 h-6 text-[#781D32] flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-1">
-                  {t("benefits.events.title")}
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  {t("benefits.events.desc")}
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <CheckCircle className="w-6 h-6 text-[#781D32] flex-shrink-0 mt-1" />
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-1">
-                  {t("benefits.impact.title")}
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  {t("benefits.impact.desc")}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* CTA Card */}
-        <div className="bg-gradient-to-br from-[#781D32] to-[#5c1626] text-white shadow-lg rounded-2xl p-8 md:p-12 text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            {t("cta.title")}
-          </h2>
-          <p className="text-lg mb-8 opacity-90">
-            {t("cta.description")}
-          </p>
-          <a
-            href={flomembersUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 bg-white text-[#781D32] font-semibold px-8 py-4 rounded-lg hover:bg-gray-100 transition-colors shadow-md"
-          >
-            {t("cta.button")} <ExternalLink className="w-5 h-5" />
-          </a>
-          <p className="text-sm mt-6 opacity-75">
-            {t("cta.notice")}
-          </p>
-        </div>
-
-        {/* Additional Info */}
-        <div className="mt-8 text-center text-sm text-gray-600">
-          <p>
-            {t("contact.question")}{" "}
-            <a href="/contact" className="text-[#781D32] hover:underline font-medium">
-              {t("contact.link")}
-            </a>
-          </p>
-        </div>
-      </div>
-    </div>
+    <main className="min-h-screen bg-linear-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4]">
+      <h1 className="sr-only">{data.page.title}</h1>
+      <PageRenderer content={data.content as any} />
+    </main>
   );
 }

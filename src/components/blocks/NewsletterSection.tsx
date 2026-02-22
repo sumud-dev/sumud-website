@@ -22,6 +22,7 @@ interface NewsletterSectionProps {
   buttonColor?: string;
   buttonTextColor?: string;
   variant?: 'centered' | 'split' | 'card';
+  children?: React.ReactNode;
 }
 
 const defaultProps: NewsletterSectionProps = {
@@ -56,6 +57,8 @@ export const NewsletterSection = (props: NewsletterSectionProps) => {
     buttonTextColor,
     variant,
   } = props;
+
+  const { children } = props;
 
   const {
     connectors: { connect, drag },
@@ -197,13 +200,19 @@ export const NewsletterSection = (props: NewsletterSectionProps) => {
         {variant === 'split' && renderSplit()}
         {variant === 'card' && renderCard()}
       </div>
+      {children}
     </div>
   );
 };
 
 NewsletterSection.craft = {
   displayName: 'Newsletter Section',
+  isCanvas: true,
   props: defaultProps,
+  rules: {
+    canDrag: () => true,
+    canDrop: () => true,
+  },
   related: {
     settings: NewsletterSectionSettings,
   },

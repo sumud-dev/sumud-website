@@ -27,7 +27,7 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { Badge } from "@/src/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/src/components/ui/tabs";
-import { useCampaign, getDescriptionText } from "@/src/lib/hooks/use-campaigns";
+import { useCampaign } from "@/src/lib/hooks/use-campaigns";
 import { getDescriptionHtml } from "@/src/lib/utils/markdown";
 import { type CampaignType, type CampaignParticipationStep, type CampaignResource, type CampaignSuccessStory } from "@/src/types/Campaigns";
 
@@ -80,7 +80,6 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
     notFound();
   }
   const slug = resolvedParams.slug;
-  const localeParam = resolvedParams.locale || "en";
 
   // Fetch campaign data
   const { data: campaign, isLoading, error } = useCampaign(slug);
@@ -302,7 +301,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
               </h2>
               {campaign.resources && Array.isArray(campaign.resources) && campaign.resources.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {campaign.resources.map((resource: CampaignResource, index: number) => {
+                  {campaign.resources!.map((resource: CampaignResource, index: number) => {
                     const Icon = resourceIcons[resource.type] || FileText;
                     return (
                       <motion.a
@@ -362,7 +361,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
               </h2>
               {campaign.successStories && Array.isArray(campaign.successStories) && campaign.successStories.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {campaign.successStories.map((story: CampaignSuccessStory | string, index: number) => (
+                  {campaign.successStories!.map((story: CampaignSuccessStory | string, index: number) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0, scale: 0.95 }}
