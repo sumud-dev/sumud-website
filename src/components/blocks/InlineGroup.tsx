@@ -2,7 +2,6 @@
 
 import { useNode } from '@craftjs/core';
 import { Children, ReactNode } from 'react';
-import { stylePropsToCSS, type StyleProps } from '@/src/lib/types/block-props';
 
 interface InlineGroupProps {
   justifyContent: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around';
@@ -22,12 +21,6 @@ export const InlineGroup = ({
   const {
     connectors: { connect, drag },
   } = useNode();
-
-  const styles = stylePropsToCSS({
-    marginBottom: 16,
-    maxWidth: '80rem',
-    ...styleProps,
-  });
 
   const showPlaceholder = Children.count(children) === 0;
 

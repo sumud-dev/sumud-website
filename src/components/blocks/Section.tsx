@@ -1,7 +1,5 @@
 import { useNode } from '@craftjs/core';
 import { Children } from 'react';
-import { stylePropsToCSS, type StyleProps } from '@/src/lib/types/block-props';
-import { StyleSettings } from '@/src/components/admin/page-builder/StyleSettings';
 
 interface SectionProps {
   backgroundColor: string;
@@ -18,20 +16,19 @@ export const Section = ({
     connectors: { connect, drag },
   } = useNode();
 
-  const styles = stylePropsToCSS({
-    paddingTop: 20,
-    paddingBottom: 20,
-    paddingLeft: 20,
-    paddingRight: 20,
+  const styles: React.CSSProperties = {
+    paddingTop: padding,
+    paddingBottom: padding,
+    paddingLeft: padding,
+    paddingRight: padding,
     marginTop: 0,
     marginBottom: 16,
-    marginLeft: 0,
-    marginRight: 0,
-    backgroundColor: '#f8f8f8',
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    backgroundColor,
     minHeight: '100px',
-    maxWidth: styleProps.maxWidth || '80rem',
-    ...styleProps,
-  });
+    maxWidth: '80rem',
+  };
 
   const showPlaceholder = Children.count(children) === 0;
 
