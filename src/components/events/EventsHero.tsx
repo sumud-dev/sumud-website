@@ -18,7 +18,7 @@ export interface EventsHeroProps {
   totalEvents: number;
   isLoading: boolean;
   /** Content from page builder for translations/editing */
-  content?: EventsHeroContent;
+  content?: EventsHeroContent | null;
 }
 
 /** Default content as fallback */

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { 
-  getActiveCampaigns, 
+  getActiveCampaigns,
   searchCampaigns, 
   getCampaignsByCategory,
   getFeaturedCampaigns 
@@ -31,9 +31,9 @@ export async function GET(request: NextRequest) {
     else if (isFeatured) {
       campaigns = await getFeaturedCampaigns(language);
     }
-    // Default: get all active campaigns
+    // Default: get all active campaigns (public page should only show active)
     else {
-      campaigns = await getActiveCampaigns(language);
+      campaigns = await getActiveCampaigns(language, true);
     }
 
     // Apply limit if specified

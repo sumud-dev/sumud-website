@@ -3,13 +3,16 @@
 import { useState, useCallback } from 'react';
 import { useEditor } from '@craftjs/core';
 import type { SerializedNodes } from '@craftjs/core';
-import { updatePageContent, publishPage } from '@/src/actions/pages.actions';
+import { updatePageContent, publishPage, updatePage } from '@/src/actions/pages.actions';
 import { toast } from 'sonner';
 import type { Language } from '@/src/lib/types/page';
 
 interface UsePageEditorOptions {
   pageId: string;
   language: Language;
+  status?: 'draft' | 'published';
+  pageTitle?: string;
+  pageSlug?: string;
   onSaveSuccess?: () => void;
   onSaveError?: (error: Error) => void;
   onPublishSuccess?: () => void;
@@ -39,6 +42,9 @@ interface UsePageEditorReturn {
 export function usePageEditor({
   pageId,
   language,
+  status,
+  pageTitle,
+  pageSlug,
   onSaveSuccess,
   onSaveError,
   onPublishSuccess,
@@ -84,6 +90,25 @@ export function usePageEditor({
         syncStrategy: 'full-override',
       });
 
+      // Update page metadata if provided
+      const updates: { status?: 'draft' | 'published'; title?: string; slug?: string } = {};
+      
+      if (status !== 'draft') {
+        updates.status = 'draft';
+      }
+      
+      if (pageTitle) {
+        updates.title = pageTitle;
+      }
+      
+      if (pageSlug) {
+        updates.slug = pageSlug;
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        await updatePage(pageId, updates);
+      }
+
       setLastSaved(new Date());
       
       toast.success('Changes saved', {
@@ -111,7 +136,7 @@ export function usePageEditor({
     } finally {
       setIsSaving(false);
     }
-  }, [pageId, language, isSaving, query, onSaveSuccess, onSaveError]);
+  }, [pageId, language, isSaving, query, status, pageTitle, pageSlug, onSaveSuccess, onSaveError]);
 
   /**
    * Publish the page
@@ -127,7 +152,38 @@ export function usePageEditor({
     try {
       console.log('[usePageEditor] Publishing page...', { pageId });
       
+      // First save the current content
+      const json = query.serialize();
+      const content = JSON.parse(json) as SerializedNodes;
+      
+      if (!content || !('ROOT' in content)) {
+        throw new Error('Invalid editor content: Missing ROOT node');
+      }
+
+      await updatePageContent(pageId, language, content, {
+        syncAcrossLanguages: true,
+        syncStrategy: 'full-override',
+      });
+
+      // Update page metadata before publishing
+      const updates: { title?: string; slug?: string } = {};
+      
+      if (pageTitle) {
+        updates.title = pageTitle;
+      }
+      
+      if (pageSlug) {
+        updates.slug = pageSlug;
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        await updatePage(pageId, updates);
+      }
+
+      // Then publish the page
       await publishPage(pageId);
+      
+      setLastSaved(new Date());
       
       toast.success('Page published', {
         description: 'Changes are now live on all language versions',
@@ -151,7 +207,7 @@ export function usePageEditor({
     } finally {
       setIsPublishing(false);
     }
-  }, [pageId, isPublishing, onPublishSuccess, onPublishError]);
+  }, [pageId, language, isPublishing, query, pageTitle, pageSlug, onPublishSuccess, onPublishError]);
 
   /**
    * Undo last action

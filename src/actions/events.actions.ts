@@ -22,7 +22,7 @@ import {
   updateEvent,
   deleteEvent,
   upsertEventTranslation,
-} from '@/src/lib/db/queries/events';
+} from '@/src/lib/db/queries/events.queries';
 import {
   translateContentToAllLocales,
   EVENT_TRANSLATION_CONFIG,
@@ -119,7 +119,7 @@ const eventBaseSchema = z.object({
 });
 
 const createEventSchema = z.object({
-  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens'),
+  slug: z.string().max(200).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens').optional(),
   title: z.string().min(1).max(500),
   description: z.string().max(2000).optional(),
   content: z.string().optional(),
@@ -164,6 +164,13 @@ export async function fetchAllEventsAdminAction(
     status?: string;
     language?: string;
     locale?: string;
+    search?: string;
+    eventType?: string;
+    locationMode?: string;
+    upcoming?: boolean;
+    featured?: boolean;
+    startDate?: string;
+    endDate?: string;
   }
 ): Promise<ActionResult> {
   try {
@@ -452,9 +459,19 @@ export async function createEventAction(
     const sourceLocale = (validated.language || 'fi') as SupportedLocale;
     const createdEvents: { language: string; slug: string }[] = [];
 
+    // Generate slug from title if not provided
+    let finalSlug = validated.slug?.toLowerCase() || generateSlug(validated.title);
+    
+    // Ensure slug is unique by adding suffix if needed
+    let slugSuffix = 1;
+    while (await slugExistsForLanguage(finalSlug, validated.language || 'fi')) {
+      finalSlug = `${validated.slug?.toLowerCase() || generateSlug(validated.title)}-${slugSuffix}`;
+      slugSuffix++;
+    }
+
     // Base event data for insertion
     const baseEventData = {
-      slug: validated.slug.toLowerCase(),
+      slug: finalSlug,
       title: validated.title,
       description: validated.description || undefined,
       content: validated.content || undefined,
@@ -476,32 +493,20 @@ export async function createEventAction(
     // Finnish events go to events table
     // English/Arabic events go to eventTranslations table
     if (validated.language === 'fi') {
-      // Check if Finnish event already exists
-      const exists = await slugExistsForLanguage(validated.slug, 'fi');
-      if (exists) {
-        return { success: false, error: 'An event with this slug already exists' };
-      }
-      
       // Create Finnish event in events table
       await createEvent({
         ...baseEventData,
         language: 'fi',
       });
-      createdEvents.push({ language: 'fi', slug: validated.slug });
+      createdEvents.push({ language: 'fi', slug: finalSlug });
     } else {
-      // Check if event already exists for this language
-      const exists = await slugExistsForLanguage(validated.slug, validated.language!);
-      if (exists) {
-        return { success: false, error: 'An event with this slug already exists' };
-      }
-      
       // Create English/Arabic event in eventTranslations table
       await upsertEventTranslation({
         ...baseEventData,
         eventId: undefined,
         language: validated.language!,
       });
-      createdEvents.push({ language: validated.language!, slug: validated.slug });
+      createdEvents.push({ language: validated.language!, slug: finalSlug });
     }
 
     // Auto-translate to remaining languages if enabled
@@ -541,7 +546,7 @@ export async function createEventAction(
           }
 
           // Use the same slug for all language versions
-          const translatedSlug = validated.slug;
+          const translatedSlug = finalSlug;
           console.log(`[Event Creation] Using shared slug for ${targetLocale}:`, translatedSlug);
           
           // Check if this translation already exists
@@ -590,7 +595,7 @@ export async function createEventAction(
 
     return {
       success: true,
-      data: { slug: validated.slug, createdEvents },
+      data: { slug: finalSlug, createdEvents },
       message: createdEvents.length > 1
         ? `Event created with ${createdEvents.length} language versions`
         : 'Event created successfully',
@@ -624,7 +629,7 @@ export async function createEventAction(
  */
 export async function updateEventAction(
   id: string,
-  input: z.infer<typeof eventBaseSchema> & { autoTranslate?: boolean }
+  input: z.infer<typeof eventBaseSchema>
 ): Promise<ActionResult> {
   try {
     // Check permissions
@@ -639,7 +644,6 @@ export async function updateEventAction(
 
     // Validate input
     const validated = eventBaseSchema.parse(input);
-    const autoTranslate = input.autoTranslate ?? false;
 
     // Get the current event to know its language and slug
     const currentEvent = await getEventById(id);
@@ -650,153 +654,27 @@ export async function updateEventAction(
       };
     }
 
-    // Remove null and undefined values to match updateEvent's expected type
+    // Remove null, undefined values, and immutable fields (slug only)
+    // Language can be updated, slug cannot
     const updates = Object.fromEntries(
-      Object.entries(validated).filter(([, value]) => value !== null && value !== undefined)
+      Object.entries(validated).filter(([key, value]) => 
+        value !== null && 
+        value !== undefined && 
+        key !== 'slug'
+      )
     );
 
     // Update event
     const event = await updateEvent(id, updates);
 
-    // Auto-translate to other language if enabled
-    if (autoTranslate && event) {
-      try {
-        const sourceLocale = (currentEvent.language || 'fi') as SupportedLocale;
-        const contentToTranslate: Record<string, unknown> = {};
-        
-        // Build content to translate from updated values
-        if (validated.title) contentToTranslate.title = validated.title;
-        if (validated.description) contentToTranslate.description = validated.description;
-        if (validated.content) contentToTranslate.content = validated.content;
-        if (validated.location) contentToTranslate.location = validated.location;
-
-        // Only translate if there's content to translate
-        if (Object.keys(contentToTranslate).length > 0) {
-          console.log('[Event Update] Auto-translating from', sourceLocale, contentToTranslate);
-          const { translations, error: translationError } = await translateContentToAllLocales(
-            contentToTranslate,
-            sourceLocale,
-            EVENT_TRANSLATION_CONFIG
-          );
-
-          if (translationError) {
-            console.warn('[Event Update] Translation warning:', translationError);
-          }
-
-          // Translate to the other locale (fi <-> en)
-          const targetLocale: SupportedLocale = sourceLocale === 'fi' ? 'en' : 'fi';
-          const translatedContent = translations[targetLocale];
-
-          if (translatedContent && translatedContent.title && event.slug) {
-            const translatedSlug = event.slug;
-            console.log(`[Event Update] Creating/updating ${targetLocale} translation with slug:`, translatedSlug);
-
-            // Check if translation already exists
-            const translationExists = await slugExistsForLanguage(translatedSlug, targetLocale);
-            
-            const translatedEventData = {
-              slug: translatedSlug,
-              title: translatedContent.title as string,
-              description: (translatedContent.description as string) || validated.description || undefined,
-              content: (translatedContent.content as string) || validated.content || undefined,
-              location: (translatedContent.location as string) || validated.location || undefined,
-              status: validated.status || currentEvent.status || undefined,
-              author: validated.author || currentEvent.author || undefined,
-              authorName: validated.authorName || currentEvent.authorName || undefined,
-              date: validated.date || currentEvent.date || undefined,
-              startAt: validated.startAt || currentEvent.startAt || undefined,
-              endAt: validated.endAt || currentEvent.endAt || undefined,
-              publishedAt: validated.publishedAt || currentEvent.publishedAt || undefined,
-              featuredImage: validated.featuredImage || currentEvent.featuredImage || undefined,
-              altTexts: validated.altTexts || currentEvent.altTexts || undefined,
-              categories: validated.categories || currentEvent.categories || undefined,
-              locations: validated.locations || currentEvent.locations || undefined,
-              organizers: validated.organizers || currentEvent.organizers || undefined,
-            };
-
-            // Finnish events go to events table, others go to eventTranslations table
-            if (targetLocale === 'fi') {
-              if (translationExists) {
-                // Update existing Finnish event
-                const existingEvent = await db
-                  .select()
-                  .from(events)
-                  .where(eq(events.slug, translatedSlug))
-                  .limit(1);
-                
-                if (existingEvent[0]) {
-                  await db
-                    .update(events)
-                    .set({
-                      ...translatedEventData,
-                      language: 'fi',
-                      updatedAt: new Date(),
-                    })
-                    .where(eq(events.id, existingEvent[0].id));
-                  console.log(`[Event Update] Updated existing Finnish event`);
-                }
-              } else {
-                // Create new Finnish event
-                await createEvent({
-                  ...translatedEventData,
-                  language: 'fi',
-                });
-                console.log(`[Event Update] Created new Finnish event`);
-              }
-            } else {
-              if (translationExists) {
-                // Update existing translation
-                const existingTranslation = await db
-                  .select()
-                  .from(eventTranslations)
-                  .where(
-                    and(
-                      eq(eventTranslations.slug, translatedSlug),
-                      eq(eventTranslations.language, targetLocale)
-                    )
-                  )
-                  .limit(1);
-                
-                if (existingTranslation[0]) {
-                  await db
-                    .update(eventTranslations)
-                    .set({
-                      ...translatedEventData,
-                      language: targetLocale,
-                      updatedAt: new Date(),
-                    })
-                    .where(eq(eventTranslations.id, existingTranslation[0].id));
-                  console.log(`[Event Update] Updated existing ${targetLocale} translation`);
-                }
-              } else {
-                // Create new translation
-                await upsertEventTranslation({
-                  ...translatedEventData,
-                  eventId: undefined,
-                  language: targetLocale,
-                });
-                console.log(`[Event Update] Created new ${targetLocale} translation`);
-              }
-            }
-          }
-        }
-      } catch (translationError) {
-        console.error('[Event Update] Auto-translation failed:', translationError);
-        // Continue without translation - don't fail the entire operation
-      }
-    }
-
     // Revalidate cache
     revalidatePath('/[locale]/admin/events', 'page');
     revalidatePath('/[locale]/events', 'page');
-    if (event?.slug) {
-      revalidatePath(`/[locale]/events/${event.slug}`, 'page');
-    }
 
     return {
       success: true,
       data: event,
-      message: autoTranslate ? 'Event updated and translated successfully' : 'Event updated successfully',
+      message: 'Event updated successfully',
     };
   } catch (error) {
     console.error('Error updating event:', error);

@@ -41,12 +41,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/src/components/ui/dialog";
-import { useEvent } from "@/src/lib/hooks/use-events";
+import { useEventBySlug } from "@/src/lib/hooks/use-events";
 import { usePage } from "@/src/lib/hooks/use-pages";
 import type { 
   EventRegistrationFormData,
   EventType,
   EventLocationMode,
+  BaseEvent,
 } from "@/src/lib/types/event";
 import {
   formatEventDate,
@@ -83,7 +84,7 @@ export default function EventDetailPage() {
   const locale = useLocale();
   const t = useTranslations("eventsDetail");
 
-  const { data: eventResponse, isLoading, error } = useEvent(slug);
+  const { data: eventResponse, isLoading, error } = useEventBySlug(slug);
   
   // Fetch page builder content for event detail labels
   const { data: pageData } = usePage("event-detail");
@@ -147,7 +148,7 @@ export default function EventDetailPage() {
       agreeToTerms: false,
     });
 
-  const event = eventResponse;
+  const event = eventResponse as BaseEvent | undefined;
 
   const handleCopyLink = async () => {
     await navigator.clipboard.writeText(window.location.href);
@@ -454,27 +455,47 @@ export default function EventDetailPage() {
                     </h2>
                   </div>
                   <CardContent className="p-8 lg:p-10">
-                    <div className="prose prose-lg max-w-none text-[#1A1D14] leading-relaxed 
-                      prose-headings:text-[#1A1D14] prose-headings:font-bold prose-headings:mb-4 prose-headings:mt-6 first:prose-headings:mt-0
-                      prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
-                      prose-p:text-[#3E442B] prose-p:leading-loose prose-p:mb-4
-                      prose-a:text-[#781D32] prose-a:no-underline hover:prose-a:underline
-                      prose-strong:text-[#1A1D14] prose-strong:font-semibold
-                      prose-ul:my-4 prose-ol:my-4 prose-li:my-2 prose-li:text-[#3E442B]
-                      prose-blockquote:border-l-4 prose-blockquote:border-[#781D32] prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-600
-                      prose-img:rounded-lg prose-img:shadow-md prose-img:my-6
-                      prose-code:bg-gray-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
-                      prose-pre:bg-gray-900 prose-pre:text-gray-100">
-                      {event.content ? (
-                        <div dangerouslySetInnerHTML={{ __html: markdownToHtml(event.content) }} />
-                      ) : event.description ? (
-                        <div dangerouslySetInnerHTML={{ __html: markdownToHtml(event.description) }} />
-                      ) : (
-                        <p className="text-gray-500 italic text-center py-8">
-                          {t("sections.eventDetailsComingSoon")}
-                        </p>
-                      )}
-                    </div>
+                    {/* Force prose styles globally within this container */}
+                    <style dangerouslySetInnerHTML={{ __html: `
+                      #event-content h1 { font-size: 2.25rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; color: #3E442B; }
+                      #event-content h2 { font-size: 1.875rem; font-weight: 700; margin-top: 1.75rem; margin-bottom: 0.875rem; color: #3E442B; }
+                      #event-content h3 { font-size: 1.5rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #3E442B; }
+                      #event-content p { margin-top: 1rem; margin-bottom: 1rem; line-height: 1.75; color: #374151; }
+                      #event-content ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 1rem; margin-bottom: 1rem; }
+                      #event-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-top: 1rem; margin-bottom: 1rem; }
+                      #event-content li { margin-top: 0.5rem; margin-bottom: 0.5rem; }
+                      #event-content a { color: #781D32; text-decoration: underline; }
+                      #event-content strong { font-weight: 600; color: #3E442B; }
+                      #event-content blockquote { border-left: 4px solid #781D32; padding-left: 1.5rem; font-style: italic; color: #6B7280; margin: 1.5rem 0; }
+                      #event-content code { background-color: #F3F4F6; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.875rem; }
+                      #event-content pre { background-color: #1F2937; color: #F9FAFB; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1.5rem 0; }
+                    ` }} />
+                    
+                    {event.content ? (
+                      <div
+                        id="event-content"
+                        style={{
+                          backgroundColor: 'white',
+                          padding: '0.5rem',
+                          borderRadius: '0.5rem'
+                        }}
+                        dangerouslySetInnerHTML={{ __html: markdownToHtml(event.content) }}
+                      />
+                    ) : event.description ? (
+                      <div
+                        id="event-content"
+                        style={{
+                          backgroundColor: 'white',
+                          padding: '0.5rem',
+                          borderRadius: '0.5rem'
+                        }}
+                        dangerouslySetInnerHTML={{ __html: markdownToHtml(event.description) }}
+                      />
+                    ) : (
+                      <p className="text-gray-500 italic text-center py-8">
+                        {t("sections.eventDetailsComingSoon")}
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               </motion.div>

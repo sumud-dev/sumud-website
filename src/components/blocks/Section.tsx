@@ -1,16 +1,13 @@
 import { useNode } from '@craftjs/core';
 import { Children } from 'react';
 
-interface SectionProps {
-  backgroundColor: string;
-  padding: number;
+interface SectionProps extends StyleProps {
   children: React.ReactNode;
 }
 
 export const Section = ({ 
-  backgroundColor = '#f8f8f8', 
-  padding = 20,
-  children 
+  children,
+  ...styleProps
 }: Partial<SectionProps>) => {
   const {
     connectors: { connect, drag },
@@ -55,49 +52,26 @@ export const Section = ({
 
 Section.craft = {
   displayName: 'Section',
+  isCanvas: true,
   props: {
+    paddingTop: 20,
+    paddingBottom: 20,
+    paddingLeft: 20,
+    paddingRight: 20,
     backgroundColor: '#f8f8f8',
-    padding: 20,
+    marginTop: 0,
+    marginBottom: 16,
+    marginLeft: 0,
+    marginRight: 0,
+    width: '100%',
+    height: 'auto',
+    maxWidth: '80rem',
   },
   rules: {
     canDrag: () => true,
     canDrop: () => true,
   },
   related: {
-    settings: SectionSettings,
+    settings: () => <StyleSettings prefix="sectionSettings" />,
   },
 };
-
-function SectionSettings() {
-  const {
-    actions: { setProp },
-    backgroundColor,
-    padding,
-  } = useNode((node) => ({
-    backgroundColor: node.data?.props?.backgroundColor,
-    padding: node.data?.props?.padding,
-  }));
-
-  return (
-    <div className="space-y-4 p-4">
-      <div>
-        <label className="block text-sm font-medium mb-2">Background Color</label>
-        <input
-          type="color"
-          value={backgroundColor}
-          onChange={(e) => setProp((props: SectionProps) => (props.backgroundColor = e.target.value))}
-          className="w-full h-10 rounded cursor-pointer"
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium mb-2">Padding (px)</label>
-        <input
-          type="number"
-          value={padding}
-          onChange={(e) => setProp((props: SectionProps) => (props.padding = Number(e.target.value)))}
-          className="w-full px-3 py-2 border rounded"
-        />
-      </div>
-    </div>
-  );
-}

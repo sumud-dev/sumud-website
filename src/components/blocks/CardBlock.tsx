@@ -7,8 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/src/components/ui/card';
+import { stylePropsToCSS, type StyleProps } from '@/src/lib/types/block-props';
 
-interface CardProps {
+interface CardProps extends StyleProps {
   title: string;
   description: string;
   content: string;
@@ -19,11 +20,18 @@ export const CardBlock = ({
   title = 'Card Title',
   description = 'Card description goes here',
   content = 'Card content...',
-  footer = ''
+  footer = '',
+  ...styleProps
 }: Partial<CardProps>) => {
   const {
     connectors: { connect, drag },
   } = useNode();
+
+  const styles = stylePropsToCSS({
+    marginBottom: 16,
+    maxWidth: '80rem',
+    ...styleProps,
+  });
 
   return (
     <div ref={(ref) => { if (ref) connect(drag(ref)); }} className="mx-auto">
@@ -46,6 +54,11 @@ CardBlock.craft = {
     description: 'Card description',
     content: 'Card content...',
     footer: '',
+    marginTop: 0,
+    marginBottom: 16,
+    marginLeft: 0,
+    marginRight: 0,
+    maxWidth: '80rem',
   },
   related: {
     settings: CardSettings,

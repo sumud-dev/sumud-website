@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations, useLocale } from "next-intl";
-import { Search, Sparkles, BookOpen, Filter } from "lucide-react";
+import { Search, BookOpen, Filter, RotateCcw } from "lucide-react";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
 import {
@@ -14,12 +14,15 @@ import {
   SelectValue,
 } from "@/src/components/ui/select";
 import ArticleCard from "@/src/components/articles/ArticleCard";
-import { usePosts } from "@/src/lib/hooks/use-posts";
 import type { Article } from "@/src/lib/types/article";
 import type { GetPostsOptions } from "@/src/actions/posts.actions";
+import type { PostRecord } from "@/src/lib/types/article";
+import { useInfinitePosts, useInvalidatePostCache } from "@/src/lib/hooks/use-posts";
+import { usePage } from "@/src/lib/hooks/use-pages";
 
 interface ArticleFilters extends GetPostsOptions {
   category?: string;
+  page: number; // Make page required to fix TypeScript error
 }
 
 const fadeInUp = {
@@ -39,31 +42,79 @@ const categoryKeys = [
   "personal",
 ] as const;
 
+// Business Logic - Pure functions (follows SOP, DRY)
+function deduplicateArticles(existing: Article[], incoming: Article[]): Article[] {
+  const existingIds = new Set(existing.map(article => article.id));
+  return incoming.filter(article => !existingIds.has(article.id));
+}
+
+function transformPostsToArticles(posts: PostRecord[]): Article[] {
+  return posts.map(post => ({
+    id: post.id,
+    slug: post.slug,
+    title: post.title,
+    excerpt: post.excerpt,
+    content: post.content,
+    category: post.categories?.[0],
+    status: post.status,
+    publishedAt: post.publishedAt?.toISOString(),
+    createdAt: post.createdAt.toISOString(),
+    updatedAt: post.updatedAt.toISOString(),
+    image: post.featuredImage || undefined,
+    author: post.authorId ? {
+      id: post.authorId,
+      name: post.authorName || 'Unknown',
+    } : undefined,
+  }));
+}
+
+// Hero content interface for page builder
+interface ArticlesHeroContent {
+  title: string;
+  subtitle?: string;
+  description: string;
+}
+
 // Petitions-style liquid glass hero with search
 function ArticleNavigation({
   filters,
   onFiltersChange,
+  onRefresh,
+  isRefreshing,
+  heroContent,
 }: {
   filters: ArticleFilters;
   onFiltersChange: (filters: ArticleFilters) => void;
+  onRefresh: () => void;
+  isRefreshing: boolean;
+  heroContent?: ArticlesHeroContent | null;
 }) {
   const t = useTranslations("articlesPage");
-  const locale = useLocale();
   const [searchQuery, setSearchQuery] = useState(filters.search || "");
+  
+  // Use refs to avoid stale closures and cascading renders
+  const filtersRef = useRef(filters);
+  const onFiltersChangeRef = useRef(onFiltersChange);
+  
+  // Update refs on every render
+  useEffect(() => {
+    filtersRef.current = filters;
+    onFiltersChangeRef.current = onFiltersChange;
+  });
 
-  // Debounced search - ensure language is always preserved
+  // Debounced search effect - FIXED: removed filters from dependencies
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (searchQuery !== filters.search) {
-        onFiltersChange({ 
-          ...filters, 
+      const currentFilters = filtersRef.current;
+      if (searchQuery !== currentFilters.search) {
+        onFiltersChangeRef.current({ 
+          ...currentFilters, 
           search: searchQuery || undefined,
-          language: locale, // Explicitly set language to current locale
         });
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchQuery, locale, filters, onFiltersChange]);
+  }, [searchQuery]); // Only depend on searchQuery
 
   return (
     <>
@@ -146,18 +197,21 @@ function ArticleNavigation({
             </div>
 
             <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white">
-              {t("hero.title")}
-              <span className="block text-3xl lg:text-4xl font-medium opacity-90 mt-3">
-                {t("hero.subtitle")}
-              </span>
+              {heroContent?.title || t("hero.title")}
+              {(heroContent?.subtitle || t("hero.subtitle")) && (
+                <span className="block text-3xl lg:text-4xl font-medium opacity-90 mt-3">
+                  {heroContent?.subtitle || t("hero.subtitle")}
+                </span>
+              )}
             </h1>
 
             <p className="text-xl lg:text-2xl max-w-3xl mx-auto leading-relaxed text-white/90">
-              {t("hero.description")}
+              {heroContent?.description || t("hero.description")}
             </p>
           </motion.div>
         </div>
-      </motion.section>{" "}
+      </motion.section>
+
       {/* Search and Filters with Liquid Glass */}
       <motion.section
         className="py-8 relative bg-linear-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4]"
@@ -192,7 +246,7 @@ function ArticleNavigation({
                 />
               </div>
 
-              {/* Filters */}
+              {/* Filters and Refresh */}
               <div className="flex gap-3 items-center">
                 <Filter className="h-5 w-5 text-[#722F37]" />
                 <Select
@@ -201,7 +255,6 @@ function ArticleNavigation({
                     onFiltersChange({
                       ...filters,
                       category: value === "all" ? undefined : value,
-                      language: locale, // Ensure language is always set to current locale
                     })
                   }
                 >
@@ -222,6 +275,29 @@ function ArticleNavigation({
                     ))}
                   </SelectContent>
                 </Select>
+                
+                {/* Manual Refresh Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onRefresh}
+                  disabled={isRefreshing}
+                  className="h-12 px-4 rounded-xl backdrop-blur-sm border-[rgba(232,220,196,0.4)] hover:bg-[rgba(255,248,240,0.8)] transition-all"
+                  style={{
+                    background: "rgba(255, 248, 240, 0.6)",
+                  }}
+                >
+                  <motion.div
+                    animate={isRefreshing ? { rotate: 360 } : {}}
+                    transition={{
+                      duration: 1,
+                      repeat: isRefreshing ? Infinity : 0,
+                      ease: "linear",
+                    }}
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </motion.div>
+                </Button>
               </div>
             </div>
           </div>
@@ -231,51 +307,7 @@ function ArticleNavigation({
   );
 }
 
-// Featured Article Section with liquid glass
-function FeaturedSection({ articles }: { articles: Article[] }) {
-  const t = useTranslations("articlesPage");
-  const featuredArticle = articles?.[0];
 
-  if (!featuredArticle || !featuredArticle.image) return null;
-
-  return (
-    <motion.section
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      className="py-16 lg:py-20 bg-linear-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4] relative overflow-hidden"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="mb-12">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="p-2 rounded-full bg-[rgba(85,97,60,0.12)] backdrop-blur-sm border border-[rgba(85,97,60,0.2)] shadow-[0_2px_6px_rgba(85,97,60,0.08)] inline-block mb-4"
-          >
-            <Sparkles className="h-6 w-6 text-green-600" />
-          </motion.div>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-            {t("featured.title")}
-          </h2>
-          <p className="text-gray-600 text-lg">
-            {t("featured.subtitle")}
-          </p>
-        </div>
-
-        {/* Featured Article Card */}
-        <div className="max-w-7xl">
-          <ArticleCard
-            article={featuredArticle}
-            size="large"
-            showExcerpt
-            priority
-          />
-        </div>
-      </div>
-    </motion.section>
-  );
-}
 
 // Main articles grid - Structured 3-column layout
 function ArticlesGrid({
@@ -325,13 +357,13 @@ function ArticlesGrid({
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: idx * 0.1 }}
-                    className="flex" // Ensures consistent height
+                    className="flex"
                   >
                     <ArticleCard
                       article={article}
                       size="medium"
                       showExcerpt
-                      className="w-full" // Full width within flex container
+                      className="w-full"
                     />
                   </motion.div>
                 ))}
@@ -458,100 +490,135 @@ function LoadMoreSection({
   );
 }
 
-// Main articles page component
+// Main articles page component with TanStack Query optimization
 export default function ArticlesPage() {
   const t = useTranslations("articlesPage");
   const locale = useLocale();
-  const [filters, setFilters] = useState<ArticleFilters>({
-    status: "published",
-    page: 1,
-    limit: 50,
-    language: locale,
-  });
-
-  // Ensure language filter always matches current locale
-  useEffect(() => {
-    setFilters((prev) => ({
-      ...prev,
-      language: locale,
-    }));
-  }, [locale]);
-
-  const { data: postsData, isLoading, error } = usePosts(filters);
+  const { invalidateAllPosts } = useInvalidatePostCache();
   
-  // Transform posts to articles format
-  const articles = useMemo(() => {
-    if (!postsData?.posts) return [];
-    return postsData.posts.map(post => ({
-      id: post.id,
-      slug: post.slug,
-      title: post.title,
-      excerpt: post.excerpt,
-      content: post.content,
-      category: post.categories?.[0],
-      status: post.status,
-      publishedAt: post.publishedAt?.toISOString(),
-      createdAt: post.createdAt.toISOString(),
-      updatedAt: post.updatedAt.toISOString(),
-      image: post.featuredImage || undefined,
-      author: post.authorId ? {
-        id: post.authorId,
-        name: post.authorName || 'Unknown',
-      } : undefined,
-    }));
-  }, [postsData]);
+  const [filters, setFilters] = useState<Omit<ArticleFilters, 'page'>>(() => ({
+    status: "published",
+    limit: 12,
+    language: locale,
+  }));
+  
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
-  // Memoize the filter change handler to prevent infinite loops
-  // Ensure language is always preserved and set to current locale
-  const handleFiltersChange = useCallback((newFilters: ArticleFilters) => {
-    setFilters({ ...newFilters, language: locale });
-  }, [locale]);
+  // Fetch page builder content for articles page
+  const { data: pageData } = usePage("articles");
+
+  // Extract hero content from page builder
+  const heroContent = useMemo(() => {
+    if (!pageData) return null;
+    
+    // Find the HeroSection block (should be named 'articles-hero')
+    const heroBlock = pageData.translations[locale as "en" | "fi"]?.blocks?.find(
+      (b) => b.type === "HeroSection"
+    );
+    
+    if (!heroBlock) return null;
+    
+    // Extract props from the HeroSection block
+    const props = heroBlock.content as {
+      title?: string;
+      subtitle?: string;
+      description?: string;
+    };
+    
+    return {
+      title: props.title || t("hero.title"),
+      subtitle: props.subtitle || t("hero.subtitle"),
+      description: props.description || t("hero.description"),
+    };
+  }, [pageData, locale, t]);
+
+  // Use infinite query instead of manual pagination
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfinitePosts(filters);
+
+  // Flatten all pages into single array - automatically updates on invalidation!
+  const allArticles = useMemo(() => {
+    if (!data?.pages) return [];
+    
+    const posts = data.pages.flatMap(page => page.posts);
+    return transformPostsToArticles(posts);
+  }, [data]);
+
+  const handleFiltersChange = (newFilters: Omit<ArticleFilters, 'page'>) => {
+    setFilters(newFilters);
+  };
+
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+  
+  const handleManualRefresh = async () => {
+    setIsManualRefreshing(true);
+    try {
+      // Invalidate all post caches to force fresh data
+      invalidateAllPosts();
+      // Small delay to show the refresh animation
+      await new Promise(resolve => setTimeout(resolve, 500));
+    } catch (error) {
+      console.warn('Manual refresh failed:', error);
+    } finally {
+      setIsManualRefreshing(false);
+    }
+  };
 
   return (
-      <div className="min-h-screen bg-linear-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4]">
-        {/* Navigation & Search */}
-        <ArticleNavigation
-          filters={filters}
-          onFiltersChange={handleFiltersChange}
+    <div className="min-h-screen bg-linear-to-br from-[#FFF8F0] via-[#FAFAF9] to-[#E7E5E4]">
+      <ArticleNavigation
+        filters={{ ...filters, page: 1 }}
+        onFiltersChange={handleFiltersChange}
+        onRefresh={handleManualRefresh}
+        isRefreshing={isManualRefreshing || isLoading}
+        heroContent={heroContent}
+      />
+
+      <ArticlesGrid 
+        articles={allArticles} 
+        isLoading={isLoading} 
+      />
+
+      {allArticles.length > 0 && hasNextPage && (
+        <LoadMoreSection
+          currentCount={allArticles.length}
+          onLoadMore={handleLoadMore}
+          isLoading={isFetchingNextPage}
         />
+      )}
 
-        {/* Main Articles Grid */}
-        <ArticlesGrid articles={articles} isLoading={isLoading} />
+      <NewsletterSection />
 
-        {/* Enhanced Load More Section */}
-        {articles.length > 0 && !isLoading && (
-          <LoadMoreSection
-            currentCount={articles.length}
-            onLoadMore={() =>
-              setFilters((prev) => ({ ...prev, language: locale, limit: (prev.limit || 12) + 9 }))
-            }
-            isLoading={isLoading}
-          />
-        )}
-
-        {/* Newsletter Section */}
-        <NewsletterSection />
-
-        {/* Error State */}
-        {error && (
-          <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-            <div className="max-w-md mx-auto">
-              <div className="text-6xl mb-4">📚</div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                {t("error.title")}
-              </h3>
-              <p className="text-gray-600 mb-6">
-                {t("error.message")}
-              </p>
-              <Button
-                onClick={() => window.location.reload()}
-                className="bg-[rgba(62,68,43,0.95)] backdrop-blur-md hover:bg-[#3E442B] text-white border border-[rgba(255,255,255,0.2)] px-6 py-3 rounded-full shadow-[0_4px_12px_rgba(62,68,43,0.25)] transition-all hover:shadow-[0_8px_24px_rgba(62,68,43,0.35)]"
-              >
-                {t("error.tryAgain")}
-              </Button>
-            </div>
+      {/* Error State */}
+      {error && (
+        <div className="max-w-7xl mx-auto px-4 py-16 text-center">
+          <div className="max-w-md mx-auto">
+            <div className="text-6xl mb-4">📚</div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+              {t("error.title")}
+            </h3>
+            <p className="text-gray-600 mb-6">
+              {t("error.message")}
+            </p>
+            <Button
+              onClick={() => window.location.reload()}
+              className="bg-[rgba(62,68,43,0.95)] backdrop-blur-md hover:bg-[#3E442B] text-white border border-[rgba(255,255,255,0.2)] px-6 py-3 rounded-full shadow-[0_4px_12px_rgba(62,68,43,0.25)] transition-all hover:shadow-[0_8px_24px_rgba(62,68,43,0.35)]"
+            >
+              {t("error.tryAgain")}
+            </Button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+    </div>
   );
 }

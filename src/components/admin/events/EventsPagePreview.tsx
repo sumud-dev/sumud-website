@@ -53,8 +53,8 @@ export function EventsPagePreview({
     language: selectedLocale,
   });
   
-  const sampleEvent = eventsResponse?.data?.[0];
-  const totalEvents = eventsResponse?.data?.length || 0;
+  const sampleEvent = eventsResponse?.events?.[0];
+  const totalEvents = eventsResponse?.events?.length || 0;
   
   // Fetch translations from database
   useEffect(() => {

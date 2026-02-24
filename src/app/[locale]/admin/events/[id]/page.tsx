@@ -264,7 +264,34 @@ const EventDetailPage: React.FC<EventDetailPageProps> = ({ params }) => {
                 <h3 className="text-sm font-medium text-gray-500 mb-2">
                   {t("sections.description")}
                 </h3>
-                <p className="text-gray-700 whitespace-pre-wrap">{displayValue(event.content)}</p>
+                
+                {/* Force prose styles globally within this container */}
+                <style dangerouslySetInnerHTML={{ __html: `
+                  #event-content-admin h1 { font-size: 2.25rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; color: #3E442B; }
+                  #event-content-admin h2 { font-size: 1.875rem; font-weight: 700; margin-top: 1.75rem; margin-bottom: 0.875rem; color: #3E442B; }
+                  #event-content-admin h3 { font-size: 1.5rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #3E442B; }
+                  #event-content-admin p { margin-top: 1rem; margin-bottom: 1rem; line-height: 1.75; color: #374151; }
+                  #event-content-admin ul { list-style-type: disc; padding-left: 1.5rem; margin-top: 1rem; margin-bottom: 1rem; }
+                  #event-content-admin ol { list-style-type: decimal; padding-left: 1.5rem; margin-top: 1rem; margin-bottom: 1rem; }
+                  #event-content-admin li { margin-top: 0.5rem; margin-bottom: 0.5rem; }
+                  #event-content-admin a { color: #781D32; text-decoration: underline; }
+                  #event-content-admin strong { font-weight: 600; color: #3E442B; }
+                  #event-content-admin blockquote { border-left: 4px solid #781D32; padding-left: 1.5rem; font-style: italic; color: #6B7280; margin: 1.5rem 0; }
+                  #event-content-admin code { background-color: #F3F4F6; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.875rem; }
+                  #event-content-admin pre { background-color: #1F2937; color: #F9FAFB; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 1.5rem 0; }
+                ` }} />
+                
+                <div
+                  id="event-content-admin"
+                  style={{
+                    backgroundColor: 'white',
+                    padding: '1rem',
+                    borderRadius: '0.5rem'
+                  }}
+                  dangerouslySetInnerHTML={{ 
+                    __html: typeof event.content === 'string' ? event.content : JSON.stringify(event.content) 
+                  }}
+                />
               </div>
             )}
 

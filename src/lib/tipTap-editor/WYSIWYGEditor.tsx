@@ -20,8 +20,10 @@ import {Highlight} from '@tiptap/extension-highlight';
 import {TaskList} from '@tiptap/extension-task-list';
 import {TaskItem} from '@tiptap/extension-task-item';
 import { RawHtml } from './extensions/html-block';
+import { Details, DetailsSummary } from './extensions/details';
 import { EditorProps } from '../types/editor';
 import { cn } from '@/src/lib/utils/utils';
+import { useTranslations } from 'next-intl';
 
 interface WYSIWYGEditorProps extends EditorProps {
   onFocus?: () => void;
@@ -29,43 +31,63 @@ interface WYSIWYGEditorProps extends EditorProps {
 }
 
 /**
- * Convert plain text with \n newlines to proper HTML
+ * Process content for editor initialization
+ * Preserves HTML formatting and converts plain text newlines to proper HTML
  */
 function normalizeContentToHTML(content: string): string {
   if (!content) return '';
   
-  // If it's already HTML (contains tags), return as-is
-  if (/<[a-z][\s\S]*>/i.test(content)) {
+  // If content contains HTML tags, return completely unchanged
+  // This preserves all formatting including headings, paragraphs, line breaks, etc.
+  if (/<\/?[a-z][\s\S]*>/i.test(content)) {
     return content;
   }
   
+  // Only process plain text content (no HTML tags found)
   // Handle escaped newlines (\\n becomes \n)
   const cleaned = content.replace(/\\n/g, '\n');
   
-  // Convert plain text to HTML paragraphs
-  return cleaned
-    .split('\n\n')
-    .map(paragraph => {
-      const content = paragraph
-        .split('\n')
-        .filter(line => line.trim())
-        .join('<br>');
-      
-      return content ? `<p>${content}</p>` : '';
-    })
-    .filter(p => p)
-    .join('\n');
+  // Split by single or multiple newlines
+  const lines = cleaned.split('\n');
+  const result: string[] = [];
+  let currentParagraph: string[] = [];
+  
+  for (const line of lines) {
+    const trimmed = line.trim();
+    
+    if (!trimmed) {
+      // Empty line indicates paragraph break
+      if (currentParagraph.length > 0) {
+        result.push(`<p>${currentParagraph.join('<br>')}</p>`);
+        currentParagraph = [];
+      }
+      // Add empty paragraph for visual spacing
+      result.push('<p><br></p>');
+    } else {
+      // Add line to current paragraph
+      currentParagraph.push(trimmed);
+    }
+  }
+  
+  // Don't forget the last paragraph
+  if (currentParagraph.length > 0) {
+    result.push(`<p>${currentParagraph.join('<br>')}</p>`);
+  }
+  
+  return result.filter(p => p !== '<p><br></p>' || result.length === 1).join('');
 }
 
 export const WYSIWYGEditor: React.FC<WYSIWYGEditorProps> = ({
   value,
   onChange,
-  placeholder = 'Start typing...',
+  placeholder,
   disabled = false,
   className,
   onFocus,
   onBlur,
 }) => {
+  const t = useTranslations('common');
+  const translatedPlaceholder = placeholder || t('editor.startTyping');
   // Ensure value is always defined to prevent controlled/uncontrolled warning
   const controlledValue = value ?? '';
   
@@ -148,6 +170,8 @@ export const WYSIWYGEditor: React.FC<WYSIWYGEditorProps> = ({
           class: 'flex items-start gap-2',
         },
       }),
+      Details,
+      DetailsSummary,
       RawHtml,
     ],
     content: normalizeContentToHTML(controlledValue), // ✅ Normalize content
@@ -164,7 +188,11 @@ export const WYSIWYGEditor: React.FC<WYSIWYGEditorProps> = ({
       },
     },
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      const html = editor.getHTML();
+      // Only emit if content has actually changed
+      if (html !== controlledValue) {
+        onChange(html);
+      }
     },
     onFocus,
     onBlur,
@@ -172,9 +200,27 @@ export const WYSIWYGEditor: React.FC<WYSIWYGEditorProps> = ({
 
   // Update editor content when value changes externally
   useEffect(() => {
-    if (editor && controlledValue !== editor.getHTML()) {
-      const normalized = normalizeContentToHTML(controlledValue);
-      editor.commands.setContent(normalized, { emitUpdate: false });
+    if (!editor || !controlledValue) return;
+    
+    const currentHTML = editor.getHTML();
+    
+    // Normalize both for comparison (remove whitespace differences)
+    const normalizeForComparison = (html: string) => {
+      return html
+        .replace(/>\s+</g, '><')  // Remove whitespace between tags
+        .replace(/\s+/g, ' ')      // Normalize internal whitespace
+        .trim();
+    };
+    
+    const currentNormalized = normalizeForComparison(currentHTML);
+    const newNormalized = normalizeForComparison(controlledValue);
+    
+    // Only update if content is genuinely different
+    if (currentNormalized !== newNormalized) {
+      const processedContent = normalizeContentToHTML(controlledValue);
+      
+      // Use setContent without emitting update to prevent infinite loops
+      editor.commands.setContent(processedContent, { emitUpdate: false });
     }
   }, [controlledValue, editor]);
 
@@ -194,7 +240,7 @@ export const WYSIWYGEditor: React.FC<WYSIWYGEditorProps> = ({
     <div className="relative w-full">
       {editor.isEmpty && (
         <div className="absolute top-4 left-4 text-muted-foreground pointer-events-none select-none">
-          {placeholder}
+          {translatedPlaceholder}
         </div>
       )}
       <EditorContent editor={editor} />
@@ -330,12 +376,21 @@ export const WYSIWYGEditor: React.FC<WYSIWYGEditorProps> = ({
         
         /* Ensure details/summary elements work properly */
         .ProseMirror details {
-          cursor: pointer;
+          cursor: default;
         }
         
         .ProseMirror details summary {
           cursor: pointer;
-          user-select: none;
+          position: relative;
+        }
+        
+        /* Add chevron icon via CSS - not editable */
+        .ProseMirror details summary[data-has-chevron="true"]::after {
+          content: '▼';
+          margin-left: auto;
+          font-size: 1.25rem;
+          opacity: 0.6;
+          pointer-events: none;
         }
       `}</style>
     </div>

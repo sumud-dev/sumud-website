@@ -104,7 +104,7 @@ export function Toolbox() {
             <div>
               <h3 className="text-sm font-semibold text-[#781D32] mb-3 flex items-center gap-2">
                 <Sparkles className="h-4 w-4" />
-                Page Templates
+                {t('toolbox.pageTemplates')}
               </h3>
               <div className="space-y-2">
                 {pageTemplates.map(renderBlockButton)}
@@ -116,7 +116,7 @@ export function Toolbox() {
             {/* Basic Blocks Section */}
             <div>
               <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                Basic Blocks
+                {t('toolbox.basicBlocks')}
               </h3>
               <div className="space-y-2">
                 {basicBlocks.map(renderBlockButton)}

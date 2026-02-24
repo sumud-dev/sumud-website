@@ -138,13 +138,13 @@ export const FAQSection = (props: FAQSectionProps) => {
         {/* Contact CTA */}
         <div className="mt-12 text-center">
           <p className="text-lg" style={{ color: textColor }}>
-            Still have questions?{' '}
+            {t('faq.stillHaveQuestions')}{' '}
             <Link 
               href="/contact" 
               className="font-bold hover:underline"
               style={{ color: accentColor }}
             >
-              Contact us
+              {t('faq.contactUs')}
             </Link>
           </p>
         </div>
@@ -175,6 +175,26 @@ export function FAQSectionSettings() {
   } = useNode((node) => ({
     props: node.data?.props as FAQSectionProps,
   }));
+
+  const addFAQ = () => {
+    setProp((props: FAQSectionProps) => {
+      if (!props.faqs) {
+        props.faqs = [];
+      }
+      props.faqs.push({
+        question: `Question ${props.faqs.length + 1}`,
+        answer: 'Your answer here',
+      });
+    });
+  };
+
+  const removeFAQ = (index: number) => {
+    setProp((props: FAQSectionProps) => {
+      if (props.faqs) {
+        props.faqs.splice(index, 1);
+      }
+    });
+  };
 
   return (
     <div className="space-y-4">

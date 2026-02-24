@@ -59,46 +59,29 @@ export const AboutSection = (props: AboutSectionProps) => {
       className="py-20 px-6 bg-gradient-to-br from-[#F4F3F0] to-white"
     >
       <div className="max-w-7xl mx-auto">
-        <div className={`grid md:grid-cols-2 gap-12 items-center ${imagePosition === 'left' ? 'md:flex-row-reverse' : ''}`}>
-          {/* Content */}
-          <div className={imagePosition === 'left' ? 'md:order-2' : ''}>
-            {subtitle && (
-              <p className="text-[#781D32] font-semibold text-sm uppercase tracking-wide mb-2">
-                {subtitle}
-              </p>
-            )}
-            
-            <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ color: titleColor }}>
-              {title}
-            </h2>
-            
-            <div className="text-lg leading-relaxed space-y-4 mb-8" style={{ color: textColor }}>
-              {description?.split('\n\n').map((paragraph, index) => (
-                <p key={index}>{paragraph}</p>
-              ))}
-            </div>
+        {/* Header Section */}
+        <div className="mb-8">
+          {subtitle && (
+            <p className="text-[#781D32] font-semibold text-sm uppercase tracking-wide mb-2">
+              {subtitle}
+            </p>
+          )}
+          
+          <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ color: titleColor }}>
+            {title}
+          </h2>
+        </div>
 
-            {/* Stats */}
-            {stats && stats.length > 0 && (
-              <div className="grid grid-cols-3 gap-6 pt-8 border-t border-[#55613C]/20">
-                {stats.map((stat, index) => (
-                  <div key={index} className="text-center">
-                    <div className="text-3xl font-bold text-[#781D32] mb-1">
-                      {stat.value}
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {stat.label}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Image */}
-          <div className={imagePosition === 'left' ? 'md:order-1' : ''}>
+        {/* Content with Floating Image */}
+        <div className="relative">
+          {/* Floating Image */}
+          <div 
+            className={`w-full md:w-[45%] lg:w-[40%] mb-6 md:mb-0 ${
+              imagePosition === 'left' ? 'md:float-left md:mr-8' : 'md:float-right md:ml-8'
+            }`}
+          >
             <div 
-              className="relative h-[500px] rounded-2xl overflow-hidden shadow-2xl"
+              className="relative h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-2xl"
               style={{
                 backgroundImage: imageUrl ? `url(${imageUrl})` : 'linear-gradient(135deg, #781D32 0%, #55613C 100%)',
                 backgroundSize: 'cover',
@@ -108,7 +91,33 @@ export const AboutSection = (props: AboutSectionProps) => {
               <div className="absolute inset-0 bg-gradient-to-t from-[#3E442B]/30 to-transparent" />
             </div>
           </div>
+
+          {/* Text Content - Wraps around image */}
+          <div className="text-lg leading-relaxed space-y-4" style={{ color: textColor }}>
+            {description?.split('\n\n').map((paragraph, index) => (
+              <p key={index}>{paragraph}</p>
+            ))}
+          </div>
+
+          {/* Clear float */}
+          <div className="clear-both" />
         </div>
+
+        {/* Stats Section - Below content */}
+        {stats && stats.length > 0 && (
+          <div className="grid grid-cols-3 gap-6 pt-12 mt-12 border-t border-[#55613C]/20">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className="text-3xl font-bold text-[#781D32] mb-1">
+                  {stat.value}
+                </div>
+                <div className="text-sm text-gray-600">
+                  {stat.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       {children}
     </div>

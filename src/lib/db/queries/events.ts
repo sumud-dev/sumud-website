@@ -1,14 +1,15 @@
 /**
- * Event Queries - Drizzle ORM
+ * Event Queries - Drizzle ORM (Refactored)
  * 
  * Handles bilingual events:
  * - Finnish events (fi) stored in events table
- * - English translations (en) stored in event_translations table
+ * - English events (en) stored in event_translations table
  */
 
 import { db } from '@/src/lib/db';
 import { events, eventTranslations, type Event as EventType, type EventTranslation } from '@/src/lib/db/schema';
-import { eq, and, like, desc, or, gte, lte, sql } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
+import { buildEventConditions, mergeAndPaginate } from './event-filters';
 
 export interface EventQueryOptions {
   search?: string;
@@ -33,201 +34,111 @@ export interface EventsResult {
   pages: number;
 }
 
+// ============================================================================
+// QUERY FUNCTIONS
+// ============================================================================
+
+/**
+ * Get Finnish events from both tables
+ */
+async function getFinnishEvents(
+  options: EventQueryOptions,
+  offset: number,
+  limit: number,
+  page: number
+): Promise<EventsResult> {
+  const eventsConditions = buildEventConditions(events, options, 'fi');
+  const translationsConditions = buildEventConditions(eventTranslations, options, 'fi');
+
+  // Get counts
+  const [eventsCount, translationsCount] = await Promise.all([
+    db.select({ count: sql<number>`count(*)` })
+      .from(events)
+      .where(and(...eventsConditions)),
+    db.select({ count: sql<number>`count(*)` })
+      .from(eventTranslations)
+      .where(and(...translationsConditions)),
+  ]);
+
+  const total = Number(eventsCount[0]?.count || 0) + Number(translationsCount[0]?.count || 0);
+
+  // Fetch data
+  const [eventsResult, translationsResult] = await Promise.all([
+    db.select().from(events)
+      .where(and(...eventsConditions))
+      .orderBy(desc(events.createdAt)),
+    db.select().from(eventTranslations)
+      .where(and(...translationsConditions))
+      .orderBy(desc(eventTranslations.createdAt)),
+  ]);
+
+  const paginatedEvents = mergeAndPaginate(
+    eventsResult as (EventType | EventTranslation)[],
+    translationsResult as (EventType | EventTranslation)[],
+    offset,
+    limit
+  );
+
+  return {
+    events: paginatedEvents,
+    total,
+    page,
+    limit,
+    pages: Math.ceil(total / limit),
+  };
+}
+
+/**
+ * Get English events from translations table
+ */
+async function getEnglishEvents(
+  options: EventQueryOptions,
+  offset: number,
+  limit: number,
+  page: number
+): Promise<EventsResult> {
+  const conditions = buildEventConditions(eventTranslations, options, 'en');
+
+  const countResult = await db.select({ count: sql<number>`count(*)` })
+    .from(eventTranslations)
+    .where(and(...conditions));
+  
+  const total = Number(countResult[0]?.count || 0);
+
+  const result = await db.select()
+    .from(eventTranslations)
+    .where(and(...conditions))
+    .orderBy(desc(eventTranslations.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  return {
+    events: result,
+    total,
+    page,
+    limit,
+    pages: Math.ceil(total / limit),
+  };
+}
+
 /**
  * Get events based on locale
- * - For 'fi' (Finnish): Returns events directly from events table
- * - For 'en' (English): Returns translations from event_translations table, with base data from events
  */
 export async function getEvents(options: EventQueryOptions = {}): Promise<EventsResult> {
   const {
-    search,
-    status,
-    language,
-    upcoming = false,
-    startDate,
-    endDate,
+    language = 'en',
     page = 1,
     limit = 10,
     offset,
   } = options;
 
   const actualOffset = offset ?? (page - 1) * limit;
-  
-  // Default to 'en' if no language specified
-  const actualLanguage = language || 'en';
 
   try {
-    if (actualLanguage === 'fi') {
-      // For Finnish: Query both events table and event_translations table
-
-      // Apply filters for events table
-      const eventsConditions = [eq(events.language, 'fi')];
-      
-      if (status) {
-        eventsConditions.push(eq(events.status, status));
-      }
-
-      if (upcoming) {
-        eventsConditions.push(gte(events.date, new Date()));
-      }
-
-      if (search) {
-        eventsConditions.push(
-          or(
-            like(events.title, `%${search}%`),
-            like(events.description, `%${search}%`)
-          )!
-        );
-      }
-
-      // Date range filtering
-      if (startDate) {
-        const start = new Date(startDate);
-        start.setHours(0, 0, 0, 0);
-        eventsConditions.push(gte(events.date, start));
-      }
-
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        eventsConditions.push(lte(events.date, end));
-      }
-
-      // Apply filters for event_translations table
-      const translationsConditions = [eq(eventTranslations.language, 'fi')];
-      
-      if (status) {
-        translationsConditions.push(eq(eventTranslations.status, status));
-      }
-
-      if (upcoming) {
-        translationsConditions.push(gte(eventTranslations.date, new Date()));
-      }
-
-      if (search) {
-        translationsConditions.push(
-          or(
-            like(eventTranslations.title, `%${search}%`),
-            like(eventTranslations.description, `%${search}%`)
-          )!
-        );
-      }
-
-      // Date range filtering
-      if (startDate) {
-        const start = new Date(startDate);
-        start.setHours(0, 0, 0, 0);
-        translationsConditions.push(gte(eventTranslations.date, start));
-      }
-
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        translationsConditions.push(lte(eventTranslations.date, end));
-      }
-
-      // Get counts from both tables
-      const [eventsCountResult, translationsCountResult] = await Promise.all([
-        db
-          .select({ count: sql<number>`count(*)` })
-          .from(events)
-          .where(and(...eventsConditions)),
-        db
-          .select({ count: sql<number>`count(*)` })
-          .from(eventTranslations)
-          .where(and(...translationsConditions)),
-      ]);
-      
-      const eventsCount = Number(eventsCountResult[0]?.count) || 0;
-      const translationsCount = Number(translationsCountResult[0]?.count) || 0;
-      const total = eventsCount + translationsCount;
-
-      // Fetch from both tables
-      const [eventsResult, translationsResult] = await Promise.all([
-        db
-          .select()
-          .from(events)
-          .where(and(...eventsConditions))
-          .orderBy(desc(events.createdAt)),
-        db
-          .select()
-          .from(eventTranslations)
-          .where(and(...translationsConditions))
-          .orderBy(desc(eventTranslations.createdAt)),
-      ]);
-
-      // Merge and sort by createdAt (latest created first)
-      const allEvents = [...eventsResult, ...translationsResult]
-        .sort((a, b) => {
-          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return dateB - dateA;
-        })
-        .slice(actualOffset, actualOffset + limit);
-
-      return {
-        events: allEvents,
-        total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
-      };
+    if (language === 'fi') {
+      return await getFinnishEvents(options, actualOffset, limit, page);
     } else {
-      // For English: Query event_translations table directly (has all columns now)
-      const conditions = [eq(eventTranslations.language, 'en')];
-
-      if (status) {
-        conditions.push(eq(eventTranslations.status, status));
-      }
-
-      if (upcoming) {
-        conditions.push(gte(eventTranslations.date, new Date()));
-      }
-
-      if (search) {
-        conditions.push(
-          or(
-            like(eventTranslations.title, `%${search}%`),
-            like(eventTranslations.description, `%${search}%`)
-          )!
-        );
-      }
-
-      // Date range filtering
-      if (startDate) {
-        const start = new Date(startDate);
-        start.setHours(0, 0, 0, 0);
-        conditions.push(gte(eventTranslations.date, start));
-      }
-
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        conditions.push(lte(eventTranslations.date, end));
-      }
-
-      // Get total count
-      const countResult = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(eventTranslations)
-        .where(and(...conditions));
-      const total = Number(countResult[0]?.count) || 0;
-
-      const result = await db
-        .select()
-        .from(eventTranslations)
-        .where(and(...conditions))
-        .orderBy(desc(eventTranslations.createdAt))
-        .limit(limit)
-        .offset(actualOffset);
-
-      return {
-        events: result,
-        total,
-        page,
-        limit,
-        pages: Math.ceil(total / limit),
-      };
+      return await getEnglishEvents(options, actualOffset, limit, page);
     }
   } catch (error) {
     console.error('Error fetching events:', error);
@@ -237,7 +148,6 @@ export async function getEvents(options: EventQueryOptions = {}): Promise<Events
 
 /**
  * Get all events (admin view)
- * Always requires a locale/language to be specified
  */
 export async function getAllEvents(filters?: {
   limit?: number;
@@ -247,7 +157,6 @@ export async function getAllEvents(filters?: {
   language?: string;
   locale?: string;
 }) {
-  // Use locale or language, default to 'en' if neither specified
   const language = filters?.locale || filters?.language || 'en';
   const limit = filters?.limit || 16;
   const page = filters?.page || 1;
@@ -296,50 +205,24 @@ export async function getUpcomingEvents(filters?: {
 
 /**
  * Get event by slug
- * - For 'fi': Looks up in events table
- * - For 'en': Looks up in event_translations table
  */
 export async function getEventBySlug(slug: string, language: string = 'en') {
   try {
     if (language === 'fi') {
-      // Query both events table and event_translations table for Finnish
       const [eventsResult, translationsResult] = await Promise.all([
-        db
-          .select()
-          .from(events)
-          .where(
-            and(
-              eq(events.slug, slug),
-              eq(events.language, 'fi')
-            )
-          )
+        db.select().from(events)
+          .where(and(eq(events.slug, slug), eq(events.language, 'fi')))
           .limit(1),
-        db
-          .select()
-          .from(eventTranslations)
-          .where(
-            and(
-              eq(eventTranslations.slug, slug),
-              eq(eventTranslations.language, 'fi')
-            )
-          )
+        db.select().from(eventTranslations)
+          .where(and(eq(eventTranslations.slug, slug), eq(eventTranslations.language, 'fi')))
           .limit(1),
       ]);
-
       return eventsResult[0] || translationsResult[0] || null;
     } else {
-      // Query event_translations for English (has all columns now)
-      const result = await db
-        .select()
+      const result = await db.select()
         .from(eventTranslations)
-        .where(
-          and(
-            eq(eventTranslations.slug, slug),
-            eq(eventTranslations.language, 'en')
-          )
-        )
+        .where(and(eq(eventTranslations.slug, slug), eq(eventTranslations.language, 'en')))
         .limit(1);
-
       return result[0] || null;
     }
   } catch (error) {
@@ -350,14 +233,10 @@ export async function getEventBySlug(slug: string, language: string = 'en') {
 
 /**
  * Get event by ID
- * Checks both events table (Finnish) and event_translations table (English)
- * Returns EventType | EventTranslation
  */
 export async function getEventById(id: string): Promise<EventType | EventTranslation | null> {
   try {
-    // First try events table (Finnish events)
-    const eventResult = await db
-      .select()
+    const eventResult = await db.select()
       .from(events)
       .where(eq(events.id, id))
       .limit(1);
@@ -366,9 +245,7 @@ export async function getEventById(id: string): Promise<EventType | EventTransla
       return eventResult[0];
     }
 
-    // If not found, try event_translations table (English events)
-    const translationResult = await db
-      .select()
+    const translationResult = await db.select()
       .from(eventTranslations)
       .where(eq(eventTranslations.id, id))
       .limit(1);
@@ -392,57 +269,38 @@ export async function getEventsByCategory(
   }
 ) {
   const language = filters?.language || 'en';
+  const limit = filters?.limit || 10;
+  const offset = filters?.offset || 0;
   
   try {
     if (language === 'fi') {
-      // Query Finnish events from both tables
+      const categoryCondition = sql`${events.categories}::jsonb @> ${JSON.stringify([category])}`;
+      const translationCategoryCondition = sql`${eventTranslations.categories}::jsonb @> ${JSON.stringify([category])}`;
+
       const [eventsResult, translationsResult] = await Promise.all([
-        db
-          .select()
-          .from(events)
-          .where(
-            and(
-              eq(events.language, 'fi'),
-              sql`${events.categories}::jsonb @> ${JSON.stringify([category])}`
-            )
-          )
+        db.select().from(events)
+          .where(and(eq(events.language, 'fi'), categoryCondition))
           .orderBy(desc(events.createdAt)),
-        db
-          .select()
-          .from(eventTranslations)
-          .where(
-            and(
-              eq(eventTranslations.language, 'fi'),
-              sql`${eventTranslations.categories}::jsonb @> ${JSON.stringify([category])}`
-            )
-          )
+        db.select().from(eventTranslations)
+          .where(and(eq(eventTranslations.language, 'fi'), translationCategoryCondition))
           .orderBy(desc(eventTranslations.createdAt)),
       ]);
 
-      // Merge and sort by createdAt (latest created first)
-      const allEvents = [...eventsResult, ...translationsResult]
-        .sort((a, b) => {
-          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return dateB - dateA;
-        })
-        .slice(filters?.offset || 0, (filters?.offset || 0) + (filters?.limit || 10));
-
-      return allEvents;
+      return mergeAndPaginate(
+        eventsResult as (EventType | EventTranslation)[],
+        translationsResult as (EventType | EventTranslation)[],
+        offset,
+        limit
+      );
     } else {
-      // Query English translations (has all columns now)
-      const result = await db
-        .select()
+      const categoryCondition = sql`${eventTranslations.categories}::jsonb @> ${JSON.stringify([category])}`;
+      
+      const result = await db.select()
         .from(eventTranslations)
-        .where(
-          and(
-            eq(eventTranslations.language, 'en'),
-            sql`${eventTranslations.categories}::jsonb @> ${JSON.stringify([category])}`
-          )
-        )
+        .where(and(eq(eventTranslations.language, 'en'), categoryCondition))
         .orderBy(desc(eventTranslations.createdAt))
-        .limit(filters?.limit || 10)
-        .offset(filters?.offset || 0);
+        .limit(limit)
+        .offset(offset);
 
       return result;
     }
@@ -469,10 +327,12 @@ export async function searchEvents(
   });
 }
 
+// ============================================================================
+// MUTATION FUNCTIONS
+// ============================================================================
+
 /**
  * Create a new event based on language
- * - Finnish (fi): Creates in events table
- * - English (en): Creates in event_translations table
  */
 export async function createEvent(data: {
   slug: string;
@@ -497,32 +357,30 @@ export async function createEvent(data: {
   const language = data.language || 'fi';
   
   try {
-    if (language === 'fi') {
-      // Finnish events go to events table
-      const result = await db
-        .insert(events)
-        .values({
-          ...data,
-          language: 'fi',
-        })
-        .returning();
+    // Check if slug already exists in either table
+    const [existingEvent, existingTranslation] = await Promise.all([
+      db.select({ slug: events.slug })
+        .from(events)
+        .where(eq(events.slug, data.slug))
+        .limit(1),
+      db.select({ slug: eventTranslations.slug })
+        .from(eventTranslations)
+        .where(eq(eventTranslations.slug, data.slug))
+        .limit(1),
+    ]);
 
-      return result[0];
-    } else {
-      // English/Arabic events go to event_translations table
-      const result = await db
-        .insert(eventTranslations)
-        .values({
-          ...data,
-          language,
-        })
-        .returning();
-
-      return result[0];
+    if (existingEvent[0] || existingTranslation[0]) {
+      throw new Error('An event with this slug already exists');
     }
+
+    const targetTable = language === 'fi' ? events : eventTranslations;
+    const result = await db.insert(targetTable)
+      .values({ ...data, language })
+      .returning();
+
+    return result[0];
   } catch (error) {
     console.error('Error creating event:', error);
-    // Provide more specific error messages
     if (error instanceof Error) {
       if (error.message.includes('unique') || error.message.includes('duplicate')) {
         throw new Error('An event with this slug already exists');
@@ -534,7 +392,7 @@ export async function createEvent(data: {
 }
 
 /**
- * Update an event and optionally sync common fields across all language versions
+ * Update an event and sync common fields across all language versions
  */
 export async function updateEvent(id: string, data: Partial<{
   slug: string;
@@ -557,122 +415,28 @@ export async function updateEvent(id: string, data: Partial<{
   organizers: unknown;
 }>) {
   try {
-    // First, find the event to get its slug
-    let currentEvent: EventType | EventTranslation | null = null;
-    let isInEventsTable = false;
-
-    // Check events table
-    const eventCheck = await db
-      .select()
-      .from(events)
-      .where(eq(events.id, id))
-      .limit(1);
-
-    if (eventCheck[0]) {
-      currentEvent = eventCheck[0];
-      isInEventsTable = true;
-    } else {
-      // Check translations table
-      const translationCheck = await db
-        .select()
-        .from(eventTranslations)
-        .where(eq(eventTranslations.id, id))
-        .limit(1);
-      
-      if (translationCheck[0]) {
-        currentEvent = translationCheck[0];
-        isInEventsTable = false;
-      }
-    }
-
-    if (!currentEvent) {
+    // Find the event
+    const { event: currentEvent, isInEventsTable } = await findEventById(id);
+    
+    if (!currentEvent || !currentEvent.slug) {
       throw new Error('Event not found');
     }
 
     const currentSlug = currentEvent.slug;
-    
-    if (!currentSlug) {
-      throw new Error('Event slug is required');
-    }
 
-    // Separate language-specific fields from common fields
-    const languageSpecificFields = ['title', 'description', 'content', 'location'];
-    const commonFields: Partial<typeof data> = {};
-    const specificFields: Partial<typeof data> = {};
+    // Separate fields
+    const { filteredData, commonFields } = categorizeFields(data);
 
-    Object.entries(data).forEach(([key, value]) => {
-      if (languageSpecificFields.includes(key)) {
-        (specificFields as any)[key] = value;
-      } else {
-        (commonFields as any)[key] = value;
-      }
-    });
+    // Update the current event
+    await updateCurrentEvent(id, filteredData, isInEventsTable);
 
-    // Update the current event with all fields
-    if (isInEventsTable) {
-      await db
-        .update(events)
-        .set({
-          ...data,
-          updatedAt: new Date(),
-        })
-        .where(eq(events.id, id));
-    } else {
-      await db
-        .update(eventTranslations)
-        .set({
-          ...data,
-          updatedAt: new Date(),
-        })
-        .where(eq(eventTranslations.id, id));
-    }
-
-    // Sync common fields (status, dates, images, etc.) to all language versions with the same slug
+    // Sync common fields to all language versions
     if (Object.keys(commonFields).length > 0) {
-      const updateData = {
-        ...commonFields,
-        updatedAt: new Date(),
-      };
-
-      // Update other events in events table with same slug
-      await db
-        .update(events)
-        .set(updateData)
-        .where(
-          and(
-            eq(events.slug, currentSlug),
-            sql`${events.id} != ${id}`
-          )
-        );
-
-      // Update other events in translations table with same slug
-      await db
-        .update(eventTranslations)
-        .set(updateData)
-        .where(
-          and(
-            eq(eventTranslations.slug, currentSlug),
-            sql`${eventTranslations.id} != ${id}`
-          )
-        );
+      await syncCommonFields(commonFields, currentSlug, id);
     }
 
-    // Fetch and return the updated event
-    if (isInEventsTable) {
-      const result = await db
-        .select()
-        .from(events)
-        .where(eq(events.id, id))
-        .limit(1);
-      return result[0];
-    } else {
-      const result = await db
-        .select()
-        .from(eventTranslations)
-        .where(eq(eventTranslations.id, id))
-        .limit(1);
-      return result[0];
-    }
+    // Return updated event
+    return await fetchUpdatedEvent(id, isInEventsTable);
   } catch (error) {
     console.error('Error updating event:', error);
     throw error instanceof Error ? error : new Error('Failed to update event');
@@ -684,46 +448,16 @@ export async function updateEvent(id: string, data: Partial<{
  */
 export async function deleteEvent(id: string) {
   try {
-    // First, find the event to get its slug
-    let currentSlug: string | null = null;
-    let isInEventsTable = false;
-
-    // Check events table
-    const eventCheck = await db
-      .select({ slug: events.slug })
-      .from(events)
-      .where(eq(events.id, id))
-      .limit(1);
-
-    if (eventCheck[0]) {
-      currentSlug = eventCheck[0].slug;
-      isInEventsTable = true;
-    } else {
-      // Check translations table
-      const translationCheck = await db
-        .select({ slug: eventTranslations.slug })
-        .from(eventTranslations)
-        .where(eq(eventTranslations.id, id))
-        .limit(1);
-      
-      if (translationCheck[0]) {
-        currentSlug = translationCheck[0].slug;
-        isInEventsTable = false;
-      }
-    }
-
-    if (!currentSlug) {
+    const { event: currentEvent } = await findEventById(id);
+    
+    if (!currentEvent || !currentEvent.slug) {
       throw new Error('Event not found');
     }
 
-    // Delete all events with the same slug from both tables (all language versions)
-    await db
-      .delete(events)
-      .where(eq(events.slug, currentSlug));
-
-    await db
-      .delete(eventTranslations)
-      .where(eq(eventTranslations.slug, currentSlug));
+    await Promise.all([
+      db.delete(events).where(eq(events.slug, currentEvent.slug)),
+      db.delete(eventTranslations).where(eq(eventTranslations.slug, currentEvent.slug)),
+    ]);
 
     return true;
   } catch (error) {
@@ -758,8 +492,7 @@ export async function upsertEventTranslation(data: {
   organizers?: unknown;
 }) {
   try {
-    const result = await db
-      .insert(eventTranslations)
+    const result = await db.insert(eventTranslations)
       .values(data)
       .returning();
 
@@ -775,20 +508,91 @@ export async function upsertEventTranslation(data: {
  */
 export async function getEventTranslation(eventId: string, language: string) {
   try {
-    const result = await db
-      .select()
+    const result = await db.select()
       .from(eventTranslations)
-      .where(
-        and(
-          eq(eventTranslations.eventId, eventId),
-          eq(eventTranslations.language, language)
-        )
-      )
+      .where(and(
+        eq(eventTranslations.eventId, eventId),
+        eq(eventTranslations.language, language)
+      ))
       .limit(1);
 
     return result[0] || null;
   } catch (error) {
     console.error('Error fetching event translation:', error);
     throw new Error('Failed to fetch event translation');
+  }
+}
+
+// ============================================================================
+// UPDATE HELPER FUNCTIONS
+// ============================================================================
+
+async function findEventById(id: string) {
+  const eventCheck = await db.select()
+    .from(events)
+    .where(eq(events.id, id))
+    .limit(1);
+
+  if (eventCheck[0]) {
+    return { event: eventCheck[0], isInEventsTable: true };
+  }
+
+  const translationCheck = await db.select()
+    .from(eventTranslations)
+    .where(eq(eventTranslations.id, id))
+    .limit(1);
+
+  return { event: translationCheck[0] || null, isInEventsTable: false };
+}
+
+function categorizeFields(data: Record<string, unknown>) {
+  const languageSpecificFields = ['title', 'description', 'content', 'location'];
+  const immutableFields = ['slug', 'language'];
+  const commonFields: Record<string, unknown> = {};
+
+  const filteredData = Object.entries(data).reduce((acc, [key, value]) => {
+    if (!immutableFields.includes(key)) {
+      acc[key] = value;
+    }
+    return acc;
+  }, {} as Record<string, unknown>);
+
+  Object.entries(filteredData).forEach(([key, value]) => {
+    if (!languageSpecificFields.includes(key)) {
+      commonFields[key] = value;
+    }
+  });
+
+  return { filteredData, commonFields };
+}
+
+async function updateCurrentEvent(id: string, filteredData: Record<string, unknown>, isInEventsTable: boolean) {
+  const updateData = { ...filteredData, updatedAt: new Date() };
+  
+  if (isInEventsTable) {
+    await db.update(events).set(updateData).where(eq(events.id, id));
+  } else {
+    await db.update(eventTranslations).set(updateData).where(eq(eventTranslations.id, id));
+  }
+}
+
+async function syncCommonFields(commonFields: Record<string, unknown>, currentSlug: string, currentId: string) {
+  const updateData = { ...commonFields, updatedAt: new Date() };
+
+  await Promise.all([
+    db.update(events).set(updateData)
+      .where(and(eq(events.slug, currentSlug), sql`${events.id} != ${currentId}`)),
+    db.update(eventTranslations).set(updateData)
+      .where(and(eq(eventTranslations.slug, currentSlug), sql`${eventTranslations.id} != ${currentId}`)),
+  ]);
+}
+
+async function fetchUpdatedEvent(id: string, isInEventsTable: boolean) {
+  if (isInEventsTable) {
+    const result = await db.select().from(events).where(eq(events.id, id)).limit(1);
+    return result[0];
+  } else {
+    const result = await db.select().from(eventTranslations).where(eq(eventTranslations.id, id)).limit(1);
+    return result[0];
   }
 }

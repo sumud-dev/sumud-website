@@ -44,10 +44,9 @@ const articleSchema = z.object({
     .max(500, "Excerpt too long"),
   content: z.string().min(1, "Content is required"),
   status: z.enum(["draft", "published", "archived"]),
-  language: z.enum(["en", "fi"]),  // ADD THIS LINE
+  language: z.enum(["en", "fi"]),
   featuredImageUrl: z.string().optional(),
   metaDescription: z.string().max(160, "Meta description too long").optional(),
-  autoTranslate: z.boolean(),
 });
 
 type ArticleFormData = z.infer<typeof articleSchema>;
@@ -64,6 +63,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [resolvedSlug, setResolvedSlug] = React.useState<string>("");
+  const [originalLanguage, setOriginalLanguage] = React.useState<string>("");
 
   const form = useForm<ArticleFormData>({
     resolver: zodResolver(articleSchema),
@@ -72,10 +72,9 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
       excerpt: "",
       content: "",
       status: "draft",
-      language: "en",  // ADD THIS LINE
+      language: "en",
       featuredImageUrl: "",
       metaDescription: "",
-      autoTranslate: false,
     },
   });
 
@@ -101,22 +100,24 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
   });
 
   const article = articleData?.post ?? null;
-  const articleLanguage = articleData?.language ?? "en";
 
   React.useEffect(() => {
-    if (article) {
-      form.reset({
-        title: article.title || "",
-        excerpt: article.excerpt || "",
-        content: article.content || "",
-        status: (article.status as "draft" | "published" | "archived") || "draft",
-        language: articleLanguage as "en" | "fi",
-        featuredImageUrl: article.featuredImage || "",
-        metaDescription: "",
-        autoTranslate: false,
-      });
-    }
-  }, [article, form, articleLanguage]);
+  if (article && articleData) {
+    // Store the original language when loading the article
+    setOriginalLanguage(articleData.language);
+    
+    const formValues = {
+      title: article.title || "",
+      excerpt: article.excerpt || "",
+      content: article.content || "",
+      status: (article.status as "draft" | "published" | "archived") || "draft",
+      language: (articleData.language as "en" | "fi") || "en",
+      featuredImageUrl: article.featuredImage || "",
+      metaDescription: "",
+    };
+    form.reset(formValues);
+  }
+}, [article, articleData, form]);
 
   const onSubmit = async (data: ArticleFormData) => {
     if (!article) {
@@ -136,39 +137,18 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
           status: data.status,
           featured_image: data.featuredImageUrl || null,
           meta_description: data.metaDescription || null,
-          autoTranslate: data.autoTranslate,
+          language: data.language, // Include new language in update data
         },
-        data.language,
-        data.autoTranslate
-          ? ["en", "fi"].filter((lang) => lang !== data.language)
-          : undefined
+        originalLanguage || data.language // Use original language to find the post
       );
 
       if (result.success) {
-        const translationsCount = result.createdTranslations?.length || 0;
-        toast.success(
-          translationsCount > 0
-            ? `Article updated with ${translationsCount} translation(s)!`
-            : t("updateSuccess")
-        );
-        
-        // Generate new slug from title if title changed
-        const newSlug = data.title
-          .toLowerCase()
-          .replace(/[^\w\s-]/g, "") // Remove special characters
-          .replace(/\s+/g, "-") // Replace spaces with hyphens
-          .trim();
-
-        const shouldUpdateSlug = newSlug !== resolvedSlug;
-
-        // Redirect to the updated slug if it changed
-        if (shouldUpdateSlug) {
-          queryClient.invalidateQueries({ queryKey: postQueryKeys.allPosts });
-          router.push(`/admin/articles/${newSlug}/edit`);
-        } else {
-          queryClient.invalidateQueries({ queryKey: postQueryKeys.allPosts });
-          router.push("/admin/articles");
-        }
+        toast.success(t("updateSuccess"));
+        // Invalidate the specific article query
+        queryClient.invalidateQueries({ queryKey: ["article", resolvedSlug] });
+        // Invalidate all post lists
+        queryClient.invalidateQueries({ queryKey: postQueryKeys.allPosts });
+        router.push("/admin/articles");
       } else {
         toast.error(result.error || t("updateError"));
       }
@@ -179,7 +159,6 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
       setIsSubmitting(false);
     }
   };
-
 
 
   if (isLoading) {
@@ -298,35 +277,15 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                 <CardContent className="space-y-4">
                   <FormField
                     control={form.control}
-                    name="autoTranslate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                        <div className="space-y-0.5">
-                          <FormLabel className="flex items-center gap-2">
-                            <Languages className="h-4 w-4" />
-                            {t("autoTranslate")}
-                          </FormLabel>
-                          <FormDescription className="text-xs">{t("autoTranslateDescription")}</FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
                     name="language"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>{t("languageLabel")}</FormLabel>
                         <Select
+                          key={`language-${article?.id || resolvedSlug}`} 
                           onValueChange={field.onChange}
                           value={field.value}
+                          defaultValue={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
@@ -352,6 +311,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
+                          defaultValue={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>

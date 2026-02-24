@@ -77,38 +77,37 @@ export default function CampaignsPage() {
   // Fetch page builder content
   const { data: pageData } = usePage("campaigns");
 
-  // Extract localized content from page builder
-  const pageContent = useMemo(() => {
+  // Extract hero content from page builder
+  const heroContent = useMemo(() => {
     if (!pageData) return null;
     
-    const textBlock = pageData.translations.en?.blocks?.find(
-      (b) => b.id === "campaigns-page-text"
-    );
-    const heroBlock = pageData.translations.en?.blocks?.find(
-      (b) => b.id === "campaigns-page-hero"
-    );
-    const typesBlock = pageData.translations.en?.blocks?.find(
-      (b) => b.id === "campaigns-page-types"
+    // Find the HeroSection block (should be named 'campaigns-hero')
+    const heroBlock = pageData.translations[locale as "en" | "fi"]?.blocks?.find(
+      (b) => b.type === "HeroSection"
     );
     
-    const textContent = (textBlock?.content as { content?: Record<string, Record<string, string>> })?.content;
-    const heroContent = (heroBlock?.content as { content?: Record<string, { title: string; subtitle?: string; description: string }> })?.content;
-    const typesContent = (typesBlock?.content as { content?: Record<string, Record<string, string>> })?.content;
+    if (!heroBlock) return null;
     
-    const localeKey = locale as "en" | "fi";
-    
-    return {
-      hero: heroContent?.[localeKey] || heroContent?.en,
-      text: textContent?.[localeKey] || textContent?.en,
-      types: typesContent?.[localeKey] || typesContent?.en,
+    // Extract props from the HeroSection block
+    const props = heroBlock.content as {
+      title?: string;
+      subtitle?: string;
+      description?: string;
+      backgroundImage?: string;
+      primaryButtonText?: string;
+      primaryButtonLink?: string;
+      secondaryButtonText?: string;
+      secondaryButtonLink?: string;
     };
+    
+    return props;
   }, [pageData, locale]);
 
   // Fetch campaigns from API - uses current locale automatically via useLocale() in the hook
   const { data: campaignsResponse, isLoading, error } = useCampaigns();
 
   // Get campaigns from API response (already typed correctly)
-  const campaigns = campaignsResponse?.data ?? [];
+  const campaigns = campaignsResponse ?? [];
 
   // Filter and sort campaigns
   const filteredCampaigns = useMemo(() => {
@@ -232,14 +231,14 @@ export default function CampaignsPage() {
               </div>
 
               <h1 className="text-5xl lg:text-7xl font-bold leading-tight text-white">
-                {pageContent?.hero?.title || t("hero.title")}
+                {heroContent?.title || t("hero.title")}
                 <span className="block text-3xl lg:text-4xl font-medium opacity-90 mt-3">
-                  {pageContent?.hero?.subtitle || t("hero.subtitle")}
+                  {heroContent?.subtitle || t("hero.subtitle")}
                 </span>
               </h1>
 
               <p className="text-xl lg:text-2xl max-w-3xl mx-auto leading-relaxed text-white/90">
-                {pageContent?.hero?.description || t("hero.description")}
+                {heroContent?.description || t("hero.description")}
               </p>
             </motion.div>
           </div>
@@ -268,7 +267,7 @@ export default function CampaignsPage() {
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     type="text"
-                    placeholder={pageContent?.text?.searchPlaceholder || t("search.placeholder")}
+                    placeholder={t("search.placeholder")}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-12 h-12 backdrop-blur-sm rounded-xl"

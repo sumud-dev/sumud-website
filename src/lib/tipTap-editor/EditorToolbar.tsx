@@ -57,7 +57,7 @@ interface EditorToolbarProps {
   onHighlight: () => void;
   onTextColor: (color: string) => void;
   onBackgroundColor: (color: string) => void;
-  onHeading: (level: 1 | 2 | 3) => void;
+  onHeading: (level: number) => void;
   onAlignLeft: () => void;
   onAlignCenter: () => void;
   onAlignRight: () => void;
@@ -144,7 +144,7 @@ export const EditorToolbar: React.FC<EditorToolbarProps> = ({
   const Divider = () => <div className="w-px h-6 bg-border mx-1" />;
 
   return (
-    <div className="sticky top-0 z-10 bg-background border-b">
+    <div className="sticky top-0 z-50 bg-background border-b shadow-sm">
       <div className="flex flex-wrap items-center gap-1 p-2">
         {/* History */}
         <ToolbarButton onClick={onUndo} icon={Undo} title="Undo" disabled={!canUndo} />

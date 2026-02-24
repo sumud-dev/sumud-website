@@ -53,8 +53,8 @@ export function CampaignsPagePreview({
     language: selectedLocale,
   });
   
-  const sampleCampaign = campaignsResponse?.data?.[0];
-  const totalCampaigns = campaignsResponse?.data?.length || 0;
+  const sampleCampaign = campaignsResponse?.[0];
+  const totalCampaigns = campaignsResponse?.length || 0;
   
   // Fetch translations from database
   useEffect(() => {

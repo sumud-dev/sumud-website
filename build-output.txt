@@ -2,8 +2,9 @@
 > sumud-dec@0.1.0 build
 > next build
 
-[@sentry/nextjs] DEPRECATION WARNING: disableLogger is deprecated and will be removed in a future version. Use webpack.treeshake.removeDebugLogging instead.
-[@sentry/nextjs] DEPRECATION WARNING: automaticVercelMonitors is deprecated and will be removed in a future version. Use webpack.automaticVercelMonitors instead.
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[@sentry/nextjs] DEPRECATION WARNING: disableLogger is deprecated and will be removed in a future version. Use webpack.treeshake.removeDebugLogging instead. (Not supported with Turbopack.)
+[@sentry/nextjs] DEPRECATION WARNING: automaticVercelMonitors is deprecated and will be removed in a future version. Use webpack.automaticVercelMonitors instead. (Not supported with Turbopack.)
  ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
  We detected multiple lockfiles and selected the directory of /Users/amjadshakhshir/package-lock.json as the root directory.
  To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
@@ -18,18 +19,37 @@
 
  ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
    Creating an optimized production build ...
-[@sentry/nextjs] DEPRECATION WARNING: disableLogger is deprecated and will be removed in a future version. Use webpack.treeshake.removeDebugLogging instead.
-[@sentry/nextjs] DEPRECATION WARNING: automaticVercelMonitors is deprecated and will be removed in a future version. Use webpack.automaticVercelMonitors instead.
- ✓ Compiled successfully in 3.4s
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[@sentry/nextjs] DEPRECATION WARNING: disableLogger is deprecated and will be removed in a future version. Use webpack.treeshake.removeDebugLogging instead. (Not supported with Turbopack.)
+[@sentry/nextjs] DEPRECATION WARNING: automaticVercelMonitors is deprecated and will be removed in a future version. Use webpack.automaticVercelMonitors instead. (Not supported with Turbopack.)
+ ✓ Compiled successfully in 3.9s
    Running next.config.js provided runAfterProductionCompile ...
- ✓ Completed runAfterProductionCompile in 8014ms
+ ✓ Completed runAfterProductionCompile in 8166ms
    Running TypeScript ...
    Collecting page data using 13 workers ...
-   Generating static pages using 13 workers (0/98) ...
-   Generating static pages using 13 workers (24/98) 
-   Generating static pages using 13 workers (48/98) 
-   Generating static pages using 13 workers (73/98) 
- ✓ Generating static pages using 13 workers (98/98) in 465.4ms
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   Generating static pages using 13 workers (0/108) ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   Generating static pages using 13 workers (27/108) 
+   Generating static pages using 13 workers (54/108) 
+   Generating static pages using 13 workers (81/108) 
+ ✓ Generating static pages using 13 workers (108/108) in 1988.8ms
    Finalizing page optimization ...
 
 Route (app)
@@ -38,6 +58,9 @@ Route (app)
 ├ ● /[locale]
 │ ├ /en
 │ └ /fi
+├ ● /[locale]/[slug]
+│ ├ /en/%2F
+│ └ /fi/%2F
 ├ ● /[locale]/about
 │ ├ /en/about
 │ └ /fi/about
@@ -46,10 +69,12 @@ Route (app)
 ├ ƒ /[locale]/admin/articles/[slug]
 ├ ƒ /[locale]/admin/articles/[slug]/edit
 ├ ƒ /[locale]/admin/articles/new
+├ ƒ /[locale]/admin/articles/ui-translations
 ├ ƒ /[locale]/admin/campaigns
 ├ ƒ /[locale]/admin/campaigns/[slug]
 ├ ƒ /[locale]/admin/campaigns/[slug]/edit
 ├ ƒ /[locale]/admin/campaigns/new
+├ ƒ /[locale]/admin/campaigns/ui-translations
 ├ ƒ /[locale]/admin/categories
 ├ ƒ /[locale]/admin/categories/new
 ├ ƒ /[locale]/admin/content
@@ -59,10 +84,13 @@ Route (app)
 ├ ƒ /[locale]/admin/events/[id]
 ├ ƒ /[locale]/admin/events/[id]/edit
 ├ ƒ /[locale]/admin/events/new
+├ ƒ /[locale]/admin/events/ui-translations
 ├ ƒ /[locale]/admin/page-builder
-├ ƒ /[locale]/admin/page-builder/[slug]
+├ ƒ /[locale]/admin/page-builder/[pageId]
 ├ ƒ /[locale]/admin/page-builder/new
+├ ƒ /[locale]/admin/preview
 ├ ƒ /[locale]/admin/settings
+├ ƒ /[locale]/admin/translations
 ├ ● /[locale]/articles
 │ ├ /en/articles
 │ └ /fi/articles
@@ -86,25 +114,23 @@ Route (app)
 │ ├ /en/membership
 │ └ /fi/membership
 ├ ● /[locale]/p/[slug]
-│ ├ /en/p/home
+│ ├ /en/p/join
 │ ├ /en/p/about
-│ ├ /en/p/contact
+│ ├ /en/p/campaigns
 │ └ [+15 more paths]
 ├ ● /[locale]/pages/[slug]
-│ ├ /en/pages/home
+│ ├ /en/pages/join
 │ ├ /en/pages/about
-│ ├ /en/pages/contact
+│ ├ /en/pages/campaigns
 │ └ [+15 more paths]
-├ ● /[locale]/partners
-│ ├ /en/partners
-│ └ /fi/partners
+├ ● /[locale]/petition
+│ ├ /en/petition
+│ └ /fi/petition
+├ ƒ /[locale]/petition/[slug]
 ├ ● /[locale]/privacy-policy
 │ ├ /en/privacy-policy
 │ └ /fi/privacy-policy
 ├ ƒ /[locale]/sign-in/[[...sign-in]]
-├ ● /[locale]/team
-│ ├ /en/team
-│ └ /fi/team
 ├ ƒ /api/admin/content/buttons
 ├ ƒ /api/admin/content/messages/[locale]
 ├ ƒ /api/articles
@@ -114,6 +140,7 @@ Route (app)
 ├ ƒ /api/events
 ├ ƒ /api/events/[slug]
 ├ ƒ /api/pages
+├ ƒ /api/pages/[pageId]
 ├ ƒ /api/test-db
 ├ ƒ /api/upload
 ├ ƒ /api/webhooks/clerk

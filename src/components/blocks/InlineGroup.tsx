@@ -3,7 +3,7 @@
 import { useNode } from '@craftjs/core';
 import { Children, ReactNode } from 'react';
 
-interface InlineGroupProps {
+interface InlineGroupProps extends StyleProps {
   justifyContent: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around';
   alignItems: 'flex-start' | 'center' | 'flex-end' | 'baseline';
   gap: number;
@@ -17,6 +17,7 @@ export const InlineGroup = ({
   gap = 8,
   wrap = true,
   children,
+  ...styleProps
 }: Partial<InlineGroupProps>) => {
   const {
     connectors: { connect, drag },
@@ -30,6 +31,7 @@ export const InlineGroup = ({
         if (ref) connect(drag(ref));
       }}
       style={{
+        ...styles,
         display: 'flex',
         flexDirection: 'row',
         justifyContent,
@@ -54,11 +56,17 @@ export const InlineGroup = ({
 
 InlineGroup.craft = {
   displayName: 'Inline Group',
+  isCanvas: true,
   props: {
     justifyContent: 'flex-start',
     alignItems: 'center',
     gap: 8,
     wrap: true,
+    marginTop: 0,
+    marginBottom: 16,
+    marginLeft: 0,
+    marginRight: 0,
+    maxWidth: '80rem',
   },
   rules: {
     canDrag: () => true,

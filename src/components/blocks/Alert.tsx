@@ -1,8 +1,9 @@
 import { useNode } from '@craftjs/core';
 import { Alert as ShadcnAlert, AlertDescription, AlertTitle } from '@/src/components/ui/alert';
 import { AlertCircle, Info, CheckCircle, AlertTriangle } from 'lucide-react';
+import { stylePropsToCSS, type StyleProps } from '@/src/lib/types/block-props';
 
-interface AlertProps {
+interface AlertProps extends StyleProps {
   title: string;
   description: string;
   variant: 'default' | 'destructive';
@@ -13,7 +14,8 @@ export const Alert = ({
   title = 'Alert Title',
   description = 'This is an alert description.',
   variant = 'default',
-  icon = 'info'
+  icon = 'info',
+  ...styleProps
 }: Partial<AlertProps>) => {
   const {
     connectors: { connect, drag },
@@ -27,6 +29,12 @@ export const Alert = ({
   };
 
   const Icon = icons[icon];
+
+  const styles = stylePropsToCSS({
+    marginBottom: 16,
+    maxWidth: '80rem',
+    ...styleProps,
+  });
 
   return (
     <div ref={(ref) => { if (ref) connect(drag(ref)); }} className="mx-auto">
@@ -46,6 +54,11 @@ Alert.craft = {
     description: 'This is an alert description.',
     variant: 'default',
     icon: 'info',
+    marginTop: 0,
+    marginBottom: 16,
+    marginLeft: 0,
+    marginRight: 0,
+    maxWidth: '80rem',
   },
   related: {
     settings: AlertSettings,

@@ -2,6 +2,97 @@
  * Article Types and Utilities
  */
 
+export interface PostRecord {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  language: string;
+  type: string;
+  status: string;
+  featuredImage: string | null;
+  categories: string[];
+  authorId: string | null;
+  authorName: string | null;
+  publishedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  viewCount: number;
+  isTranslation: boolean;
+  parentPostId: string | null;
+  translatedFromLanguage: string | null;
+  translationQuality: string | null;
+}
+
+/**
+ * Input type for creating an original post
+ */
+export interface CreateOriginalPostInput {
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  language: string;
+  type?: string;
+  status?: string;
+  featuredImage?: string | null;
+  categories?: string[];
+  authorId?: string | null;
+  authorName?: string | null;
+}
+
+/**
+ * Input type for creating a post translation
+ */
+export interface CreateTranslationPostInput {
+  parentPostId: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  language: string;
+  translatedFromLanguage: string;
+  type: string;
+  status: string;
+  featuredImage?: string | null;
+  categories: string[];
+  publishedAt?: Date | null;
+}
+
+/**
+ * Input type for updating an original post
+ */
+export type UpdateOriginalPostInput = Partial<Pick<PostRecord, 'title' | 'excerpt' | 'content' | 'status' | 'language' | 'featuredImage' | 'categories' | 'publishedAt'>>;
+
+export interface PostQueryFilters {
+  status?: 'draft' | 'published' | 'archived';
+  type?: 'article' | 'news';
+  language?: string;
+  search?: string;
+  originalsOnly?: boolean; // Only user-created articles
+  translationsOnly?: boolean; // Only AI translations
+}
+
+export interface PostPaginationOptions {
+  page?: number;
+  limit?: number;
+  sortBy?: 'createdAt' | 'publishedAt' | 'title' | 'viewCount';
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface PaginatedPostResult {
+  posts: PostRecord[];
+  pagination: {
+    currentPage: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
 export interface Article {
   id: string;
   title: string;

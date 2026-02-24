@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/src/components/ui/tooltip';
+import { ImageUpload } from '@/src/components/ui/image-upload';
 import { Mail, Linkedin } from 'lucide-react';
 
 interface TeamMember {
@@ -135,9 +137,16 @@ export const TeamSection = (props: TeamSectionProps) => {
                 <p className="text-sm font-semibold mb-2 line-clamp-2 h-[2.5rem]" style={{ color: accentColor }}>
                   {member.role}
                 </p>
-                <p className="text-sm leading-relaxed line-clamp-4 flex-1" style={{ color: textColor }}>
-                  {member.bio}
-                </p>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <p className="text-sm leading-relaxed line-clamp-4 flex-1 cursor-help" style={{ color: textColor }}>
+                      {member.bio}
+                    </p>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    {member.bio}
+                  </TooltipContent>
+                </Tooltip>
               </div>
 
               {/* Contact Icons - Fixed position at bottom */}
@@ -270,6 +279,15 @@ export function TeamSectionSettings() {
         </div>
         {props.teamMembers?.map((member, index) => (
           <div key={index} className="mb-4 p-4 border rounded space-y-2">
+            <div className="flex justify-between items-center">
+              <Label>{t('dynamicLabels.member', { index: index + 1 }) || `Member ${index + 1}`}</Label>
+              <button
+                onClick={() => removeTeamMember(index)}
+                className="text-sm text-red-600 hover:text-red-800"
+              >
+                {t('actions.remove') || 'Remove'}
+              </button>
+            </div>
             <div>
               <Label>{t('teamSection.name')} {index + 1}</Label>
               <Input
@@ -313,10 +331,25 @@ export function TeamSectionSettings() {
               <Label>{t('teamSection.email')}</Label>
               <Input
                 value={member.email || ''}
+                placeholder={t('placeholders.email') || 'email@example.com'}
                 onChange={(e) =>
                   setProp((props: TeamSectionProps) => {
                     if (props.teamMembers) {
                       props.teamMembers[index].email = e.target.value;
+                    }
+                  })
+                }
+              />
+            </div>
+            <div>
+              <Label>{t('labels.linkedinUrl') || 'LinkedIn URL'}</Label>
+              <Input
+                value={member.linkedin || ''}
+                placeholder={t('placeholders.linkedinUrl') || 'https://linkedin.com/in/username'}
+                onChange={(e) =>
+                  setProp((props: TeamSectionProps) => {
+                    if (props.teamMembers) {
+                      props.teamMembers[index].linkedin = e.target.value;
                     }
                   })
                 }

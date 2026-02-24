@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, lazy, useMemo, useState, useEffect } from "react";
+import React, { Suspense, lazy, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useLocale, useTranslations } from "next-intl";
 import { Card, CardContent } from "@/src/components/ui/card";
@@ -10,8 +10,7 @@ import { useEventFilters } from "@/src/lib/hooks/use-event-filters";
 import { useCelebration } from "@/src/components/ui/celebration";
 import { usePage } from "@/src/lib/hooks/use-pages";
 import { fadeInUp, staggerContainer } from "@/src/lib/utils/animations";
-import { getTranslationsAction } from "@/src/actions/translations";
-import type { EventsHeroContent } from "@/src/components/events/EventsHero";
+import type { BaseEvent } from "@/src/lib/types/event";
 
 // Lazy load components for better performance
 const EventCard = lazy(() =>
@@ -80,8 +79,6 @@ const EventsResultsSummary = lazy(() =>
 export default function EventsPage() {
   const locale = useLocale();
   const t = useTranslations("events");
-  const [heroTranslations, setHeroTranslations] = useState<Record<string, string>>({});
-  const [loadingHero, setLoadingHero] = useState(true);
   
   // Use the custom hook for all filter state management
   const filterState = useEventFilters();
@@ -89,62 +86,35 @@ export default function EventsPage() {
   
   // Fetch page builder content for events page
   const { data: pageData } = usePage("events");
-  
-  // Fetch hero translations from database
-  useEffect(() => {
-    const loadHeroTranslations = async () => {
-      setLoadingHero(true);
-      try {
-        const result = await getTranslationsAction(locale);
-        if (result.success && result.data) {
-          const translations: Record<string, string> = {};
-          result.data
-            .filter((t) => t.namespace === "events" && t.key.startsWith("hero."))
-            .forEach((t) => {
-              translations[t.key] = t.value;
-            });
-          setHeroTranslations(translations);
-        }
-      } catch (error) {
-        console.error("Failed to load hero translations:", error);
-      } finally {
-        setLoadingHero(false);
-      }
-    };
-    
-    loadHeroTranslations();
-  }, [locale]);
-  
-  // Extract localized content from page builder
-  const pageContent = useMemo(() => {
+
+  // Extract hero content from page builder
+  const heroContent = useMemo(() => {
     if (!pageData) return null;
     
-    // Get the text block with locale-nested content
-    const textBlock = pageData.translations.en?.blocks?.find(
-      (b) => b.id === "events-page-text"
+    // Find the HeroSection block (should be named 'events-hero')
+    const heroBlock = pageData.translations[locale as "en" | "fi"]?.blocks?.find(
+      (b) => b.type === "HeroSection"
     );
     
-    // Extract locale-specific content
-    const textContent = (textBlock?.content as { content?: Record<string, Record<string, string>> })?.content;
-    const localeKey = locale as "en" | "fi";
+    if (!heroBlock) return null;
+    
+    // Extract props from the HeroSection block
+    const props = heroBlock.content as {
+      title?: string;
+      subtitle?: string;
+      description?: string;
+      backgroundImage?: string;
+    };
     
     return {
-      text: textContent?.[localeKey] || textContent?.en,
+      title: props.title || t("hero.title"),
+      subtitle: props.subtitle || t("hero.subtitle"),
+      description: props.description || t("hero.description"),
+      eventsLabel: t("hero.eventsLabel"),
+      globalVirtualLabel: t("hero.globalVirtualLabel"),
+      communityDrivenLabel: t("hero.communityDrivenLabel"),
     };
-  }, [pageData, locale]);
-  
-  // Build hero content from database translations
-  const heroContent: EventsHeroContent | undefined = useMemo(() => {
-    if (loadingHero || !heroTranslations["hero.title"]) return undefined;
-    return {
-      title: heroTranslations["hero.title"],
-      subtitle: heroTranslations["hero.subtitle"] || "",
-      description: heroTranslations["hero.description"] || "",
-      eventsLabel: heroTranslations["hero.eventsLabel"] || "events",
-      globalVirtualLabel: heroTranslations["hero.globalVirtualLabel"] || "Global & Virtual",
-      communityDrivenLabel: heroTranslations["hero.communityDrivenLabel"] || "Community Driven",
-    };
-  }, [heroTranslations, loadingHero]);
+  }, [pageData, locale, t]);
 
   // Helper to format date in local timezone as YYYY-MM-DD
   const formatLocalDate = (date: Date): string => {
@@ -160,7 +130,7 @@ export default function EventsPage() {
     limit: 100, // Get more events for calendar display
   });
 
-  const calendarEvents = calendarEventsResponse?.data || [];
+  const calendarEvents = (calendarEventsResponse?.events || []) as BaseEvent[];
 
   // Fetch events with current filters
   const {
@@ -179,26 +149,24 @@ export default function EventsPage() {
       : undefined,
   });
 
-  const events = eventsResponse?.data || [];
+  const events = (eventsResponse?.events || []) as BaseEvent[];
   const pagination = eventsResponse?.pagination;
 
   // Error state
   if (error) {
-    const failedText = pageContent?.text?.failedToLoad || t("error.failedToLoad");
-    const tryAgainText = pageContent?.text?.tryAgain || t("error.tryAgain");
     return (
       <>
         <div className="container mx-auto px-4 py-8">
           <Card className="border-2 border-red-300 bg-red-50">
             <CardContent className="p-8 text-center">
               <p className="text-red-700 font-semibold mb-4 text-lg">
-                {failedText}
+                {t("error.failedToLoad")}
               </p>
               <Button
                 onClick={() => window.location.reload()}
                 className="bg-[#781D32] text-white hover:bg-[#5E1727] font-medium"
               >
-                {tryAgainText}
+                {t("error.tryAgain")}
               </Button>
             </CardContent>
           </Card>
@@ -235,7 +203,7 @@ export default function EventsPage() {
               isLoading={isLoading}
               onMobileCalendarChange={filterState.setShowMobileCalendar}
               onMobileFiltersChange={filterState.setShowMobileFilters}
-              onFilterChange={filterState.handleFilterChange as any}
+              onFilterChange={filterState.handleFilterChange}
               onSearchChange={filterState.setSearchInput}
               onSearch={filterState.handleSearch}
               onUpcomingToggle={() =>
@@ -254,7 +222,7 @@ export default function EventsPage() {
               showUpcomingOnly={filterState.showUpcomingOnly}
               selectedDate={filterState.selectedDate}
               activeFiltersCount={filterState.activeFiltersCount}
-              onFilterChange={filterState.handleFilterChange as any}
+              onFilterChange={filterState.handleFilterChange}
               onSearchChange={filterState.setSearchInput}
               onSearch={filterState.handleSearch}
               onUpcomingToggle={() =>
@@ -339,7 +307,7 @@ export default function EventsPage() {
                         animate="animate"
                         className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"
                       >
-                        {events.map((event) => (
+                        {events.map((event: BaseEvent) => (
                           <motion.div
                             key={event.id}
                             variants={fadeInUp}
@@ -375,7 +343,7 @@ export default function EventsPage() {
                           transition={{ duration: 0.6, delay: 0.3 }}
                           className="text-center mt-8 text-sm text-[#3E442B] font-semibold bg-[#F8F6F0] py-3 px-6 rounded-full inline-block border border-[#2D3320]/20"
                         >
-                          {pageContent?.text?.showingText || t("pagination.showing")}{" "}
+                          {t("pagination.showing")}{" "}
                           {((pagination?.page || 1) - 1) *
                             (pagination?.limit || 12) +
                             1}{" "}
@@ -384,7 +352,7 @@ export default function EventsPage() {
                             (pagination?.page || 1) * (pagination?.limit || 12),
                             pagination?.total || 0
                           )}{" "}
-                          {pageContent?.text?.ofText || t("pagination.of")} {pagination?.total || 0} {pageContent?.text?.eventsText || t("pagination.events")}
+                          {t("pagination.of")} {pagination?.total || 0} {t("pagination.events")}
                         </motion.div>
                       )}
                     </>

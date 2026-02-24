@@ -6,6 +6,9 @@ import { useTranslations } from 'next-intl';
 
 interface ContainerProps {
   background: string;
+  width: string;
+  height: string;
+  maxWidth: string;
   paddingTop: number;
   paddingBottom: number;
   paddingLeft: number;
@@ -20,6 +23,9 @@ interface ContainerProps {
 
 export const Container = ({
   background = '#ffffff',
+  width = '100%',
+  height = 'auto',
+  maxWidth = 'none',
   paddingTop = 40,
   paddingBottom = 40,
   paddingLeft = 40,
@@ -31,6 +37,7 @@ export const Container = ({
   flexDirection = 'column' as const,
   children,
 }: Partial<ContainerProps>) => {
+  const t = useTranslations('adminSettings.pageBuilder');
   const {
     connectors: { connect, drag },
   } = useNode();
@@ -46,6 +53,9 @@ export const Container = ({
       }}
       style={{
         background,
+        width,
+        height,
+        maxWidth,
         paddingTop: `${paddingTop}px`,
         paddingBottom: `${paddingBottom}px`,
         paddingLeft: `${paddingLeft}px`,
@@ -62,7 +72,7 @@ export const Container = ({
     >
       {showPlaceholder ? (
         <div className="flex items-center justify-center h-64 text-gray-400 border-2 border-dashed border-gray-300 rounded">
-          <p className="text-lg">Drag blocks here to start building your page...</p>
+          <p className="text-lg">{t('canvas.placeholder') || 'Drag blocks here to start building your page...'}</p>
         </div>
       ) : (
         children
@@ -75,6 +85,9 @@ Container.craft = {
   displayName: 'Page Container',
   props: {
     background: '#ffffff',
+    width: '100%',
+    height: 'auto',
+    maxWidth: 'none',
     paddingTop: 40,
     paddingBottom: 40,
     paddingLeft: 40,
@@ -97,6 +110,9 @@ function ContainerSettings() {
   const {
     actions: { setProp },
     background,
+    width,
+    height,
+    maxWidth,
     paddingTop,
     paddingBottom,
     paddingLeft,
@@ -108,6 +124,9 @@ function ContainerSettings() {
     flexDirection,
   } = useNode((node) => ({
     background: node.data?.props?.background,
+    width: node.data?.props?.width,
+    height: node.data?.props?.height,
+    maxWidth: node.data?.props?.maxWidth,
     paddingTop: node.data?.props?.paddingTop,
     paddingBottom: node.data?.props?.paddingBottom,
     paddingLeft: node.data?.props?.paddingLeft,
@@ -135,6 +154,42 @@ function ContainerSettings() {
         </select>
       </div>
       
+      <div>
+        <label className="block text-sm font-medium mb-2">Dimensions</label>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="text-xs text-gray-600">Width</label>
+            <input
+              type="text"
+              value={width}
+              onChange={(e) => setProp((props: ContainerProps) => (props.width = e.target.value))}
+              className="w-full px-2 py-1 border rounded text-sm"
+              placeholder="100% or 1200px"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Max Width</label>
+            <input
+              type="text"
+              value={maxWidth}
+              onChange={(e) => setProp((props: ContainerProps) => (props.maxWidth = e.target.value))}
+              className="w-full px-2 py-1 border rounded text-sm"
+              placeholder="none or 1400px"
+            />
+          </div>
+          <div className="col-span-2">
+            <label className="text-xs text-gray-600">Height</label>
+            <input
+              type="text"
+              value={height}
+              onChange={(e) => setProp((props: ContainerProps) => (props.height = e.target.value))}
+              className="w-full px-2 py-1 border rounded text-sm"
+              placeholder="auto or 100vh"
+            />
+          </div>
+        </div>
+      </div>
+
       <div>
         <label className="block text-sm font-medium mb-2">Background</label>
         <div className="flex gap-2">
@@ -190,6 +245,48 @@ function ContainerSettings() {
               type="number"
               value={paddingRight}
               onChange={(e) => setProp((props: ContainerProps) => (props.paddingRight = Number(e.target.value)))}
+              className="w-full px-2 py-1 border rounded text-sm"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium mb-2">Margin</label>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="text-xs text-gray-600">Top</label>
+            <input
+              type="number"
+              value={marginTop}
+              onChange={(e) => setProp((props: ContainerProps) => (props.marginTop = Number(e.target.value)))}
+              className="w-full px-2 py-1 border rounded text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Bottom</label>
+            <input
+              type="number"
+              value={marginBottom}
+              onChange={(e) => setProp((props: ContainerProps) => (props.marginBottom = Number(e.target.value)))}
+              className="w-full px-2 py-1 border rounded text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Left</label>
+            <input
+              type="number"
+              value={marginLeft}
+              onChange={(e) => setProp((props: ContainerProps) => (props.marginLeft = Number(e.target.value)))}
+              className="w-full px-2 py-1 border rounded text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-600">Right</label>
+            <input
+              type="number"
+              value={marginRight}
+              onChange={(e) => setProp((props: ContainerProps) => (props.marginRight = Number(e.target.value)))}
               className="w-full px-2 py-1 border rounded text-sm"
             />
           </div>

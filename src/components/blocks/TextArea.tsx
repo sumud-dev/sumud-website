@@ -1,7 +1,8 @@
 import { useNode } from '@craftjs/core';
 import { Textarea } from '@/src/components/ui/textarea';
+import { stylePropsToCSS, type StyleProps } from '@/src/lib/types/block-props';
 
-interface TextAreaProps {
+interface TextAreaProps extends StyleProps {
   placeholder: string;
   rows: number;
   disabled: boolean;
@@ -12,11 +13,18 @@ export const TextArea = ({
   placeholder = 'Enter your text here...',
   rows = 4,
   disabled = false,
-  value = ''
+  value = '',
+  ...styleProps
 }: Partial<TextAreaProps>) => {
   const {
     connectors: { connect, drag },
   } = useNode();
+
+  const styles = stylePropsToCSS({
+    marginBottom: 16,
+    maxWidth: '80rem',
+    ...styleProps,
+  });
 
   return (
     <div ref={(ref) => { if (ref) connect(drag(ref)); }} className="mx-auto">
@@ -38,6 +46,11 @@ TextArea.craft = {
     rows: 4,
     disabled: false,
     value: '',
+    marginTop: 0,
+    marginBottom: 16,
+    marginLeft: 0,
+    marginRight: 0,
+    maxWidth: '80rem',
   },
   related: {
     settings: TextAreaSettings,

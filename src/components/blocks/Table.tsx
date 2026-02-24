@@ -7,13 +7,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/src/components/ui/table';
+import { stylePropsToCSS, type StyleProps } from '@/src/lib/types/block-props';
 
 interface TableData {
   headers: string[];
   rows: string[][];
 }
 
-interface TableProps {
+interface TableProps extends StyleProps {
   data: TableData;
   striped: boolean;
 }
@@ -26,11 +27,18 @@ export const Table = ({
       ['Row 2 Col 1', 'Row 2 Col 2', 'Row 2 Col 3'],
     ],
   },
-  striped = true
+  striped = true,
+  ...styleProps
 }: Partial<TableProps>) => {
   const {
     connectors: { connect, drag },
   } = useNode();
+
+  const styles = stylePropsToCSS({
+    marginBottom: 16,
+    maxWidth: '80rem',
+    ...styleProps,
+  });
 
   return (
     <div ref={(ref) => { if (ref) connect(drag(ref)); }} className="mx-auto">
@@ -67,6 +75,11 @@ Table.craft = {
       ],
     },
     striped: true,
+    marginTop: 0,
+    marginBottom: 16,
+    marginLeft: 0,
+    marginRight: 0,
+    maxWidth: '80rem',
   },
   related: {
     settings: TableSettings,

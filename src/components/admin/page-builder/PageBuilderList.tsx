@@ -11,8 +11,6 @@ import {
   CardTitle,
 } from "@/src/components/ui/card";
 import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
 import {
   Edit,
   Eye,
@@ -35,14 +33,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/src/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/src/components/ui/dialog";
 import { createPage, deletePage } from "@/src/actions/pages.actions";
 
 interface Page {
@@ -60,9 +50,6 @@ export function PageBuilderList() {
   const locale = useLocale() as "en" | "fi";
   const queryClient = useQueryClient();
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [newPageTitle, setNewPageTitle] = useState("");
-  const [newPageSlug, setNewPageSlug] = useState("");
 
   const { data: pages = [], isLoading } = useQuery<Page[]>({
     queryKey: ["pages"],
@@ -74,15 +61,17 @@ export function PageBuilderList() {
   });
 
   const createPageMutation = useMutation({
-    mutationFn: async (data: { title: string; slug: string }) => {
-      return await createPage(data.slug, data.title);
+    mutationFn: async () => {
+      // Generate unique slug with timestamp
+      const timestamp = Date.now();
+      const slug = `new-page-${timestamp}`;
+      const page = await createPage(slug, `New Page`);
+      // Ensure page is created as draft (this should be the default in createPage action)
+      return page;
     },
     onSuccess: (page) => {
       queryClient.invalidateQueries({ queryKey: ["pages"] });
       toast.success(t("messages.createSuccess") || "Page created successfully");
-      setCreateDialogOpen(false);
-      setNewPageTitle("");
-      setNewPageSlug("");
       router.push(`/${locale}/admin/page-builder/${page.id}`);
     },
     onError: (error: Error) => {
@@ -91,26 +80,7 @@ export function PageBuilderList() {
   });
 
   const handleCreatePage = () => {
-    if (!newPageTitle.trim()) {
-      toast.error("Please enter a page title");
-      return;
-    }
-    if (!newPageSlug.trim()) {
-      toast.error("Please enter a page slug");
-      return;
-    }
-    createPageMutation.mutate({ title: newPageTitle, slug: newPageSlug });
-  };
-
-  const handleTitleChange = (value: string) => {
-    setNewPageTitle(value);
-    // Auto-generate slug from title
-    const generatedSlug = value
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .trim();
-    setNewPageSlug(generatedSlug);
+    createPageMutation.mutate();
   };
 
   const handleDuplicate = async (_id: string) => {
@@ -151,8 +121,17 @@ export function PageBuilderList() {
             {t("description")}
           </p>
         </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" /> {t("newButton")}
+        <Button onClick={handleCreatePage} disabled={createPageMutation.isPending}>
+          {createPageMutation.isPending ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              {t("createDialog.creating") || "Creating..."}
+            </>
+          ) : (
+            <>
+              <Plus className="h-4 w-4 mr-2" /> {t("newButton")}
+            </>
+          )}
         </Button>
       </div>
 
@@ -169,8 +148,15 @@ export function PageBuilderList() {
           ) : pages.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-muted-foreground mb-4">{t("noPagesYet")}</p>
-              <Button onClick={() => setCreateDialogOpen(true)}>
-                {t("createFirstPage")}
+              <Button onClick={handleCreatePage} disabled={createPageMutation.isPending}>
+                {createPageMutation.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    {t("createDialog.creating") || "Creating..."}
+                  </>
+                ) : (
+                  t("createFirstPage")
+                )}
               </Button>
             </div>
           ) : (
@@ -197,7 +183,7 @@ export function PageBuilderList() {
                   </div>
                   <div className="col-span-2">
                     <Badge variant={page.status === "published" ? "default" : "secondary"}>
-                      {page.status}
+                      {t(`status.${page.status}`)}
                     </Badge>
                   </div>
                   <div className="col-span-3 text-right flex items-center justify-end gap-1">
@@ -240,59 +226,7 @@ export function PageBuilderList() {
         </CardContent>
       </Card>
 
-      {/* Create Page Dialog */}
-      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("createDialog.title") || "Create New Page"}</DialogTitle>
-            <DialogDescription>
-              {t("createDialog.description") || "Enter a title and slug for your new page."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">{t("createDialog.titleLabel") || "Page Title"}</Label>
-              <Input
-                id="title"
-                value={newPageTitle}
-                onChange={(e) => handleTitleChange(e.target.value)}
-                placeholder={t("createDialog.titlePlaceholder") || "Enter page title"}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="slug">{t("createDialog.slugLabel") || "Slug"}</Label>
-              <Input
-                id="slug"
-                value={newPageSlug}
-                onChange={(e) => setNewPageSlug(e.target.value)}
-                placeholder={t("createDialog.slugPlaceholder") || "page-slug"}
-                className="font-mono"
-              />
-              <p className="text-xs text-muted-foreground">
-                {t("createDialog.slugHint") || "URL-friendly identifier (auto-generated from title)"}
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
-              {t("createDialog.cancel") || "Cancel"}
-            </Button>
-            <Button 
-              onClick={handleCreatePage}
-              disabled={createPageMutation.isPending}
-            >
-              {createPageMutation.isPending ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  {t("createDialog.creating") || "Creating..."}
-                </>
-              ) : (
-                t("createDialog.create") || "Create Page"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog

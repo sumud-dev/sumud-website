@@ -1,8 +1,9 @@
 import { useNode } from '@craftjs/core';
 import Link from 'next/link';
 import { Button as ShadcnButton } from '@/src/components/ui/button';
+import { stylePropsToCSS, type StyleProps } from '@/src/lib/types/block-props';
 
-interface ButtonProps {
+interface ButtonProps extends StyleProps {
   text: string;
   variant: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
   size: 'default' | 'sm' | 'lg' | 'icon';
@@ -13,14 +14,21 @@ export const Button = ({
   text = 'Click me', 
   variant = 'default', 
   size = 'default',
-  href 
+  href,
+  ...styleProps
 }: Partial<ButtonProps>) => {
   const {
     connectors: { connect, drag },
   } = useNode();
 
+  const styles = stylePropsToCSS({
+    marginTop: 4,
+    marginBottom: 4,
+    ...styleProps,
+  });
+
   return (
-    <div ref={ref => { if (ref) connect(drag(ref)); }} className="inline-block my-1">
+    <div ref={ref => { if (ref) connect(drag(ref)); }} style={styles} className="inline-block">
       {href ? (
         <ShadcnButton variant={variant} size={size} asChild>
           <Link href={href}>{text}</Link>
@@ -41,6 +49,10 @@ Button.craft = {
     variant: 'default',
     size: 'default',
     href: '',
+    marginTop: 4,
+    marginBottom: 4,
+    marginLeft: 0,
+    marginRight: 0,
   },
   related: {
     settings: ButtonSettings,
