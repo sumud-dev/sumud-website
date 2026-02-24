@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter, Link } from "@/src/i18n/navigation";
-import { ArrowLeft, Eye, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { EventForm, type EventFormData } from "@/src/components/forms/event-form";
 import { fetchEventByIdAction, updateEventAction } from "@/src/actions/events.actions";
@@ -120,12 +120,7 @@ export default function EditEventPage({ params }: EditEventPageProps) {
     }
   };
 
-  const handlePreview = () => {
-    if (!event || !currentId) return;
 
-    // Navigate to admin event detail page
-    router.push(`/admin/events/${currentId}`);
-  };
 
   if (isLoading) {
     return (
@@ -180,12 +175,6 @@ export default function EditEventPage({ params }: EditEventPageProps) {
             <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
             <p className="text-gray-600">{t("description", { title: event.title || '' })}</p>
           </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button type="button" variant="outline" onClick={handlePreview}>
-            <Eye className="mr-2 h-4 w-4" />
-            {t("preview")}
-          </Button>
         </div>
       </div>
 

@@ -9,7 +9,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { postQueryKeys } from "@/src/lib/hooks/use-posts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ArrowLeft, Save, Eye, Loader2, Languages } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Languages } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { ImageUpload } from "@/src/components/ui/image-upload";
 import { RichTextEditor } from "@/src/lib/tipTap-editor/RichTextEditor";
@@ -180,12 +180,7 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
     }
   };
 
-  const handlePreview = () => {
-    if (!article || !resolvedSlug) return;
 
-    // Open admin article detail page in new tab
-    window.open(`/admin/articles/${resolvedSlug}`, "_blank");
-  };
 
   if (isLoading) {
     return (
@@ -222,12 +217,6 @@ export default function EditArticlePage({ params }: EditArticlePageProps) {
             <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
             <p className="text-gray-600">{t("description", { title: article.title })}</p>
           </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button type="button" variant="outline" onClick={handlePreview}>
-            <Eye className="mr-2 h-4 w-4" />
-            {t("preview")}
-          </Button>
         </div>
       </div>
 

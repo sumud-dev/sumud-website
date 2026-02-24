@@ -26,7 +26,7 @@ export const CardBlock = ({
   } = useNode();
 
   return (
-    <div ref={(ref) => { if (ref) connect(drag(ref)); }} style={styles} className="mx-auto">
+    <div ref={(ref) => { if (ref) connect(drag(ref)); }} className="mx-auto">
       <ShadcnCard>
         <CardHeader>
           <CardTitle>{title}</CardTitle>

@@ -14,8 +14,7 @@ import {
   Archive, 
   Loader2,
   Globe,
-  User,
-  Languages
+  User
 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
@@ -206,12 +205,6 @@ const ArticlesPage: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button asChild variant="outline">
-            <Link href="/admin/articles/ui-translations">
-              <Languages className="mr-2 h-4 w-4" />
-              {t("uiTranslationsButton")}
-            </Link>
-          </Button>
           <Button asChild className="bg-[#781D32] hover:bg-[#781D32]/90">
             <Link href="/admin/articles/new">
               <Plus className="mr-2 h-4 w-4" />

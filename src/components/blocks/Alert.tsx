@@ -29,7 +29,7 @@ export const Alert = ({
   const Icon = icons[icon];
 
   return (
-    <div ref={(ref) => { if (ref) connect(drag(ref)); }} style={styles} className="mx-auto">
+    <div ref={(ref) => { if (ref) connect(drag(ref)); }} className="mx-auto">
       <ShadcnAlert variant={variant}>
         <Icon className="h-4 w-4" />
         <AlertTitle>{title}</AlertTitle>
