@@ -298,7 +298,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                   {t("detail.participateTitle")}
                 </h2>
                 <div className="space-y-4">
-                  {campaign.howToParticipate.map((step: CampaignParticipationStep | string, index: number) => (
+                  {campaign.howToParticipate?.map((step: CampaignParticipationStep | string, index: number) => (
                     <motion.div
                       key={index}
                       initial={{ opacity: 0, x: -20 }}
