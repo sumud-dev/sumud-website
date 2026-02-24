@@ -77,6 +77,7 @@ export const FAQSection = (props: FAQSectionProps) => {
 
   const { children } = props;
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const t = useTranslations();
 
   return (
     <div 
