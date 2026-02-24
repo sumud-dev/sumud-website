@@ -1,6 +1,6 @@
 'use client';
 import { Editor, Frame } from '@craftjs/core';
-import { Button, Text, Section, ImageBlock, Column, Row, InlineGroup, Accordion, Carousel, Table, List, TextArea, Badge, Alert, Separator, CardBlock, Container, CTABlock, HeroSection, AboutSection, ContactSection, FeaturesSection, StatsSection, TestimonialsSection, TeamSection, TimelineSection, PricingSection, GallerySection, FAQSection, NewsletterSection as NewsletterBlock, PartnersSection } from '@/src/components/blocks';
+import { Button, Text, Section, ImageBlock, Column, Row, InlineGroup, Accordion, Carousel, Table, List, TextArea, Badge, Alert, Separator, CardBlock, Container, CTABlock, HeroSection, AboutSection, ContactSection, FeaturesSection, StatsSection, TestimonialsSection, TeamSection, TimelineSection, PricingSection, GallerySection, FAQSection, NewsletterSection as NewsletterBlock, PartnersSection, DonationSection, InfoListCard } from '@/src/components/blocks';
 import { HeritageHero, NewsSection, EventsSection, CampaignsSection, NewsletterSection } from '@/src/components/page-builder/sections';
 import type { SerializedNodes } from '@craftjs/core';
 
@@ -23,7 +23,7 @@ export function PageRenderer({ content }: PageRendererProps) {
     CTABlock, HeroSection, AboutSection, ContactSection,
     FeaturesSection, StatsSection, TestimonialsSection, TeamSection,
     TimelineSection, PricingSection, GallerySection, FAQSection,
-    NewsletterBlock, PartnersSection,
+    NewsletterBlock, PartnersSection, DonationSection, InfoListCard,
     HeritageHero,
     NewsSection,
     EventsSection,

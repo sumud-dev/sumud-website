@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { Link, useRouter } from "@/src/i18n/navigation";
-import { ArrowLeft, Eye } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/src/components/ui/button";
 import { CampaignForm, type CampaignFormData } from "@/src/components/forms/campaign-form";
@@ -106,10 +106,7 @@ export default function EditCampaignPage({ params }: EditCampaignPageProps) {
     }
   };
 
-  const handlePreview = () => {
-    if (!slug) return;
-    window.open(`/admin/campaigns/${slug}`, "_blank");
-  };
+
 
   // Loading state
   if (isLoading) {
@@ -157,12 +154,6 @@ export default function EditCampaignPage({ params }: EditCampaignPageProps) {
             <h1 className="text-2xl font-bold text-gray-900">{t("pageTitle")}</h1>
             <p className="text-gray-600">{t("updateCampaign")} {mappedCampaign.title}</p>
           </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button type="button" variant="outline" onClick={handlePreview}>
-            <Eye className="mr-2 h-4 w-4" />
-            {t("preview")}
-          </Button>
         </div>
       </div>
 

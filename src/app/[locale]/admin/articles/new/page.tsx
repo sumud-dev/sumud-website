@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { ArrowLeft, Save, Eye, Languages, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Languages, Loader2 } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { ImageUpload } from "@/src/components/ui/image-upload";
@@ -162,12 +162,7 @@ export default function NewArticlePage() {
     }
   };
 
-  const handlePreview = () => {
-    const formData = form.getValues();
-    // Here you would typically open a preview modal or new tab
-    console.log("Preview data:", formData);
-    toast.info(t("previewNote"));
-  };
+
 
   return (
     <div className="space-y-6">
@@ -183,12 +178,6 @@ export default function NewArticlePage() {
             <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
             <p className="text-gray-600">{t("description")}</p>
           </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button type="button" variant="outline" onClick={handlePreview}>
-            <Eye className="mr-2 h-4 w-4" />
-            {t("preview")}
-          </Button>
         </div>
       </div>
 

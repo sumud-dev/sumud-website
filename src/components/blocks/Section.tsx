@@ -1,4 +1,5 @@
 import { useNode } from '@craftjs/core';
+import { Children } from 'react';
 
 interface SectionProps {
   backgroundColor: string;
@@ -15,6 +16,22 @@ export const Section = ({
     connectors: { connect, drag },
   } = useNode();
 
+  const styles: React.CSSProperties = {
+    paddingTop: padding,
+    paddingBottom: padding,
+    paddingLeft: padding,
+    paddingRight: padding,
+    marginTop: 0,
+    marginBottom: 16,
+    marginLeft: 'auto',
+    marginRight: 'auto',
+    backgroundColor,
+    minHeight: '100px',
+    maxWidth: '80rem',
+  };
+
+  const showPlaceholder = Children.count(children) === 0;
+
   return (
     <section
       ref={(ref) => {
@@ -22,14 +39,16 @@ export const Section = ({
           connect(drag(ref));
         }
       }}
-      style={{
-        backgroundColor,
-        padding: `${padding}px`,
-        minHeight: '100px',
-      }}
-      className="mb-4"
+      style={styles}
+      className="mx-auto"
     >
-      {children}
+      {showPlaceholder ? (
+        <div className="flex items-center justify-center min-h-25 text-gray-400">
+          <p className="text-sm">Drop blocks here...</p>
+        </div>
+      ) : (
+        children
+      )}
     </section>
   );
 };

@@ -24,6 +24,7 @@ interface CTABlockProps {
   secondaryButtonHoverColor?: string;
   secondaryButtonTextColor?: string;
   variant?: 'centered' | 'split' | 'minimal';
+  children?: React.ReactNode;
 }
 
 const defaultProps: CTABlockProps = {
@@ -63,13 +64,14 @@ export const CTABlock = (props: CTABlockProps) => {
     variant,
   } = props;
 
+  const { children } = props;
+
   const {
     connectors: { connect, drag },
   } = useNode();
 
   const renderCentered = () => (
     <div 
-      ref={(ref) => { if (ref) connect(drag(ref)); }}
       className="relative py-16 px-6 text-center"
       style={{ backgroundColor }}
     >
@@ -114,7 +116,6 @@ export const CTABlock = (props: CTABlockProps) => {
 
   const renderSplit = () => (
     <div 
-      ref={(ref) => { if (ref) connect(drag(ref)); }}
       className="relative py-16 px-6"
       style={{ backgroundColor }}
     >
@@ -161,7 +162,6 @@ export const CTABlock = (props: CTABlockProps) => {
 
   const renderMinimal = () => (
     <div 
-      ref={(ref) => { if (ref) connect(drag(ref)); }}
       className="relative py-12 px-6"
       style={{ backgroundColor }}
     >
@@ -205,11 +205,12 @@ export const CTABlock = (props: CTABlockProps) => {
   );
 
   return (
-    <>
+    <div ref={(ref) => { if (ref) connect(drag(ref)); }}>
       {variant === 'centered' && renderCentered()}
       {variant === 'split' && renderSplit()}
       {variant === 'minimal' && renderMinimal()}
-    </>
+      {children}
+    </div>
   );
 };
 
@@ -479,7 +480,12 @@ export const CTABlockSettings = () => {
 
 CTABlock.craft = {
   displayName: 'CTA Block',
+  isCanvas: true,
   props: defaultProps,
+  rules: {
+    canDrag: () => true,
+    canDrop: () => true,
+  },
   related: {
     settings: CTABlockSettings,
   },

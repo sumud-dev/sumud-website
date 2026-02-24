@@ -12,6 +12,7 @@ interface ImageProps {
   alt: string;
   width: number;
   height: number;
+  borderRadius: number;
 }
 
 export const ImageBlock = ({ 
@@ -19,18 +20,30 @@ export const ImageBlock = ({
   alt = 'Image',
   width = 400,
   height = 300,
+  borderRadius = 12,
 }: Partial<ImageProps>) => {
   const {
     connectors: { connect, drag },
   } = useNode();
 
+  // Handle empty src to prevent Next.js Image error
+  const imageSrc = src && src.trim() !== '' ? src : 'https://via.placeholder.com/400x300';
+
   return (
-    <div ref={(ref) => { if (ref) connect(drag(ref)); }}>
+    <div 
+      ref={(ref) => { if (ref) connect(drag(ref)); }}
+      style={{
+        borderRadius: `${borderRadius}px`,
+        overflow: 'hidden',
+        width: 'fit-content',
+      }}
+    >
       <Image 
-        src={src} 
+        src={imageSrc} 
         alt={alt} 
         width={width}
         height={height}
+        style={{ display: 'block' }}
       />
     </div>
   );
@@ -43,6 +56,7 @@ ImageBlock.craft = {
     alt: 'Image',
     width: 400,
     height: 300,
+    borderRadius: 12,
   },
   related: {
     settings: ImageSettings,
@@ -56,11 +70,13 @@ function ImageSettings() {
     alt,
     width,
     height,
+    borderRadius,
   } = useNode((node) => ({
     src: node.data?.props?.src,
     alt: node.data?.props?.alt,
     width: node.data?.props?.width,
     height: node.data?.props?.height,
+    borderRadius: node.data?.props?.borderRadius,
   }));
 
   return (
@@ -124,6 +140,19 @@ function ImageSettings() {
             onChange={(e) => setProp((props: ImageProps) => (props.height = Number(e.target.value)))}
           />
         </div>
+      </div>
+
+      {/* Border Radius */}
+      <div className="space-y-2">
+        <Label htmlFor="borderRadius">Border Radius (px)</Label>
+        <Input
+          id="borderRadius"
+          type="number"
+          min={0}
+          max={999}
+          value={borderRadius}
+          onChange={(e) => setProp((props: ImageProps) => (props.borderRadius = Number(e.target.value)))}
+        />
       </div>
     </div>
   );

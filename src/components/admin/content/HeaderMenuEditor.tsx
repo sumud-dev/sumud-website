@@ -83,6 +83,10 @@ export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEd
   const [hasChanges, setHasChanges] = React.useState(false);
   const [availablePages, setAvailablePages] = React.useState<AvailablePage[]>([]);
   const [expandedItems, setExpandedItems] = React.useState<Set<number>>(new Set());
+  const [dragIndex, setDragIndex] = React.useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null);
+  const [subDragKey, setSubDragKey] = React.useState<{ parent: number; child: number } | null>(null);
+  const [subDragOverIndex, setSubDragOverIndex] = React.useState<number | null>(null);
 
   // Load config and available pages on mount and when locale changes
   React.useEffect(() => {
@@ -203,6 +207,35 @@ export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEd
       );
     }
     setHasChanges(true);
+  };
+
+  const handleDrop = (dropIndex: number) => {
+    if (dragIndex === null || dragIndex === dropIndex) return;
+    setNavItems((prev) => {
+      const next = [...prev];
+      const [moved] = next.splice(dragIndex, 1);
+      next.splice(dropIndex, 0, moved);
+      return next;
+    });
+    setHasChanges(true);
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleSubDrop = (parentIndex: number, dropChildIndex: number) => {
+    if (!subDragKey || subDragKey.parent !== parentIndex || subDragKey.child === dropChildIndex) return;
+    setNavItems((prev) =>
+      prev.map((item, i) => {
+        if (i !== parentIndex) return item;
+        const children = [...(item.children || [])];
+        const [moved] = children.splice(subDragKey.child, 1);
+        children.splice(dropChildIndex, 0, moved);
+        return { ...item, children };
+      })
+    );
+    setHasChanges(true);
+    setSubDragKey(null);
+    setSubDragOverIndex(null);
   };
 
   const toggleExpand = (index: number) => {
@@ -335,10 +368,18 @@ export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEd
           </div>
           <div className="space-y-3">
             {navItems.map((item, index) => (
-              <div key={index} className="space-y-2">
+              <div
+                key={index}
+                className={`space-y-2 transition-opacity ${dragIndex === index ? "opacity-40" : ""} ${dragOverIndex === index && dragIndex !== index ? "ring-2 ring-primary/50 rounded-lg" : ""}`}
+                draggable
+                onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; setDragIndex(index); }}
+                onDragOver={(e) => { e.preventDefault(); setDragOverIndex(index); }}
+                onDrop={() => handleDrop(index)}
+                onDragEnd={() => { setDragIndex(null); setDragOverIndex(null); }}
+              >
                 <div className="flex items-start gap-2 p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-2 pt-2">
-                    <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
+                      <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab active:cursor-grabbing" />
                     {item.children && item.children.length > 0 && (
                       <Button
                         variant="ghost"
@@ -423,8 +464,14 @@ export default function HeaderMenuEditor({ locale, onSaveSuccess }: HeaderMenuEd
                     {item.children.map((child, childIndex) => (
                       <div
                         key={childIndex}
-                        className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg"
+                        className={`flex items-center gap-2 p-2 bg-muted/30 rounded-lg transition-opacity ${subDragKey?.parent === index && subDragKey?.child === childIndex ? "opacity-40" : ""} ${subDragOverIndex === childIndex && subDragKey?.child !== childIndex ? "ring-2 ring-primary/50" : ""}`}
+                        draggable
+                        onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; setSubDragKey({ parent: index, child: childIndex }); }}
+                        onDragOver={(e) => { e.preventDefault(); setSubDragOverIndex(childIndex); }}
+                        onDrop={() => handleSubDrop(index, childIndex)}
+                        onDragEnd={() => { setSubDragKey(null); setSubDragOverIndex(null); }}
                       >
+                        <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab active:cursor-grabbing shrink-0" />
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-2 flex-1">
                           <Select
                             value={child.labelKey || "__custom__"}

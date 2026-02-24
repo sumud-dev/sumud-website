@@ -1,7 +1,7 @@
 'use client';
 
 import { useNode } from '@craftjs/core';
-import { ReactNode } from 'react';
+import { Children, ReactNode } from 'react';
 
 interface InlineGroupProps {
   justifyContent: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around';
@@ -22,6 +22,8 @@ export const InlineGroup = ({
     connectors: { connect, drag },
   } = useNode();
 
+  const showPlaceholder = Children.count(children) === 0;
+
   return (
     <div
       ref={(ref) => {
@@ -37,12 +39,14 @@ export const InlineGroup = ({
         minHeight: '40px',
         width: '100%',
       }}
-      className="mb-4 p-2 border border-dashed border-blue-300 rounded"
+      className="craftjs-inline-container p-2 border border-dashed border-blue-300 rounded mx-auto"
     >
-      {children || (
+      {showPlaceholder ? (
         <span className="text-gray-400 text-sm">
-          Drop inline elements here (Text, Button, Badge)
+          Drop blocks here to place them side by side
         </span>
+      ) : (
+        children
       )}
     </div>
   );
@@ -151,7 +155,7 @@ function InlineGroupSettings() {
 
       <div className="pt-2 border-t">
         <p className="text-xs text-gray-500">
-          Use this to display elements inline (side by side). Great for Text + Button combinations.
+          Place blocks side by side in a flexible row layout. Perfect for inline elements like text, buttons, and badges.
         </p>
       </div>
     </div>

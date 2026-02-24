@@ -19,7 +19,7 @@ export const TextArea = ({
   } = useNode();
 
   return (
-    <div ref={(ref) => { if (ref) connect(drag(ref)); }} className="mb-4">
+    <div ref={(ref) => { if (ref) connect(drag(ref)); }} className="mx-auto">
       <Textarea
         placeholder={placeholder}
         rows={rows}

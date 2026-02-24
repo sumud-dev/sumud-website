@@ -33,7 +33,7 @@ export const Table = ({
   } = useNode();
 
   return (
-    <div ref={(ref) => { if (ref) connect(drag(ref)); }} className="mb-4">
+    <div ref={(ref) => { if (ref) connect(drag(ref)); }} className="mx-auto">
       <ShadcnTable>
         <TableHeader>
           <TableRow>

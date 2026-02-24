@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useNode } from '@craftjs/core';
+import { useTranslations } from 'next-intl';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
@@ -21,6 +22,7 @@ interface FAQSectionProps {
   titleColor?: string;
   textColor?: string;
   accentColor?: string;
+  children?: React.ReactNode;
 }
 
 const defaultProps: FAQSectionProps = {
@@ -73,6 +75,7 @@ export const FAQSection = (props: FAQSectionProps) => {
     connectors: { connect, drag },
   } = useNode();
 
+  const { children } = props;
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
@@ -146,19 +149,26 @@ export const FAQSection = (props: FAQSectionProps) => {
           </p>
         </div>
       </div>
+      {children}
     </div>
   );
 };
 
 FAQSection.craft = {
   displayName: 'FAQ Section',
+  isCanvas: true,
   props: defaultProps,
+  rules: {
+    canDrag: () => true,
+    canDrop: () => true,
+  },
   related: {
     settings: FAQSectionSettings,
   },
 };
 
 export function FAQSectionSettings() {
+  const t = useTranslations('adminSettings.pageBuilder');
   const {
     actions: { setProp },
     props,
@@ -169,7 +179,7 @@ export function FAQSectionSettings() {
   return (
     <div className="space-y-4">
       <div>
-        <Label>Title</Label>
+        <Label>{t('settings.title')}</Label>
         <Input
           value={props.title || ''}
           onChange={(e) => setProp((props: FAQSectionProps) => (props.title = e.target.value))}
@@ -177,7 +187,7 @@ export function FAQSectionSettings() {
       </div>
 
       <div>
-        <Label>Subtitle</Label>
+        <Label>{t('settings.subtitle')}</Label>
         <Input
           value={props.subtitle || ''}
           onChange={(e) => setProp((props: FAQSectionProps) => (props.subtitle = e.target.value))}
@@ -185,7 +195,7 @@ export function FAQSectionSettings() {
       </div>
 
       <div>
-        <Label>Background Color</Label>
+        <Label>{t('settings.backgroundColor')}</Label>
         <Input
           type="color"
           value={props.backgroundColor || '#F4F3F0'}
@@ -194,7 +204,7 @@ export function FAQSectionSettings() {
       </div>
 
       <div>
-        <Label>Title Color</Label>
+        <Label>{t('settings.titleColor')}</Label>
         <Input
           type="color"
           value={props.titleColor || '#3E442B'}
@@ -203,7 +213,7 @@ export function FAQSectionSettings() {
       </div>
 
       <div>
-        <Label>Accent Color</Label>
+        <Label>{t('settings.accentColor')}</Label>
         <Input
           type="color"
           value={props.accentColor || '#781D32'}
@@ -212,11 +222,11 @@ export function FAQSectionSettings() {
       </div>
 
       <div className="pt-4 border-t">
-        <Label className="mb-3 block">FAQ Items</Label>
+        <Label className="mb-3 block">{t('faqSection.items')}</Label>
         {props.faqs?.map((faq, index) => (
           <div key={index} className="mb-4 p-4 border rounded space-y-2">
             <div>
-              <Label>Question {index + 1}</Label>
+              <Label>{t('faqSection.question')} {index + 1}</Label>
               <Input
                 value={faq.question}
                 onChange={(e) =>
@@ -229,7 +239,7 @@ export function FAQSectionSettings() {
               />
             </div>
             <div>
-              <Label>Answer</Label>
+              <Label>{t('faqSection.answer')}</Label>
               <Textarea
                 value={faq.answer}
                 onChange={(e) =>

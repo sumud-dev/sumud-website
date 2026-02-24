@@ -21,6 +21,7 @@ interface ContactSectionProps {
   textColor?: string;
   buttonColor?: string;
   buttonTextColor?: string;
+  children?: React.ReactNode;
 }
 
 const defaultProps: ContactSectionProps = {
@@ -53,6 +54,8 @@ export const ContactSection = (props: ContactSectionProps) => {
     buttonColor,
     buttonTextColor,
   } = props;
+
+  const { children } = props;
 
   const {
     connectors: { connect, drag },
@@ -187,6 +190,7 @@ export const ContactSection = (props: ContactSectionProps) => {
           )}
         </div>
       </div>
+      {children}
     </div>
   );
 };
@@ -372,7 +376,12 @@ export const ContactSectionSettings = () => {
 
 ContactSection.craft = {
   displayName: 'Contact Section',
+  isCanvas: true,
   props: defaultProps,
+  rules: {
+    canDrag: () => true,
+    canDrop: () => true,
+  },
   related: {
     settings: ContactSectionSettings,
   },

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useNode } from '@craftjs/core';
+import { useTranslations } from 'next-intl';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
@@ -25,6 +26,7 @@ interface TeamSectionProps {
   titleColor?: string;
   textColor?: string;
   accentColor?: string;
+  children?: React.ReactNode;
 }
 
 const defaultProps: TeamSectionProps = {
@@ -74,6 +76,8 @@ export const TeamSection = (props: TeamSectionProps) => {
     textColor,
     accentColor,
   } = props;
+
+  const { children } = props;
 
   const {
     connectors: { connect, drag },
@@ -163,19 +167,26 @@ export const TeamSection = (props: TeamSectionProps) => {
           ))}
         </div>
       </div>
+      {children}
     </div>
   );
 };
 
 TeamSection.craft = {
   displayName: 'Team Section',
+  isCanvas: true,
   props: defaultProps,
+  rules: {
+    canDrag: () => true,
+    canDrop: () => true,
+  },
   related: {
     settings: TeamSectionSettings,
   },
 };
 
 export function TeamSectionSettings() {
+  const t = useTranslations('adminSettings.pageBuilder');
   const {
     actions: { setProp },
     props,
@@ -183,10 +194,21 @@ export function TeamSectionSettings() {
     props: node.data?.props as TeamSectionProps,
   }));
 
+  const addTeamMember = () => {
+    setProp((props: TeamSectionProps) => {
+      if (!props.teamMembers) props.teamMembers = [];
+      props.teamMembers.push({
+        name: 'New Member',
+        role: 'Role',
+        bio: 'Bio',
+      });
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div>
-        <Label>Title</Label>
+        <Label>{t('settings.title')}</Label>
         <Input
           value={props.title || ''}
           onChange={(e) => setProp((props: TeamSectionProps) => (props.title = e.target.value))}
@@ -194,7 +216,7 @@ export function TeamSectionSettings() {
       </div>
 
       <div>
-        <Label>Subtitle</Label>
+        <Label>{t('settings.subtitle')}</Label>
         <Input
           value={props.subtitle || ''}
           onChange={(e) => setProp((props: TeamSectionProps) => (props.subtitle = e.target.value))}
@@ -202,7 +224,7 @@ export function TeamSectionSettings() {
       </div>
 
       <div>
-        <Label>Description</Label>
+        <Label>{t('settings.description')}</Label>
         <Textarea
           value={props.description || ''}
           onChange={(e) => setProp((props: TeamSectionProps) => (props.description = e.target.value))}
@@ -210,7 +232,7 @@ export function TeamSectionSettings() {
       </div>
 
       <div>
-        <Label>Background Color</Label>
+        <Label>{t('settings.backgroundColor')}</Label>
         <Input
           type="color"
           value={props.backgroundColor || '#ffffff'}
@@ -219,7 +241,7 @@ export function TeamSectionSettings() {
       </div>
 
       <div>
-        <Label>Title Color</Label>
+        <Label>{t('settings.titleColor')}</Label>
         <Input
           type="color"
           value={props.titleColor || '#3E442B'}
@@ -228,7 +250,7 @@ export function TeamSectionSettings() {
       </div>
 
       <div>
-        <Label>Accent Color</Label>
+        <Label>{t('settings.accentColor')}</Label>
         <Input
           type="color"
           value={props.accentColor || '#781D32'}
@@ -237,11 +259,19 @@ export function TeamSectionSettings() {
       </div>
 
       <div className="pt-4 border-t">
-        <Label className="mb-3 block">Team Members</Label>
+        <div className="flex justify-between items-center mb-3">
+          <Label>{t('labels.items', { count: props.teamMembers?.length || 0 }) || 'Team Members'}</Label>
+          <button
+            onClick={addTeamMember}
+            className="text-sm px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            {t('actions.addMember') || 'Add Member'}
+          </button>
+        </div>
         {props.teamMembers?.map((member, index) => (
           <div key={index} className="mb-4 p-4 border rounded space-y-2">
             <div>
-              <Label>Name {index + 1}</Label>
+              <Label>{t('teamSection.name')} {index + 1}</Label>
               <Input
                 value={member.name}
                 onChange={(e) =>
@@ -254,7 +284,7 @@ export function TeamSectionSettings() {
               />
             </div>
             <div>
-              <Label>Role</Label>
+              <Label>{t('teamSection.role')}</Label>
               <Input
                 value={member.role}
                 onChange={(e) =>
@@ -267,7 +297,7 @@ export function TeamSectionSettings() {
               />
             </div>
             <div>
-              <Label>Bio</Label>
+              <Label>{t('teamSection.bio')}</Label>
               <Textarea
                 value={member.bio}
                 onChange={(e) =>
@@ -280,7 +310,7 @@ export function TeamSectionSettings() {
               />
             </div>
             <div>
-              <Label>Email</Label>
+              <Label>{t('teamSection.email')}</Label>
               <Input
                 value={member.email || ''}
                 onChange={(e) =>

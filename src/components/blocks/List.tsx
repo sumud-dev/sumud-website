@@ -36,7 +36,7 @@ export const List = ({
   const Component = ordered ? 'ol' : 'ul';
 
   return (
-    <div ref={(ref) => { if (ref) connect(drag(ref)); }} className="mb-4">
+    <div ref={(ref) => { if (ref) connect(drag(ref)); }} className="mx-auto">
       <Component
         style={{ listStyleType: listStyleMap[style] }}
         className="space-y-2 pl-6"

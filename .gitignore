@@ -49,3 +49,6 @@ next-env.d.ts
 /usage-of-campagins-schema-actions
 backup.sql
 /scripts
+/data
+.github/
+.github/instructions/ADMIN-PANEL-RULES.instructions.md

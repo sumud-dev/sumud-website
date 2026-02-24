@@ -22,6 +22,7 @@ interface TimelineSectionProps {
   textColor?: string;
   accentColor?: string;
   lineColor?: string;
+  children?: React.ReactNode;
 }
 
 const defaultProps: TimelineSectionProps = {
@@ -77,6 +78,8 @@ export const TimelineSection = (props: TimelineSectionProps) => {
     accentColor,
     lineColor,
   } = props;
+
+  const { children } = props;
 
   const {
     connectors: { connect, drag },
@@ -148,13 +151,19 @@ export const TimelineSection = (props: TimelineSectionProps) => {
           </div>
         </div>
       </div>
+      {children}
     </div>
   );
 };
 
 TimelineSection.craft = {
   displayName: 'Timeline Section',
+  isCanvas: true,
   props: defaultProps,
+  rules: {
+    canDrag: () => true,
+    canDrop: () => true,
+  },
   related: {
     settings: TimelineSectionSettings,
   },

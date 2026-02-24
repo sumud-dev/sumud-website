@@ -17,6 +17,7 @@ interface AboutSectionProps {
   stats?: Array<{ label: string; value: string }>;
   titleColor?: string;
   textColor?: string;
+  children?: React.ReactNode;
 }
 
 const defaultProps: AboutSectionProps = {
@@ -45,6 +46,8 @@ export const AboutSection = (props: AboutSectionProps) => {
     titleColor,
     textColor,
   } = props;
+
+  const { children } = props;
 
   const {
     connectors: { connect, drag },
@@ -107,6 +110,7 @@ export const AboutSection = (props: AboutSectionProps) => {
           </div>
         </div>
       </div>
+      {children}
     </div>
   );
 };
@@ -255,7 +259,12 @@ export const AboutSectionSettings = () => {
 
 AboutSection.craft = {
   displayName: 'About Section',
+  isCanvas: true,
   props: defaultProps,
+  rules: {
+    canDrag: () => true,
+    canDrop: () => true,
+  },
   related: {
     settings: AboutSectionSettings,
   },

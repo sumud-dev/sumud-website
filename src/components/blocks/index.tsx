@@ -32,3 +32,5 @@ export { GallerySection } from './GallerySection';
 export { FAQSection } from './FAQSection';
 export { NewsletterSection } from './NewsletterSection';
 export { PartnersSection } from './PartnersSection';
+export { DonationSection } from './DonationSection';
+export { InfoListCard } from './InfoListCard';

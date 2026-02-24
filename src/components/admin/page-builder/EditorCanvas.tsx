@@ -11,7 +11,7 @@ import {
   CTABlock, HeroSection, AboutSection, ContactSection, 
   FeaturesSection, StatsSection, TestimonialsSection, TeamSection,
   TimelineSection, PricingSection, GallerySection, FAQSection,
-  NewsletterSection as NewsletterBlock, PartnersSection
+  NewsletterSection as NewsletterBlock, PartnersSection, DonationSection, InfoListCard
 } from '@/src/components/blocks';
 import { 
   HeritageHero, NewsSection, EventsSection, 
@@ -70,6 +70,8 @@ export function EditorCanvas({ pageId, language, initialContent }: EditorCanvasP
           FAQSection,
           NewsletterBlock,
           PartnersSection,
+          DonationSection,
+          InfoListCard,
           
           // Page Builder Sections
           HeritageHero,

@@ -21,6 +21,7 @@ interface GallerySectionProps {
   textColor?: string;
   accentColor?: string;
   columns?: number;
+  children?: React.ReactNode;
 }
 
 const defaultProps: GallerySectionProps = {
@@ -81,6 +82,7 @@ export const GallerySection = (props: GallerySectionProps) => {
     connectors: { connect, drag },
   } = useNode();
 
+  const { children } = props;
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
 
   return (
@@ -173,13 +175,19 @@ export const GallerySection = (props: GallerySectionProps) => {
           </div>
         )}
       </div>
+      {children}
     </div>
   );
 };
 
 GallerySection.craft = {
   displayName: 'Gallery Section',
+  isCanvas: true,
   props: defaultProps,
+  rules: {
+    canDrag: () => true,
+    canDrop: () => true,
+  },
   related: {
     settings: GallerySectionSettings,
   },
