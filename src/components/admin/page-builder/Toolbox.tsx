@@ -7,7 +7,7 @@ import {
   Carousel, Table, List, TextArea, Badge, Alert, Separator, CardBlock,
   CTABlock, HeroSection, AboutSection, ContactSection, FeaturesSection, StatsSection,
   TestimonialsSection, TeamSection, TimelineSection, PricingSection, GallerySection,
-  FAQSection, NewsletterSection, PartnersSection
+  FAQSection, NewsletterSection, PartnersSection, DonationSection, InfoListCard
 } from '@/src/components/blocks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/src/components/ui/card';
 import { ScrollArea } from '@/src/components/ui/scroll-area';
@@ -17,7 +17,7 @@ import {
   Type, RectangleHorizontal, LayoutGrid, Columns, Rows3, AlignHorizontalJustifyStart, 
   ImageIcon, ChevronDown, Images, TableIcon, ListIcon, FileText, Tag, AlertCircle, 
   Minus, CreditCard, Megaphone, Sparkles, Users, Mail, Grid3x3, BarChart3, MessageSquareQuote,
-  UsersRound, Clock, DollarSign, ImagePlus, HelpCircle, Send, Handshake
+  UsersRound, Clock, DollarSign, ImagePlus, HelpCircle, Send, Handshake, Heart, ListChecks
 } from 'lucide-react';
 
 export function Toolbox() {
