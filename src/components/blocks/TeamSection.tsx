@@ -214,6 +214,14 @@ export function TeamSectionSettings() {
     });
   };
 
+  const removeTeamMember = (index: number) => {
+    setProp((props: TeamSectionProps) => {
+      if (props.teamMembers) {
+        props.teamMembers.splice(index, 1);
+      }
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div>

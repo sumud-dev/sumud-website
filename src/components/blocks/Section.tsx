@@ -1,30 +1,50 @@
 import { useNode } from '@craftjs/core';
 import { Children } from 'react';
+import { StyleSettings } from '@/src/components/admin/page-builder/StyleSettings';
 
-interface SectionProps extends StyleProps {
-  children: React.ReactNode;
+interface SectionProps {
+  backgroundColor?: string;
+  paddingTop?: number;
+  paddingBottom?: number;
+  paddingLeft?: number;
+  paddingRight?: number;
+  marginTop?: number;
+  marginBottom?: number;
+  marginLeft?: number;
+  marginRight?: number;
+  maxWidth?: string;
+  children?: React.ReactNode;
 }
 
 export const Section = ({ 
+  backgroundColor = '#f8f8f8',
+  paddingTop = 20,
+  paddingBottom = 20,
+  paddingLeft = 20,
+  paddingRight = 20,
+  marginTop = 0,
+  marginBottom = 16,
+  marginLeft = 0,
+  marginRight = 0,
+  maxWidth = '80rem',
   children,
-  ...styleProps
 }: Partial<SectionProps>) => {
   const {
     connectors: { connect, drag },
   } = useNode();
 
   const styles: React.CSSProperties = {
-    paddingTop: padding,
-    paddingBottom: padding,
-    paddingLeft: padding,
-    paddingRight: padding,
-    marginTop: 0,
-    marginBottom: 16,
-    marginLeft: 'auto',
-    marginRight: 'auto',
+    paddingTop,
+    paddingBottom,
+    paddingLeft,
+    paddingRight,
+    marginTop,
+    marginBottom,
+    marginLeft: marginLeft === 0 ? 'auto' : marginLeft,
+    marginRight: marginRight === 0 ? 'auto' : marginRight,
     backgroundColor,
     minHeight: '100px',
-    maxWidth: '80rem',
+    maxWidth,
   };
 
   const showPlaceholder = Children.count(children) === 0;

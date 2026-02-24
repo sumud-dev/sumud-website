@@ -3,7 +3,7 @@
 import { useNode } from '@craftjs/core';
 import { Children, ReactNode } from 'react';
 
-interface InlineGroupProps extends StyleProps {
+interface InlineGroupProps {
   justifyContent: 'flex-start' | 'center' | 'flex-end' | 'space-between' | 'space-around';
   alignItems: 'flex-start' | 'center' | 'flex-end' | 'baseline';
   gap: number;
@@ -17,7 +17,6 @@ export const InlineGroup = ({
   gap = 8,
   wrap = true,
   children,
-  ...styleProps
 }: Partial<InlineGroupProps>) => {
   const {
     connectors: { connect, drag },
@@ -31,7 +30,6 @@ export const InlineGroup = ({
         if (ref) connect(drag(ref));
       }}
       style={{
-        ...styles,
         display: 'flex',
         flexDirection: 'row',
         justifyContent,
