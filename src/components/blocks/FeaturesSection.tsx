@@ -5,6 +5,7 @@ import { useNode } from '@craftjs/core';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
+import { CompactRichTextEditor } from '@/src/lib/tipTap-editor/CompactRichTextEditor';
 import { Heart, Users, BookOpen, Megaphone } from 'lucide-react';
 
 interface Feature {

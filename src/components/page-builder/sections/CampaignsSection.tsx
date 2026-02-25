@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useNode } from "@craftjs/core";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
-import { Textarea } from "@/src/components/ui/textarea";
+import { CompactRichTextEditor } from "@/src/lib/tipTap-editor/CompactRichTextEditor";
 import { motion } from "framer-motion";
 import { ArrowRight, Target } from "lucide-react";
 import { Card, CardContent } from "@/src/components/ui/card";
@@ -55,9 +55,10 @@ export const CampaignsSection = (props: CampaignsSectionProps) => {
             {title}
           </h2>
           {subtitle && (
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-4">
-              {subtitle}
-            </p>
+            <div 
+              className="text-xl text-gray-600 mx-auto mb-4 prose max-w-none"
+              dangerouslySetInnerHTML={{ __html: subtitle }}
+            />
           )}
           <div className="w-24 h-1 bg-[#781D32] mx-auto rounded-full" />
         </motion.div>
@@ -149,12 +150,12 @@ export const CampaignsSectionSettings = () => {
       </div>
       <div>
         <Label>Subtitle</Label>
-        <Textarea
-          value={subtitle}
-          onChange={(e) =>
-            setProp((props: CampaignsSectionProps) => (props.subtitle = e.target.value))
+        <CompactRichTextEditor
+          value={subtitle || ''}
+          onChange={(value) =>
+            setProp((props: CampaignsSectionProps) => (props.subtitle = value))
           }
-          rows={2}
+          placeholder="Enter subtitle with formatting"
         />
       </div>
       <div>

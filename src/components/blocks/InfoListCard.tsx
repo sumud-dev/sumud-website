@@ -9,6 +9,7 @@ import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
+import { CompactRichTextEditor } from '@/src/lib/tipTap-editor/CompactRichTextEditor';
 
 interface ListItem {
   text: string;
@@ -82,9 +83,10 @@ export const InfoListCard = (props: InfoListCardProps) => {
           </h3>
           
           {description && (
-            <p className="text-sm text-gray-600 mb-4">
-              {description}
-            </p>
+            <div 
+              className="text-sm text-gray-600 mb-4 prose prose-sm"
+              dangerouslySetInnerHTML={{ __html: description }}
+            />
           )}
           
           {items && items.length > 0 && (
@@ -153,10 +155,9 @@ export const InfoListCardSettings = () => {
 
       <div>
         <Label className="text-sm font-medium">Description (optional)</Label>
-        <Textarea
+        <CompactRichTextEditor
           value={props.description || ''}
-          onChange={(e) => setProp((p: InfoListCardProps) => (p.description = e.target.value))}
-          rows={2}
+          onChange={(value) => setProp((p: InfoListCardProps) => (p.description = value))}
         />
       </div>
 

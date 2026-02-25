@@ -5,7 +5,7 @@ import { useNode } from '@craftjs/core';
 import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+import { CompactRichTextEditor } from '@/src/lib/tipTap-editor/CompactRichTextEditor';
 import { Mail, ArrowRight } from 'lucide-react';
 
 interface NewsletterSectionProps {
@@ -75,9 +75,11 @@ export const NewsletterSection = (props: NewsletterSectionProps) => {
         {title}
       </h2>
       {description && (
-        <p className="text-lg mb-8" style={{ color: textColor, opacity: 0.9 }}>
-          {description}
-        </p>
+        <div 
+          className="text-lg mb-8 prose prose-lg" 
+          style={{ color: textColor, opacity: 0.9 }}
+          dangerouslySetInnerHTML={{ __html: description }}
+        />
       )}
       <form className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1 relative">
@@ -114,9 +116,11 @@ export const NewsletterSection = (props: NewsletterSectionProps) => {
           {title}
         </h2>
         {description && (
-          <p className="text-lg" style={{ color: textColor, opacity: 0.9 }}>
-            {description}
-          </p>
+          <div 
+            className="text-lg prose prose-lg" 
+            style={{ color: textColor, opacity: 0.9 }}
+            dangerouslySetInnerHTML={{ __html: description }}
+          />
         )}
       </div>
       <div>
@@ -160,9 +164,11 @@ export const NewsletterSection = (props: NewsletterSectionProps) => {
             {title}
           </h2>
           {description && (
-            <p className="text-lg" style={{ color: textColor, opacity: 0.9 }}>
-              {description}
-            </p>
+            <div 
+              className="text-lg prose prose-lg" 
+              style={{ color: textColor, opacity: 0.9 }}
+              dangerouslySetInnerHTML={{ __html: description }}
+            />
           )}
         </div>
         <form className="flex flex-col sm:flex-row gap-3">
@@ -246,9 +252,9 @@ export function NewsletterSectionSettings() {
 
       <div>
         <Label>Description</Label>
-        <Textarea
+        <CompactRichTextEditor
           value={props.description || ''}
-          onChange={(e) => setProp((props: NewsletterSectionProps) => (props.description = e.target.value))}
+          onChange={(value) => setProp((props: NewsletterSectionProps) => (props.description = value))}
         />
       </div>
 

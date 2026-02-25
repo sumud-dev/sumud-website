@@ -9,6 +9,17 @@ import { Textarea } from '@/src/components/ui/textarea';
 import { TemplateType } from '@/src/lib/types/editor';
 import { getTemplate } from '@/src/lib/tipTap-editor/templates/editor-templates';
 import { getTemplateDefaults } from '@/src/lib/tipTap-editor/templates/template-defaults';
+import { Plus, Trash2 } from 'lucide-react';
+
+interface AccordionItem {
+  title: string;
+  content: string;
+}
+
+interface FAQItem {
+  question: string;
+  answer: string;
+}
 
 interface TemplateEditorDialogProps {
   isOpen: boolean;
@@ -26,27 +37,82 @@ export const TemplateEditorDialog: React.FC<TemplateEditorDialogProps> = ({
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [backgroundColor, setBackgroundColor] = useState('#667eea');
   const [textColor, setTextColor] = useState('#ffffff');
+  const [accordionItems, setAccordionItems] = useState<AccordionItem[]>([]);
+  const [faqItems, setFaqItems] = useState<FAQItem[]>([]);
 
   // Reset form when template type changes
   useEffect(() => {
     if (templateType) {
-      setFormData(getDefaultValues(templateType));
+      const defaults = getDefaultValues(templateType);
+      setFormData(defaults);
+      
+      // Initialize accordion items
+      if (templateType === 'accordion') {
+        setAccordionItems([
+          { title: defaults.item1Title || 'Section One', content: defaults.item1Content || 'Content for the first section. Add your detailed information here.' },
+          { title: defaults.item2Title || 'Section Two', content: defaults.item2Content || 'Content for the second section. Add your detailed information here.' },
+          { title: defaults.item3Title || 'Section Three', content: defaults.item3Content || 'Content for the third section. Add your detailed information here.' },
+        ]);
+      }
+      
+      // Initialize FAQ items
+      if (templateType === 'faq') {
+        setFaqItems([
+          { question: defaults.question1 || 'How does it work?', answer: defaults.answer1 || "Our solution is designed to be intuitive and easy to use. Simply sign up and you're ready to go." },
+          { question: defaults.question2 || "What's included in the plan?", answer: defaults.answer2 || 'Each plan includes access to all core features, with higher tiers offering additional benefits.' },
+          { question: defaults.question3 || 'Can I cancel anytime?', answer: defaults.answer3 || 'Yes! You can cancel your subscription at any time with no hidden fees.' },
+        ]);
+      }
+      
       // Set default colors based on template type
-      const defaults = getTemplateColors(templateType);
-      setBackgroundColor(defaults.background);
-      setTextColor(defaults.text);
+      const colorDefaults = getTemplateColors(templateType);
+      setBackgroundColor(colorDefaults.background);
+      setTextColor(colorDefaults.text);
     }
   }, [templateType]);
 
   const handleSubmit = () => {
     if (!templateType) return;
-    const html = generateTemplateHTML(templateType, formData, backgroundColor, textColor);
+    const html = generateTemplateHTML(
+      templateType, 
+      formData, 
+      backgroundColor, 
+      textColor,
+      templateType === 'accordion' ? accordionItems : undefined,
+      templateType === 'faq' ? faqItems : undefined
+    );
     onInsert(html);
     onClose();
   };
 
   const updateField = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Accordion item management
+  const addAccordionItem = () => {
+    setAccordionItems(prev => [...prev, { title: `Section ${prev.length + 1}`, content: 'Add your content here.' }]);
+  };
+
+  const removeAccordionItem = (index: number) => {
+    setAccordionItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateAccordionItem = (index: number, field: 'title' | 'content', value: string) => {
+    setAccordionItems(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
+  };
+
+  // FAQ item management
+  const addFaqItem = () => {
+    setFaqItems(prev => [...prev, { question: `Question ${prev.length + 1}`, answer: 'Your answer here.' }]);
+  };
+
+  const removeFaqItem = (index: number) => {
+    setFaqItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateFaqItem = (index: number, field: 'question' | 'answer', value: string) => {
+    setFaqItems(prev => prev.map((item, i) => i === index ? { ...item, [field]: value } : item));
   };
 
   if (!templateType) return null;
@@ -105,7 +171,19 @@ export const TemplateEditorDialog: React.FC<TemplateEditorDialogProps> = ({
           </div>
 
           {/* Template-specific fields */}
-          {renderTemplateForm(templateType, formData, updateField)}
+          {renderTemplateForm(
+            templateType, 
+            formData, 
+            updateField,
+            accordionItems,
+            addAccordionItem,
+            removeAccordionItem,
+            updateAccordionItem,
+            faqItems,
+            addFaqItem,
+            removeFaqItem,
+            updateFaqItem
+          )}
         </div>
 
         <div className="flex justify-end gap-2">
@@ -125,7 +203,15 @@ export const TemplateEditorDialog: React.FC<TemplateEditorDialogProps> = ({
 function renderTemplateForm(
   type: TemplateType,
   data: Record<string, string>,
-  update: (field: string, value: string) => void
+  update: (field: string, value: string) => void,
+  accordionItems: AccordionItem[],
+  addAccordionItem: () => void,
+  removeAccordionItem: (index: number) => void,
+  updateAccordionItem: (index: number, field: 'title' | 'content', value: string) => void,
+  faqItems: FAQItem[],
+  addFaqItem: () => void,
+  removeFaqItem: (index: number) => void,
+  updateFaqItem: (index: number, field: 'question' | 'answer', value: string) => void
 ) {
   switch (type) {
     case 'hero':
@@ -173,65 +259,59 @@ function renderTemplateForm(
 
     case 'accordion':
       return (
-        <>
-          <div>
-            <Label htmlFor="item1Title">Item 1 Title</Label>
-            <Input
-              id="item1Title"
-              value={data.item1Title || ''}
-              onChange={(e) => update('item1Title', e.target.value)}
-              placeholder="Section One"
-            />
+        <div className="space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b">
+            <Label className="text-sm font-semibold">Accordion Items</Label>
+            <Button 
+              onClick={addAccordionItem} 
+              size="sm" 
+              variant="outline"
+              className="h-8 gap-1"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span className="text-xs">Add</span>
+            </Button>
           </div>
-          <div>
-            <Label htmlFor="item1Content">Item 1 Content</Label>
-            <Textarea
-              id="item1Content"
-              value={data.item1Content || ''}
-              onChange={(e) => update('item1Content', e.target.value)}
-              placeholder="Content for the first section..."
-              rows={2}
-            />
-          </div>
-          <div>
-            <Label htmlFor="item2Title">Item 2 Title</Label>
-            <Input
-              id="item2Title"
-              value={data.item2Title || ''}
-              onChange={(e) => update('item2Title', e.target.value)}
-              placeholder="Section Two"
-            />
-          </div>
-          <div>
-            <Label htmlFor="item2Content">Item 2 Content</Label>
-            <Textarea
-              id="item2Content"
-              value={data.item2Content || ''}
-              onChange={(e) => update('item2Content', e.target.value)}
-              placeholder="Content for the second section..."
-              rows={2}
-            />
-          </div>
-          <div>
-            <Label htmlFor="item3Title">Item 3 Title</Label>
-            <Input
-              id="item3Title"
-              value={data.item3Title || ''}
-              onChange={(e) => update('item3Title', e.target.value)}
-              placeholder="Section Three"
-            />
-          </div>
-          <div>
-            <Label htmlFor="item3Content">Item 3 Content</Label>
-            <Textarea
-              id="item3Content"
-              value={data.item3Content || ''}
-              onChange={(e) => update('item3Content', e.target.value)}
-              placeholder="Content for the third section..."
-              rows={2}
-            />
-          </div>
-        </>
+          
+          {accordionItems.map((item, index) => (
+            <div key={index} className="p-3 border rounded-lg bg-muted/30 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Item {index + 1}
+                </Label>
+                <Button
+                  onClick={() => removeAccordionItem(index)}
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <div>
+                <Label htmlFor={`accordion-title-${index}`} className="text-xs">Title</Label>
+                <Input
+                  id={`accordion-title-${index}`}
+                  value={item.title}
+                  onChange={(e) => updateAccordionItem(index, 'title', e.target.value)}
+                  placeholder="Section title"
+                  className="h-9 text-sm"
+                />
+              </div>
+              <div>
+                <Label htmlFor={`accordion-content-${index}`} className="text-xs">Content</Label>
+                <Textarea
+                  id={`accordion-content-${index}`}
+                  value={item.content}
+                  onChange={(e) => updateAccordionItem(index, 'content', e.target.value)}
+                  placeholder="Section content..."
+                  rows={2}
+                  className="text-sm resize-none"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
       );
 
     case 'card':
@@ -355,6 +435,76 @@ function renderTemplateForm(
         </>
       );
 
+    case 'faq':
+      return (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b">
+            <Label className="text-sm font-semibold">FAQ Items</Label>
+            <Button 
+              onClick={addFaqItem} 
+              size="sm" 
+              variant="outline"
+              className="h-8 gap-1"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span className="text-xs">Add</span>
+            </Button>
+          </div>
+          
+          {data.title !== undefined && (
+            <div>
+              <Label htmlFor="faq-title" className="text-xs">Section Title</Label>
+              <Input
+                id="faq-title"
+                value={data.title || ''}
+                onChange={(e) => update('title', e.target.value)}
+                placeholder="Frequently Asked Questions"
+                className="h-9 text-sm"
+              />
+            </div>
+          )}
+          
+          {faqItems.map((item, index) => (
+            <div key={index} className="p-3 border rounded-lg bg-muted/30 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-semibold text-muted-foreground">
+                  Q&A {index + 1}
+                </Label>
+                <Button
+                  onClick={() => removeFaqItem(index)}
+                  size="sm"
+                  variant="ghost"
+                  className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <div>
+                <Label htmlFor={`faq-question-${index}`} className="text-xs">Question</Label>
+                <Input
+                  id={`faq-question-${index}`}
+                  value={item.question}
+                  onChange={(e) => updateFaqItem(index, 'question', e.target.value)}
+                  placeholder="Your question here?"
+                  className="h-9 text-sm"
+                />
+              </div>
+              <div>
+                <Label htmlFor={`faq-answer-${index}`} className="text-xs">Answer</Label>
+                <Textarea
+                  id={`faq-answer-${index}`}
+                  value={item.answer}
+                  onChange={(e) => updateFaqItem(index, 'answer', e.target.value)}
+                  placeholder="Your answer here..."
+                  rows={2}
+                  className="text-sm resize-none"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+
     default:
       return renderGenericTemplateForm(type, data, update);
   }
@@ -373,6 +523,7 @@ function getTemplateColors(type: TemplateType): { background: string; text: stri
     card: { background: '#ffffff', text: '#111827' },
     testimonial: { background: '#f5f7fa', text: '#374151' },
     accordion: { background: '#ffffff', text: '#111827' },
+    faq: { background: '#ffffff', text: '#111827' },
     'callout-info': { background: '#3b82f6', text: '#ffffff' },
     'callout-warning': { background: '#f59e0b', text: '#ffffff' },
     'callout-success': { background: '#10b981', text: '#ffffff' },
@@ -416,13 +567,40 @@ function getTemplateName(type: TemplateType): string {
 }
 
 // Generate HTML with user input
-function generateTemplateHTML(type: TemplateType, data: Record<string, string>, bgColor: string, txtColor: string): string {
+function generateTemplateHTML(
+  type: TemplateType, 
+  data: Record<string, string>, 
+  bgColor: string, 
+  txtColor: string,
+  accordionItems?: AccordionItem[],
+  faqItems?: FAQItem[]
+): string {
   switch (type) {
     case 'hero':
       return `<div style="text-align:center;padding:80px 32px;margin:48px 0;background:${bgColor};border-radius:16px;color:${txtColor};box-shadow:0 10px 40px rgba(102,126,234,0.3)"><h1 style="font-size:3rem;font-weight:900;margin:0 0 20px 0;line-height:1.1;letter-spacing:-0.02em;color:${txtColor}">${data.title}</h1><p style="font-size:1.25rem;margin:0 0 32px 0;opacity:0.95;max-width:600px;margin-left:auto;margin-right:auto;color:${txtColor}">${data.description}</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><a href="#" style="display:inline-block;padding:14px 32px;background:#fff;color:${bgColor};text-decoration:none;border-radius:8px;font-weight:600;box-shadow:0 4px 6px rgba(0,0,0,0.1)">${data.primaryButton}</a><a href="#" style="display:inline-block;padding:14px 32px;background:rgba(255,255,255,0.2);color:${txtColor};text-decoration:none;border-radius:8px;font-weight:600;border:2px solid ${txtColor}">${data.secondaryButton}</a></div></div>`;
 
     case 'accordion':
-      return `<div style="max-width:800px;margin:32px auto"><details open style="padding:20px 24px;border-radius:10px;background:${bgColor};border:1px solid #e5e7eb;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all 0.2s"><summary style="font-size:1.0625rem;font-weight:600;color:${txtColor};cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between">${data.item1Title}</summary><div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(0,0,0,0.1)"><p style="margin:0;color:${txtColor};opacity:0.8;line-height:1.6">${data.item1Content}</p></div></details><details open style="padding:20px 24px;border-radius:10px;background:${bgColor};border:1px solid #e5e7eb;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all 0.2s"><summary style="font-size:1.0625rem;font-weight:600;color:${txtColor};cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between">${data.item2Title}</summary><div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(0,0,0,0.1)"><p style="margin:0;color:${txtColor};opacity:0.8;line-height:1.6">${data.item2Content}</p></div></details><details open style="padding:20px 24px;border-radius:10px;background:${bgColor};border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all 0.2s"><summary style="font-size:1.0625rem;font-weight:600;color:${txtColor};cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between">${data.item3Title}</summary><div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(0,0,0,0.1)"><p style="margin:0;color:${txtColor};opacity:0.8;line-height:1.6">${data.item3Content}</p></div></details></div>`;
+      if (!accordionItems || accordionItems.length === 0) {
+        return `<div style="max-width:800px;margin:32px auto;padding:20px;text-align:center;color:#6b7280;">No accordion items added</div>`;
+      }
+      const accordionHTML = accordionItems.map((item, index) => {
+        const isLast = index === accordionItems.length - 1;
+        const marginBottom = isLast ? '' : 'margin-bottom:12px;';
+        return `<details open style="padding:20px 24px;border-radius:10px;background:${bgColor};border:1px solid #e5e7eb;${marginBottom}box-shadow:0 1px 3px rgba(0,0,0,0.05);transition:all 0.2s"><summary style="font-size:1.0625rem;font-weight:600;color:${txtColor};cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between">${item.title}</summary><div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(0,0,0,0.1)"><p style="margin:0;color:${txtColor};opacity:0.8;line-height:1.6">${item.content}</p></div></details>`;
+      }).join('');
+      return `<div style="max-width:800px;margin:32px auto">${accordionHTML}</div>`;
+
+    case 'faq':
+      if (!faqItems || faqItems.length === 0) {
+        return `<div style="max-width:800px;margin:48px auto;padding:20px;text-align:center;color:#6b7280;">No FAQ items added</div>`;
+      }
+      const titleHTML = data.title ? `<h2 style="font-size:2.25rem;font-weight:800;margin:0 0 40px 0;color:${txtColor};text-align:center">${data.title}</h2>` : '';
+      const faqHTML = faqItems.map((item, index) => {
+        const isLast = index === faqItems.length - 1;
+        const marginBottom = isLast ? '' : 'margin-bottom:16px;';
+        return `<details style="padding:24px;border-radius:12px;background:${bgColor};border:1px solid #e5e7eb;${marginBottom}"><summary style="font-size:1.125rem;font-weight:600;color:${txtColor};cursor:pointer;list-style:none">${item.question}</summary><p style="margin:16px 0 0 0;color:${txtColor};opacity:0.8;line-height:1.6">${item.answer}</p></details>`;
+      }).join('');
+      return `<div style="max-width:800px;margin:48px auto">${titleHTML}${faqHTML}</div>`;
 
     case 'card':
       return `<div style="border:1px solid #e5e7eb;border-radius:12px;padding:32px;margin:24px 0;background:${bgColor};box-shadow:0 1px 3px rgba(0,0,0,0.1)"><h3 style="font-size:1.5rem;font-weight:700;margin:0 0 12px 0;color:${txtColor}">${data.title}</h3><p style="color:${txtColor};opacity:0.8;margin:0 0 20px 0;line-height:1.6">${data.content}</p><div style="padding-top:16px;border-top:1px solid rgba(0,0,0,0.1)"><a href="#" style="color:${txtColor};text-decoration:none;font-weight:500;font-size:0.875rem">${data.linkText} →</a></div></div>`;

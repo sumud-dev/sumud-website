@@ -5,6 +5,7 @@ import { useNode } from '@craftjs/core';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
+import { CompactRichTextEditor } from '@/src/lib/tipTap-editor/CompactRichTextEditor';
 import { ImageUpload } from '@/src/components/ui/image-upload';
 import { Separator } from '@/src/components/ui/separator';
 
@@ -93,11 +94,13 @@ export const AboutSection = (props: AboutSectionProps) => {
           </div>
 
           {/* Text Content - Wraps around image */}
-          <div className="text-lg leading-relaxed space-y-4" style={{ color: textColor }}>
-            {description?.split('\n\n').map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))}
-          </div>
+          {description && (
+            <div 
+              className="text-lg leading-relaxed prose prose-lg" 
+              style={{ color: textColor }}
+              dangerouslySetInnerHTML={{ __html: description }}
+            />
+          )}
 
           {/* Clear float */}
           <div className="clear-both" />
@@ -167,11 +170,9 @@ export const AboutSectionSettings = () => {
 
       <div>
         <Label>Description</Label>
-        <Textarea
-          value={description}
-          onChange={(e) => setProp((props: AboutSectionProps) => (props.description = e.target.value))}
-          rows={6}
-          placeholder="Use double line breaks for paragraphs"
+        <CompactRichTextEditor
+          value={description || ''}
+          onChange={(value) => setProp((props: AboutSectionProps) => (props.description = value))}
         />
       </div>
 

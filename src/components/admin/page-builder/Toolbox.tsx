@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Element, useEditor } from '@craftjs/core';
 import { useTranslations } from 'next-intl';
 import { 
@@ -17,12 +18,18 @@ import {
   Type, RectangleHorizontal, LayoutGrid, Columns, Rows3, AlignHorizontalJustifyStart, 
   ImageIcon, ChevronDown, Images, TableIcon, ListIcon, FileText, Tag, AlertCircle, 
   Minus, CreditCard, Megaphone, Sparkles, Users, Mail, Grid3x3, BarChart3, MessageSquareQuote,
-  UsersRound, Clock, DollarSign, ImagePlus, HelpCircle, Send, Handshake, Heart, ListChecks
+  UsersRound, Clock, DollarSign, ImagePlus, HelpCircle, Send, Handshake, Heart, ListChecks,
+  ChevronRight, ChevronLeft, Blocks
 } from 'lucide-react';
 
-export function Toolbox() {
+interface ToolboxProps {
+  defaultCollapsed?: boolean;
+}
+
+export function Toolbox({ defaultCollapsed = false }: ToolboxProps) {
   const { connectors } = useEditor();
   const t = useTranslations('adminSettings.pageBuilder');
+  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
   const basicBlocks = [
     { name: t('blockNames.text'), component: Text, icon: Type, key: 'text', description: t('blockDescriptions.text') },
@@ -91,13 +98,46 @@ export function Toolbox() {
     );
   };
 
+  // Collapsed view
+  if (isCollapsed) {
+    return (
+      <div className="w-12 bg-background border-r flex flex-col items-center py-4">
+        <UIButton
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsCollapsed(false)}
+          className="h-8 w-8"
+          title={t('toolbox.expand') || 'Expand Toolbox'}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </UIButton>
+        <div className="mt-4">
+          <Blocks className="h-5 w-5 text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-72 bg-background border-r">
       <ScrollArea className="h-full">
         <Card className="border-0 rounded-none">
           <CardHeader className="border-b">
-            <CardTitle className="text-lg">{t('toolbox.title')}</CardTitle>
-            <CardDescription>{t('toolbox.description')}</CardDescription>
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-lg">{t('toolbox.title')}</CardTitle>
+                <CardDescription>{t('toolbox.description')}</CardDescription>
+              </div>
+              <UIButton
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsCollapsed(true)}
+                className="h-8 w-8 shrink-0"
+                title={t('toolbox.collapse') || 'Collapse Toolbox'}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </UIButton>
+            </div>
           </CardHeader>
           <CardContent className="p-4 space-y-6">
             {/* Page Templates Section */}

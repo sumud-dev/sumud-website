@@ -5,7 +5,7 @@ import { useNode } from '@craftjs/core';
 import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+import { CompactRichTextEditor } from '@/src/lib/tipTap-editor/CompactRichTextEditor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
 import { ImageUpload } from '@/src/components/ui/image-upload';
 import { Separator } from '@/src/components/ui/separator';
@@ -102,9 +102,11 @@ export const HeroSection = (props: HeroSectionProps) => {
         </h1>
         
         {description && (
-          <p className="text-xl mb-8 max-w-3xl mx-auto" style={{ color: textColor, opacity: 0.9 }}>
-            {description}
-          </p>
+          <div 
+            className="text-xl mb-8 max-w-3xl mx-auto prose prose-lg prose-invert" 
+            style={{ color: textColor, opacity: 0.9 }}
+            dangerouslySetInnerHTML={{ __html: description }}
+          />
         )}
         
         <div className={`flex flex-wrap gap-4 ${textAlign === 'center' ? 'justify-center' : 'justify-start'}`}>
@@ -222,10 +224,9 @@ export const HeroSectionSettings = () => {
 
       <div>
         <Label>Description</Label>
-        <Textarea
-          value={description}
-          onChange={(e) => setProp((props: HeroSectionProps) => (props.description = e.target.value))}
-          rows={3}
+        <CompactRichTextEditor
+          value={description || ''}
+          onChange={(value) => setProp((props: HeroSectionProps) => (props.description = value))}
         />
       </div>
 

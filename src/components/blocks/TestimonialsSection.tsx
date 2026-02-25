@@ -4,7 +4,7 @@ import React from 'react';
 import { useNode } from '@craftjs/core';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+import { CompactRichTextEditor } from '@/src/lib/tipTap-editor/CompactRichTextEditor';
 import { Quote } from 'lucide-react';
 
 interface Testimonial {
@@ -22,6 +22,7 @@ interface TestimonialsSectionProps {
   titleColor?: string;
   textColor?: string;
   accentColor?: string;
+  maxQuoteLines?: number;
   children?: React.ReactNode;
 }
 
@@ -49,6 +50,7 @@ const defaultProps: TestimonialsSectionProps = {
   titleColor: '#3E442B',
   textColor: '#4B5563',
   accentColor: '#781D32',
+  maxQuoteLines: 4,
 };
 
 export const TestimonialsSection = (props: TestimonialsSectionProps) => {
@@ -60,6 +62,7 @@ export const TestimonialsSection = (props: TestimonialsSectionProps) => {
     titleColor,
     textColor,
     accentColor,
+    maxQuoteLines = 4,
   } = props;
 
   const { children } = props;
@@ -92,7 +95,7 @@ export const TestimonialsSection = (props: TestimonialsSectionProps) => {
           {testimonials?.map((testimonial, index) => (
             <div 
               key={index}
-              className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow relative flex flex-col h-[320px]"
+              className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow relative flex flex-col h-80"
             >
               <Quote 
                 className="absolute top-6 right-6 opacity-10 shrink-0" 
@@ -101,10 +104,18 @@ export const TestimonialsSection = (props: TestimonialsSectionProps) => {
               />
               
               <div className="relative z-10 flex flex-col h-full">
-                {/* Quote - Fixed height with line clamp */}
-                <p className="text-lg mb-1 leading-relaxed line-clamp-6 flex-1" style={{ color: textColor }}>
-                  &quot;{testimonial.quote}&quot;
-                </p>
+                {/* Quote - Dynamic line clamp */}
+                <div 
+                  className="text-lg mb-1 leading-relaxed flex-1 prose prose-sm" 
+                  style={{ 
+                    color: textColor,
+                    display: '-webkit-box',
+                    WebkitLineClamp: maxQuoteLines,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                  }}
+                  dangerouslySetInnerHTML={{ __html: `"${testimonial.quote}"` }}
+                />
                 
                 {/* Author info - Fixed position at bottom */}
                 <div className="flex items-center gap-4 mt-auto pt-2 shrink-0">
@@ -199,18 +210,31 @@ export function TestimonialsSectionSettings() {
         />
       </div>
 
+      <div>
+        <Label>Max Quote Lines</Label>
+        <Input
+          type="number"
+          min={2}
+          max={10}
+          value={props.maxQuoteLines || 4}
+          onChange={(e) => setProp((props: TestimonialsSectionProps) => (props.maxQuoteLines = parseInt(e.target.value) || 4))}
+          className="w-24"
+        />
+        <p className="text-xs text-muted-foreground mt-1">Number of lines before truncating quote text</p>
+      </div>
+
       <div className="pt-4 border-t">
         <Label className="mb-3 block">Testimonials</Label>
         {props.testimonials?.map((testimonial, index) => (
           <div key={index} className="mb-4 p-4 border rounded space-y-2">
             <div>
               <Label>Quote {index + 1}</Label>
-              <Textarea
-                value={testimonial.quote}
-                onChange={(e) =>
+              <CompactRichTextEditor
+                value={testimonial.quote || ''}
+                onChange={(value) =>
                   setProp((props: TestimonialsSectionProps) => {
                     if (props.testimonials) {
-                      props.testimonials[index].quote = e.target.value;
+                      props.testimonials[index].quote = value;
                     }
                   })
                 }

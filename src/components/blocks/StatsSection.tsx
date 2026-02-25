@@ -5,6 +5,7 @@ import { useNode } from '@craftjs/core';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
+import { CompactRichTextEditor } from '@/src/lib/tipTap-editor/CompactRichTextEditor';
 import { TrendingUp } from 'lucide-react';
 
 interface Stat {
@@ -82,9 +83,11 @@ export const StatsSection = (props: StatsSectionProps) => {
             {title}
           </h2>
           {description && (
-            <p className="text-lg" style={{ color: textColor }}>
-              {description}
-            </p>
+            <div 
+              className="text-lg prose prose-lg" 
+              style={{ color: textColor }}
+              dangerouslySetInnerHTML={{ __html: description }}
+            />
           )}
         </div>
 
@@ -171,10 +174,9 @@ export const StatsSectionSettings = () => {
 
       <div>
         <Label>Description</Label>
-        <Textarea
-          value={description}
-          onChange={(e) => setProp((props: StatsSectionProps) => (props.description = e.target.value))}
-          rows={3}
+        <CompactRichTextEditor
+          value={description || ''}
+          onChange={(value) => setProp((props: StatsSectionProps) => (props.description = value))}
         />
       </div>
 

@@ -84,7 +84,7 @@ export default function EventDetailPage() {
   const locale = useLocale();
   const t = useTranslations("eventsDetail");
 
-  const { data: eventResponse, isLoading, error } = useEventBySlug(slug);
+  const { data: eventResponse, isLoading, error } = useEventBySlug(slug, locale);
   
   // Fetch page builder content for event detail labels
   const { data: pageData } = usePage("event-detail");

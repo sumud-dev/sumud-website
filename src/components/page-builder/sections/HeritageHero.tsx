@@ -9,7 +9,7 @@ import { Button } from "@/src/components/ui/button";
 import { useNode } from "@craftjs/core";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
-import { Textarea } from "@/src/components/ui/textarea";
+import { CompactRichTextEditor } from "@/src/lib/tipTap-editor/CompactRichTextEditor";
 import { ImageUpload } from "@/src/components/ui/image-upload";
 import { Separator } from "@/src/components/ui/separator";
 
@@ -145,12 +145,11 @@ export const HeritageHero = (props: HeritageHeroProps) => {
             </motion.div>
 
             {/* Description paragraph */}
-            <motion.p
-              className="text-base md:text-lg text-gray-700 leading-relaxed max-w-2xl mx-auto lg:mx-0"
+            <motion.div
+              className="text-base md:text-lg text-gray-700 leading-relaxed mx-auto lg:mx-0 prose max-w-none"
               variants={fadeInUp}
-            >
-              {description}
-            </motion.p>
+              dangerouslySetInnerHTML={{ __html: description || '' }}
+            />
 
             {/* CTA Buttons */}
             <motion.div
@@ -271,12 +270,12 @@ export const HeritageHeroSettings = () => {
 
       <div>
         <Label>Description</Label>
-        <Textarea
-          value={description}
-          onChange={(e) =>
-            setProp((props: HeritageHeroProps) => (props.description = e.target.value))
+        <CompactRichTextEditor
+          value={description || ''}
+          onChange={(value) =>
+            setProp((props: HeritageHeroProps) => (props.description = value))
           }
-          rows={4}
+          placeholder="Enter description with formatting"
         />
       </div>
 

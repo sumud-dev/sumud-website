@@ -2,7 +2,20 @@
 
 This file defines strict conventions and architecture rules for this project. It must be followed by all contributors and AI copilots to ensure code clarity, maintainability, and professionalism.
 
-- **AI Copilots (MUST):** Ensure consistency with the rest of the codebase and introduce only minimal changes without regression.
+- **AI Copilots (MUST):** Ensure consistency with the rest of the codebase and introduce only minimal changes without regression, over-engineering, or unnecessary files. just make it simple. Be configurable via props
+  - Be visually compact and optimized for user experience
+  - Use icon and short label dropdowns when listing options
+- All inserted elements should:
+  - Conform to the builder' structure
+  - Be previewable and vertically added
+  - Use a consistent data shape and rendering structure
+
+
+---
+
+
+## Code Architecture Rules
+ 
 I want to go one by one, review the following code: ensure that it's empty of duplicating, coupling. it should follow composability, dry, decoupling and clean, sop. the business logic should be separated from the db and actions. don't over-engineering and add unnecessary files.
 Ensure the performance optimizations. please show only the parts I need to change with line number and don't generate all the code or try to save the usage. use the state management. Ensure consistency with the rest of the codebase and introduce only minimal changes.
 

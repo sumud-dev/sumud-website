@@ -5,7 +5,7 @@ import { useNode } from '@craftjs/core';
 import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+import { CompactRichTextEditor } from '@/src/lib/tipTap-editor/CompactRichTextEditor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/src/components/ui/select';
 
 interface CTABlockProps {
@@ -77,7 +77,13 @@ export const CTABlock = (props: CTABlockProps) => {
     >
       <div className="max-w-3xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: textColor }}>{title}</h2>
-        <p className="text-lg mb-8" style={{ color: textColor, opacity: 0.9 }}>{description}</p>
+        {description && (
+          <div 
+            className="text-lg mb-8 prose prose-lg" 
+            style={{ color: textColor, opacity: 0.9 }}
+            dangerouslySetInnerHTML={{ __html: description }}
+          />
+        )}
         <div className="flex flex-wrap gap-4 justify-center">
           {primaryButtonText && (
             <Button 
@@ -122,7 +128,13 @@ export const CTABlock = (props: CTABlockProps) => {
       <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 items-center">
         <div style={{ color: textColor }}>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">{title}</h2>
-          <p className="text-lg" style={{ opacity: 0.9 }}>{description}</p>
+          {description && (
+            <div 
+              className="text-lg prose prose-lg" 
+              style={{ opacity: 0.9 }}
+              dangerouslySetInnerHTML={{ __html: description }}
+            />
+          )}
         </div>
         <div className="flex flex-wrap gap-4 md:justify-end">
           {primaryButtonText && (
@@ -168,7 +180,13 @@ export const CTABlock = (props: CTABlockProps) => {
       <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex-1" style={{ color: textColor }}>
           <h3 className="text-2xl font-bold mb-2">{title}</h3>
-          <p style={{ opacity: 0.9 }}>{description}</p>
+          {description && (
+            <div 
+              className="prose" 
+              style={{ opacity: 0.9 }}
+              dangerouslySetInnerHTML={{ __html: description }}
+            />
+          )}
         </div>
         <div className="flex gap-4 shrink-0">
           {primaryButtonText && (
@@ -280,10 +298,9 @@ export const CTABlockSettings = () => {
 
       <div>
         <Label>Description</Label>
-        <Textarea
-          value={description}
-          onChange={(e) => setProp((props: CTABlockProps) => (props.description = e.target.value))}
-          rows={3}
+        <CompactRichTextEditor
+          value={description || ''}
+          onChange={(value) => setProp((props: CTABlockProps) => (props.description = value))}
         />
       </div>
 
