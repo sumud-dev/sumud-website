@@ -6,8 +6,10 @@ import { useNode } from '@craftjs/core';
 import { useTranslations } from 'next-intl';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { Checkbox } from '@/src/components/ui/checkbox';
+import { CompactRichTextEditor } from '@/src/lib/tipTap-editor/CompactRichTextEditor';
+import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { Button } from '@/src/components/ui/button';
 
 interface FAQItem {
   question: string;
@@ -22,42 +24,50 @@ interface FAQSectionProps {
   titleColor?: string;
   textColor?: string;
   accentColor?: string;
+  showContactCTA?: boolean;
+  contactCTAQuestionText?: string;
+  contactCTALinkText?: string;
+  contactCTALink?: string;
   children?: React.ReactNode;
 }
 
 const defaultProps: FAQSectionProps = {
   title: 'Frequently Asked Questions',
   subtitle: 'Got Questions? We Have Answers',
+  contactCTAQuestionText: 'Still have questions?',
+  contactCTALinkText: 'Contact us',
+  contactCTALink: '/contact',
   faqs: [
     {
       question: 'What is Sumud - Finnish Palestine Network?',
-      answer: 'Sumud is a Finnish solidarity organization dedicated to supporting Palestinian rights through education, advocacy, and community building. We work to raise awareness about Palestinian history, culture, and the ongoing struggle for justice and self-determination.',
+      answer: '<p>Sumud is a Finnish solidarity organization dedicated to supporting Palestinian rights through <strong>education</strong>, <strong>advocacy</strong>, and <strong>community building</strong>. We work to raise awareness about Palestinian history, culture, and the ongoing struggle for justice and self-determination.</p>',
     },
     {
       question: 'How can I get involved with Sumud?',
-      answer: 'There are many ways to get involved! You can become a member, volunteer for our events, participate in advocacy campaigns, attend our educational programs, or support us financially. Visit our "Get Involved" page for more information.',
+      answer: '<p>There are many ways to get involved!</p><ul><li>Become a member</li><li>Volunteer for our events</li><li>Participate in advocacy campaigns</li><li>Attend our educational programs</li><li>Support us financially</li></ul><p>Visit our <a href="/get-involved">Get Involved page</a> for more information.</p>',
     },
     {
       question: 'Does Sumud organize cultural events?',
-      answer: 'Yes! We regularly organize cultural events including film screenings, art exhibitions, music performances, and traditional Palestinian celebrations. These events help share Palestinian culture with the Finnish community and build cross-cultural understanding.',
+      answer: '<p>Yes! We regularly organize cultural events including:</p><ul><li>Film screenings</li><li>Art exhibitions</li><li>Music performances</li><li>Traditional Palestinian celebrations</li></ul><p>These events help share Palestinian culture with the Finnish community and build cross-cultural understanding.</p>',
     },
     {
       question: 'How does Sumud support Palestinians?',
-      answer: 'We support Palestinians through various initiatives: advocacy for policy changes, educational programs to raise awareness, cultural events that celebrate Palestinian heritage, partnerships with Palestinian organizations, and solidarity campaigns that amplify Palestinian voices.',
+      answer: '<p>We support Palestinians through various initiatives:</p><ul><li><strong>Advocacy</strong> for policy changes</li><li><strong>Educational programs</strong> to raise awareness</li><li><strong>Cultural events</strong> that celebrate Palestinian heritage</li><li><strong>Partnerships</strong> with Palestinian organizations</li><li><strong>Solidarity campaigns</strong> that amplify Palestinian voices</li></ul>',
     },
     {
       question: 'Is Sumud affiliated with any political party?',
-      answer: 'No, Sumud is an independent non-partisan organization. While we engage in political advocacy for Palestinian rights, we are not affiliated with any political party in Finland or elsewhere. Our focus is on human rights and international law.',
+      answer: '<p><strong>No</strong>, Sumud is an independent non-partisan organization. While we engage in political advocacy for Palestinian rights, we are not affiliated with any political party in Finland or elsewhere. Our focus is on <em>human rights</em> and <em>international law</em>.</p>',
     },
     {
       question: 'Can I volunteer if I\'m not Palestinian or Finnish?',
-      answer: 'Absolutely! Sumud welcomes volunteers from all backgrounds who share our commitment to justice and human rights. We believe solidarity transcends national and ethnic boundaries.',
+      answer: '<p><strong>Absolutely!</strong> Sumud welcomes volunteers from all backgrounds who share our commitment to justice and human rights. We believe solidarity transcends national and ethnic boundaries.</p>',
     },
   ],
   backgroundColor: '#F4F3F0',
   titleColor: '#3E442B',
   textColor: '#4B5563',
   accentColor: '#781D32',
+  showContactCTA: true,
 };
 
 export const FAQSection = (props: FAQSectionProps) => {
@@ -69,6 +79,10 @@ export const FAQSection = (props: FAQSectionProps) => {
     titleColor,
     textColor,
     accentColor,
+    showContactCTA,
+    contactCTAQuestionText,
+    contactCTALinkText,
+    contactCTALink,
   } = props;
 
   const {
@@ -128,7 +142,10 @@ export const FAQSection = (props: FAQSectionProps) => {
                     className="px-6 pb-6 pt-0"
                     style={{ color: textColor }}
                   >
-                    <p className="leading-relaxed">{faq.answer}</p>
+                    <div 
+                      className="leading-relaxed prose prose-sm max-w-none [&>p]:my-2 [&>p]:min-h-[1.5em] [&>p:empty]:min-h-[1.5em] [&_p:has(br:only-child)]:min-h-[1.5em]"
+                      dangerouslySetInnerHTML={{ __html: faq.answer }}
+                    />
                   </div>
                 )}
               </div>
@@ -137,18 +154,20 @@ export const FAQSection = (props: FAQSectionProps) => {
         </div>
 
         {/* Contact CTA */}
-        <div className="mt-12 text-center">
-          <p className="text-lg" style={{ color: textColor }}>
-            {t('faq.stillHaveQuestions')}{' '}
-            <Link 
-              href="/contact" 
-              className="font-bold hover:underline"
-              style={{ color: accentColor }}
-            >
-              {t('faq.contactUs')}
-            </Link>
-          </p>
-        </div>
+        {showContactCTA && (
+          <div className="mt-12 text-center">
+            <p className="text-lg" style={{ color: textColor }}>
+              {contactCTAQuestionText || t('faq.stillHaveQuestions')}{' '}
+              <Link 
+                href={contactCTALink || '/contact'}
+                className="font-bold hover:underline"
+                style={{ color: accentColor }}
+              >
+                {contactCTALinkText || t('faq.contactUs')}
+              </Link>
+            </p>
+          </div>
+        )}
       </div>
       {children}
     </div>
@@ -242,12 +261,74 @@ export function FAQSectionSettings() {
         />
       </div>
 
+      <div className="flex items-center justify-between">
+        <div className="space-y-0.5">
+          <Label>{t('faqSection.showContactCTA') || 'Show Contact Link'}</Label>
+          <p className="text-xs text-muted-foreground">
+            {t('faqSection.showContactCTADescription') || 'Display "Still have questions? Contact us" at the bottom'}
+          </p>
+        </div>
+        <Checkbox
+          checked={props.showContactCTA ?? true}
+          onCheckedChange={(checked) => setProp((props: FAQSectionProps) => (props.showContactCTA = checked as boolean))}
+        />
+      </div>
+
+      {props.showContactCTA && (
+        <>
+          <div>
+            <Label>{t('faqSection.contactQuestionText') || 'Contact Question Text'}</Label>
+            <Input
+              value={props.contactCTAQuestionText || ''}
+              onChange={(e) => setProp((props: FAQSectionProps) => (props.contactCTAQuestionText = e.target.value))}
+              placeholder={t('faq.stillHaveQuestions') || 'Still have questions?'}
+            />
+          </div>
+
+          <div>
+            <Label>{t('faqSection.contactLinkText') || 'Contact Link Text'}</Label>
+            <Input
+              value={props.contactCTALinkText || ''}
+              onChange={(e) => setProp((props: FAQSectionProps) => (props.contactCTALinkText = e.target.value))}
+              placeholder={t('faq.contactUs') || 'Contact us'}
+            />
+          </div>
+
+          <div>
+            <Label>{t('faqSection.contactLink') || 'Contact Link URL'}</Label>
+            <Input
+              value={props.contactCTALink || ''}
+              onChange={(e) => setProp((props: FAQSectionProps) => (props.contactCTALink = e.target.value))}
+              placeholder="/contact"
+            />
+          </div>
+        </>
+      )}
+
       <div className="pt-4 border-t">
-        <Label className="mb-3 block">{t('faqSection.items')}</Label>
+        <div className="flex items-center justify-between mb-3">
+          <Label>{t('faqSection.items')}</Label>
+          <Button onClick={addFAQ} size="sm" variant="outline">
+            {t('faqSection.addItem') || 'Add FAQ'}
+          </Button>
+        </div>
         {props.faqs?.map((faq, index) => (
-          <div key={index} className="mb-4 p-4 border rounded space-y-2">
+          <div key={index} className="mb-4 p-4 border rounded space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-base font-semibold">
+                {t('faqSection.item')} {index + 1}
+              </Label>
+              <Button 
+                onClick={() => removeFAQ(index)} 
+                size="sm" 
+                variant="ghost"
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
             <div>
-              <Label>{t('faqSection.question')} {index + 1}</Label>
+              <Label>{t('faqSection.question')}</Label>
               <Input
                 value={faq.question}
                 onChange={(e) =>
@@ -257,19 +338,21 @@ export function FAQSectionSettings() {
                     }
                   })
                 }
+                placeholder={t('faqSection.questionPlaceholder') || 'Enter your question'}
               />
             </div>
             <div>
               <Label>{t('faqSection.answer')}</Label>
-              <Textarea
+              <CompactRichTextEditor
                 value={faq.answer}
-                onChange={(e) =>
+                onChange={(value) =>
                   setProp((props: FAQSectionProps) => {
                     if (props.faqs) {
-                      props.faqs[index].answer = e.target.value;
+                      props.faqs[index].answer = value;
                     }
                   })
                 }
+                placeholder={t('faqSection.answerPlaceholder') || 'Enter your answer with formatting, links, images, etc.'}
               />
             </div>
           </div>

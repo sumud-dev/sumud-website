@@ -46,7 +46,7 @@ export const eventQueryKeys = {
   eventLists: () => [...eventQueryKeys.allEvents, 'list'] as const,
   eventList: (filters?: unknown) => [...eventQueryKeys.eventLists(), filters || {}] as const,
   eventDetails: () => [...eventQueryKeys.allEvents, 'detail'] as const,
-  eventDetail: (eventSlug: string) => [...eventQueryKeys.eventDetails(), eventSlug] as const,
+  eventDetail: (eventSlug: string, language?: string) => [...eventQueryKeys.eventDetails(), eventSlug, language || 'en'] as const,
   eventDetailById: (eventId: string) => [...eventQueryKeys.eventDetails(), 'id', eventId] as const,
   eventStatistics: () => [...eventQueryKeys.allEvents, 'statistics'] as const,
   eventCount: (status?: string, language?: string) =>
@@ -176,11 +176,11 @@ export function useUpcomingEvents(filters?: {
   });
 }
 
-export function useEventBySlug(eventSlug: string) {
+export function useEventBySlug(eventSlug: string, language?: string) {
   return useQuery({
-    queryKey: eventQueryKeys.eventDetail(eventSlug),
+    queryKey: eventQueryKeys.eventDetail(eventSlug, language),
     queryFn: async () => {
-      const result = await fetchEventBySlugAction(eventSlug);
+      const result = await fetchEventBySlugAction(eventSlug, language);
       if (!result.success) throw new Error(result.error);
       return result.data;
     },
@@ -400,11 +400,11 @@ export function useDeleteEvent() {
 export function usePrefetchEvent() {
   const queryClient = useQueryClient();
 
-  return (eventSlug: string) => {
+  return (eventSlug: string, language?: string) => {
     queryClient.prefetchQuery({
-      queryKey: eventQueryKeys.eventDetail(eventSlug),
+      queryKey: eventQueryKeys.eventDetail(eventSlug, language),
       queryFn: async () => {
-        const result = await fetchEventBySlugAction(eventSlug);
+        const result = await fetchEventBySlugAction(eventSlug, language);
         if (!result.success) throw new Error('Event not found');
         return result.data;
       },

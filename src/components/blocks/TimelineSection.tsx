@@ -4,7 +4,7 @@ import React from 'react';
 import { useNode } from '@craftjs/core';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
-import { Textarea } from '@/src/components/ui/textarea';
+import { CompactRichTextEditor } from '@/src/lib/tipTap-editor/CompactRichTextEditor';
 import { Calendar } from 'lucide-react';
 
 interface TimelineEvent {
@@ -132,9 +132,11 @@ export const TimelineSection = (props: TimelineSectionProps) => {
                     <h3 className="text-xl font-bold mb-2" style={{ color: titleColor }}>
                       {event.title}
                     </h3>
-                    <p style={{ color: textColor }}>
-                      {event.description}
-                    </p>
+                    <div 
+                      className="prose prose-sm" 
+                      style={{ color: textColor }}
+                      dangerouslySetInnerHTML={{ __html: event.description }}
+                    />
                   </div>
                 </div>
 
@@ -263,12 +265,12 @@ export function TimelineSectionSettings() {
             </div>
             <div>
               <Label>Description</Label>
-              <Textarea
-                value={event.description}
-                onChange={(e) =>
+              <CompactRichTextEditor
+                value={event.description || ''}
+                onChange={(value) =>
                   setProp((props: TimelineSectionProps) => {
                     if (props.events) {
-                      props.events[index].description = e.target.value;
+                      props.events[index].description = value;
                     }
                   })
                 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Link, usePathname, useRouter } from "@/src/i18n/navigation";
+import { Link, usePathname } from "@/src/i18n/navigation";
 import { useTranslations } from "next-intl";
 import { useClerk } from "@clerk/nextjs";
 import Image from "next/image";
@@ -9,13 +9,13 @@ import {
   FileText,
   Calendar,
   Megaphone,
-  FolderOpen,
   Settings,
   LogOut,
   Menu,
   X,
-  Languages,
   LayoutTemplate,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/src/lib/utils/utils";
@@ -26,7 +26,7 @@ const navigationKeys = [
   { key: "articles", href: "/admin/articles", icon: FileText },
   { key: "campaigns", href: "/admin/campaigns", icon: Megaphone },
   { key: "events", href: "/admin/events", icon: Calendar },
-  { key: "content", href: "/admin/content", icon: Languages },
+  { key: "menus", href: "/admin/content", icon: Menu },
   { key: "pageBuilder", href: "/admin/page-builder", icon: LayoutTemplate },
 ];
 
@@ -37,13 +37,14 @@ const bottomNavigationKeys = [
 interface AdminSidebarProps {
   userEmail?: string;
   userInitial?: string;
+  defaultCollapsed?: boolean;
 }
 
-export function AdminSidebar({ userEmail, userInitial = "A" }: AdminSidebarProps) {
+export function AdminSidebar({ userEmail, userInitial = "A", defaultCollapsed = false }: AdminSidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const t = useTranslations("adminSettings.sidebar");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { signOut } = useClerk();
 
@@ -70,24 +71,44 @@ export function AdminSidebar({ userEmail, userInitial = "A" }: AdminSidebarProps
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-sidebar border-r border-sidebar-border transform transition-transform duration-200 ease-in-out lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed inset-y-0 left-0 z-50 bg-sidebar border-r border-sidebar-border transform transition-all duration-200 ease-in-out lg:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+          isCollapsed ? "lg:w-16" : "lg:w-64",
+          "w-64" // Always full width on mobile
         )}
       >
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-20 items-center justify-between px-6 border-b border-sidebar-border">
-            <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/Logo.svg"
-                alt="Sumud Admin"
-                width={120}
-                height={8}
-                className="h-8 w-auto"
-                priority
-                style={{ width: "auto", height: "auto" }}
-              />
-            </Link>
+          <div className={cn(
+            "flex h-20 items-center border-b border-sidebar-border",
+            isCollapsed ? "lg:justify-center lg:px-2" : "justify-between px-6"
+          )}>
+            {!isCollapsed && (
+              <Link href="/" className="flex items-center gap-2">
+                <Image
+                  src="/Logo.svg"
+                  alt="Sumud Admin"
+                  width={120}
+                  height={8}
+                  className="h-8 w-auto"
+                  priority
+                  style={{ width: "auto", height: "auto" }}
+                />
+              </Link>
+            )}
+            {isCollapsed && (
+              <Link href="/" className="hidden lg:flex items-center justify-center">
+                <Image
+                  src="/Logo.svg"
+                  alt="Sumud Admin"
+                  width={32}
+                  height={32}
+                  className="h-8 w-8"
+                  priority
+                  style={{ width: "auto", height: "auto" }}
+                />
+              </Link>
+            )}
             <Button
               variant="ghost"
               size="icon-sm"
@@ -109,15 +130,19 @@ export function AdminSidebar({ userEmail, userInitial = "A" }: AdminSidebarProps
                   key={item.key}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    "flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    isCollapsed ? "lg:justify-center" : "gap-3",
                     isActive
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
                       : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   )}
                   onClick={() => setSidebarOpen(false)}
+                  title={isCollapsed ? t(item.key) : undefined}
                 >
                   <item.icon className="h-5 w-5" />
-                  {t(item.key)}
+                  <span className={cn(isCollapsed && "lg:hidden")}>
+                    {t(item.key)}
+                  </span>
                 </Link>
               );
             })}
@@ -125,6 +150,24 @@ export function AdminSidebar({ userEmail, userInitial = "A" }: AdminSidebarProps
 
           {/* Bottom navigation */}
           <div className="border-t border-sidebar-border px-3 py-4 space-y-1">
+            {/* Desktop toggle button */}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className={cn(
+                "hidden lg:flex w-full mb-2",
+                isCollapsed ? "justify-center" : "justify-end"
+              )}
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              title={isCollapsed ? t("expand") || "Expand Sidebar" : t("collapse") || "Collapse Sidebar"}
+            >
+              {isCollapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
+            
             {bottomNavigationKeys.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -132,25 +175,35 @@ export function AdminSidebar({ userEmail, userInitial = "A" }: AdminSidebarProps
                   key={item.key}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    "flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    isCollapsed ? "lg:justify-center" : "gap-3",
                     isActive
                       ? "bg-sidebar-accent text-sidebar-accent-foreground"
                       : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   )}
                   onClick={() => setSidebarOpen(false)}
+                  title={isCollapsed ? t(item.key) : undefined}
                 >
                   <item.icon className="h-5 w-5" />
-                  {t(item.key)}
+                  <span className={cn(isCollapsed && "lg:hidden")}>
+                    {t(item.key)}
+                  </span>
                 </Link>
               );
             })}
             <button
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors disabled:opacity-50"
+              className={cn(
+                "flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors disabled:opacity-50",
+                isCollapsed ? "lg:justify-center" : "gap-3"
+              )}
               onClick={handleLogout}
               disabled={isLoggingOut}
+              title={isCollapsed ? (isLoggingOut ? t("loggingOut") : t("logout")) : undefined}
             >
               <LogOut className="h-5 w-5" />
-              {isLoggingOut ? t("loggingOut") : t("logout")}
+              <span className={cn(isCollapsed && "lg:hidden")}>
+                {isLoggingOut ? t("loggingOut") : t("logout")}
+              </span>
             </button>
           </div>
         </div>

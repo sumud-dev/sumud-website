@@ -262,7 +262,8 @@ export async function fetchUpcomingEventsAction(
  * Fetch event by slug
  */
 export async function fetchEventBySlugAction(
-  slug: string
+  slug: string,
+  language?: string
 ): Promise<ActionResult> {
   try {
     if (!slug) {
@@ -272,7 +273,7 @@ export async function fetchEventBySlugAction(
       };
     }
 
-    const event = await getEventBySlug(slug);
+    const event = await getEventBySlug(slug, language || 'en');
     
     if (!event) {
       return {

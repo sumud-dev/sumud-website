@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Editor, Frame, Element } from '@craftjs/core';
 import { Toolbox } from './Toolbox';
 import { SettingsPanel } from './SettingsPanel';
@@ -36,24 +35,6 @@ export function EditorCanvas({ pageId, language, initialContent }: EditorCanvasP
   const [status, setStatus] = useState<'draft' | 'published'>('draft');
   const [pageTitle, setPageTitle] = useState<string>('');
   const [pageSlug, setPageSlug] = useState<string>('');
-
-  // Fetch page data to get initial status
-  const { data: page } = useQuery({
-    queryKey: ['page', pageId],
-    queryFn: async () => {
-      const response = await fetch(`/api/pages/${pageId}`);
-      if (!response.ok) throw new Error('Failed to fetch page');
-      const result = await response.json();
-      return result.data;
-    },
-  });
-
-  // Update status when page data loads
-  useEffect(() => {
-    if (page?.status) {
-      setStatus(page.status);
-    }
-  }, [page?.status]);
 
   return (
     <div className="h-screen flex flex-col">
@@ -147,7 +128,8 @@ export function EditorCanvas({ pageId, language, initialContent }: EditorCanvasP
           
           {/* Settings Panel */}
           <SettingsPanel 
-            pageId={pageId} 
+            pageId={pageId}
+            language={language}
             status={status} 
             onStatusChange={setStatus}
             onTitleChange={setPageTitle}

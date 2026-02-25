@@ -6,6 +6,7 @@ import { Button } from '@/src/components/ui/button';
 import { Input } from '@/src/components/ui/input';
 import { Label } from '@/src/components/ui/label';
 import { Textarea } from '@/src/components/ui/textarea';
+import { CompactRichTextEditor } from '@/src/lib/tipTap-editor/CompactRichTextEditor';
 import { Mail, MapPin, Phone } from 'lucide-react';
 
 interface ContactSectionProps {
@@ -80,9 +81,13 @@ export const ContactSection = (props: ContactSectionProps) => {
               {title}
             </h2>
             
-            <p className="text-lg mb-8" style={{ color: textColor }}>
-              {description}
-            </p>
+            {description && (
+              <div 
+                className="text-lg mb-8 prose prose-lg" 
+                style={{ color: textColor }}
+                dangerouslySetInnerHTML={{ __html: description }}
+              />
+            )}
 
             {showContactInfo && (
               <div className="space-y-6">
@@ -246,10 +251,9 @@ export const ContactSectionSettings = () => {
 
       <div>
         <Label>Description</Label>
-        <Textarea
-          value={description}
-          onChange={(e) => setProp((props: ContactSectionProps) => (props.description = e.target.value))}
-          rows={3}
+        <CompactRichTextEditor
+          value={description || ''}
+          onChange={(value) => setProp((props: ContactSectionProps) => (props.description = value))}
         />
       </div>
 

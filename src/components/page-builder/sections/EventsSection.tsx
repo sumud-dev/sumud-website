@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useNode } from "@craftjs/core";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
+import { CompactRichTextEditor } from "@/src/lib/tipTap-editor/CompactRichTextEditor";
 import { motion } from "framer-motion";
 import { ArrowRight, Calendar, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/src/components/ui/card";
@@ -15,16 +16,18 @@ import Image from "next/image";
 
 interface EventsSectionProps {
   title?: string;
+  subtitle?: string;
   showCount?: number;
 }
 
 const defaultProps: EventsSectionProps = {
   title: "Upcoming Events",
+  subtitle: "Join us at our upcoming events and activities",
   showCount: 3,
 };
 
 export const EventsSection = (props: EventsSectionProps) => {
-  const { title, showCount } = props;
+  const { title, subtitle, showCount } = props;
   const t = useTranslations('common');
 
   const {
@@ -55,6 +58,12 @@ export const EventsSection = (props: EventsSectionProps) => {
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             {title}
           </h2>
+          {subtitle && (
+            <div 
+              className="text-xl text-gray-600 mx-auto mb-4 prose max-w-none"
+              dangerouslySetInnerHTML={{ __html: subtitle }}
+            />
+          )}
           <div className="w-24 h-1 bg-[#781D32] mx-auto rounded-full" />
         </motion.div>
 
@@ -144,9 +153,11 @@ export const EventsSectionSettings = () => {
   const {
     actions: { setProp },
     title,
+    subtitle,
     showCount,
   } = useNode((node) => ({
     title: node.data?.props?.title,
+    subtitle: node.data?.props?.subtitle,
     showCount: node.data?.props?.showCount,
   }));
 
@@ -159,6 +170,16 @@ export const EventsSectionSettings = () => {
           onChange={(e) =>
             setProp((props: EventsSectionProps) => (props.title = e.target.value))
           }
+        />
+      </div>
+      <div>
+        <Label>Subtitle</Label>
+        <CompactRichTextEditor
+          value={subtitle || ''}
+          onChange={(value) =>
+            setProp((props: EventsSectionProps) => (props.subtitle = value))
+          }
+          placeholder="Enter subtitle with formatting"
         />
       </div>
       <div>
