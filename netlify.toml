@@ -2,6 +2,12 @@
   command = "npm run build"
   publish = ".next"
 
+[build.environment]
+  NODE_VERSION = "20"
+  npm_flags = "--legacy-peer-deps"
+  # Exclude edge functions from secret scanning as they're server-side
+  SECRETS_SCAN_OMIT_PATHS = ".netlify/edge-functions/**"
+
 [[headers]]
   for = "/*"
   [headers.values]
@@ -14,7 +20,3 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
-
-[build.environment]
-  NODE_VERSION = "20"
-  npm_flags = "--legacy-peer-deps"

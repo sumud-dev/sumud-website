@@ -15,13 +15,6 @@ export default async function EditorPage({
   // Priority: 1. searchParams.lang (override), 2. params.locale (route), 3. default 'en'
   const language = (lang || locale || 'en') as 'en' | 'fi';
   
-  console.log('[EditorPage] Loading page:', {
-    pageId,
-    routeLocale: locale,
-    queryLang: lang,
-    resolvedLanguage: language,
-  });
-  
   const page = await getPageWithContent(pageId, language);
 
   if (!page) {
@@ -36,13 +29,6 @@ export default async function EditorPage({
     typeof content === 'object' && 
     Object.keys(content).length > 0 &&
     'ROOT' in content;
-
-  console.log('[EditorPage] Content loaded:', {
-    pageId,
-    language,
-    hasValidContent,
-    contentKeys: content ? Object.keys(content).length : 0,
-  });
 
   return (
     <EditorCanvas
